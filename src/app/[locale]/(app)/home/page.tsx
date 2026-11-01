@@ -4,8 +4,8 @@ import { Suspense } from "react";
 
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Clock } from "@/components/home/clock";
-import { JoinForm } from "@/components/home/join-form";
 import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
+import { JoinForm } from "@/components/meetings/join-form";
 import { requireSession } from "@/lib/auth/session";
 import { HOME_ROUTE } from "@/lib/routes";
 

@@ -10,7 +10,7 @@ import { parseMeetingInput } from "@/lib/meetings/codes";
 
 /** "Enter a meeting ID or link" + Join. Accepts "123 456 7890" or a pasted invite link. */
 export function JoinForm() {
-  const t = useTranslations("Home");
+  const t = useTranslations("Join");
   const router = useRouter();
   const errorId = useId();
   const [value, setValue] = useState("");
@@ -31,8 +31,8 @@ export function JoinForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-2" noValidate>
       <div className="flex gap-2">
         <Input
-          aria-label={t("joinLabel")}
-          placeholder={t("joinPlaceholder")}
+          aria-label={t("label")}
+          placeholder={t("placeholder")}
           value={value}
           onChange={(event) => {
             setValue(event.target.value);
@@ -50,12 +50,12 @@ export function JoinForm() {
           size="lg"
           isDisabled={value.trim() === ""}
         >
-          {t("join")}
+          {t("submit")}
         </Button>
       </div>
       {invalid ? (
         <p id={errorId} role="alert" className="text-destructive text-sm">
-          {t("joinError")}
+          {t("error")}
         </p>
       ) : null}
     </form>

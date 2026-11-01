@@ -1,23 +1,27 @@
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
 
+import { Features } from "@/components/marketing/features";
+import { ProductShot } from "@/components/marketing/product-shot";
+import { SiteFooter } from "@/components/marketing/site-footer";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { JoinForm } from "@/components/meetings/join-form";
+import { LinkButton } from "@/components/ui/button";
 import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/site";
 
-const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-
-// The lockup's intrinsic size (its SVG viewBox), so the browser reserves space before it loads.
-const LOCKUP = { width: 979, height: 224 };
-
-export default async function Home() {
+/**
+ * The signed-out home. Most visitors come to join a meeting, so joining comes first and
+ * nothing suggests an account is needed for it. Signed-in visitors go to /home (proxy).
+ */
+export default async function LandingPage() {
   const t = await getTranslations("Landing");
   const meta = await getTranslations("Metadata");
 
-  // Structured data for search engines. It's built from our own static values and escaped.
+  // Structured data for search engines, built from our own static values and escaped.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: appName,
+    name: publicEnv.NEXT_PUBLIC_APP_NAME,
     url: siteUrl(),
     description: meta("description"),
     applicationCategory: "CommunicationApplication",
@@ -28,35 +32,38 @@ export default async function Home() {
   };
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <h1>
-        <Image
-          src="/brand/logo-lockup.svg"
-          alt={appName}
-          width={LOCKUP.width}
-          height={LOCKUP.height}
-          priority
-          className="h-14 w-auto sm:h-16 dark:hidden"
-        />
-        <Image
-          src="/brand/logo-lockup-dark.svg"
-          alt={appName}
-          width={LOCKUP.width}
-          height={LOCKUP.height}
-          priority
-          className="hidden h-14 w-auto sm:h-16 dark:block"
-        />
-      </h1>
-      <p className="font-display max-w-md text-2xl font-bold text-balance sm:text-3xl">
-        {t("tagline")}
-      </p>
-      <p className="text-muted-foreground max-w-md text-base">{t("subline")}</p>
+    <>
+      <SiteHeader />
+      <main className="flex-1">
+        <section className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:py-20">
+          <div className="flex flex-col gap-6">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+              {t("headline")}
+            </h1>
+            <p className="text-muted-foreground text-lg">{t("subline")}</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <LinkButton href="/sign-up" size="lg">
+                {t("startMeeting")}
+              </LinkButton>
+              <div className="min-w-0 flex-1">
+                <JoinForm />
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">{t("newHere")}</p>
+          </div>
+          <div className="flex justify-center lg:justify-end">
+            <ProductShot />
+          </div>
+        </section>
+        <Features />
+      </main>
+      <SiteFooter />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-    </main>
+    </>
   );
 }
