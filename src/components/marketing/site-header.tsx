@@ -1,11 +1,8 @@
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
 import Link from "next/link";
 
+import { LogoLockup } from "@/components/brand/logo-lockup";
 import { LinkButton } from "@/components/ui/button";
-import { publicEnv } from "@/lib/env";
-
-const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
 
 /** Header for public pages: logo, Help, Sign in and a primary Sign up. */
 export async function SiteHeader() {
@@ -14,22 +11,7 @@ export async function SiteHeader() {
   return (
     <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
       <Link href="/" className="rounded-md">
-        <Image
-          src="/brand/logo-lockup.svg"
-          alt={appName}
-          width={979}
-          height={224}
-          priority
-          className="h-7 w-auto dark:hidden"
-        />
-        <Image
-          src="/brand/logo-lockup-dark.svg"
-          alt={appName}
-          width={979}
-          height={224}
-          priority
-          className="hidden h-7 w-auto dark:block"
-        />
+        <LogoLockup className="h-7" />
       </Link>
       <nav
         aria-label={t("primaryNav")}

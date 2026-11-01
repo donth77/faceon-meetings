@@ -1,46 +1,150 @@
 "use client";
 
-import { CalendarPlus, Link2, Plus, Video } from "lucide-react";
+import { CalendarPlus, Link2, LoaderCircle, Plus, Video } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useState, useTransition, type Key } from "react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { createInstantMeeting } from "@/lib/meetings/actions";
+
+type Created = { code: string; passcode: string | null };
+
+const linkFor = ({ code, passcode }: Created) =>
+  `${window.location.origin}/j/${code}${passcode ? `#pwd=${passcode}` : ""}`;
+
+/** "Here's the link to your meeting", with Copy link and Start now, as in Meet. */
+function MeetingLinkDialog({
+  meeting,
+  onClose,
+}: {
+  meeting: Created;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Home");
+  const link = linkFor(meeting);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success(t("linkCopied"));
+    } catch {
+      toast.error(t("copyFailed"));
+    }
+  }
+
+  return (
+    <Dialog
+      isOpen
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      showCloseButton={false}
+      className="sm:max-w-md"
+    >
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          {t("laterTitle")}
+        </DialogTitle>
+        <DialogDescription>{t("laterBody")}</DialogDescription>
+      </DialogHeader>
+      <div className="flex gap-2">
+        <Input
+          aria-label={t("linkLabel")}
+          value={link}
+          readOnly
+          onFocus={(event) => event.target.select()}
+          className="h-10 min-w-0 flex-1"
+        />
+        <Button onPress={() => void copy()} size="lg" className="h-10">
+          <Link2 aria-hidden="true" />
+          {t("copyLink")}
+        </Button>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" slot="close">
+          {t("close")}
+        </Button>
+        <LinkButton href={`/j/${meeting.code}`}>{t("startNow")}</LinkButton>
+      </DialogFooter>
+    </Dialog>
+  );
+}
 
 /**
- * Meet-style "New meeting" menu. The meeting actions arrive with the meeting core,
- * so they're shown but disabled for now.
+ * Meet-style "New meeting" menu: start an instant meeting, or create one for later and
+ * share its link. Scheduling arrives with the scheduler.
  */
 export function NewMeetingMenu() {
   const t = useTranslations("Home");
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [created, setCreated] = useState<Created | null>(null);
+
+  function handleAction(key: Key) {
+    if (key !== "instant" && key !== "later") return;
+    startTransition(async () => {
+      try {
+        const meeting = await createInstantMeeting();
+        if (key === "instant") router.push(`/j/${meeting.code}`);
+        else setCreated(meeting);
+      } catch {
+        toast.error(t("createFailed"));
+      }
+    });
+  }
 
   return (
-    <DropdownMenuTrigger>
-      <Button size="lg" className="gap-2">
-        <Plus aria-hidden="true" />
-        {t("newMeeting")}
-      </Button>
-      <DropdownMenu
-        placement="bottom start"
-        className="min-w-64"
-        disabledKeys={["instant", "later", "schedule"]}
-      >
-        <DropdownMenuItem id="instant" textValue={t("startInstant")}>
-          <Video aria-hidden="true" />
-          {t("startInstant")}
-        </DropdownMenuItem>
-        <DropdownMenuItem id="later" textValue={t("createForLater")}>
-          <Link2 aria-hidden="true" />
-          {t("createForLater")}
-        </DropdownMenuItem>
-        <DropdownMenuItem id="schedule" textValue={t("schedule")}>
-          <CalendarPlus aria-hidden="true" />
-          {t("schedule")}
-        </DropdownMenuItem>
-      </DropdownMenu>
-    </DropdownMenuTrigger>
+    <>
+      <DropdownMenuTrigger>
+        <Button size="lg" className="gap-2" isPending={pending}>
+          {pending ? (
+            <LoaderCircle
+              className="animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+          ) : (
+            <Plus aria-hidden="true" />
+          )}
+          {pending ? t("starting") : t("newMeeting")}
+        </Button>
+        <DropdownMenu
+          placement="bottom start"
+          className="min-w-64"
+          disabledKeys={["schedule"]}
+          onAction={handleAction}
+        >
+          <DropdownMenuItem id="instant" textValue={t("startInstant")}>
+            <Video aria-hidden="true" />
+            {t("startInstant")}
+          </DropdownMenuItem>
+          <DropdownMenuItem id="later" textValue={t("createForLater")}>
+            <Link2 aria-hidden="true" />
+            {t("createForLater")}
+          </DropdownMenuItem>
+          <DropdownMenuItem id="schedule" textValue={t("schedule")}>
+            <CalendarPlus aria-hidden="true" />
+            {t("schedule")}
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </DropdownMenuTrigger>
+      {created ? (
+        <MeetingLinkDialog meeting={created} onClose={() => setCreated(null)} />
+      ) : null}
+    </>
   );
 }

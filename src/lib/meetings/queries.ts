@@ -10,7 +10,9 @@ import type {
   SessionLimits,
 } from "@/lib/media/types";
 
+import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
+import { isJoinable } from "./rules";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
 
 export type Meeting = Omit<typeof meeting.$inferSelect, "settings"> & {
@@ -39,7 +41,7 @@ function readMeeting(row: typeof meeting.$inferSelect): Meeting {
 }
 
 /** Creates an instant meeting (or one for later) with a fresh meeting ID and passcode. */
-export async function createInstantMeeting(hostId: string): Promise<Meeting> {
+export async function insertInstantMeeting(hostId: string): Promise<Meeting> {
   // Meeting IDs are random, so a collision is rare; try a new one on each.
   for (let attempt = 0; attempt < 5; attempt++) {
     const [row] = await db()
@@ -79,6 +81,27 @@ export async function findMeetingByCode(
     .where(eq(meeting.code, code))
     .limit(1);
   return row ? { meeting: readMeeting(row.meeting), host: row.host } : null;
+}
+
+/**
+ * What the meeting page shows before joining: the title and host, and whether the link
+ * still works. Null for an unknown meeting ID.
+ */
+export async function getMeetingSummary(code: string): Promise<{
+  code: string;
+  title: string | null;
+  hostName: string;
+  joinable: boolean;
+} | null> {
+  if (!MEETING_CODE_PATTERN.test(code)) return null;
+  const found = await findMeetingByCode(code);
+  if (!found) return null;
+  return {
+    code,
+    title: found.meeting.title,
+    hostName: found.host.name,
+    joinable: isJoinable(found.meeting, new Date()),
+  };
 }
 
 /** Marks a meeting ended, so its link stops working. */

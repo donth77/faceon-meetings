@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { MobileTabBar } from "@/components/app-shell/mobile-tab-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { requireSession } from "@/lib/auth/session";
 import { avatarUrl } from "@/lib/avatars/seed";
 import { HOME_ROUTE } from "@/lib/routes";
@@ -31,6 +32,7 @@ async function AppShell({ children }: { children: ReactNode }) {
       <AppSidebar user={{ name, email, image: avatarUrl(session.user) }} />
       <SidebarInset className="pb-16 md:pb-0">{children}</SidebarInset>
       <MobileTabBar />
+      <Toaster position="bottom-center" />
     </SidebarProvider>
   );
 }

@@ -96,7 +96,17 @@
     "createForLater": "Create a meeting for later",
     "schedule": "Schedule",
     "upcomingTitle": "Upcoming",
-    "upcomingEmpty": "No upcoming meetings. Scheduled meetings will show up here."
+    "upcomingEmpty": "No upcoming meetings. Scheduled meetings will show up here.",
+    "starting": "Starting your meeting…",
+    "laterTitle": "Here’s the link to your meeting",
+    "laterBody": "Copy this link and send it to people you want to meet with. Save it so you can use it later, too.",
+    "linkLabel": "Meeting link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyFailed": "Couldn’t copy the link. Select it and copy it yourself.",
+    "startNow": "Start now",
+    "close": "Close",
+    "createFailed": "Couldn’t create the meeting. Try again."
   },
   "Pages": {
     "upcoming": "Upcoming",
@@ -111,5 +121,126 @@
     "title": "Page not found",
     "body": "The link may be broken, or the page may have moved.",
     "home": "Go to the home page"
+  },
+  "Meeting": {
+    "pageTitle": "Join a meeting",
+    "defaultTitle": "{name}’s meeting",
+    "you": "{name} (You)",
+    "screenOf": "{name}’s screen",
+    "muted": "Muted",
+    "poorConnection": "Poor connection",
+    "stageLabel": "Meeting video",
+    "noDevices": "None found",
+    "deviceNumber": "Device {n}",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "stopVideo": "Stop video",
+    "startVideo": "Start video",
+    "shareScreen": "Share screen",
+    "stopSharing": "Stop sharing",
+    "leave": "Leave",
+    "leaveMeeting": "Leave meeting",
+    "endForAll": "End meeting for all",
+    "endFailed": "Couldn’t end the meeting. Try again.",
+    "audioSettings": "Audio settings",
+    "videoSettings": "Video settings",
+    "microphone": "Microphone",
+    "speaker": "Speaker",
+    "camera": "Camera",
+    "participantCount": "{count, plural, one {# participant} other {# participants}}",
+    "meetingInfo": "Meeting information",
+    "hostLabel": "Host",
+    "meetingId": "Meeting ID",
+    "passcode": "Passcode",
+    "inviteLink": "Invite link",
+    "copyLink": "Copy link",
+    "linkCopied": "Invite link copied",
+    "copyFailed": "Couldn’t copy the link. Select it and copy it yourself.",
+    "elapsed": "Meeting time {time}",
+    "layout": "Layout",
+    "layoutLabel": "Layout: {layout}",
+    "layouts": {
+      "auto": "Auto",
+      "gallery": "Gallery",
+      "speaker": "Speaker"
+    },
+    "flipCamera": "Switch camera",
+    "reconnecting": "Reconnecting…",
+    "offline": "You’re offline. FaceOn will reconnect when your connection is back.",
+    "joining": "Joining…",
+    "left": {
+      "left": "You left the meeting",
+      "ended": "The host ended the meeting",
+      "endedByYou": "You ended the meeting for everyone",
+      "removed": "You were removed from the meeting",
+      "timeLimit": "The meeting reached its time limit",
+      "connectionLost": "You lost your connection to the meeting"
+    },
+    "rejoin": "Rejoin",
+    "returnHome": "Return home",
+    "meetingIdLine": "Meeting ID {code}",
+    "notices": {
+      "notFound": {
+        "title": "Check your meeting ID",
+        "body": "There’s no meeting with this ID. Check the link or ID, then try again."
+      },
+      "ended": {
+        "title": "This meeting has ended",
+        "body": "Ask the host for a new link if you still need to meet."
+      },
+      "signIn": {
+        "title": "Sign in to join",
+        "body": "Sign in to your FaceOn account to join this meeting."
+      },
+      "removed": {
+        "title": "You can’t rejoin this meeting",
+        "body": "The host removed you from this meeting."
+      },
+      "signInAction": "Sign in",
+      "returnHome": "Return home"
+    }
+  },
+  "PreJoin": {
+    "readyToJoin": "Ready to join?",
+    "waitingEyebrow": "Waiting for the host",
+    "hostedBy": "Hosted by {name}",
+    "waitingForHost": "The host hasn’t started this meeting yet. You’ll join as soon as they do.",
+    "yourName": "Your name",
+    "passcode": "Passcode",
+    "joinNow": "Join now",
+    "joining": "Joining…",
+    "joinWithout": "Join without audio and video",
+    "stopWaiting": "Stop waiting",
+    "testSound": "Play a test sound",
+    "micWorking": "Your mic is working",
+    "speakToTest": "Say something to test your mic",
+    "micOff": "Your mic is off",
+    "cameraOff": "Your camera is off",
+    "startingCamera": "Starting your camera",
+    "tryAgain": "Try again",
+    "errors": {
+      "BAD_PASSCODE": "That passcode isn’t right. Check the invite and try again.",
+      "passcodeNeeded": "This meeting has a passcode. Enter it to join.",
+      "FULL": "This meeting is full. Try again when someone leaves.",
+      "NETWORK": "Can’t reach FaceOn. Check your connection, then try again.",
+      "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
+      "BAD_REQUEST": "Enter your name, then try again."
+    }
+  },
+  "DeviceProblems": {
+    "microphone": {
+      "blocked": "Your browser is blocking your microphone. Allow it in the site settings (the icon in the address bar), then select Try again.",
+      "notFound": "No microphone found. Connect one, then select Try again.",
+      "inUse": "Your microphone is being used by another app. Close that app, then select Try again.",
+      "unavailableSetting": "The microphone you chose isn’t available, so FaceOn is using another one.",
+      "unknown": "Your microphone didn’t start. Select Try again."
+    },
+    "camera": {
+      "blocked": "Your browser is blocking your camera. Allow it in the site settings (the icon in the address bar), then select Try again.",
+      "notFound": "No camera found. Connect one, then select Try again.",
+      "inUse": "Your camera is being used by another app. Close that app, then select Try again.",
+      "unavailableSetting": "The camera you chose isn’t available, so FaceOn is using another one.",
+      "unknown": "Your camera didn’t start. Select Try again."
+    }
   }
 }

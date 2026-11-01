@@ -25,6 +25,17 @@ export function resolveRole(input: {
   return "participant";
 }
 
+/** Whether a meeting's link still works: not ended, cancelled or expired. */
+export function isJoinable(
+  meeting: { status: string; expiresAt: Date | null },
+  now: Date,
+): boolean {
+  return (
+    meeting.status === "active" &&
+    (meeting.expiresAt === null || meeting.expiresAt > now)
+  );
+}
+
 export const isHostRole = (role: MeetingRole) =>
   role === "host" || role === "cohost";
 

@@ -7,6 +7,7 @@ import { Clock } from "@/components/home/clock";
 import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { JoinForm } from "@/components/meetings/join-form";
 import { requireSession } from "@/lib/auth/session";
+import { firstName } from "@/lib/names";
 import { HOME_ROUTE } from "@/lib/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -49,6 +50,7 @@ export default async function HomePage() {
 async function Greeting() {
   const session = await requireSession(HOME_ROUTE);
   const t = await getTranslations("Home");
-  const firstName = session.user.name.split(/\s+/)[0] ?? session.user.name;
-  return <PageHeader title={t("welcome", { name: firstName })} />;
+  return (
+    <PageHeader title={t("welcome", { name: firstName(session.user.name) })} />
+  );
 }

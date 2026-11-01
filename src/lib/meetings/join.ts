@@ -22,7 +22,7 @@ import {
   type MeetingHost,
   type MeetingSession,
 } from "./queries";
-import { checkEntry, isSessionStale, resolveRole } from "./rules";
+import { checkEntry, isJoinable, isSessionStale, resolveRole } from "./rules";
 
 /** An open session with what its provider reported (null: its call isn't there yet). */
 type LiveSession = { row: MeetingSession; snapshot: SessionSnapshot | null };
@@ -37,10 +37,6 @@ function sessionLimits(): SessionLimits {
       : {}),
   };
 }
-
-const isJoinable = (meeting: Meeting, now: Date) =>
-  meeting.status === "active" &&
-  (meeting.expiresAt === null || meeting.expiresAt > now);
 
 /**
  * The meeting's open session, if it's still usable. A session whose call ended or sat

@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { LogoLockup } from "@/components/brand/logo-lockup";
 import { publicEnv } from "@/lib/env";
 
 import { SocialSignIn, type AuthMode } from "./social-sign-in";
@@ -21,20 +21,7 @@ export async function AuthCard({ mode }: { mode: AuthMode }) {
         className="bg-card text-card-foreground flex w-full max-w-sm flex-col gap-6 rounded-2xl border p-8 shadow-sm"
       >
         <Link href="/" className="self-start rounded-md">
-          <Image
-            src="/brand/logo-lockup.svg"
-            alt={appName}
-            width={979}
-            height={224}
-            className="h-8 w-auto dark:hidden"
-          />
-          <Image
-            src="/brand/logo-lockup-dark.svg"
-            alt={appName}
-            width={979}
-            height={224}
-            className="hidden h-8 w-auto dark:block"
-          />
+          <LogoLockup className="h-8" />
         </Link>
 
         <div className="flex flex-col gap-2">
