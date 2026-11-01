@@ -1,0 +1,14 @@
+{
+  "Metadata": {
+    "description": "Free, open-source video meetings in your browser. No downloads."
+  },
+  "Landing": {
+    "tagline": "Video meetings in your browser.",
+    "subline": "Free and open source. No downloads. Coming soon."
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "The link may be broken, or the page may have moved.",
+    "home": "Go to the home page"
+  }
+}

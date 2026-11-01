@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 
 import { publicEnv } from "@/lib/env";
 
@@ -7,7 +8,8 @@ const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
 // The lockup's intrinsic size (its SVG viewBox), so the browser reserves space before it loads.
 const LOCKUP = { width: 979, height: 224 };
 
-export default function Home() {
+export default async function Home() {
+  const t = await getTranslations("Landing");
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16 text-center">
       <h1>
@@ -29,11 +31,9 @@ export default function Home() {
         />
       </h1>
       <p className="font-display max-w-md text-2xl font-bold text-balance sm:text-3xl">
-        Video meetings in your browser.
+        {t("tagline")}
       </p>
-      <p className="text-muted-foreground max-w-md text-base">
-        Free and open source. No downloads. Coming soon.
-      </p>
+      <p className="text-muted-foreground max-w-md text-base">{t("subline")}</p>
     </main>
   );
 }
