@@ -3,15 +3,17 @@ import "server-only";
 import { avatarUrl } from "@/lib/avatars/seed";
 import { guestsEnabled } from "@/lib/guest-session";
 import { mediaProvider, pickProvider } from "@/lib/media";
-import type { SessionLimits, SessionSnapshot } from "@/lib/media/types";
+import type { SessionSnapshot } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
 
 import type { JoinResponse } from "./api";
 import { MEETING_CODE_PATTERN } from "./codes";
 import { MeetingError } from "./errors";
+import { hostingPlan, limitsFor } from "./hosting";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
+  countSessionsSince,
   endMeeting,
   findMeetingByCode,
   findMember,
@@ -28,15 +30,37 @@ import { checkEntry, isJoinable, isSessionStale, resolveRole } from "./rules";
 /** An open session with what its provider reported (null: its call isn't there yet). */
 type LiveSession = { row: MeetingSession; snapshot: SessionSnapshot | null };
 
-/** Limits for a new session. Demo limits for non-allowlisted hosts come later. */
-function sessionLimits(): SessionLimits {
-  const env = serverEnv();
-  return {
-    maxParticipants: env.MAX_PARTICIPANTS_PER_MEETING,
-    ...(env.MAX_MEETING_MINUTES > 0
-      ? { maxDurationSeconds: env.MAX_MEETING_MINUTES * 60 }
-      : {}),
-  };
+/** A day, for the daily caps. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Opens a session with the host's limits: full for allowlisted hosts, demo otherwise.
+ * A demo host has a few sessions a day.
+ */
+async function startSession(meeting: Meeting, host: MeetingHost, now: Date) {
+  const plan = hostingPlan(host);
+  if (plan === "demo") {
+    const today = await countSessionsSince(
+      host.id,
+      new Date(now.getTime() - DAY_MS),
+    );
+    if (today >= serverEnv().DEMO_MEETINGS_PER_DAY) {
+      throw new MeetingError("DEMO_LIMIT");
+    }
+  }
+  return openSession({
+    meeting,
+    provider: pickProvider().id,
+    limits: limitsFor(plan),
+  });
+}
+
+/** Seconds until the session's time limit, from its start; null without a limit. */
+function secondsLeft(session: MeetingSession, now: Date): number | null {
+  const max = session.limits.maxDurationSeconds;
+  if (!max) return null;
+  const elapsed = (now.getTime() - session.startedAt.getTime()) / 1000;
+  return Math.max(0, Math.round(max - elapsed));
 }
 
 /**
@@ -142,11 +166,7 @@ export async function joinMeeting(input: {
   if (blocked) throw new MeetingError(blocked);
 
   const session = live ?? {
-    row: await openSession({
-      meeting,
-      provider: pickProvider().id,
-      limits: sessionLimits(),
-    }),
+    row: await startSession(meeting, host, now),
     snapshot: null,
   };
   const provider = mediaProvider(session.row.provider);
@@ -189,6 +209,14 @@ export async function joinMeeting(input: {
       hostName: host.name,
       muteOnEntry: meeting.settings.muteOnEntry,
       videoOffOnEntry: meeting.settings.videoOffOnEntry,
+    },
+    session: {
+      demo: session.row.limits.demo === true,
+      maxParticipants: session.row.limits.maxParticipants,
+      maxMinutes: session.row.limits.maxDurationSeconds
+        ? Math.round(session.row.limits.maxDurationSeconds / 60)
+        : null,
+      secondsLeft: secondsLeft(session.row, now),
     },
   };
 }

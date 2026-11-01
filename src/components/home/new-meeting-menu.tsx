@@ -98,9 +98,10 @@ export function NewMeetingMenu() {
     if (key !== "instant" && key !== "later") return;
     startTransition(async () => {
       try {
-        const meeting = await createInstantMeeting();
-        if (key === "instant") router.push(`/j/${meeting.code}`);
-        else setCreated(meeting);
+        const result = await createInstantMeeting();
+        if (!result.ok) toast.error(t("dailyLimit"));
+        else if (key === "instant") router.push(`/j/${result.code}`);
+        else setCreated(result);
       } catch {
         toast.error(t("createFailed"));
       }

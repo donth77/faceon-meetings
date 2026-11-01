@@ -12,6 +12,13 @@ const Providers = z
   )
   .pipe(z.array(z.enum(["stream", "livekit"])).min(1));
 
+const EmailList = z.string().transform((value) =>
+  value
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 /**
  * Server-only settings. Parsed on first use rather than at import, so pages that never
  * need them build and run without them. Empty strings count as unset.
@@ -35,17 +42,31 @@ const ServerEnv = z.object({
   MAX_PARTICIPANTS_PER_MEETING: z.coerce.number().int().min(2).default(20),
   /** 0 means no time limit. */
   MAX_MEETING_MINUTES: z.coerce.number().int().min(0).default(0),
+  /** Comma-separated emails: admins, who also host with full limits. */
+  ADMIN_EMAILS: EmailList.default([]),
+  /** Comma-separated emails that host with full limits; everyone else hosts demos. */
+  HOST_ALLOWLIST: EmailList.default([]),
+  DEMO_MAX_MINUTES: z.coerce.number().int().min(1).default(15),
+  DEMO_MAX_PARTICIPANTS: z.coerce.number().int().min(2).default(4),
+  DEMO_MEETINGS_PER_DAY: z.coerce.number().int().min(0).default(3),
+  /** Meetings one account may create in a day; stops bots from burning the free credit. */
+  MEETINGS_PER_USER_PER_DAY: z.coerce.number().int().min(1).default(20),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;
 
 let parsed: ServerEnv | undefined;
 
-export function serverEnv(): ServerEnv {
-  parsed ??= ServerEnv.parse(
+const read = () =>
+  ServerEnv.parse(
     Object.fromEntries(
       Object.entries(process.env).filter(([, value]) => value !== ""),
     ),
   );
+
+/** Parsed once in production; on every call in development, so edits apply at once. */
+export function serverEnv(): ServerEnv {
+  if (process.env.NODE_ENV !== "production") return read();
+  parsed ??= read();
   return parsed;
 }

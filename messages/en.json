@@ -171,7 +171,9 @@
     "copyFailed": "Couldn’t copy the link. Select it and copy it yourself.",
     "startNow": "Start now",
     "close": "Close",
-    "createFailed": "Couldn’t create the meeting. Try again."
+    "createFailed": "Couldn’t create the meeting. Try again.",
+    "dailyLimit": "You’ve created a lot of meetings today. Try again tomorrow.",
+    "demoNote": "Your meetings are demos for now: up to {minutes} minutes and {people} people."
   },
   "Pages": {
     "upcoming": "Upcoming",
@@ -236,6 +238,9 @@
       "dismiss": "Close"
     },
     "elapsed": "Meeting time {time}",
+    "demo": "Demo",
+    "timeLeft": "{time} left",
+    "demoExplained": "Demo meetings end after {minutes} minutes and fit up to {people} people.",
     "layout": "Layout",
     "layoutLabel": "Layout: {layout}",
     "layouts": {
@@ -304,7 +309,8 @@
       "NETWORK": "Can’t reach FaceOn. Check your connection, then try again.",
       "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
       "BAD_REQUEST": "Enter your name, then try again.",
-      "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again."
+      "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
+      "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow."
     },
     "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account."
   },

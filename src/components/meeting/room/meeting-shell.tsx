@@ -6,7 +6,11 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { toast } from "sonner";
 
 import type { DeviceProblem } from "@/lib/device/problems";
-import type { AdmittedMeetingInfo, SelfInfo } from "@/lib/meetings/api";
+import type {
+  AdmittedMeetingInfo,
+  SelfInfo,
+  SessionInfo,
+} from "@/lib/meetings/api";
 
 import { useRoomMedia, type RoomStatus } from "../media";
 import { useMeetingTitle } from "../meeting-title";
@@ -58,10 +62,15 @@ function useDeviceProblemToast(
 export function MeetingShell({
   meeting,
   self,
+  session,
+  endsAt,
   onEndForAll,
 }: {
   meeting: AdmittedMeetingInfo;
   self: SelfInfo;
+  session: SessionInfo;
+  /** When the session's time limit runs out, on this device's clock. */
+  endsAt: number | null;
   onEndForAll: () => void;
 }) {
   const media = useRoomMedia();
@@ -79,6 +88,8 @@ export function MeetingShell({
       <TopBar
         title={title}
         meeting={meeting}
+        session={session}
+        endsAt={endsAt}
         layout={layout}
         onLayoutChange={setLayout}
       />

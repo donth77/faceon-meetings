@@ -42,7 +42,13 @@ type Step =
   | { name: "prejoin"; error: JoinErrorKind | null }
   | { name: "joining" }
   | { name: "waiting" }
-  | { name: "room"; admission: Admission; devices: DevicePreferences }
+  | {
+      name: "room";
+      admission: Admission;
+      devices: DevicePreferences;
+      /** When the session's time limit runs out, on this device's clock. */
+      endsAt: number | null;
+    }
   | { name: "left"; reason: LeftReason }
   | { name: "notice"; kind: NoticeKind };
 
@@ -120,6 +126,7 @@ export default function MeetingEntry({
   const [step, setStep] = useState<Step>({ name: "prejoin", error: null });
   const lastJoin = useRef<JoinInput | null>(null);
   const endingForAll = useRef(false);
+  const endsAt = useRef<number | null>(null);
 
   useEffect(() => scrubLinkPasscode(), []);
 
@@ -138,10 +145,14 @@ export default function MeetingEntry({
         }
         if (input.passcode) rememberPasscode(code, input.passcode);
         endingForAll.current = false;
+        const { secondsLeft } = result.session;
+        endsAt.current =
+          secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
         setStep({
           name: "room",
           admission: result,
           devices: entryDevices(input.devices, result),
+          endsAt: endsAt.current,
         });
       } catch (error) {
         const errorCode =
@@ -168,9 +179,16 @@ export default function MeetingEntry({
 
   const handleLeft = useCallback((reason: LeaveReason) => {
     // Once this host has asked to end the meeting, however the room closes, they ended it.
+    // A call that ends as its time runs out reached its limit, whatever the notice said.
+    const timeUp =
+      endsAt.current !== null && Date.now() >= endsAt.current - 10_000;
     setStep({
       name: "left",
-      reason: endingForAll.current ? "endedByYou" : reason,
+      reason: endingForAll.current
+        ? "endedByYou"
+        : reason === "ended" && timeUp
+          ? "timeLimit"
+          : reason,
     });
   }, []);
 
@@ -218,6 +236,8 @@ export default function MeetingEntry({
           <MeetingShell
             meeting={admission.meeting}
             self={admission.self}
+            session={admission.session}
+            endsAt={step.endsAt}
             onEndForAll={() => void endForAll()}
           />
         </MeetingRoom>

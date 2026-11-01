@@ -14,6 +14,8 @@ export type SessionLimits = {
   maxParticipants: number;
   /** The provider ends the call after this long; omit for no limit. */
   maxDurationSeconds?: number;
+  /** A demo session (the host isn't allowlisted). Providers ignore it; the UI shows it. */
+  demo?: boolean;
 };
 
 /** What a browser needs to connect once it has been admitted. */

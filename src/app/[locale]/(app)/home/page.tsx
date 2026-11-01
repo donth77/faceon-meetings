@@ -7,6 +7,7 @@ import { Clock } from "@/components/home/clock";
 import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { JoinForm } from "@/components/meetings/join-form";
 import { requireSession } from "@/lib/auth/session";
+import { demoTerms, hostingPlan } from "@/lib/meetings/hosting";
 import { firstName } from "@/lib/names";
 import { HOME_ROUTE } from "@/lib/routes";
 
@@ -22,6 +23,9 @@ export default async function HomePage() {
     <main className="flex flex-1 flex-col gap-10 p-6 md:p-10">
       <Suspense fallback={<PageHeader title={t("title")} />}>
         <Greeting />
+      </Suspense>
+      <Suspense fallback={null}>
+        <DemoNote />
       </Suspense>
 
       <section
@@ -44,6 +48,18 @@ export default async function HomePage() {
         </aside>
       </section>
     </main>
+  );
+}
+
+/** Hosts who aren't allowlisted host demo meetings; say so up front. */
+async function DemoNote() {
+  const session = await requireSession(HOME_ROUTE);
+  if (hostingPlan(session.user) === "full") return null;
+  const t = await getTranslations("Home");
+  return (
+    <p className="-mt-6 max-w-5xl rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-950 dark:bg-amber-400/15 dark:text-amber-100">
+      {t("demoNote", demoTerms())}
+    </p>
   );
 }
 

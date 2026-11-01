@@ -18,6 +18,7 @@ export const MEETING_ERRORS = {
   ENDED: 410,
   SESSION_ENDED: 410,
   RATE_LIMITED: 429,
+  DEMO_LIMIT: 429,
   UNAVAILABLE: 503,
 } as const;
 
@@ -57,12 +58,21 @@ export type AdmittedMeetingInfo = {
   videoOffOnEntry: boolean;
 };
 
+/** The session's limits; the time left is in seconds when admitted, so no clocks disagree. */
+export type SessionInfo = {
+  demo: boolean;
+  maxParticipants: number;
+  maxMinutes: number | null;
+  secondsLeft: number | null;
+};
+
 export type JoinResponse =
   | {
       state: "admitted";
       connection: JoinInfo;
       self: SelfInfo;
       meeting: AdmittedMeetingInfo;
+      session: SessionInfo;
     }
   | { state: "waiting_for_host" };
 

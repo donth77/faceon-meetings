@@ -19,8 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNow } from "@/hooks/use-now";
-import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
+import type { AdmittedMeetingInfo, SessionInfo } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 
 import { useInvitation } from "../invitation";
@@ -79,6 +80,53 @@ function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
         </Dialog>
       </Popover>
     </PopoverTrigger>
+  );
+}
+
+const twoDigits = (n: number) => String(n).padStart(2, "0");
+const clock = (seconds: number) =>
+  `${twoDigits(Math.floor(seconds / 60))}:${twoDigits(seconds % 60)}`;
+
+/** Shows a time limit only in its last five minutes, unless it's a demo. */
+const WARN_SECONDS = 5 * 60;
+
+/**
+ * The session's time limit: a "Demo" chip with a countdown for demo meetings, and a
+ * countdown in the last five minutes of any other limited meeting.
+ */
+function TimeLimit({
+  session,
+  endsAt,
+}: {
+  session: SessionInfo;
+  endsAt: number | null;
+}) {
+  const t = useTranslations("Meeting");
+  const now = useNow(1000);
+  if (now === null || endsAt === null) return null;
+  const left = Math.max(0, Math.round((endsAt - now) / 1000));
+  if (!session.demo && left > WARN_SECONDS) return null;
+  const urgent = left <= WARN_SECONDS;
+
+  return (
+    <TooltipTrigger delay={300}>
+      <Button
+        className={`focus-visible:ring-ring flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 font-mono text-sm tabular-nums outline-none focus-visible:ring-2 ${urgent ? "bg-amber-400/20 text-amber-100" : "bg-white/10"}`}
+      >
+        {session.demo ? (
+          <span className="font-sans font-semibold">{t("demo")} ·</span>
+        ) : null}
+        {t("timeLeft", { time: clock(left) })}
+      </Button>
+      <Tooltip>
+        {session.demo
+          ? t("demoExplained", {
+              minutes: session.maxMinutes ?? 0,
+              people: session.maxParticipants,
+            })
+          : t("timeLeft", { time: clock(left) })}
+      </Tooltip>
+    </TooltipTrigger>
   );
 }
 
@@ -177,11 +225,15 @@ function FlipCamera() {
 export function TopBar({
   title,
   meeting,
+  session,
+  endsAt,
   layout,
   onLayoutChange,
 }: {
   title: string;
   meeting: AdmittedMeetingInfo;
+  session: SessionInfo;
+  endsAt: number | null;
   layout: LayoutChoice;
   onLayoutChange: (layout: LayoutChoice) => void;
 }) {
@@ -196,6 +248,7 @@ export function TopBar({
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
         <FlipCamera />
+        <TimeLimit session={session} endsAt={endsAt} />
         <Elapsed />
         <LayoutMenu value={layout} onChange={onLayoutChange} />
       </div>

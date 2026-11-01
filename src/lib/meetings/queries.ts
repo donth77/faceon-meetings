@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, eq, gte, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meeting, meetingMember, meetingSession, user } from "@/lib/db/schema";
@@ -22,7 +22,13 @@ export type MeetingSession = typeof meetingSession.$inferSelect;
 export type MeetingMember = typeof meetingMember.$inferSelect;
 export type MeetingHost = Pick<
   typeof user.$inferSelect,
-  "id" | "name" | "image" | "avatarSeed" | "avatarSource"
+  | "id"
+  | "name"
+  | "email"
+  | "emailVerified"
+  | "image"
+  | "avatarSeed"
+  | "avatarSource"
 >;
 
 /** Unused instant meetings are deleted this long after they were last used. */
@@ -160,6 +166,8 @@ export async function findMeetingByCode(
       host: {
         id: user.id,
         name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
         image: user.image,
         avatarSeed: user.avatarSeed,
         avatarSource: user.avatarSource,
@@ -193,6 +201,33 @@ export async function getMeetingSummary(code: string): Promise<{
     joinable: isJoinable(found.meeting, new Date()),
     allowGuests: found.meeting.settings.allowGuests,
   };
+}
+
+/** Sessions opened in a host's meetings since a moment, for the demo daily cap. */
+export async function countSessionsSince(
+  hostId: string,
+  since: Date,
+): Promise<number> {
+  const [row] = await db()
+    .select({ count: count() })
+    .from(meetingSession)
+    .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
+    .where(
+      and(eq(meeting.hostId, hostId), gte(meetingSession.startedAt, since)),
+    );
+  return row?.count ?? 0;
+}
+
+/** Meetings a host created since a moment, for the daily creation cap. */
+export async function countMeetingsCreatedSince(
+  hostId: string,
+  since: Date,
+): Promise<number> {
+  const [row] = await db()
+    .select({ count: count() })
+    .from(meeting)
+    .where(and(eq(meeting.hostId, hostId), gte(meeting.createdAt, since)));
+  return row?.count ?? 0;
 }
 
 /** Marks a meeting ended, so its link stops working. */
@@ -234,6 +269,8 @@ export async function openSession(input: {
       meetingId: input.meeting.id,
       provider: input.provider,
       limits: input.limits,
+      // This server's clock, the same one that later works out the time left.
+      startedAt: new Date(),
     })
     .onConflictDoNothing()
     .returning();
