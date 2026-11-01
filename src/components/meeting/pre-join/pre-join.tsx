@@ -230,8 +230,10 @@ export function PreJoin({
 
   return (
     <MeetingPageFrame>
-      <div className="flex w-full max-w-[1220px] flex-wrap items-center gap-8 lg:gap-12">
-        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-4">
+      {/* Phones: preview, then name and Join now, then device settings. Wider: the form
+          sits to the right of the preview and settings. */}
+      <div className="grid w-full max-w-[1220px] gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <div className="relative aspect-video w-full overflow-hidden rounded-[20px] bg-[#0e1013] text-[#f2f4f7]">
             {video.track ? (
               <PreviewVideo track={video.track} />
@@ -289,7 +291,9 @@ export function PreJoin({
               onRetry={audio.retry}
             />
           ) : null}
+        </div>
 
+        <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-2">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-3">
             <DeviceSelect
               label={tm("microphone")}
@@ -330,7 +334,7 @@ export function PreJoin({
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex w-full min-w-0 flex-[1_1_340px] flex-col gap-5 lg:max-w-[440px]"
+          className="flex min-w-0 flex-col gap-5 max-lg:row-start-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
         >
           <div className="flex flex-col gap-1.5">
             <p className="text-muted-foreground text-[13px] font-bold tracking-[0.06em] uppercase">

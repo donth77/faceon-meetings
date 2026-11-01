@@ -152,10 +152,10 @@ export default function MeetingEntry({
   }, [waiting, join]);
 
   const handleLeft = useCallback((reason: LeaveReason) => {
+    // Once this host has asked to end the meeting, however the room closes, they ended it.
     setStep({
       name: "left",
-      reason:
-        reason === "ended" && endingForAll.current ? "endedByYou" : reason,
+      reason: endingForAll.current ? "endedByYou" : reason,
     });
   }, []);
 

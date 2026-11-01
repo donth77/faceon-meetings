@@ -14,7 +14,7 @@ import { CALL_TYPE } from "@/lib/stream/constants";
 import type { RoomAdapterProps } from "../../media";
 import { StreamMedia } from "./stream-media";
 
-type Room = { client: StreamVideoClient; call: Call };
+type Room = { client: StreamVideoClient; call: Call; joinedAt: number };
 
 /** Remembered devices first (a missing one falls back to the default), then on or off. */
 async function applyDevices(call: Call, devices: DevicePreferences) {
@@ -55,7 +55,7 @@ export default function StreamRoom(props: RoomAdapterProps) {
     (async () => {
       await applyDevices(call, setup.devices);
       await call.join();
-      if (!cancelled) setRoom({ client, call });
+      if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
     })().catch(() => {
       if (!cancelled) leftUnexpectedly();
     });
@@ -76,7 +76,11 @@ export default function StreamRoom(props: RoomAdapterProps) {
   return (
     <StreamVideo client={room.client}>
       <StreamCall call={room.call}>
-        <StreamMedia call={room.call} onLeft={props.onLeft}>
+        <StreamMedia
+          call={room.call}
+          joinedAt={room.joinedAt}
+          onLeft={props.onLeft}
+        >
           {props.children}
         </StreamMedia>
       </StreamCall>

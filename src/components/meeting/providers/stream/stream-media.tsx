@@ -44,7 +44,15 @@ function connectionOf(p: StreamVideoParticipant): ConnectionQuality {
   }
 }
 
-function toRoomParticipant(p: StreamVideoParticipant): RoomParticipant {
+/** Stream's join time for a participant, in ms on Stream's clock. */
+const joinTimeOf = (p: StreamVideoParticipant) =>
+  p.joinedAt ? Number(p.joinedAt.seconds) * 1000 : 0;
+
+function toRoomParticipant(
+  p: StreamVideoParticipant,
+  clockSkew: number,
+): RoomParticipant {
+  const joinedAt = joinTimeOf(p);
   return {
     key: p.sessionId,
     userId: p.userId,
@@ -52,7 +60,7 @@ function toRoomParticipant(p: StreamVideoParticipant): RoomParticipant {
     image: p.image || undefined,
     isLocal: p.isLocalParticipant === true,
     isHost: p.roles.some((role) => HOST_ROLES.has(role)),
-    joinedAt: p.joinedAt ? Number(p.joinedAt.seconds) * 1000 : 0,
+    joinedAt: joinedAt > 0 ? joinedAt - clockSkew : 0,
     audio: hasAudio(p),
     video: hasVideo(p),
     screen: hasScreenShare(p),
@@ -76,10 +84,13 @@ const supportsSpeakerSelection = () =>
 /** Maps Stream's call state onto room media for the UI, and plays everyone else's audio. */
 export function StreamMedia({
   call,
+  joinedAt,
   onLeft,
   children,
 }: {
   call: Call;
+  /** When this browser finished joining, on its own clock. */
+  joinedAt: number;
   onLeft: (reason: LeaveReason) => void;
   children: ReactNode;
 }) {
@@ -105,10 +116,17 @@ export function StreamMedia({
   const reportLeft = useEffectEvent((reason: LeaveReason) => onLeft(reason));
 
   useEffect(() => {
+    // The media server's notice often comes first, and the SDK leaves on it.
+    const offServerEnded = call.on("callEnded", (event) => {
+      leaveReason.current ??=
+        event.reason === SfuModels.CallEndedReason.KICKED ? "removed" : "ended";
+    });
     const offEnded = call.on("call.ended", (event) => {
-      leaveReason.current ??= /duration/i.test(event.reason ?? "")
-        ? "timeLimit"
-        : "ended";
+      if (/duration/i.test(event.reason ?? "")) {
+        leaveReason.current = "timeLimit";
+      } else {
+        leaveReason.current ??= "ended";
+      }
     });
     const offKicked = call.on("call.kicked_user", (event) => {
       if (event.user.id === call.currentUserId) {
@@ -116,6 +134,7 @@ export function StreamMedia({
       }
     });
     return () => {
+      offServerEnded();
       offEnded();
       offKicked();
     };
@@ -123,16 +142,23 @@ export function StreamMedia({
 
   useEffect(() => {
     if (callingState === CallingState.LEFT) {
-      reportLeft(leaveReason.current ?? "left");
+      const ended = call.state.endedAt !== undefined;
+      reportLeft(leaveReason.current ?? (ended ? "ended" : "left"));
     } else if (callingState === CallingState.RECONNECTING_FAILED) {
       reportLeft("connectionLost");
     }
-  }, [callingState]);
+  }, [call, callingState]);
+
+  // Stream's clock and this device's can differ by seconds. Shift join times onto ours,
+  // using our own join as the reference, so the meeting timer is right.
+  const local = participants.find((p) => p.isLocalParticipant);
+  const clockSkew =
+    local && joinTimeOf(local) > 0 ? joinTimeOf(local) - joinedAt : 0;
 
   const media = useMemo<RoomMedia>(
     () => ({
       status: statusOf(callingState),
-      participants: participants.map(toRoomParticipant),
+      participants: participants.map((p) => toRoomParticipant(p, clockSkew)),
       dominantSpeakerKey: dominantSpeaker?.sessionId,
       mic: {
         enabled: !mic.optionsAwareIsMute,
@@ -170,6 +196,7 @@ export function StreamMedia({
     [
       call,
       callingState,
+      clockSkew,
       participants,
       dominantSpeaker,
       mic,

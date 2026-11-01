@@ -1,9 +1,12 @@
 "use client";
 
+import { MonitorUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
+import { Button } from "react-aria-components";
 
 import { useElementSize } from "@/hooks/use-element-size";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useRoomMedia, type RoomParticipant } from "../media";
 import { fitGrid } from "./grid";
@@ -102,7 +105,7 @@ function Gallery({ tiles }: { tiles: StageTile[] }) {
           key={tileKey(tile)}
           style={{ width: fit.tileWidth, height: fit.tileHeight }}
         >
-          <Tile participant={tile.participant} kind={tile.kind} />
+          <MainTile tile={tile} />
         </li>
       ))}
     </ul>
@@ -122,6 +125,7 @@ function Fitted({ children }: { children: ReactNode }) {
   );
 }
 
+/** The other person large (filling a phone screen, as in Meet), you in the corner. */
 function OneOnOne({
   other,
   self,
@@ -129,11 +133,16 @@ function OneOnOne({
   other: RoomParticipant;
   self: RoomParticipant | undefined;
 }) {
+  const fill = useIsMobile();
   return (
     <div className="relative size-full">
-      <Fitted>
+      {fill ? (
         <Tile participant={other} />
-      </Fitted>
+      ) : (
+        <Fitted>
+          <Tile participant={other} />
+        </Fitted>
+      )}
       {self ? (
         <div className="absolute right-3 bottom-3 aspect-video w-32 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 sm:w-56">
           <Tile participant={self} />
@@ -141,6 +150,34 @@ function OneOnOne({
       ) : null}
     </div>
   );
+}
+
+/**
+ * In place of your own shared screen: showing it back to you would make a hall of
+ * mirrors. Everyone else sees the screen itself.
+ */
+function SharingNotice() {
+  const t = useTranslations("Meeting");
+  const { screenShare } = useRoomMedia();
+  return (
+    <div className="bg-card flex size-full flex-col items-center justify-center gap-4 rounded-xl p-6 text-center">
+      <MonitorUp className="text-primary size-10" aria-hidden="true" />
+      <p className="text-lg font-semibold">{t("youAreSharing")}</p>
+      <Button
+        onPress={() => void screenShare.toggle()}
+        className="bg-destructive hover:bg-destructive/90 focus-visible:ring-ring h-10 rounded-full px-5 text-sm font-semibold text-white outline-none focus-visible:ring-2"
+      >
+        {t("stopSharing")}
+      </Button>
+    </div>
+  );
+}
+
+function MainTile({ tile }: { tile: StageTile }) {
+  if (tile.kind === "screen" && tile.participant.isLocal) {
+    return <SharingNotice />;
+  }
+  return <Tile participant={tile.participant} kind={tile.kind} />;
 }
 
 /** One tile large (a shared screen or the speaker), everyone else in a strip beside it. */
@@ -156,7 +193,7 @@ function FocusLayout({
     <div className="flex size-full flex-col gap-2.5 lg:flex-row">
       <div className="min-h-0 min-w-0 flex-1">
         <Fitted>
-          <Tile participant={main.participant} kind={main.kind} />
+          <MainTile tile={main} />
         </Fitted>
       </div>
       {strip.length > 0 ? (
