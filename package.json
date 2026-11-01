@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "engines": {
     "node": "24.x"
   },
@@ -10,13 +11,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src *.ts *.mjs",
+    "lint": "eslint src scripts *.ts *.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "format": "prettier --write src *.ts *.mjs *.json *.md",
-    "format:check": "prettier --check src *.ts *.mjs *.json *.md"
+    "format": "prettier --write src scripts *.ts *.mjs *.json *.md",
+    "format:check": "prettier --check src scripts *.ts *.mjs *.json *.md",
+    "stream:setup": "node --env-file=.env.local scripts/setup-stream.ts",
+    "stream:check": "node --env-file=.env.local scripts/setup-stream.ts --check",
+    "stream:lockdown-test": "node --env-file=.env.local scripts/stream-lockdown-test.ts"
   },
   "dependencies": {
+    "@stream-io/node-sdk": "^0.8.15",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",

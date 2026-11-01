@@ -14,12 +14,13 @@ FaceOn is a free, open-source (MIT), browser-based video meeting app that should
 
 ## Commands
 
-| Command                                      | Use                                                        |
-| -------------------------------------------- | ---------------------------------------------------------- |
-| `pnpm dev`                                   | Dev server on http://localhost:3000                        |
-| `pnpm build`                                 | Production build (also what Vercel runs)                   |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` | ESLint / route types + `tsc` / Vitest; all three run in CI |
-| `pnpm format`                                | Prettier (with the Tailwind class-sorting plugin)          |
+| Command                                                       | Use                                                                                                                   |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                    | Dev server on http://localhost:3000                                                                                   |
+| `pnpm build`                                                  | Production build (also what Vercel runs)                                                                              |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test`                  | ESLint / route types + `tsc` / Vitest; all three run in CI                                                            |
+| `pnpm format`                                                 | Prettier (with the Tailwind class-sorting plugin)                                                                     |
+| `pnpm stream:setup` / `stream:check` / `stream:lockdown-test` | Configure Stream (call type, grants, system user), report drift, prove the permission boundary. They use `.env.local` |
 
 Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integration), never with `vercel deploy`.
 
