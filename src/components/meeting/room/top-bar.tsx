@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   Clock3,
+  Copy,
   LayoutGrid,
   Link2,
   ShieldCheck,
@@ -10,7 +11,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button, Dialog, type Selection } from "react-aria-components";
-import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ import { useNow } from "@/hooks/use-now";
 import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 
+import { useInvitation } from "../invitation";
 import { useRoomMedia } from "../media";
 import type { LayoutChoice } from "./stage";
 
@@ -31,24 +32,9 @@ const LAYOUTS: LayoutChoice[] = ["auto", "gallery", "speaker"];
 const iconButton =
   "flex size-9 items-center justify-center rounded-[10px] outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-ring";
 
-/** The invite link, with the passcode in the fragment so it never reaches a server. */
-export function inviteLink(meeting: { code: string; passcode: string | null }) {
-  const fragment = meeting.passcode ? `#pwd=${meeting.passcode}` : "";
-  return `${window.location.origin}/j/${meeting.code}${fragment}`;
-}
-
 function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
   const t = useTranslations("Meeting");
-  const link = inviteLink(meeting);
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(link);
-      toast.success(t("linkCopied"));
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
+  const { link, copyLink, copyInvitation } = useInvitation(meeting);
 
   return (
     <PopoverTrigger>
@@ -82,6 +68,13 @@ function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
           >
             <Link2 className="size-4" aria-hidden="true" />
             {t("copyLink")}
+          </Button>
+          <Button
+            onPress={() => void copyInvitation()}
+            className="focus-visible:ring-ring mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+          >
+            <Copy className="size-4" aria-hidden="true" />
+            {t("copyInvitation")}
           </Button>
         </Dialog>
       </Popover>

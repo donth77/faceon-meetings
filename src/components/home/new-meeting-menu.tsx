@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type Key } from "react";
 import { toast } from "sonner";
 
+import { inviteLink } from "@/components/meeting/invitation";
 import { Button, LinkButton } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,12 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useOrigin } from "@/hooks/use-origin";
 import { createInstantMeeting } from "@/lib/meetings/actions";
 
 type Created = { code: string; passcode: string | null };
-
-const linkFor = ({ code, passcode }: Created) =>
-  `${window.location.origin}/j/${code}${passcode ? `#pwd=${passcode}` : ""}`;
 
 /** "Here's the link to your meeting", with Copy link and Start now, as in Meet. */
 function MeetingLinkDialog({
@@ -36,7 +35,7 @@ function MeetingLinkDialog({
   onClose: () => void;
 }) {
   const t = useTranslations("Home");
-  const link = linkFor(meeting);
+  const link = inviteLink(useOrigin(), meeting);
 
   async function copy() {
     try {

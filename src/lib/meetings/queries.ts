@@ -61,6 +61,95 @@ export async function insertInstantMeeting(hostId: string): Promise<Meeting> {
   throw new Error("Could not find a free meeting ID.");
 }
 
+/** The user's personal room (Personal Meeting ID), if they have opened it before. */
+export async function findPersonalRoom(
+  hostId: string,
+): Promise<Meeting | null> {
+  const [row] = await db()
+    .select()
+    .from(meeting)
+    .where(and(eq(meeting.hostId, hostId), eq(meeting.type, "personal")))
+    .limit(1);
+  return row ? readMeeting(row) : null;
+}
+
+/**
+ * The user's personal room, created on first use. It never expires. A unique index
+ * allows one per user, so a concurrent first visit gets the same room.
+ */
+export async function getOrCreatePersonalRoom(
+  hostId: string,
+): Promise<Meeting> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const existing = await findPersonalRoom(hostId);
+    if (existing) return existing;
+    const [row] = await db()
+      .insert(meeting)
+      .values({
+        code: generateMeetingCode(),
+        hostId,
+        type: "personal",
+        passcode: generatePasscode(),
+        settings: DEFAULT_SETTINGS.personal,
+      })
+      .onConflictDoNothing()
+      .returning();
+    if (row) return readMeeting(row);
+  }
+  throw new Error("Could not create a personal room.");
+}
+
+/** A new Personal Meeting ID and passcode: the old link stops working at once. */
+export async function rotatePersonalRoomCode(hostId: string): Promise<Meeting> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const [row] = await db()
+        .update(meeting)
+        .set({ code: generateMeetingCode(), passcode: generatePasscode() })
+        .where(and(eq(meeting.hostId, hostId), eq(meeting.type, "personal")))
+        .returning();
+      if (!row) throw new Error("This account has no personal room.");
+      return readMeeting(row);
+    } catch (error) {
+      // Another meeting already has that ID (rare): try another.
+      if (!isUniqueViolation(error)) throw error;
+    }
+  }
+  throw new Error("Could not find a free meeting ID.");
+}
+
+/** Changes some of a meeting's settings, checked against the full schema. */
+export async function updateMeetingSettings(
+  meetingId: string,
+  hostId: string,
+  changes: Partial<MeetingSettings>,
+): Promise<void> {
+  const [row] = await db()
+    .select()
+    .from(meeting)
+    .where(and(eq(meeting.id, meetingId), eq(meeting.hostId, hostId)))
+    .limit(1);
+  if (!row) throw new Error("Meeting not found.");
+  const settings = MeetingSettings.parse({
+    ...readMeeting(row).settings,
+    ...changes,
+  });
+  await db().update(meeting).set({ settings }).where(eq(meeting.id, meetingId));
+}
+
+/** Postgres's unique_violation, possibly wrapped by Drizzle. */
+function isUniqueViolation(error: unknown): boolean {
+  const code = (value: unknown) =>
+    typeof value === "object" && value !== null && "code" in value
+      ? value.code
+      : undefined;
+  const cause =
+    typeof error === "object" && error !== null && "cause" in error
+      ? error.cause
+      : undefined;
+  return code(error) === "23505" || code(cause) === "23505";
+}
+
 /** A meeting and its host, by meeting ID. */
 export async function findMeetingByCode(
   code: string,

@@ -187,6 +187,8 @@ export async function joinMeeting(input: {
       title: meeting.title,
       passcode: meeting.passcode,
       hostName: host.name,
+      muteOnEntry: meeting.settings.muteOnEntry,
+      videoOffOnEntry: meeting.settings.videoOffOnEntry,
     },
   };
 }

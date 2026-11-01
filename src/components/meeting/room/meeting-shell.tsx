@@ -10,6 +10,7 @@ import type { AdmittedMeetingInfo, SelfInfo } from "@/lib/meetings/api";
 
 import { useRoomMedia, type RoomStatus } from "../media";
 import { useMeetingTitle } from "../meeting-title";
+import { AloneCard } from "./alone-card";
 import { ControlBar } from "./control-bar";
 import { Stage, type LayoutChoice } from "./stage";
 import { TopBar } from "./top-bar";
@@ -82,8 +83,11 @@ export function MeetingShell({
         onLayoutChange={setLayout}
       />
       <ConnectionBanner status={media.status} />
-      <main className="min-h-0 flex-1 px-3">
+      <main className="relative min-h-0 flex-1 px-3">
         <Stage layout={layout} />
+        {media.participants.length === 1 ? (
+          <AloneCard meeting={meeting} />
+        ) : null}
       </main>
       <ControlBar
         title={title}

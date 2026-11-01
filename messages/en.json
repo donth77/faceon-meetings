@@ -222,6 +222,19 @@
     "copyLink": "Copy link",
     "linkCopied": "Invite link copied",
     "copyFailed": "Couldn’t copy the link. Select it and copy it yourself.",
+    "copyInvitation": "Copy invitation",
+    "invitationCopied": "Invitation copied",
+    "invitation": {
+      "intro": "{host} is inviting you to a {appName} meeting.",
+      "join": "Join: {link}",
+      "meetingId": "Meeting ID: {code}",
+      "passcode": "Passcode: {passcode}"
+    },
+    "alone": {
+      "title": "You’re the only one here",
+      "body": "Share this link with people you want in the meeting.",
+      "dismiss": "Close"
+    },
     "elapsed": "Meeting time {time}",
     "layout": "Layout",
     "layoutLabel": "Layout: {layout}",
@@ -422,5 +435,35 @@
       "sidebar": "Show or hide the sidebar",
       "shortcuts": "Show keyboard shortcuts"
     }
+  },
+  "PersonalRoom": {
+    "title": "Personal room",
+    "subtitle": "Your always-available meeting. Share it once and use it whenever you want to meet.",
+    "start": "Start",
+    "copyInvitation": "Copy invitation",
+    "joinDetails": "Join details",
+    "meetingId": "Personal Meeting ID",
+    "passcode": "Passcode",
+    "inviteLink": "Invite link",
+    "copy": "Copy",
+    "copyMeetingId": "Copy Personal Meeting ID",
+    "copyPasscode": "Copy passcode",
+    "copyLink": "Copy invite link",
+    "showPasscode": "Show passcode",
+    "copied": "Copied",
+    "copyFailed": "Couldn’t copy. Select the text and copy it yourself.",
+    "regenerateNote": "Shared it too widely? A new ID and passcode stop the old link from working.",
+    "regenerate": "Regenerate ID",
+    "regenerateTitle": "Get a new Personal Meeting ID?",
+    "regenerateBody": "The old link and passcode stop working right away. Send people the new invitation.",
+    "regenerateConfirm": "Regenerate",
+    "cancel": "Cancel",
+    "regenerated": "Your personal room has a new ID and passcode.",
+    "settings": "Room settings",
+    "allowGuests": "Let guests join without an account",
+    "allowGuestsHint": "They only need the link and a name",
+    "muteOnEntry": "Mute people when they join",
+    "muteOnEntryHint": "They can unmute themselves",
+    "saveFailed": "Couldn’t save that change. Try again."
   }
 }

@@ -41,6 +41,7 @@ export const NOINDEX_ROUTES = [
 ] as const;
 
 export const HOME_ROUTE = "/home";
+export const PERSONAL_ROOM_ROUTE = "/personal-room";
 export const SIGN_IN_ROUTE = "/sign-in";
 
 /** True when `pathname` is one of `routes` or below one ("/settings" matches "/settings/audio"). */

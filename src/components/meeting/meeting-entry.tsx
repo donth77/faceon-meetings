@@ -65,6 +65,19 @@ const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
 const toJoinError = (code: MeetingErrorCode | "NETWORK"): JoinErrorKind =>
   RETRYABLE.has(code) ? (code as JoinErrorKind) : "UNAVAILABLE";
 
+/** The host's "mute people when they join" settings apply to everyone but hosts. */
+function entryDevices(
+  devices: DevicePreferences,
+  { meeting, self }: Admission,
+): DevicePreferences {
+  if (self.role === "host" || self.role === "cohost") return devices;
+  return {
+    ...devices,
+    micOn: devices.micOn && !meeting.muteOnEntry,
+    cameraOn: devices.cameraOn && !meeting.videoOffOnEntry,
+  };
+}
+
 /** While waiting for the host, ask again this often. */
 const WAITING_RETRY_MS = 5000;
 
@@ -125,7 +138,11 @@ export default function MeetingEntry({
         }
         if (input.passcode) rememberPasscode(code, input.passcode);
         endingForAll.current = false;
-        setStep({ name: "room", admission: result, devices: input.devices });
+        setStep({
+          name: "room",
+          admission: result,
+          devices: entryDevices(input.devices, result),
+        });
       } catch (error) {
         const errorCode =
           error instanceof MeetingRequestError ? error.code : "UNAVAILABLE";

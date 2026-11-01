@@ -52,6 +52,9 @@ export type AdmittedMeetingInfo = {
   title: string | null;
   passcode: string | null;
   hostName: string;
+  /** Join with the mic (or camera) off; hosts and co-hosts aren't affected. */
+  muteOnEntry: boolean;
+  videoOffOnEntry: boolean;
 };
 
 export type JoinResponse =
