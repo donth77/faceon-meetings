@@ -18,20 +18,30 @@
     "format:check": "prettier --check src scripts *.ts *.mjs *.json *.md",
     "stream:setup": "node --env-file=.env.local scripts/setup-stream.ts",
     "stream:check": "node --env-file=.env.local scripts/setup-stream.ts --check",
-    "stream:lockdown-test": "node --env-file=.env.local scripts/stream-lockdown-test.ts"
+    "stream:lockdown-test": "node --env-file=.env.local scripts/stream-lockdown-test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "node --env-file=.env.local scripts/db-check.ts"
   },
   "dependencies": {
     "@stream-io/node-sdk": "^0.8.15",
+    "@vercel/functions": "^3.10.5",
+    "drizzle-orm": "^0.45.4",
     "next": "16.4.3",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "prettier": "^3.9.10",
