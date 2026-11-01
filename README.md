@@ -1,0 +1,45 @@
+# FaceOn
+
+Free, open-source video meetings that run in your browser. If you've used Zoom or Google Meet, you already know how to use it.
+
+> **Status:** early development. FaceOn is a working name.
+
+## What it does (planned)
+
+- Instant and scheduled meetings (including recurring ones), a personal room, and joining by link or meeting ID
+- Guests join with just a name; passcodes, a waiting room and host controls keep meetings safe
+- Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
+- Works on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app
+- Six languages: English, Spanish, Portuguese (Brazil), French, German and Japanese
+
+## Tech stack
+
+- [Next.js](https://nextjs.org) 16 (App Router, TypeScript) on [Vercel](https://vercel.com)
+- [Tailwind CSS](https://tailwindcss.com) 4 and [shadcn/ui](https://ui.shadcn.com), with [Lucide](https://lucide.dev) icons
+- [Stream Video](https://getstream.io/video/) for media, with self-hosted [LiveKit](https://livekit.io) as an open-source alternative
+- [Better Auth](https://www.better-auth.com) for accounts, [Neon](https://neon.com) Postgres and [Drizzle ORM](https://orm.drizzle.team)
+
+## Run it locally
+
+Requirements: Node.js 24 and pnpm 10.
+
+```bash
+pnpm install
+cp .env.example .env.local   # then fill in the values you need
+pnpm dev                     # http://localhost:3000
+```
+
+Useful scripts:
+
+| Command          | What it does                                           |
+| ---------------- | ------------------------------------------------------ |
+| `pnpm dev`       | Start the dev server                                   |
+| `pnpm build`     | Production build                                       |
+| `pnpm lint`      | ESLint                                                 |
+| `pnpm typecheck` | Generate route types, then run the TypeScript compiler |
+| `pnpm test`      | Unit tests (Vitest)                                    |
+| `pnpm format`    | Format with Prettier                                   |
+
+## Deploy your own
+
+FaceOn is designed to run on free tiers. A step-by-step guide to deploying your own copy (Vercel, Stream and Neon accounts, plus every environment variable) will be added here as the features land. `.env.example` lists every variable.
