@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 
 import { publicEnv } from "@/lib/env";
+import { siteUrl } from "@/lib/site";
 
 const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
 
@@ -10,6 +11,22 @@ const LOCKUP = { width: 979, height: 224 };
 
 export default async function Home() {
   const t = await getTranslations("Landing");
+  const meta = await getTranslations("Metadata");
+
+  // Structured data for search engines. It's built from our own static values and escaped.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: appName,
+    url: siteUrl(),
+    description: meta("description"),
+    applicationCategory: "CommunicationApplication",
+    operatingSystem: "Any (web browser)",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    license: "https://opensource.org/license/mit",
+  };
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16 text-center">
       <h1>
@@ -34,6 +51,12 @@ export default async function Home() {
         {t("tagline")}
       </p>
       <p className="text-muted-foreground max-w-md text-base">{t("subline")}</p>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
     </main>
   );
 }
