@@ -4,3 +4,4 @@
  * that need them.
  */
 export * from "./auth-schema";
+export * from "./meetings-schema";

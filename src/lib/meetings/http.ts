@@ -1,0 +1,56 @@
+import "server-only";
+
+import type { z } from "zod";
+
+import {
+  MEETING_ERRORS,
+  type MeetingErrorBody,
+  type MeetingErrorCode,
+} from "./api";
+import { MeetingError } from "./errors";
+
+export function errorResponse(code: MeetingErrorCode): Response {
+  const body: MeetingErrorBody = { error: { code } };
+  return Response.json(body, { status: MEETING_ERRORS[code] });
+}
+
+/**
+ * Browsers always send Origin on cross-site POSTs, so a mismatch means another site is
+ * trying to act with the visitor's cookies. Non-browser clients send no Origin.
+ */
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  if (origin === null) return true;
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  return URL.canParse(origin) && new URL(origin).host === host;
+}
+
+/** The request's JSON body, validated; a malformed body is a BAD_REQUEST. */
+export async function readJson<T extends z.ZodType>(
+  request: Request,
+  schema: T,
+): Promise<z.output<T>> {
+  const parsed = schema.safeParse(await request.json().catch(() => undefined));
+  if (!parsed.success) throw new MeetingError("BAD_REQUEST");
+  return parsed.data;
+}
+
+/**
+ * Runs a state-changing meeting API handler: rejects cross-site requests and turns a
+ * MeetingError into its JSON error. Anything unexpected is logged and reported as
+ * UNAVAILABLE, without details.
+ */
+export async function handleMeetingRequest(
+  request: Request,
+  handler: () => Promise<Response>,
+): Promise<Response> {
+  if (!isSameOrigin(request)) return errorResponse("NOT_ALLOWED");
+  try {
+    return await handler();
+  } catch (error) {
+    if (error instanceof MeetingError) return errorResponse(error.code);
+    console.error("Meeting API request failed", error);
+    return errorResponse("UNAVAILABLE");
+  }
+}

@@ -44,23 +44,15 @@ export type ServerEvent =
   | { type: "lobby.updated"; count: number }
   | { type: "host.request_unmute"; target: string };
 
-export type NormalizedWebhookEvent =
-  | { type: "session.started"; room: string; at: string }
-  | { type: "session.ended"; room: string; at: string }
-  | {
-      type: "participant.joined";
-      room: string;
-      userId: string;
-      connectionId: string;
-      at: string;
-    }
-  | {
-      type: "participant.left";
-      room: string;
-      userId: string;
-      connectionId: string;
-      at: string;
-    };
+/** What a provider knows about a session's call right now. */
+export type SessionSnapshot = {
+  /** The call has ended for everyone: a host ended it, or it reached its time limit. */
+  ended: boolean;
+  /** Media user IDs of everyone connected now. */
+  connectedUserIds: string[];
+  /** While nobody is connected: since when. Null while someone is connected. */
+  emptySince: Date | null;
+};
 
 /** Optional features; the UI hides whatever the active provider lacks. */
 export type ProviderCapabilities = {
@@ -79,11 +71,10 @@ export interface MediaProvider {
     host: MediaUser;
     limits: SessionLimits;
   }): Promise<void>;
+  /** Ends the call for everyone. Safe to call again on an ended or unknown session. */
   endSession(sessionId: string): Promise<void>;
-  isHostPresent(sessionId: string, hostUserId: string): Promise<boolean>;
-  listParticipants(
-    sessionId: string,
-  ): Promise<Array<{ userId: string; connectionId: string }>>;
+  /** Null when the provider has no such session. */
+  inspectSession(sessionId: string): Promise<SessionSnapshot | null>;
 
   admit(input: {
     sessionId: string;
@@ -112,8 +103,4 @@ export interface MediaProvider {
 
   setSessionState(sessionId: string, state: SessionState): Promise<void>;
   sendServerEvent(sessionId: string, event: ServerEvent): Promise<void>;
-  parseWebhook(
-    rawBody: string,
-    headers: Headers,
-  ): Promise<NormalizedWebhookEvent[]>;
 }
