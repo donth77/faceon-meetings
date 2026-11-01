@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 
+import { AriaRouterProvider } from "@/components/providers/aria-router-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 import { publicEnv } from "@/lib/env";
@@ -71,7 +72,9 @@ export default async function LocaleLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            <AriaRouterProvider>{children}</AriaRouterProvider>
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

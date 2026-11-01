@@ -2,15 +2,19 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { SIGN_IN_ROUTE } from "@/lib/routes";
 
 import { auth } from "./server";
 
-/** The signed-in session, or null. Reads request headers, so the caller is dynamic. */
-export async function getSession() {
-  return auth.api.getSession({ headers: await headers() });
-}
+/**
+ * The signed-in session, or null. Deduplicated per request, so layouts and pages can
+ * both ask. Reads request headers, so the caller is dynamic.
+ */
+export const getSession = cache(async () =>
+  auth.api.getSession({ headers: await headers() }),
+);
 
 /**
  * The signed-in session, or a redirect to sign-in that comes back to `returnTo`.

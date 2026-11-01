@@ -19,13 +19,54 @@
     "signUpLink": "Sign up",
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
-    "guestNote": "Joining a meeting? You don't need an account. Just open the meeting link.",
+    "guestNote": "Joining a meeting? You don't need an account. Just open the meeting link."
+  },
+  "Nav": {
+    "label": "Main",
+    "toggle": "Toggle sidebar",
+    "home": "Home",
+    "upcoming": "Upcoming",
+    "previous": "Previous",
+    "personalRoom": "Personal room",
+    "help": "Help",
+    "settings": "Settings"
+  },
+  "Account": {
+    "menuLabel": "Account menu for {name}",
+    "profile": "Profile",
+    "theme": "Theme",
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "shortcuts": "Keyboard shortcuts",
     "signOut": "Sign out"
   },
   "Home": {
     "title": "Home",
     "welcome": "Welcome, {name}",
-    "placeholder": "Your meetings will appear here."
+    "clockLabel": "Current time and date",
+    "actionsLabel": "Start or join a meeting",
+    "newMeeting": "New meeting",
+    "startInstant": "Start an instant meeting",
+    "createForLater": "Create a meeting for later",
+    "schedule": "Schedule",
+    "joinLabel": "Meeting ID or link",
+    "joinPlaceholder": "Enter a meeting ID or link",
+    "join": "Join",
+    "joinError": "Enter a 10-digit meeting ID or a meeting link.",
+    "upcomingTitle": "Upcoming",
+    "upcomingEmpty": "No upcoming meetings. Scheduled meetings will show up here."
+  },
+  "Pages": {
+    "upcoming": "Upcoming",
+    "previous": "Previous",
+    "personalRoom": "Personal room",
+    "settings": "Settings",
+    "account": "Account",
+    "help": "Help",
+    "comingSoon": "This page is on its way. It arrives with the features it belongs to."
   },
   "NotFound": {
     "title": "Page not found",

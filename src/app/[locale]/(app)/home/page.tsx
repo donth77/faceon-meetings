@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { PageHeader } from "@/components/app-shell/page-header";
+import { Clock } from "@/components/home/clock";
+import { JoinForm } from "@/components/home/join-form";
+import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { requireSession } from "@/lib/auth/session";
 import { HOME_ROUTE } from "@/lib/routes";
 
@@ -11,27 +14,41 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-/** Placeholder home until the dashboard shell lands: proves sign-in end to end. */
-export default function HomePage() {
+export default async function HomePage() {
+  const t = await getTranslations("Home");
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <Suspense fallback={<p className="text-muted-foreground">…</p>}>
-        <Welcome />
+    <main className="flex flex-1 flex-col gap-10 p-6 md:p-10">
+      <Suspense fallback={<PageHeader title={t("title")} />}>
+        <Greeting />
       </Suspense>
+
+      <section
+        aria-label={t("actionsLabel")}
+        className="grid max-w-5xl gap-8 lg:grid-cols-[1fr_minmax(0,26rem)]"
+      >
+        <div className="flex flex-col gap-6">
+          <Clock />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <NewMeetingMenu />
+            <div className="min-w-0 flex-1">
+              <JoinForm />
+            </div>
+          </div>
+        </div>
+
+        <aside className="bg-card flex flex-col gap-2 rounded-2xl border p-6">
+          <h2 className="font-semibold">{t("upcomingTitle")}</h2>
+          <p className="text-muted-foreground text-sm">{t("upcomingEmpty")}</p>
+        </aside>
+      </section>
     </main>
   );
 }
 
-async function Welcome() {
+async function Greeting() {
   const session = await requireSession(HOME_ROUTE);
   const t = await getTranslations("Home");
-  return (
-    <>
-      <h1 className="font-display text-3xl font-bold">
-        {t("welcome", { name: session.user.name })}
-      </h1>
-      <p className="text-muted-foreground">{t("placeholder")}</p>
-      <SignOutButton />
-    </>
-  );
+  const firstName = session.user.name.split(/\s+/)[0] ?? session.user.name;
+  return <PageHeader title={t("welcome", { name: firstName })} />;
 }
