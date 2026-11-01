@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-shell/app-sidebar";
 import { MobileTabBar } from "@/components/app-shell/mobile-tab-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { requireSession } from "@/lib/auth/session";
+import { avatarUrl } from "@/lib/avatars/seed";
 import { HOME_ROUTE } from "@/lib/routes";
 
 /** Signed-in pages: sidebar on desktop and tablets, a bottom tab bar on phones. */
@@ -23,11 +24,11 @@ async function AppShell({ children }: { children: ReactNode }) {
   ]);
   // The sidebar remembers whether it was collapsed (shadcn's sidebar_state cookie).
   const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
-  const { name, email, image } = session.user;
+  const { name, email } = session.user;
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <AppSidebar user={{ name, email, image }} />
+      <AppSidebar user={{ name, email, image: avatarUrl(session.user) }} />
       <SidebarInset className="pb-16 md:pb-0">{children}</SidebarInset>
       <MobileTabBar />
     </SidebarProvider>

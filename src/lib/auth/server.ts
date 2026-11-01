@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { oAuthProxy } from "better-auth/plugins";
 
+import { createAvatarSeed } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { publicEnv } from "@/lib/env";
@@ -39,6 +40,20 @@ export const auth = betterAuth({
       locale: { type: "string", required: false, input: false },
       avatarSeed: { type: "string", required: false, input: false },
       avatarSource: { type: "string", required: false, input: false },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        // Every new account gets a friendly default avatar (DiceBear "Dylan").
+        before: async (user) => ({
+          data: {
+            ...user,
+            avatarSeed: createAvatarSeed(user.name),
+            avatarSource: "dicebear",
+          },
+        }),
+      },
     },
   },
   session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },

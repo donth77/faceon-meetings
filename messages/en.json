@@ -40,7 +40,8 @@
       }
     },
     "footerLabel": "Footer",
-    "viewSource": "View source on GitHub"
+    "viewSource": "View source on GitHub",
+    "avatarCredit": "Avatars: <link>Dylan</link> by Natalia Spivak (CC BY 4.0)"
   },
   "Auth": {
     "signInTitle": "Sign in to {appName}",

@@ -18,6 +18,20 @@ export async function SiteFooter() {
         <Link href="/help" className="hover:text-foreground">
           {t("help")}
         </Link>
+        <span>
+          {t.rich("avatarCredit", {
+            link: (chunks) => (
+              <a
+                href="https://www.dicebear.com/styles/dylan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground underline underline-offset-4"
+              >
+                {chunks}
+              </a>
+            ),
+          })}
+        </span>
         {repo ? (
           <a
             href={repo}
