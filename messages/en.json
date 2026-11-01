@@ -290,8 +290,10 @@
       "FULL": "This meeting is full. Try again when someone leaves.",
       "NETWORK": "Can’t reach FaceOn. Check your connection, then try again.",
       "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
-      "BAD_REQUEST": "Enter your name, then try again."
-    }
+      "BAD_REQUEST": "Enter your name, then try again.",
+      "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again."
+    },
+    "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account."
   },
   "DeviceProblems": {
     "microphone": {

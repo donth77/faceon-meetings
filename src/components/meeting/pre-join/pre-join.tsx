@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 import { Button as AriaButton } from "react-aria-components";
 
@@ -26,6 +27,7 @@ import type { DeviceProblem } from "@/lib/device/problems";
 import { playTestSound } from "@/lib/device/test-sound";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 
+import { loadGuestName, saveGuestName } from "../guest-name";
 import { useMeetingTitle } from "../meeting-title";
 import { MeetingPageFrame } from "../page-frame";
 import { MicMeter } from "./mic-meter";
@@ -37,7 +39,8 @@ export type MeetingSummary = {
   hostName: string;
 };
 
-export type Viewer = { name: string; image: string };
+/** Who is about to join: signed in, or a guest (whose name we remember on this device). */
+export type Viewer = { kind: "user" | "guest"; name: string; image: string };
 
 export type JoinInput = {
   name: string;
@@ -47,7 +50,12 @@ export type JoinInput = {
 
 /** Why the last join attempt failed, in the terms the error messages use. */
 export type JoinErrorKind =
-  "BAD_PASSCODE" | "FULL" | "NETWORK" | "UNAVAILABLE" | "BAD_REQUEST";
+  | "BAD_PASSCODE"
+  | "FULL"
+  | "RATE_LIMITED"
+  | "NETWORK"
+  | "UNAVAILABLE"
+  | "BAD_REQUEST";
 
 const canChooseSpeaker = () =>
   typeof HTMLMediaElement !== "undefined" &&
@@ -197,7 +205,9 @@ export function PreJoin({
   const errorId = useId();
 
   const [devices, setDevices] = useState(loadDevicePreferences);
-  const [name, setName] = useState(viewer.name);
+  const [name, setName] = useState(() =>
+    viewer.kind === "guest" ? loadGuestName() : viewer.name,
+  );
   const [passcode, setPasscode] = useState(initialPasscode ?? "");
   const video = useLocalTrack("video", devices.cameraOn, devices.cameraId);
   const audio = useLocalTrack("audio", devices.micOn, devices.micId);
@@ -208,6 +218,7 @@ export function PreJoin({
     setDevices((current) => ({ ...current, ...patch }));
 
   const busy = status !== "idle";
+  const signInHref = `/sign-in?next=${encodeURIComponent(`/j/${meeting.code}`)}`;
   const needsPasscode = error === "BAD_PASSCODE";
   const errorMessage = error
     ? t(
@@ -216,6 +227,7 @@ export function PreJoin({
     : null;
 
   function join(withDevices: DevicePreferences) {
+    if (viewer.kind === "guest") saveGuestName(name.trim());
     onJoin({
       name,
       passcode: passcode.trim() || undefined,
@@ -229,7 +241,9 @@ export function PreJoin({
   }
 
   return (
-    <MeetingPageFrame>
+    <MeetingPageFrame
+      signInHref={viewer.kind === "guest" ? signInHref : undefined}
+    >
       {/* Phones: preview, then name and Join now, then device settings. Wider: the form
           sits to the right of the preview and settings. */}
       <div className="grid w-full max-w-[1220px] gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
@@ -440,6 +454,20 @@ export function PreJoin({
               >
                 {t("joinWithout")}
               </Button>
+              {viewer.kind === "guest" ? (
+                <p className="text-muted-foreground text-center text-[13px] leading-normal">
+                  {t.rich("guestNote", {
+                    link: (chunks) => (
+                      <Link
+                        href={signInHref}
+                        className="text-primary font-semibold underline-offset-4 hover:underline"
+                      >
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
+                </p>
+              ) : null}
             </>
           )}
         </form>

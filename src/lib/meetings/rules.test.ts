@@ -12,22 +12,34 @@ import { DEFAULT_SETTINGS } from "./settings";
 
 describe("resolveRole", () => {
   it("makes the owner the host", () => {
-    expect(resolveRole({ isOwner: true, memberRole: undefined })).toBe("host");
+    expect(
+      resolveRole({ isOwner: true, isGuest: false, memberRole: undefined }),
+    ).toBe("host");
   });
 
   it("keeps an in-session co-host promotion on rejoin", () => {
-    expect(resolveRole({ isOwner: false, memberRole: "cohost" })).toBe(
-      "cohost",
-    );
+    expect(
+      resolveRole({ isOwner: false, isGuest: true, memberRole: "cohost" }),
+    ).toBe("cohost");
+  });
+
+  it("makes people without an account guests", () => {
+    expect(
+      resolveRole({ isOwner: false, isGuest: true, memberRole: undefined }),
+    ).toBe("guest");
   });
 
   it("makes everyone else a participant", () => {
-    expect(resolveRole({ isOwner: false, memberRole: undefined })).toBe(
-      "participant",
-    );
-    expect(resolveRole({ isOwner: false, memberRole: "participant" })).toBe(
-      "participant",
-    );
+    expect(
+      resolveRole({ isOwner: false, isGuest: false, memberRole: undefined }),
+    ).toBe("participant");
+    expect(
+      resolveRole({
+        isOwner: false,
+        isGuest: false,
+        memberRole: "participant",
+      }),
+    ).toBe("participant");
   });
 });
 

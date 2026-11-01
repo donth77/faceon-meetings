@@ -92,6 +92,7 @@ export async function getMeetingSummary(code: string): Promise<{
   title: string | null;
   hostName: string;
   joinable: boolean;
+  allowGuests: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
@@ -101,6 +102,7 @@ export async function getMeetingSummary(code: string): Promise<{
     title: found.meeting.title,
     hostName: found.host.name,
     joinable: isJoinable(found.meeting, new Date()),
+    allowGuests: found.meeting.settings.allowGuests,
   };
 }
 

@@ -15,14 +15,18 @@ import type { MeetingSettings } from "./settings";
  */
 export const SESSION_GRACE_MS = 2 * 60 * 1000;
 
-/** The owner hosts; an in-session promotion to co-host sticks on rejoin; everyone else participates. */
+/**
+ * The owner hosts; an in-session promotion to co-host sticks on rejoin; everyone else
+ * joins as a participant, or as a guest without an account.
+ */
 export function resolveRole(input: {
   isOwner: boolean;
+  isGuest: boolean;
   memberRole: MeetingRole | undefined;
 }): MeetingRole {
   if (input.isOwner) return "host";
   if (input.memberRole === "cohost") return "cohost";
-  return "participant";
+  return input.isGuest ? "guest" : "participant";
 }
 
 /** Whether a meeting's link still works: not ended, cancelled or expired. */

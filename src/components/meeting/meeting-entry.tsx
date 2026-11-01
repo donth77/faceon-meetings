@@ -57,6 +57,7 @@ const NOTICES: Partial<Record<MeetingErrorCode, NoticeKind>> = {
 const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
   "BAD_PASSCODE",
   "FULL",
+  "RATE_LIMITED",
   "NETWORK",
   "BAD_REQUEST",
 ]);
@@ -70,7 +71,7 @@ const WAITING_RETRY_MS = 5000;
 export type MeetingEntryProps = {
   code: string;
   meeting: MeetingSummary;
-  viewer: Viewer | null;
+  viewer: Viewer;
 };
 
 function JoiningScreen() {
@@ -103,11 +104,7 @@ export default function MeetingEntry({
   const isMobile = useIsMobile();
   const title = useMeetingTitle(meeting);
   const [initialPasscode] = useState(() => readLinkPasscode(code));
-  const [step, setStep] = useState<Step>(
-    viewer
-      ? { name: "prejoin", error: null }
-      : { name: "notice", kind: "signIn" },
-  );
+  const [step, setStep] = useState<Step>({ name: "prejoin", error: null });
   const lastJoin = useRef<JoinInput | null>(null);
   const endingForAll = useRef(false);
 
@@ -211,7 +208,7 @@ export default function MeetingEntry({
       break;
     }
     default:
-      content = viewer ? (
+      content = (
         <PreJoin
           meeting={meeting}
           viewer={viewer}
@@ -221,8 +218,6 @@ export default function MeetingEntry({
           onJoin={(input) => void join(input)}
           onStopWaiting={() => setStep({ name: "prejoin", error: null })}
         />
-      ) : (
-        <MeetingNotice kind="signIn" code={code} />
       );
   }
 

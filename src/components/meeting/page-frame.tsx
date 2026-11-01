@@ -3,18 +3,38 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoLockup } from "@/components/brand/logo-lockup";
+import { LanguageMenu } from "@/components/marketing/language-menu";
 import { PUBLIC_CONTAINER } from "@/components/marketing/layout";
 
-/** Pages around a meeting (pre-join, notices, after leaving): the logo on top, content centered. */
-export function MeetingPageFrame({ children }: { children: ReactNode }) {
+import { SignInLink } from "./sign-in-link";
+
+/**
+ * Pages around a meeting (pre-join, notices, after leaving): the public header's logo
+ * and language menu (plus Sign in for guests), content centered.
+ */
+export function MeetingPageFrame({
+  signInHref,
+  children,
+}: {
+  /** Shown to guests, returning them here after signing in. */
+  signInHref?: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header
-        className={cn(PUBLIC_CONTAINER, "flex min-h-18 items-center py-4")}
+        className={cn(
+          PUBLIC_CONTAINER,
+          "flex min-h-18 items-center justify-between gap-3 py-4",
+        )}
       >
         <Link href="/" className="inline-flex shrink-0 rounded-md">
           <LogoLockup className="h-7 sm:h-[30px]" />
         </Link>
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <LanguageMenu />
+          {signInHref ? <SignInLink href={signInHref} /> : null}
+        </div>
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-14 sm:px-10">
         {children}

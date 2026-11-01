@@ -15,6 +15,13 @@
       "when": 1793571595581,
       "tag": "0001_meetings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793575963756,
+      "tag": "0002_attempt_counter",
+      "breakpoints": true
     }
   ]
 }

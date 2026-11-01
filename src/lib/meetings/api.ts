@@ -17,6 +17,7 @@ export const MEETING_ERRORS = {
   FULL: 409,
   ENDED: 410,
   SESSION_ENDED: 410,
+  RATE_LIMITED: 429,
   UNAVAILABLE: 503,
 } as const;
 

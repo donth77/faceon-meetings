@@ -7,6 +7,12 @@ import { EntryLoading } from "@/components/meeting/entry-loading";
 import { MeetingNotice } from "@/components/meeting/meeting-notice";
 import { getSession } from "@/lib/auth/session";
 import { avatarUrl } from "@/lib/avatars/seed";
+import {
+  currentGuest,
+  guestAvatarUrl,
+  guestsEnabled,
+  NEW_GUEST_AVATAR,
+} from "@/lib/guest-session";
 import { getMeetingSummary } from "@/lib/meetings/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,12 +35,16 @@ async function MeetingGate({
   params,
 }: Pick<PageProps<"/[locale]/j/[code]">, "params">) {
   const { code } = await params;
-  const [summary, session] = await Promise.all([
+  const [summary, session, guest] = await Promise.all([
     getMeetingSummary(code),
     getSession(),
+    currentGuest(),
   ]);
   if (!summary) return <MeetingNotice kind="notFound" code={code} />;
   if (!summary.joinable) return <MeetingNotice kind="ended" code={code} />;
+  if (!session && !(guestsEnabled() && summary.allowGuests)) {
+    return <MeetingNotice kind="signIn" code={code} />;
+  }
 
   return (
     <MeetingEntryLoader
@@ -46,8 +56,16 @@ async function MeetingGate({
       }}
       viewer={
         session
-          ? { name: session.user.name, image: avatarUrl(session.user) }
-          : null
+          ? {
+              kind: "user",
+              name: session.user.name,
+              image: avatarUrl(session.user),
+            }
+          : {
+              kind: "guest",
+              name: "",
+              image: guest ? guestAvatarUrl(guest) : NEW_GUEST_AVATAR,
+            }
       }
     />
   );

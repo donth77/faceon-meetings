@@ -1,6 +1,7 @@
 import "server-only";
 
 import { avatarUrl } from "@/lib/avatars/seed";
+import { guestsEnabled } from "@/lib/guest-session";
 import { mediaProvider, pickProvider } from "@/lib/media";
 import type { SessionLimits, SessionSnapshot } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
@@ -100,6 +101,14 @@ export async function joinMeeting(input: {
   const { meeting, host } = await requireMeeting(input.code);
   if (!isJoinable(meeting, now)) throw new MeetingError("ENDED");
   const principal = requirePrincipal(input.principal);
+  const isOwner =
+    principal.kind === "user" && principal.userId === meeting.hostId;
+  if (
+    principal.kind === "guest" &&
+    !(guestsEnabled() && meeting.settings.allowGuests)
+  ) {
+    throw new MeetingError("SIGN_IN_REQUIRED");
+  }
 
   const live = await currentSession(meeting, now);
   if (live === "meeting-ended") throw new MeetingError("ENDED");
@@ -111,7 +120,8 @@ export async function joinMeeting(input: {
       ])
     : [null, []];
   const role = resolveRole({
-    isOwner: principal.userId === meeting.hostId,
+    isOwner,
+    isGuest: principal.kind === "guest",
     memberRole: member?.role,
   });
   const connected = live?.snapshot?.connectedUserIds ?? [];
@@ -158,7 +168,7 @@ export async function joinMeeting(input: {
   await upsertMember({
     sessionId: session.row.id,
     mediaUserId: self.id,
-    userId: principal.userId,
+    userId: principal.kind === "user" ? principal.userId : null,
     displayName: self.name,
     role,
   });
@@ -211,8 +221,9 @@ export async function endMeetingForAll(input: {
 }): Promise<void> {
   const { meeting } = await requireMeeting(input.code);
   const principal = requirePrincipal(input.principal);
-  if (principal.userId !== meeting.hostId)
+  if (principal.kind !== "user" || principal.userId !== meeting.hostId) {
     throw new MeetingError("NOT_ALLOWED");
+  }
 
   const session = await findOpenSession(meeting.id);
   if (session) {
