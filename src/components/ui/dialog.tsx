@@ -64,6 +64,7 @@ function Dialog({
   className,
   children,
   showCloseButton = true,
+  closeLabel = "Close",
   isDismissable = true,
   ...props
 }: Omit<ModalOverlayPrimitiveProps, "className" | "children"> &
@@ -71,6 +72,8 @@ function Dialog({
     className?: string;
     children: React.ReactNode;
     showCloseButton?: boolean;
+    /** The close button's accessible name, translated by the caller. */
+    closeLabel?: string;
   }) {
   return (
     <DialogOverlay isDismissable={isDismissable} {...props}>
@@ -93,7 +96,7 @@ function Dialog({
               size="icon-sm"
             >
               <XIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{closeLabel}</span>
             </DialogClose>
           )}
         </DialogPrimitive>

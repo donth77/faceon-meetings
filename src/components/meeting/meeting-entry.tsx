@@ -78,6 +78,7 @@ function JoiningScreen() {
   return (
     <div
       role="status"
+      data-fullscreen
       className="dark bg-background text-foreground flex h-dvh flex-col items-center justify-center gap-3"
     >
       <LoaderCircle

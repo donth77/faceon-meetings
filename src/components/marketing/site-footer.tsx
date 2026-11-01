@@ -1,8 +1,11 @@
+import { cn } from "cn";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { GitHubIcon } from "@/components/auth/provider-icons";
 import { publicEnv } from "@/lib/env";
+
+import { PUBLIC_CONTAINER } from "./layout";
 
 /** Footer for public pages. The source link appears once NEXT_PUBLIC_REPO_URL is set. */
 export async function SiteFooter() {
@@ -13,7 +16,10 @@ export async function SiteFooter() {
     <footer className="border-t">
       <nav
         aria-label={t("footerLabel")}
-        className="text-muted-foreground mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-sm sm:px-6"
+        className={cn(
+          PUBLIC_CONTAINER,
+          "text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-2 py-6 text-sm",
+        )}
       >
         <Link href="/help" className="hover:text-foreground">
           {t("help")}

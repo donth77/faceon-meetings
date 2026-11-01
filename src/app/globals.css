@@ -116,6 +116,12 @@
 @layer base {
   html {
     @apply font-sans;
+    /* Reserve the scrollbar's space, so centered headers don't shift between short and
+       long pages. The full-screen meeting room opts out. */
+    scrollbar-gutter: stable;
+  }
+  html:has([data-fullscreen]) {
+    scrollbar-gutter: auto;
   }
   * {
     @apply border-border outline-ring/50;

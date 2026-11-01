@@ -1,0 +1,99 @@
+"use client";
+
+import { ChevronLeft, Clock3, LoaderCircle, Mail } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useState, type FormEvent } from "react";
+
+import { Button } from "@/components/ui/button";
+import { requestPasswordReset } from "@/lib/auth/client";
+import { publicEnv } from "@/lib/env";
+
+import { AuthCard } from "./auth-card";
+import { FormNotice, isEmailAddress, TextField } from "./fields";
+
+/**
+ * "Reset your password": sends a reset link. The reply is the same whether or not the
+ * email has an account, so nobody can use this to find out who signed up.
+ */
+export function ForgotPasswordCard() {
+  const t = useTranslations("Auth");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "tooMany">(
+    "idle",
+  );
+  const [sentTo, setSentTo] = useState("");
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isEmailAddress(email)) {
+      setEmailError(t("errors.invalidEmail"));
+      return;
+    }
+    setEmailError(null);
+    setState("sending");
+    const { error } = await requestPasswordReset({
+      email: email.trim(),
+      redirectTo: "/reset-password",
+    });
+    setSentTo(email.trim());
+    setState(error?.status === 429 ? "tooMany" : "sent");
+  }
+
+  return (
+    <AuthCard
+      title={t("forgot.title")}
+      subtitle={t("forgot.subtitle", {
+        appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+      })}
+    >
+      {state === "sent" ? (
+        <FormNotice icon={Mail} role="status">
+          {t("forgot.sent", { email: sentTo })}
+        </FormNotice>
+      ) : state === "tooMany" ? (
+        <FormNotice icon={Clock3} tone="warning">
+          {t("errors.tooMany")}
+        </FormNotice>
+      ) : null}
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="flex flex-col gap-3.5"
+      >
+        <TextField
+          label={t("email")}
+          type="email"
+          value={email}
+          onChange={setEmail}
+          autoComplete="email"
+          error={emailError}
+          disabled={state === "sending"}
+        />
+        <Button
+          type="submit"
+          variant={state === "sent" ? "outline" : "default"}
+          isPending={state === "sending"}
+          isDisabled={email.trim() === ""}
+          className="h-[50px] rounded-xl text-base font-semibold"
+        >
+          {state === "sending" ? (
+            <LoaderCircle
+              className="size-5 animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+          ) : null}
+          {state === "sent" ? t("forgot.sendAgain") : t("forgot.send")}
+        </Button>
+      </form>
+      <Link
+        href="/sign-in"
+        className="text-primary inline-flex items-center gap-1 self-center rounded text-sm font-semibold underline-offset-4 hover:underline"
+      >
+        <ChevronLeft className="size-4" aria-hidden="true" />
+        {t("forgot.back")}
+      </Link>
+    </AuthCard>
+  );
+}

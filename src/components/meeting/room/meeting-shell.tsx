@@ -71,7 +71,10 @@ export function MeetingShell({
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
 
   return (
-    <div className="dark bg-background text-foreground flex h-dvh flex-col overflow-hidden">
+    <div
+      data-fullscreen
+      className="dark bg-background text-foreground flex h-dvh flex-col overflow-hidden"
+    >
       <TopBar
         title={title}
         meeting={meeting}

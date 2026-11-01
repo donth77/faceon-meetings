@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-import { AuthCard } from "@/components/auth/auth-card";
+import { AuthPage } from "@/components/auth/auth-page";
+import { JoinCard, SignInCard } from "@/components/auth/sign-in-card";
 import { publicEnv } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,5 +13,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function SignInPage() {
-  return <AuthCard mode="sign-in" />;
+  return (
+    <AuthPage links="sign-up">
+      <SignInCard />
+      <JoinCard />
+    </AuthPage>
+  );
 }

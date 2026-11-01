@@ -7,3 +7,9 @@ export const isAppleDevice = () =>
 export const canShareScreen = () =>
   typeof navigator !== "undefined" &&
   typeof navigator.mediaDevices?.getDisplayMedia === "function";
+
+/** Keyboard shortcuts stay out of the way while someone types. */
+export const isTypingTarget = (target: EventTarget | null) =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));

@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import type { Selection } from "react-aria-components";
 
+import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import {
   DropdownMenu,
   DropdownMenuGroup,
@@ -35,6 +36,7 @@ export function AccountMenu({ user }: { user: AccountUser }) {
   const t = useTranslations("Account");
   const router = useRouter();
   const { theme = "system", setTheme } = useTheme();
+  const openShortcuts = useOpenShortcuts();
 
   async function handleSignOut() {
     await signOut();
@@ -84,7 +86,7 @@ export function AccountMenu({ user }: { user: AccountUser }) {
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem href="/help#keyboard-shortcuts">
+        <DropdownMenuItem onAction={openShortcuts}>
           <Keyboard aria-hidden="true" />
           {t("shortcuts")}
         </DropdownMenuItem>

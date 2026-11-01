@@ -1,15 +1,19 @@
+import { cn } from "cn";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoLockup } from "@/components/brand/logo-lockup";
+import { PUBLIC_CONTAINER } from "@/components/marketing/layout";
 
 /** Pages around a meeting (pre-join, notices, after leaving): the logo on top, content centered. */
 export function MeetingPageFrame({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="px-5 py-4 sm:px-10">
-        <Link href="/" className="inline-block rounded-md">
-          <LogoLockup className="h-7" />
+      <header
+        className={cn(PUBLIC_CONTAINER, "flex min-h-18 items-center py-4")}
+      >
+        <Link href="/" className="inline-flex shrink-0 rounded-md">
+          <LogoLockup className="h-7 sm:h-[30px]" />
         </Link>
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-14 sm:px-10">

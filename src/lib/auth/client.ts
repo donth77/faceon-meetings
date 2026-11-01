@@ -1,6 +1,14 @@
 import { createAuthClient } from "better-auth/react";
 
-/** Browser-side auth: social sign-in, sign-out and the session hook. */
+/** Browser-side auth: sign-in (social or email), sign-up, password reset, sign-out. */
 export const authClient = createAuthClient();
 
-export const { signIn, signOut, useSession } = authClient;
+export const {
+  signIn,
+  signUp,
+  signOut,
+  useSession,
+  requestPasswordReset,
+  resetPassword,
+  sendVerificationEmail,
+} = authClient;

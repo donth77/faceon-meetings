@@ -5,6 +5,7 @@ import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { AriaRouterProvider } from "@/components/providers/aria-router-provider";
+import { ShortcutsProvider } from "@/components/shortcuts/shortcuts-dialog";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 import { publicEnv } from "@/lib/env";
@@ -73,7 +74,9 @@ export default async function LocaleLayout({
           disableTransitionOnChange
         >
           <NextIntlClientProvider>
-            <AriaRouterProvider>{children}</AriaRouterProvider>
+            <AriaRouterProvider>
+              <ShortcutsProvider>{children}</ShortcutsProvider>
+            </AriaRouterProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

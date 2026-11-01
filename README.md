@@ -29,6 +29,8 @@ cp .env.example .env.local   # then fill in the values you need
 pnpm dev                     # http://localhost:3000
 ```
 
+Accounts: Google, GitHub, or email and password. Locally, email sign-up works without an email service: the verification and password-reset emails print in the dev server's log, links included.
+
 Useful scripts:
 
 | Command          | What it does                                           |
@@ -43,3 +45,5 @@ Useful scripts:
 ## Deploy your own
 
 FaceOn is designed to run on free tiers. A step-by-step guide to deploying your own copy (Vercel, Stream and Neon accounts, plus every environment variable) will be added here as the features land. `.env.example` lists every variable.
+
+Email and password accounts need email delivery: a free [Resend](https://resend.com) account with a verified sending domain (a subdomain of a domain you already own works), set as `RESEND_API_KEY` and `EMAIL_FROM`. Until both are set, production offers only Google and GitHub.

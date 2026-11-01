@@ -1,57 +1,70 @@
-import { getTranslations } from "next-intl/server";
-import Link from "next/link";
-import { Suspense } from "react";
+import type { ReactNode } from "react";
 
-import { LogoLockup } from "@/components/brand/logo-lockup";
-import { publicEnv } from "@/lib/env";
-
-import { SocialSignIn, type AuthMode } from "./social-sign-in";
-
-const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-
-/** The sign-in and sign-up page body: same buttons, different heading and cross-link. */
-export async function AuthCard({ mode }: { mode: AuthMode }) {
-  const t = await getTranslations("Auth");
-  const signUp = mode === "sign-up";
-
+/** The white card every account screen uses: optional icon, heading, subtitle, body. */
+export function AuthCard({
+  title,
+  subtitle,
+  icon,
+  children,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  icon?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <section
-        aria-labelledby="auth-title"
-        className="bg-card text-card-foreground flex w-full max-w-sm flex-col gap-6 rounded-2xl border p-8 shadow-sm"
-      >
-        <Link href="/" className="self-start rounded-md">
-          <LogoLockup className="h-8" />
-        </Link>
-
-        <div className="flex flex-col gap-2">
-          <h1 id="auth-title" className="font-display text-2xl font-bold">
-            {t(signUp ? "signUpTitle" : "signInTitle", { appName })}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t(signUp ? "signUpSubtitle" : "signInSubtitle")}
+    <section
+      aria-labelledby="auth-title"
+      className="bg-card text-card-foreground ring-border flex flex-col gap-5 rounded-[20px] p-6 ring-1 sm:p-8"
+    >
+      {icon}
+      <div className="flex flex-col gap-2">
+        <h1
+          id="auth-title"
+          className="text-[26px] leading-tight font-bold tracking-tight text-balance sm:text-[30px]"
+        >
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="text-muted-foreground text-[15px] leading-normal">
+            {subtitle}
           </p>
-        </div>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  );
+}
 
-        {/* useSearchParams needs a Suspense boundary so the rest of the page can prerender. */}
-        <Suspense fallback={<div className="h-28" aria-hidden="true" />}>
-          <SocialSignIn mode={mode} />
-        </Suspense>
+/** A round icon above a card's heading, as on "Check your email". */
+export function AuthCardIcon({
+  tone,
+  children,
+}: {
+  tone: "brand" | "success";
+  children: ReactNode;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        tone === "brand"
+          ? "bg-secondary text-primary flex size-14 items-center justify-center rounded-full"
+          : "flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
+      }
+    >
+      {children}
+    </span>
+  );
+}
 
-        <p className="text-muted-foreground text-sm">
-          {t(signUp ? "haveAccount" : "newHere", { appName })}{" "}
-          <Link
-            href={signUp ? "/sign-in" : "/sign-up"}
-            className="text-primary font-semibold underline-offset-4 hover:underline"
-          >
-            {t(signUp ? "signInLink" : "signUpLink")}
-          </Link>
-        </p>
-
-        <p className="text-muted-foreground border-t pt-4 text-xs">
-          {t("guestNote")}
-        </p>
-      </section>
-    </main>
+/** "or", between the social buttons and the email form. */
+export function OrDivider({ label }: { label: string }) {
+  return (
+    <div className="text-muted-foreground flex items-center gap-3 text-[13px]">
+      <span aria-hidden="true" className="bg-border h-px flex-1" />
+      {label}
+      <span aria-hidden="true" className="bg-border h-px flex-1" />
+    </div>
   );
 }
