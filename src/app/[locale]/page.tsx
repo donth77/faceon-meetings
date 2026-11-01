@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import Image from "next/image";
 
 import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/site";

@@ -15,6 +15,11 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Placeholders so modules that read server settings can load during the build.
+    # Nothing connects to them; real values live in Vercel.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-for-anything-real
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4

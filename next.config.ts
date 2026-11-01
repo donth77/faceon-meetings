@@ -1,22 +1,9 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-// App and meeting pages are never indexed; meeting links also send no referrer.
+import { NOINDEX_ROUTES } from "./src/lib/routes";
+
 const NOINDEX = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
-const PRIVATE_SOURCES = [
-  "/join",
-  "/sign-in",
-  "/home",
-  "/upcoming",
-  "/previous",
-  "/personal-room",
-  "/schedule",
-  "/meetings/:path*",
-  "/settings",
-  "/settings/:path*",
-  "/admin",
-  "/admin/:path*",
-];
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -31,11 +18,16 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // App, auth and meeting pages are never indexed.
+      ...NOINDEX_ROUTES.flatMap((route) => [
+        { source: route, headers: NOINDEX },
+        { source: `${route}/:path*`, headers: NOINDEX },
+      ]),
+      // Meeting links also send no referrer, so the link never leaks to other sites.
       {
         source: "/j/:path*",
-        headers: [...NOINDEX, { key: "Referrer-Policy", value: "no-referrer" }],
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
-      ...PRIVATE_SOURCES.map((source) => ({ source, headers: NOINDEX })),
     ];
   },
 };

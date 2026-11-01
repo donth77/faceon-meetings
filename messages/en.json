@@ -6,6 +6,27 @@
     "tagline": "Video meetings in your browser.",
     "subline": "Free and open source. No downloads. Coming soon."
   },
+  "Auth": {
+    "signInTitle": "Sign in to {appName}",
+    "signInSubtitle": "No account yet? Continuing creates one.",
+    "signUpTitle": "Create your {appName} account",
+    "signUpSubtitle": "Free, with no password to remember. Use your Google or GitHub account.",
+    "continueWith": "Continue with {provider}",
+    "signUpWith": "Sign up with {provider}",
+    "continuing": "Continuing with {provider}…",
+    "failed": "Sign-in was cancelled or didn't finish. Try again, or use the other option.",
+    "newHere": "New to {appName}?",
+    "signUpLink": "Sign up",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "guestNote": "Joining a meeting? You don't need an account. Just open the meeting link.",
+    "signOut": "Sign out"
+  },
+  "Home": {
+    "title": "Home",
+    "welcome": "Welcome, {name}",
+    "placeholder": "Your meetings will appear here."
+  },
   "NotFound": {
     "title": "Page not found",
     "body": "The link may be broken, or the page may have moved.",

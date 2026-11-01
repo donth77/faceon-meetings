@@ -19,10 +19,10 @@ export function parseMeetingInput(input: string): ParsedMeetingInput | null {
   const text = input.trim();
   if (!text) return null;
 
-  const fromLink = /\/j\/([1-9]\d{9})(?!\d)/.exec(text);
-  if (fromLink) {
+  const linkCode = /\/j\/([1-9]\d{9})(?!\d)/.exec(text)?.[1];
+  if (linkCode) {
     const passcode = /[#&]pwd=([A-Za-z0-9]+)/.exec(text)?.[1];
-    return passcode ? { code: fromLink[1], passcode } : { code: fromLink[1] };
+    return passcode ? { code: linkCode, passcode } : { code: linkCode };
   }
 
   const digits = text.replace(/[\s-]/g, "");

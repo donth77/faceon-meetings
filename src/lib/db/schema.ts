@@ -1,5 +1,6 @@
 /**
- * Database schema (Drizzle). Tables arrive with the features that need them: the
- * Better Auth tables first, then meetings, sessions and the admission ledger.
+ * Database schema (Drizzle). Better Auth's tables come from its generator (auth-schema.ts,
+ * regenerate with `pnpm dlx auth generate`); FaceOn's own tables arrive with the features
+ * that need them.
  */
-export {};
+export * from "./auth-schema";

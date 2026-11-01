@@ -1,5 +1,4 @@
 import { existsSync } from "node:fs";
-
 import { defineConfig } from "drizzle-kit";
 
 // Locally, read .env.local; CI and Vercel provide real environment variables instead.
