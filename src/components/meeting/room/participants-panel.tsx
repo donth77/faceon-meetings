@@ -1,7 +1,7 @@
 "use client";
 
 import { Hand, Link2, Mic, MicOff, Search, VideoOff } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
@@ -27,9 +27,9 @@ const isGuest = (participant: RoomParticipant) =>
   participant.userId.startsWith("g_");
 
 const FOOTER_BUTTON =
-  "focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2";
+  "flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-hidden hover:bg-white/15 focus-visible:focus-ring";
 const TEXT_BUTTON =
-  "focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2";
+  "rounded-md px-1.5 py-0.5 text-xs font-semibold outline-hidden hover:bg-white/10 focus-visible:focus-ring";
 
 function Avatar({ image }: { image: string | null | undefined }) {
   return image ? (
@@ -58,16 +58,38 @@ function SectionHeading({
   );
 }
 
+/**
+ * Where focus goes when a button is about to take its own row (or section) away: the
+ * same button on the next row, or the one before, else the panel's title (2.4.3).
+ */
+function keepFocusNear(button: Element) {
+  const action = button.getAttribute("data-row-action");
+  const row = button.closest("li");
+  const neighbour = row?.nextElementSibling ?? row?.previousElementSibling;
+  const next = action
+    ? neighbour?.querySelector(`[data-row-action="${action}"]`)
+    : null;
+  const title = button.closest("aside")?.querySelector("h2");
+  requestAnimationFrame(() => {
+    const target = [next, title].find(
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element.isConnected,
+    );
+    target?.focus();
+  });
+}
+
 /** Someone in the meeting: tags, camera and mic state, and their ⋯ menu. */
 function ParticipantRow({ participant }: { participant: RoomParticipant }) {
   const t = useTranslations("Meeting.people");
+  const locale = useLocale();
   const { roleOf } = useRoomControls();
   const role = roleOf(participant.userId);
   const tags = [
     participant.isLocal ? t("you") : null,
     role === "host" ? t("host") : role === "cohost" ? t("cohost") : null,
     isGuest(participant) ? t("guest") : null,
-  ].filter(Boolean);
+  ].filter((tag): tag is string => tag !== null);
 
   return (
     <li className="group/row flex items-center gap-2.5 py-1.5 pr-3 pl-5 hover:bg-white/[0.04]">
@@ -76,7 +98,10 @@ function ParticipantRow({ participant }: { participant: RoomParticipant }) {
         <span className="truncate">{participant.name}</span>
         {tags.length > 0 ? (
           <span className="text-muted-foreground shrink-0 text-xs">
-            {tags.join(", ")}
+            {new Intl.ListFormat(locale, {
+              style: "short",
+              type: "unit",
+            }).format(tags)}
           </span>
         ) : null}
       </span>
@@ -88,7 +113,7 @@ function ParticipantRow({ participant }: { participant: RoomParticipant }) {
           <Mic className="size-[18px]" aria-label={t("micOn")} />
         ) : (
           <MicOff
-            className="size-[18px] text-[#ff7a7d]"
+            className="text-destructive-text size-[18px]"
             aria-label={t("muted")}
           />
         )}
@@ -114,19 +139,25 @@ function RaisedHandRow({
   const t = useTranslations("Meeting.hand");
   return (
     <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
+      {/* A plain span can't be named, so the number is shown and the words are read. */}
       <span
-        aria-label={t("position", { order })}
-        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f2b200] text-xs font-bold text-[#1b1500]"
+        aria-hidden="true"
+        className="bg-hand text-hand-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
       >
         {order}
       </span>
+      <span className="sr-only">{t("position", { order })}</span>
       <span className="min-w-0 flex-1 truncate text-sm">
         {participant.name}
       </span>
-      <Hand className="size-[18px] text-[#f2b200]" aria-hidden="true" />
+      <Hand className="text-hand size-[18px]" aria-hidden="true" />
       {onLower ? (
         <Button
-          onPress={onLower}
+          onPress={(event) => {
+            keepFocusNear(event.target);
+            onLower();
+          }}
+          data-row-action="lower"
           aria-label={t("lowerFor", { name: participant.name })}
           className={TEXT_BUTTON}
         >
@@ -161,16 +192,24 @@ function WaitingRow({
         ) : null}
       </span>
       <Button
-        onPress={onDeny}
+        onPress={(event) => {
+          keepFocusNear(event.target);
+          onDeny();
+        }}
+        data-row-action="deny"
         aria-label={tl("denyName", { name: entry.name })}
-        className="focus-visible:ring-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+        className="focus-visible:focus-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-hidden hover:bg-white/10"
       >
         {tl("deny")}
       </Button>
       <Button
-        onPress={onAdmit}
+        onPress={(event) => {
+          keepFocusNear(event.target);
+          onAdmit();
+        }}
+        data-row-action="admit"
         aria-label={tl("admitName", { name: entry.name })}
-        className="bg-primary text-primary-foreground focus-visible:ring-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none hover:opacity-90 focus-visible:ring-2"
+        className="bg-primary text-primary-foreground focus-visible:focus-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-hidden hover:opacity-90"
       >
         {tl("admit")}
       </Button>
@@ -275,7 +314,7 @@ export function ParticipantsPanel({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("search")}
-          className="bg-background focus-visible:ring-ring h-10 w-full rounded-[10px] border pr-3 pl-9 text-sm outline-none focus-visible:ring-2"
+          className="bg-background focus-visible:focus-ring h-10 w-full rounded-[10px] border pr-3 pl-9 text-sm outline-hidden"
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-2">
@@ -284,7 +323,10 @@ export function ParticipantsPanel({
             <SectionHeading
               action={
                 <Button
-                  onPress={() => onDecide({ action: "admitAll" })}
+                  onPress={(event) => {
+                    keepFocusNear(event.target);
+                    onDecide({ action: "admitAll" });
+                  }}
                   className={`text-primary ${TEXT_BUTTON}`}
                 >
                   {tl("admitAll")}
@@ -311,7 +353,10 @@ export function ParticipantsPanel({
               action={
                 isHost ? (
                   <Button
-                    onPress={onLowerAll}
+                    onPress={(event) => {
+                      keepFocusNear(event.target);
+                      onLowerAll();
+                    }}
                     className={`text-primary ${TEXT_BUTTON}`}
                   >
                     {th("lowerAll")}
@@ -353,6 +398,10 @@ export function ParticipantsPanel({
               {shown.length === 0 ? t("noMatch") : t("allHandsUp")}
             </p>
           )}
+          {/* Mounted all along, so a search that finds nobody is heard (4.1.3). */}
+          <p role="status" className="sr-only">
+            {q && shown.length === 0 ? t("noMatch") : ""}
+          </p>
         </section>
       </div>
     </SidePanel>

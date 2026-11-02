@@ -10,7 +10,7 @@ export type ControlTone = "plain" | "danger" | "amber";
 const TONES: Record<ControlTone, string> = {
   plain: "text-foreground bg-white/10 group-hover:bg-white/15",
   danger: "bg-destructive group-hover:bg-destructive/90 text-white",
-  amber: "bg-[#f2b200] text-[#1b1500] group-hover:bg-[#f2b200]/90",
+  amber: "bg-hand text-hand-foreground group-hover:bg-hand/90",
 };
 
 /**
@@ -39,7 +39,7 @@ export function ControlButton({
     >
       <span
         className={cn(
-          "group-focus-visible:ring-ring flex size-14 items-center justify-center rounded-full transition-colors group-focus-visible:ring-2 md:size-11",
+          "group-focus-visible:focus-ring flex size-14 items-center justify-center rounded-full transition-colors max-[400px]:size-11 md:size-11",
           TONES[tone],
         )}
       >

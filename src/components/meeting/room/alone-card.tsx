@@ -12,7 +12,7 @@ import { useInvitation } from "../invitation";
 import { useRoomTransition } from "./motion";
 
 const actionClass =
-  "focus-visible:ring-ring flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold outline-none focus-visible:ring-2";
+  "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold outline-hidden focus-visible:focus-ring";
 
 /**
  * "You're the only one here", as in Meet: the link and an invitation to copy while
@@ -42,7 +42,7 @@ export function AloneCard({ meeting }: { meeting: AdmittedMeetingInfo }) {
             <Button
               aria-label={t("alone.dismiss")}
               onPress={() => setDismissed(true)}
-              className="text-muted-foreground focus-visible:ring-ring -mt-1 -mr-1 flex size-8 items-center justify-center rounded-lg outline-none hover:bg-white/10 focus-visible:ring-2"
+              className="text-muted-foreground focus-visible:focus-ring -mt-1 -mr-1 flex size-8 items-center justify-center rounded-lg outline-hidden hover:bg-white/10"
             >
               <X className="size-4" aria-hidden="true" />
             </Button>

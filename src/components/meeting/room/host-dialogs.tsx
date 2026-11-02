@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
+import { SwitchRow } from "@/components/ui/form-fields";
 
 import type { RoomParticipant } from "../media";
 
@@ -116,13 +116,11 @@ function MuteAllForm({
         </DialogTitle>
         <DialogDescription>{t("muteAllBody")}</DialogDescription>
       </DialogHeader>
-      <Switch
+      <SwitchRow
+        label={t("muteAllLetUnmute")}
         isSelected={allow}
         onChange={setAllow}
-        className="text-sm font-medium"
-      >
-        {t("muteAllLetUnmute")}
-      </Switch>
+      />
       <DialogFooter>
         <Button variant="outline" onPress={onCancel}>
           {t("cancel")}

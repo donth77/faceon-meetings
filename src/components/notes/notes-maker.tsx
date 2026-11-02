@@ -7,6 +7,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { Button, LinkButton } from "@/components/ui/button";
 import { NewTabNote } from "@/components/ui/new-tab-note";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { NotesProgress } from "@/lib/notes/engines";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import {
@@ -158,7 +159,11 @@ function MadeNotesView({
 }) {
   const t = useTranslations("Notes");
   const locale = useIntlLocale();
-  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
+  const timeZone = useViewerTimeZone();
+  const time = new Intl.DateTimeFormat(locale, {
+    timeStyle: "short",
+    timeZone,
+  });
 
   const toMarkdown = useNotesMarkdown();
   const markdown = () =>
@@ -167,6 +172,7 @@ function MadeNotesView({
       when: new Intl.DateTimeFormat(locale, {
         dateStyle: "full",
         timeStyle: "short",
+        timeZone,
       }).format(made.madeAt),
       notes: made.notes,
       transcript: transcriptText(lines, (at) => time.format(at)),

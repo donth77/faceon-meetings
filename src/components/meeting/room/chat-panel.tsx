@@ -1,16 +1,18 @@
 "use client";
 
-import { Download, SendHorizontal } from "lucide-react";
+import { CircleAlert, Download, SendHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
   useId,
+  useRef,
   useState,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
 import { Button } from "react-aria-components";
 
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { downloadFile } from "@/lib/download";
 import { MAX_CHAT_LENGTH } from "@/lib/meetings/events";
 import { useIntlLocale } from "@/lib/preferences";
@@ -46,6 +48,7 @@ function MessageText({ text }: { text: string }) {
 function Message({ message }: { message: ChatMessage }) {
   const t = useTranslations("Meeting.chat");
   const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
   return (
     <li className="flex items-start gap-2.5">
       {message.senderImage ? (
@@ -64,14 +67,21 @@ function Message({ message }: { message: ChatMessage }) {
             {message.mine ? t("you") : message.senderName}
           </span>
           <span className="text-muted-foreground font-mono text-xs">
-            {new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
-              message.at,
-            )}
+            {new Intl.DateTimeFormat(locale, {
+              timeStyle: "short",
+              timeZone,
+            }).format(message.at)}
           </span>
         </div>
         <p className="text-[15px] leading-normal break-words whitespace-pre-wrap text-[#e6eaee]">
           <MessageText text={message.text} />
         </p>
+        {message.failed ? (
+          <p className="text-destructive-text flex items-center gap-1.5 text-[13px]">
+            <CircleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+            {t("failed")}
+          </p>
+        ) : null}
       </div>
     </li>
   );
@@ -80,9 +90,17 @@ function Message({ message }: { message: ChatMessage }) {
 /** Save chat, as in Zoom: the conversation so far as a text file on this device. */
 function saveChat(
   messages: ChatMessage[],
-  { title, you, locale }: { title: string; you: string; locale: string },
+  {
+    title,
+    you,
+    locale,
+    timeZone,
+  }: { title: string; you: string; locale: string; timeZone: string },
 ) {
-  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
+  const time = new Intl.DateTimeFormat(locale, {
+    timeStyle: "short",
+    timeZone,
+  });
   const text = messages
     .map(
       (m) => `[${time.format(m.at)}] ${m.mine ? you : m.senderName}: ${m.text}`,
@@ -114,7 +132,9 @@ export function ChatPanel({
 }) {
   const t = useTranslations("Meeting.chat");
   const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
   const inputId = useId();
+  const input = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState("");
 
   // Keep the newest message in view.
@@ -130,6 +150,8 @@ export function ChatPanel({
     if (!text) return;
     setDraft("");
     void onSend(text);
+    // Send turns off with the box empty; the next message starts where you type.
+    input.current?.focus();
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -154,6 +176,7 @@ export function ChatPanel({
       title={t("title")}
       closeLabel={t("close")}
       onClose={onClose}
+      initialFocus={canSend ? input : undefined}
       actions={
         <Button
           aria-label={t("save")}
@@ -163,9 +186,10 @@ export function ChatPanel({
               title: t("savedTitle", { title }),
               you: t("you"),
               locale,
+              timeZone,
             })
           }
-          className="text-foreground/80 focus-visible:ring-ring flex size-10 items-center justify-center rounded-xl outline-none hover:bg-white/10 focus-visible:ring-2 disabled:opacity-40"
+          className="text-foreground/80 focus-visible:focus-ring flex size-10 items-center justify-center rounded-xl outline-hidden hover:bg-white/10 disabled:opacity-40"
         >
           <Download className="size-5" aria-hidden="true" />
         </Button>
@@ -204,6 +228,7 @@ export function ChatPanel({
           {t("placeholder")}
         </label>
         <textarea
+          ref={input}
           id={inputId}
           rows={1}
           value={draft}
@@ -211,13 +236,13 @@ export function ChatPanel({
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}
-          className="bg-background focus-visible:ring-ring field-sizing-content max-h-32 min-h-[46px] min-w-0 flex-1 resize-none rounded-[23px] border px-3.5 py-3 text-base outline-none focus-visible:ring-2 md:text-[15px]"
+          className="bg-background focus-visible:focus-ring field-sizing-content max-h-32 min-h-[46px] min-w-0 flex-1 resize-none rounded-[23px] border px-3.5 py-3 text-base outline-hidden md:text-[15px]"
         />
         <Button
           type="submit"
           aria-label={t("send")}
           isDisabled={draft.trim() === ""}
-          className="bg-primary text-primary-foreground focus-visible:ring-ring flex size-[46px] shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 disabled:opacity-50"
+          className="bg-primary text-primary-foreground focus-visible:focus-ring flex size-[46px] shrink-0 items-center justify-center rounded-full outline-hidden disabled:opacity-50"
         >
           <SendHorizontal className="size-5" aria-hidden="true" />
         </Button>

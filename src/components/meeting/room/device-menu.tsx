@@ -35,10 +35,13 @@ export function DeviceMenu({
   label,
   sections,
   extra,
+  panelToggle,
   settingsLabel,
   onOpenSettings,
 }: {
   label: string;
+  /** The panel its extra action opens, so closing that panel comes back here. */
+  panelToggle?: string | undefined;
   sections: DeviceSection[];
   /** One more action above the settings, such as Backgrounds and effects. */
   extra?: { label: string; icon: LucideIcon; onAction: () => void };
@@ -52,7 +55,8 @@ export function DeviceMenu({
     <DropdownMenuTrigger>
       <Button
         aria-label={label}
-        className="border-background focus-visible:ring-ring data-[pressed]:bg-accent absolute top-[26px] right-3 flex size-[22px] items-center justify-center rounded-full border-2 bg-[#3a424d] text-[#e6eaee] outline-none hover:bg-[#4a5260] focus-visible:ring-2 max-md:hidden"
+        data-panel-toggle={panelToggle}
+        className="border-background data-[pressed]:bg-accent focus-visible:focus-ring absolute top-[25px] right-[11px] flex size-6 items-center justify-center rounded-full border-2 bg-[#3a424d] text-[#e6eaee] outline-hidden hover:bg-[#4a5260] max-md:hidden"
       >
         <ChevronUp className="size-3" aria-hidden="true" />
       </Button>

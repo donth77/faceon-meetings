@@ -8,7 +8,7 @@ import {
   PanelsTopLeft,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { Selection } from "react-aria-components";
 
 import {
@@ -52,29 +52,52 @@ export function ShareControl({
   const [sound, setSound] = useState(true);
   const [motion, setMotion] = useState(false);
 
+  // Starting or stopping swaps the button for another; if focus was on it (or went to
+  // the browser's picker from it), it comes back to the new one (2.4.3).
+  const box = useRef<HTMLDivElement>(null);
+  const hadFocus = useRef(false);
+  useLayoutEffect(() => {
+    const lost =
+      !document.activeElement || document.activeElement === document.body;
+    if (hadFocus.current && lost) box.current?.querySelector("button")?.focus();
+  }, [sharing]);
+  const frame = (children: ReactNode) => (
+    <div
+      ref={box}
+      data-share-control
+      className="flex"
+      onFocus={() => {
+        hadFocus.current = true;
+      }}
+      onBlur={(event) => {
+        // Focus moving elsewhere on the page; not the button going away.
+        const to = event.relatedTarget;
+        if (to instanceof Node && !box.current?.contains(to)) {
+          hadFocus.current = false;
+        }
+      }}
+    >
+      {children}
+    </div>
+  );
+
   if (sharing) {
-    return (
-      <div className="flex">
-        <ControlButton
-          icon={MonitorX}
-          label={t("stopSharing")}
-          tone="danger"
-          onPress={onStop}
-        />
-      </div>
+    return frame(
+      <ControlButton
+        icon={MonitorX}
+        label={t("stopSharing")}
+        tone="danger"
+        onPress={onStop}
+      />,
     );
   }
   if (onBlocked || !isChromium()) {
-    return (
-      <div className="flex">
-        <ControlButton
-          icon={MonitorUp}
-          label={t("shareScreen")}
-          onPress={
-            onBlocked ?? (() => onStart({ audio: false, motion: false }))
-          }
-        />
-      </div>
+    return frame(
+      <ControlButton
+        icon={MonitorUp}
+        label={t("shareScreen")}
+        onPress={onBlocked ?? (() => onStart({ audio: false, motion: false }))}
+      />,
     );
   }
 
@@ -88,8 +111,8 @@ export function ShareControl({
     setMotion(selected.has("motion"));
   }
 
-  return (
-    <div className="flex">
+  return frame(
+    <>
       <DropdownMenuTrigger>
         <ControlButton icon={MonitorUp} label={t("shareScreen")} />
         <DropdownMenu placement="top" className="min-w-64">
@@ -125,6 +148,6 @@ export function ShareControl({
           </DropdownMenuGroup>
         </DropdownMenu>
       </DropdownMenuTrigger>
-    </div>
+    </>,
   );
 }

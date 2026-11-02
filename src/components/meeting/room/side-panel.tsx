@@ -2,7 +2,13 @@
 
 import { X } from "lucide-react";
 import { motion } from "motion/react";
-import type { KeyboardEvent, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Button } from "react-aria-components";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,7 +18,8 @@ import { useRoomTransition } from "./motion";
 /**
  * Participants and Chat open here: on desktop they share a column beside the stage
  * (one grows in as the other makes room); on phones each is a bottom sheet over the
- * meeting. Escape closes it.
+ * meeting. Opening moves focus in (to `initialFocus`, else the title), Escape closes
+ * it, and usePanels puts focus back afterwards.
  */
 export function SidePanel({
   title,
@@ -20,6 +27,7 @@ export function SidePanel({
   onClose,
   actions,
   footer,
+  initialFocus,
   children,
 }: {
   title: string;
@@ -28,10 +36,16 @@ export function SidePanel({
   /** Buttons beside Close. */
   actions?: ReactNode;
   footer?: ReactNode;
+  /** Where focus goes as the panel opens (the chat box, say); the title otherwise. */
+  initialFocus?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const phone = useIsMobile();
   const transition = useRoomTransition();
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    (initialFocus?.current ?? heading.current)?.focus({ preventScroll: true });
+  }, [initialFocus]);
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Escape") {
@@ -68,13 +82,19 @@ export function SidePanel({
           className="mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full bg-white/20 md:hidden"
         />
         <div className="flex shrink-0 items-center justify-between py-2 pr-2 pl-5">
-          <h2 className="text-lg font-bold">{title}</h2>
+          <h2
+            ref={heading}
+            tabIndex={-1}
+            className="text-lg font-bold outline-none"
+          >
+            {title}
+          </h2>
           <div className="flex items-center">
             {actions}
             <Button
               aria-label={closeLabel}
               onPress={onClose}
-              className="text-foreground/80 focus-visible:ring-ring flex size-10 items-center justify-center rounded-xl outline-none hover:bg-white/10 focus-visible:ring-2"
+              className="text-foreground/80 focus-visible:focus-ring flex size-10 items-center justify-center rounded-xl outline-hidden hover:bg-white/10"
             >
               <X className="size-5" aria-hidden="true" />
             </Button>

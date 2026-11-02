@@ -8,6 +8,7 @@ import { Button, Dialog } from "react-aria-components";
 import { NotesMaker } from "@/components/notes/notes-maker";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { NotesState } from "@/lib/media/types";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
@@ -16,9 +17,9 @@ import { SidePanel } from "./side-panel";
 import type { SelfTranscription } from "./use-notes";
 
 const POPOVER_BUTTON =
-  "focus-visible:ring-ring flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2";
+  "flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-white/10 text-sm font-semibold outline-hidden hover:bg-white/15 focus-visible:focus-ring";
 const FOOTER_BUTTON =
-  "focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-semibold outline-none focus-visible:ring-2 disabled:opacity-60";
+  "flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-semibold outline-hidden disabled:opacity-60 focus-visible:focus-ring";
 
 /** Someone whose words aren't in the notes, and why. */
 export type NotTranscribed = {
@@ -40,7 +41,11 @@ function Transcript({
 }) {
   const t = useTranslations("Meeting.notes");
   const locale = useIntlLocale();
-  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
+  const timeZone = useViewerTimeZone();
+  const time = new Intl.DateTimeFormat(locale, {
+    timeStyle: "short",
+    timeZone,
+  });
   const following = useRef(true);
   const listRef = useCallback(
     (node: HTMLOListElement | null) => {
@@ -262,7 +267,7 @@ export function NotesChip({
     <PopoverTrigger>
       <Button
         aria-label={t("chip")}
-        className="bg-primary/25 hover:bg-primary/35 focus-visible:ring-ring flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-sm font-semibold outline-none focus-visible:ring-2"
+        className="bg-primary/25 hover:bg-primary/35 focus-visible:focus-ring flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-sm font-semibold outline-hidden"
       >
         <Sparkles className="size-4" aria-hidden="true" />
         <span className="max-sm:hidden">{t("chip")}</span>

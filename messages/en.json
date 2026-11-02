@@ -272,6 +272,7 @@
     "elapsed": "Meeting time {time}",
     "demo": "Demo",
     "timeLeft": "{time} left",
+    "minutesLeft": "{minutes, plural, one {One minute} other {# minutes}} left in this meeting",
     "demoExplained": "Demo meetings end after {minutes} minutes and fit up to {people} people.",
     "layout": "Layout",
     "layoutLabel": "Layout: {layout}",
@@ -322,6 +323,7 @@
       "returnHome": "Return home"
     },
     "more": "More",
+    "moreWithUnread": "More, {count, plural, one {# new message} other {# new messages}}",
     "people": {
       "title": "Participants ({count})",
       "button": "Participants",
@@ -354,7 +356,8 @@
       "open": "Open",
       "off": "The host turned off chat. Only hosts can send messages.",
       "save": "Save chat",
-      "savedTitle": "Chat from {title}"
+      "savedTitle": "Chat from {title}",
+      "failed": "Not sent. Check your connection and send it again."
     },
     "reactions": {
       "label": "Reactions",

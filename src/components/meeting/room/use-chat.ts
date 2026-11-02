@@ -15,6 +15,8 @@ export type ChatMessage = {
   /** When it arrived on this device. */
   at: number;
   mine: boolean;
+  /** Yours, and it didn't reach the meeting. */
+  failed?: boolean;
 };
 
 /** Keeps the newest messages; chat isn't stored, so a long meeting doesn't grow forever. */
@@ -86,7 +88,14 @@ export function useChat({
     };
     seen.current.add(message.id);
     setMessages((list) => [...list, message].slice(-KEEP));
-    await sendEvent({ type: "chat.message", id: message.id, text: trimmed });
+    try {
+      await sendEvent({ type: "chat.message", id: message.id, text: trimmed });
+    } catch {
+      // It stays in the list, marked as not sent, rather than seeming to have gone.
+      setMessages((list) =>
+        list.map((m) => (m.id === message.id ? { ...m, failed: true } : m)),
+      );
+    }
   }
 
   return { messages, unread, markRead: () => setUnread(0), send };

@@ -76,7 +76,7 @@ export function MeetingSettingsMenu({
     <DialogTrigger>
       <Button
         aria-label={t("more")}
-        className="focus-visible:ring-ring flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white/10 outline-none hover:bg-white/15 focus-visible:ring-2"
+        className="focus-visible:focus-ring flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white/10 outline-hidden hover:bg-white/15"
       >
         <Ellipsis className="size-5" aria-hidden="true" />
       </Button>
@@ -134,13 +134,13 @@ export function MeetingSettingsMenu({
             >
               <Radio
                 value="all"
-                className="data-focus-visible:ring-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-none data-focus-visible:ring-2 data-selected:bg-white/15 data-selected:text-white"
+                className="data-focus-visible:focus-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
               >
                 {t("shareEveryone")}
               </Radio>
               <Radio
                 value="host"
-                className="data-focus-visible:ring-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-none data-focus-visible:ring-2 data-selected:bg-white/15 data-selected:text-white"
+                className="data-focus-visible:focus-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
               >
                 {t("shareHosts")}
               </Radio>
@@ -149,7 +149,7 @@ export function MeetingSettingsMenu({
           {isOwner ? (
             <Button
               onPress={onEndForAll}
-              className="focus-visible:ring-ring m-1 h-[42px] rounded-[10px] bg-[#3a1d20] text-[15px] font-bold text-[#ff9a9d] outline-none hover:bg-[#46222a] focus-visible:ring-2"
+              className="text-destructive-text focus-visible:focus-ring m-1 h-[42px] rounded-[10px] bg-[#3a1d20] text-[15px] font-bold outline-hidden hover:bg-[#46222a]"
             >
               {t("endForAll")}
             </Button>

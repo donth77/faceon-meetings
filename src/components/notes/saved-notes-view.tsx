@@ -138,7 +138,7 @@ export function SavedNotesView({ notes }: { notes: SavedNotes }) {
       <div className="flex flex-col gap-2.5">
         <Link
           href="/previous"
-          className="text-primary focus-visible:ring-ring flex items-center gap-1 self-start rounded-md text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
+          className="text-primary focus-visible:focus-ring flex items-center gap-1 self-start rounded-md text-sm font-semibold outline-hidden hover:underline"
         >
           <ChevronLeft className="size-4" aria-hidden="true" />
           {t("back")}

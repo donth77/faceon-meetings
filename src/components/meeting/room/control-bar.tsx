@@ -34,7 +34,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useNow } from "@/hooks/use-now";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { REACTIONS, type ReactionCode } from "@/lib/meetings/events";
 import { canShareScreen } from "@/lib/platform";
 import { useIntlLocale } from "@/lib/preferences";
@@ -74,11 +76,14 @@ function Control({
 
 function TimeOfDay() {
   const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
   const now = useNow(60_000);
   if (now === null) return null;
   return (
     <span className="text-foreground font-mono tabular-nums">
-      {new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(now)}
+      {new Intl.DateTimeFormat(locale, { timeStyle: "short", timeZone }).format(
+        now,
+      )}
     </span>
   );
 }
@@ -97,7 +102,7 @@ function LeaveControl({
     <Button
       onPress={isOwner ? undefined : () => void media.leave()}
       aria-label={t("leave")}
-      className="bg-destructive hover:bg-destructive/90 focus-visible:ring-ring flex h-14 items-center gap-2 rounded-full px-5 text-[15px] font-semibold whitespace-nowrap text-white outline-none focus-visible:ring-2 max-md:w-14 max-md:justify-center max-md:px-0 md:h-11"
+      className="bg-destructive-fill hover:bg-destructive-fill/90 focus-visible:focus-ring flex h-14 items-center gap-2 rounded-full px-5 text-[15px] font-semibold whitespace-nowrap text-white outline-hidden max-[400px]:size-11 max-md:w-14 max-md:justify-center max-md:px-0 md:h-11"
     >
       <PhoneOff className="size-5" aria-hidden="true" />
       <span className="max-md:hidden">{t("leave")}</span>
@@ -125,15 +130,12 @@ function LeaveControl({
   );
 }
 
-/**
- * The bottom bar, in Zoom's and Meet's order: mic and camera first (each with a device
- * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
- * without labels.
- */
+/** The side panels: Participants, Chat, AI notes, and Backgrounds and effects. */
 export type PanelName = "people" | "chat" | "notes" | "effects";
 
 /** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
 function PanelButton({
+  panel,
   icon: Icon,
   label,
   accessibleLabel,
@@ -142,6 +144,7 @@ function PanelButton({
   active,
   onPress,
 }: {
+  panel: PanelName;
   icon: LucideIcon;
   label: string;
   accessibleLabel: string;
@@ -154,12 +157,13 @@ function PanelButton({
     <Button
       aria-label={accessibleLabel}
       aria-pressed={active}
+      data-panel-toggle={panel}
       onPress={onPress}
       className="group flex w-24 flex-col items-center gap-1.5 rounded-xl px-0.5 py-1 outline-none"
     >
       <span
         className={cn(
-          "group-focus-visible:ring-ring relative flex size-11 items-center justify-center rounded-full transition-colors group-focus-visible:ring-2",
+          "group-focus-visible:focus-ring relative flex size-11 items-center justify-center rounded-full transition-colors",
           active
             ? "bg-secondary text-primary"
             : "text-foreground bg-white/10 group-hover:bg-white/15",
@@ -226,6 +230,7 @@ function MoreItems({
   onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
+  const phone = useIsMobile();
   const openShortcuts = useOpenShortcuts();
   const fullscreen = useFullscreen();
   return (
@@ -256,10 +261,12 @@ function MoreItems({
           {t("openPictureInPicture")}
         </DropdownMenuItem>
       ) : null}
-      <DropdownMenuItem onAction={openShortcuts} className="max-md:hidden">
-        <Keyboard aria-hidden="true" />
-        {t("keyboardShortcuts")}
-      </DropdownMenuItem>
+      {phone ? null : (
+        <DropdownMenuItem onAction={openShortcuts}>
+          <Keyboard aria-hidden="true" />
+          {t("keyboardShortcuts")}
+        </DropdownMenuItem>
+      )}
     </>
   );
 }
@@ -278,7 +285,7 @@ function DesktopMoreMenu({
   return (
     <div className="flex max-md:hidden">
       <DropdownMenuTrigger>
-        <ControlButton icon={Ellipsis} label={t("more")} />
+        <ControlButton icon={Ellipsis} label={t("more")} data-more-menu />
         <DropdownMenu placement="top" className="min-w-56">
           <MoreItems
             onOpenSettings={onOpenSettings}
@@ -317,8 +324,13 @@ function MoreMenu({
     <div className="flex md:hidden">
       <DropdownMenuTrigger>
         <Button
-          aria-label={t("more")}
-          className="text-foreground focus-visible:ring-ring relative flex size-14 items-center justify-center rounded-full bg-white/10 outline-none hover:bg-white/15 focus-visible:ring-2"
+          aria-label={
+            unreadChat > 0
+              ? t("moreWithUnread", { count: unreadChat })
+              : t("more")
+          }
+          data-more-menu
+          className="text-foreground focus-visible:focus-ring relative flex size-14 items-center justify-center rounded-full bg-white/10 outline-hidden hover:bg-white/15 max-[400px]:size-11"
         >
           <Ellipsis className="size-6" aria-hidden="true" />
           {unreadChat > 0 ? (
@@ -381,6 +393,11 @@ function MoreMenu({
   );
 }
 
+/**
+ * The bottom bar, in Zoom's and Meet's order: mic and camera first (each with a device
+ * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
+ * without labels; narrow ones, a little smaller, wrapping rather than cutting any off.
+ */
 export function ControlBar({
   title,
   isOwner,
@@ -398,6 +415,7 @@ export function ControlBar({
   handRaised,
   onToggleHand,
   onReaction,
+  inert,
 }: {
   title: string;
   /** The meeting's owner, who can end it for everyone. */
@@ -428,6 +446,8 @@ export function ControlBar({
   onToggleHand: () => void;
   /** Null when the host has turned reactions off. */
   onReaction: ((code: ReactionCode) => void) | null;
+  /** Out of reach while a sheet covers the room (phones). */
+  inert?: boolean;
 }) {
   const t = useTranslations("Meeting");
   const te = useTranslations("Effects");
@@ -436,14 +456,17 @@ export function ControlBar({
   const count = media.participants.length;
 
   return (
-    <footer className="flex shrink-0 items-start justify-center gap-4 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:justify-between md:px-5">
+    <footer
+      inert={inert}
+      className="flex shrink-0 items-start justify-center gap-4 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:justify-between md:px-5"
+    >
       <div className="text-muted-foreground flex min-w-0 flex-1 items-center gap-2.5 pt-[18px] text-sm max-md:hidden">
         <TimeOfDay />
         <span aria-hidden="true">·</span>
         <span className="truncate">{title}</span>
       </div>
 
-      <div className="flex items-start gap-2 md:gap-0.5">
+      <div className="flex flex-wrap items-start justify-center gap-2 max-[400px]:gap-1 md:flex-nowrap md:gap-0.5">
         <Control
           icon={mic.enabled ? Mic : MicOff}
           label={mic.enabled ? t("mute") : t("unmute")}
@@ -484,6 +507,7 @@ export function ControlBar({
         >
           <DeviceMenu
             label={t("videoSettings")}
+            panelToggle={onOpenEffects ? "effects" : undefined}
             settingsLabel={t("videoSettingsMore")}
             onOpenSettings={() => onOpenSettings("video")}
             extra={
@@ -538,6 +562,7 @@ export function ControlBar({
 
       <div className="flex flex-1 items-start justify-end gap-0.5 max-md:hidden">
         <PanelButton
+          panel="people"
           icon={Users}
           label={t("people.button")}
           accessibleLabel={
@@ -551,6 +576,7 @@ export function ControlBar({
           onPress={() => onTogglePanel("people")}
         />
         <PanelButton
+          panel="chat"
           icon={MessageSquare}
           label={t("chat.title")}
           accessibleLabel={

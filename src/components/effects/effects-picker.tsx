@@ -31,7 +31,7 @@ import type { ShownUpload } from "./use-uploads";
 
 /** Focus is an outline around the tile; the chosen one also has a ring and a check. */
 const TILE =
-  "group relative block aspect-video cursor-default overflow-hidden rounded-lg bg-[#1a1f26] ring-1 ring-black/10 outline-none data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-focus-visible:outline-foreground data-selected:ring-[3px] data-selected:ring-primary dark:ring-white/10";
+  "group relative block aspect-video cursor-default overflow-hidden rounded-lg bg-[#1a1f26] ring-1 ring-black/10 outline-hidden data-focus-visible:focus-ring-strong data-selected:ring-[3px] data-selected:ring-primary dark:ring-white/10";
 
 function Tile({
   value,
@@ -208,7 +208,7 @@ export function EffectsPicker({
         >
           <Button
             isPending={adding}
-            className="data-focus-visible:outline-foreground text-muted-foreground hover:text-foreground flex aspect-video flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-current/40 text-xs font-semibold outline-none data-focus-visible:outline-2 data-focus-visible:outline-offset-2"
+            className="text-muted-foreground hover:text-foreground data-focus-visible:focus-ring-strong flex aspect-video flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-current/40 text-xs font-semibold outline-hidden"
           >
             {adding ? (
               <LoaderCircle

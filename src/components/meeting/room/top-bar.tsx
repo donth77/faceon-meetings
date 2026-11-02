@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import {
   ChevronDown,
   Clock3,
@@ -11,8 +12,9 @@ import {
   SwitchCamera,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Button, Dialog, type Selection } from "react-aria-components";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -35,7 +37,7 @@ const LAYOUTS: LayoutChoice[] = ["auto", "gallery", "speaker", "spotlight"];
 const HIDES = ["hideSelf", "hideNoVideo"] as const;
 
 const iconButton =
-  "flex size-9 items-center justify-center rounded-[10px] outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-ring";
+  "flex size-9 items-center justify-center rounded-[10px] outline-hidden hover:bg-white/10 focus-visible:focus-ring";
 
 function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
   const t = useTranslations("Meeting");
@@ -69,14 +71,14 @@ function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
           </dl>
           <Button
             onPress={() => void copyLink()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold outline-none focus-visible:ring-2"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:focus-ring mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold outline-hidden"
           >
             <Link2 className="size-4" aria-hidden="true" />
             {t("copyLink")}
           </Button>
           <Button
             onPress={() => void copyInvitation()}
-            className="focus-visible:ring-ring mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+            className="focus-visible:focus-ring mt-2 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-white/10 text-sm font-semibold outline-hidden hover:bg-white/15"
           >
             <Copy className="size-4" aria-hidden="true" />
             {t("copyInvitation")}
@@ -94,6 +96,19 @@ const clock = (seconds: number) =>
 /** Shows a time limit only in its last five minutes, unless it's a demo. */
 const WARN_SECONDS = 5 * 60;
 
+/** Whether the time-limit chip is showing (see TimeLimit). */
+const limitShown = (
+  session: SessionInfo,
+  endsAt: number | null,
+  now: number | null,
+) =>
+  endsAt !== null &&
+  now !== null &&
+  (session.demo || endsAt - now <= WARN_SECONDS * 1000);
+
+/** The minutes left at which everyone hears how long is left. */
+const WARNINGS = [5, 1];
+
 /**
  * The session's time limit: a "Demo" chip with a countdown for demo meetings, and a
  * countdown in the last five minutes of any other limited meeting.
@@ -107,18 +122,33 @@ function TimeLimit({
 }) {
   const t = useTranslations("Meeting");
   const now = useNow(1000);
-  if (now === null || endsAt === null) return null;
-  const left = Math.max(0, Math.round((endsAt - now) / 1000));
+  const left =
+    now === null || endsAt === null
+      ? null
+      : Math.max(0, Math.round((endsAt - now) / 1000));
+  // The countdown is only seen; say it at five minutes and at one (4.1.3).
+  const warned = useRef<number | null>(null);
+  useEffect(() => {
+    if (left === null) return;
+    const due = WARNINGS.findLast((minutes) => left <= minutes * 60);
+    if (due === undefined || left === 0 || due === warned.current) return;
+    warned.current = due;
+    toast(t("minutesLeft", { minutes: due }), { id: "time-limit" });
+  }, [left, t]);
+  if (left === null) return null;
   if (!session.demo && left > WARN_SECONDS) return null;
   const urgent = left <= WARN_SECONDS;
 
   return (
     <TooltipTrigger delay={300}>
       <Button
-        className={`focus-visible:ring-ring flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 font-mono text-sm tabular-nums outline-none focus-visible:ring-2 ${urgent ? "bg-amber-400/20 text-amber-100" : "bg-white/10"}`}
+        className={`focus-visible:focus-ring flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] px-2.5 font-mono text-sm whitespace-nowrap tabular-nums outline-hidden ${urgent ? "bg-amber-400/20 text-amber-100" : "bg-white/10"}`}
       >
         {session.demo ? (
-          <span className="font-sans font-semibold">{t("demo")} ·</span>
+          // Below 400 px only the countdown shows; "Demo" stays in its name.
+          <span className="font-sans font-semibold max-[400px]:sr-only">
+            {t("demo")} ·
+          </span>
         ) : null}
         {t("timeLeft", { time: clock(left) })}
       </Button>
@@ -134,8 +164,17 @@ function TimeLimit({
   );
 }
 
-/** How long the meeting has been going, from the earliest join we can see. */
-function Elapsed() {
+/**
+ * How long the meeting has been going, from the earliest join we can see. On a phone it
+ * makes way while the time-limit chip shows.
+ */
+function Elapsed({
+  session,
+  endsAt,
+}: {
+  session: SessionInfo;
+  endsAt: number | null;
+}) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
   const now = useNow(1000);
@@ -158,7 +197,10 @@ function Elapsed() {
     <span
       role="timer"
       aria-label={t("elapsed", { time })}
-      className="text-foreground/85 flex items-center gap-1.5 font-mono text-sm tabular-nums"
+      className={cn(
+        "text-foreground/85 flex items-center gap-1.5 font-mono text-sm tabular-nums",
+        limitShown(session, endsAt, now) && "max-sm:hidden",
+      )}
     >
       <Clock3 className="size-4" aria-hidden="true" />
       {time}
@@ -194,11 +236,11 @@ function LayoutMenu({
     <DropdownMenuTrigger>
       <Button
         aria-label={t("layoutLabel", { layout: t(`layouts.${view.layout}`) })}
-        className="focus-visible:ring-ring flex h-9 items-center gap-2 rounded-[10px] bg-white/10 pr-2.5 pl-3 text-sm outline-none hover:bg-white/15 focus-visible:ring-2"
+        className="focus-visible:focus-ring flex h-9 items-center gap-2 rounded-[10px] bg-white/10 pr-2.5 pl-3 text-sm outline-hidden hover:bg-white/15 max-[400px]:w-9 max-[400px]:justify-center max-[400px]:px-0"
       >
         <LayoutGrid className="size-[18px]" aria-hidden="true" />
         <span className="max-sm:hidden">{t(`layouts.${view.layout}`)}</span>
-        <ChevronDown className="size-4" aria-hidden="true" />
+        <ChevronDown className="size-4 max-[400px]:hidden" aria-hidden="true" />
       </Button>
       <DropdownMenu placement="bottom end" className="min-w-64">
         <DropdownMenuGroup
@@ -265,7 +307,7 @@ function LockedMark() {
   if (!locked) return null;
   return (
     <TooltipTrigger delay={300}>
-      <Button className="text-muted-foreground focus-visible:ring-ring flex size-7 items-center justify-center rounded-lg outline-none hover:bg-white/10 focus-visible:ring-2">
+      <Button className="text-muted-foreground focus-visible:focus-ring flex size-7 items-center justify-center rounded-lg outline-hidden hover:bg-white/10">
         <Lock className="size-4" aria-label={t("locked")} />
       </Button>
       <Tooltip>{t("lockedHelp")}</Tooltip>
@@ -282,6 +324,7 @@ export function TopBar({
   view,
   onViewChange,
   notes,
+  inert,
 }: {
   title: string;
   meeting: AdmittedMeetingInfo;
@@ -291,22 +334,38 @@ export function TopBar({
   onViewChange: (view: StageView) => void;
   /** "AI notes on", while they are. */
   notes?: ReactNode;
+  /** Out of reach while a sheet covers the room (phones). */
+  inert?: boolean;
 }) {
+  // Joining replaces the screen; focus starts at the meeting's name (2.4.3).
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => heading.current?.focus({ preventScroll: true }), []);
+
   return (
-    <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:px-5">
+    <header
+      inert={inert}
+      className="flex min-h-14 shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:px-5"
+    >
       <div className="flex min-w-0 items-center gap-2">
         <MeetingInfo meeting={meeting} />
-        <h1 className="truncate text-base font-semibold">{title}</h1>
+        <h1
+          ref={heading}
+          tabIndex={-1}
+          className="truncate text-base font-semibold outline-none"
+        >
+          {title}
+        </h1>
         <span className="text-muted-foreground font-mono text-[13px] whitespace-nowrap max-sm:hidden">
           {formatMeetingCode(meeting.code)}
         </span>
         <LockedMark />
       </div>
-      <div className="flex shrink-0 items-center gap-2.5">
+      {/* The controls keep their size; the meeting's name gives way. */}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
         {notes}
         <FlipCamera />
         <TimeLimit session={session} endsAt={endsAt} />
-        <Elapsed />
+        <Elapsed session={session} endsAt={endsAt} />
         <LayoutMenu view={view} onChange={onViewChange} />
       </div>
     </header>
