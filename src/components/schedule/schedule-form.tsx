@@ -75,7 +75,7 @@ import {
 
 import { DateField } from "./date-field";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
-import { CohostsField, InviteesField } from "./invitees-field";
+import { InviteesField } from "./invitees-field";
 import { PasscodeField } from "./passcode-field";
 import { RepeatField } from "./repeat-field";
 import { ScopeDialog } from "./scope-dialog";
@@ -89,8 +89,9 @@ export type ScheduleFormValues = {
   durationMin: number;
   timeZone: string;
   recurrence: Recurrence | null;
+  /** Everyone invited, in the order they were added. */
   invitees: string[];
-  /** Named co-hosts: they join as co-hosts when signed in with these addresses. */
+  /** Those of them named co-hosts: they join as co-hosts when signed in with these addresses. */
   cohosts: string[];
   passcode: boolean;
   /** The passcode itself: the one generated, or the host's own. */
@@ -174,6 +175,7 @@ const toInput = (values: ScheduleFormValues): ScheduleInput => ({
   muteOnEntry: values.muteOnEntry,
   autoNotes: values.autoNotes,
   shareNotes: values.shareNotes,
+  // Everyone, in order; the co-hosts among them are named too.
   invitees: values.invitees,
   cohosts: values.cohosts,
   googleCalendar: values.googleCalendar,
@@ -438,8 +440,7 @@ export function ScheduleForm({
     timeZone: values.timeZone,
     startDate: values.date,
     recurrence: values.recurrence,
-    // Named co-hosts are invited too.
-    invitees: [...values.invitees, ...values.cohosts],
+    invitees: values.invitees,
   };
 
   async function save(scope: SeriesScope) {
@@ -599,24 +600,10 @@ export function ScheduleForm({
           <InviteesField
             label={t("invitePeople")}
             optional={t("optional")}
-            value={values.invitees}
-            onChange={(invitees) =>
-              set({
-                invitees: invitees.filter((e) => !values.cohosts.includes(e)),
-              })
-            }
-          />
-          <CohostsField
-            value={values.cohosts}
-            onChange={(cohosts) =>
-              // Each address on one list: a co-host is invited as one.
-              set({
-                cohosts,
-                invitees: values.invitees.filter((e) => !cohosts.includes(e)),
-              })
-            }
+            invitees={values.invitees}
+            cohosts={values.cohosts}
+            onChange={({ invitees, cohosts }) => set({ invitees, cohosts })}
             hostEmail={calendar.email}
-            help={t("cohostsHelp")}
           />
           <GoogleCalendarField
             connection={calendar.connection}

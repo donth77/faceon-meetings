@@ -10,7 +10,7 @@ order: 3
 1. Select **Schedule** on **Home**, or **Schedule a meeting** on **Upcoming**.
 2. Give it a **Title**, then choose the **Date**, **Start time**, **Duration** and **Time zone**.
 3. To make it repeat, choose an option under **Repeat**. **Custom** covers anything else, such as every other week or the last Friday of each month.
-4. Under **Invite people**, add email addresses if you like. Under **Co-hosts**, add anyone who should join as a co-host (see [Host controls](/help/host-controls)); they're invited too.
+4. Under **Invite people**, add email addresses if you like. Select **Co-host** on anyone who should join as a co-host: they can admit people, mute others and manage the meeting with you, up to 10 (see [Host controls](/help/host-controls)). Everyone on the list is invited, and nobody is on it twice.
 5. With Google Calendar connected, leave **Add to my Google Calendar and send invitations** on (see below).
 6. Under **Security**, choose whether it needs a passcode (keep the one shown, type your own, or select **Generate**), has a waiting room and lets guests in.
 7. Under **When people join**, choose whether people join muted and can join before you.

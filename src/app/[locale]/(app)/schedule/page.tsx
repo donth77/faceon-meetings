@@ -67,7 +67,7 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
             autoNotes: earlier.meeting.settings.autoNotes,
             shareNotes: earlier.meeting.settings.shareNotes,
             ...(await invitationsOf(earlier.meeting.id).then(
-              ({ invitees, cohosts }) => ({ invitees, cohosts }),
+              ({ everyone, cohosts }) => ({ invitees: everyone, cohosts }),
             )),
           }
         : {}),

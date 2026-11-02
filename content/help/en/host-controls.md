@@ -9,7 +9,7 @@ Whoever creates a meeting is its host, and the host can make others co-hosts. Co
 
 ## Name co-hosts ahead of time
 
-Add people under **Co-hosts** when you schedule a meeting, or on your **Personal room** page. When they join signed in with that email address, verified, they're co-hosts from the start: they skip the waiting room and can let others in, even before you arrive. A scheduled meeting invites them along with everyone else. Guests can't be named this way, as they have no account, but you can still make anyone a co-host during the meeting.
+When you schedule a meeting, select **Co-host** on someone in **Invite people**. For your **Personal room**, add them under **Co-hosts** on its page. When they join signed in with that email address, verified, they're co-hosts from the start: they skip the waiting room and can let others in, even before you arrive. A scheduled meeting invites them along with everyone else. Guests can't be named this way, as they have no account, but you can still make anyone a co-host during the meeting.
 
 Changing the list applies to people as they join. Someone already in the meeting keeps the role they have there; use **Make co-host** or **Remove as co-host** for them.
 

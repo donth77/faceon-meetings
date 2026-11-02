@@ -81,9 +81,7 @@ async function EditMeeting({
           recurrence: details.rrule
             ? fromRRule(details.rrule, details.timeZone)
             : null,
-          invitees: details.invitees
-            .filter((i) => !i.cohost)
-            .map((i) => i.email),
+          invitees: details.invitees.map((i) => i.email),
           cohosts: details.invitees.filter((i) => i.cohost).map((i) => i.email),
           passcode: details.passcode !== null,
           passcodeText: details.passcode ?? "",

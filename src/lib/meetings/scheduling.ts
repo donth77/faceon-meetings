@@ -18,6 +18,7 @@ import {
 import { localParts } from "@/lib/time";
 
 import { generatePasscode } from "./generate";
+import { invitationRows } from "./invitations";
 import {
   isTimeZone,
   lastStartOf,
@@ -92,24 +93,6 @@ function settingsFrom(values: ScheduleValues): MeetingSettings {
     autoNotes: values.autoNotes,
     shareNotes: values.shareNotes,
   });
-}
-
-/**
- * The invitation rows for a meeting: invitees, and named co-hosts (invited too). An
- * address on both lists is a co-host.
- */
-function invitationRows(
-  meetingId: string,
-  invitees: readonly string[],
-  cohosts: readonly string[],
-) {
-  const named = new Set(cohosts);
-  return [
-    ...[...new Set(invitees)]
-      .filter((email) => !named.has(email))
-      .map((email) => ({ meetingId, email, cohost: false })),
-    ...[...named].map((email) => ({ meetingId, email, cohost: true })),
-  ];
 }
 
 function checked(values: ScheduleValues): Date {

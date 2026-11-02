@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Crown, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useId,
@@ -8,10 +8,12 @@ import {
   useState,
   type ClipboardEvent,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 
 import { isEmailAddress } from "@/lib/email-address";
 import { MAX_COHOSTS, MAX_INVITEES } from "@/lib/meetings/schedule";
+import { cn } from "@/lib/utils";
 
 /** A stable default avatar for an address, from the same set as everyone else's. */
 function avatarFor(email: string): string {
@@ -34,6 +36,8 @@ function EmailsField({
   removeLabel,
   fullText,
   refuse,
+  chipControl,
+  note,
 }: {
   label: string;
   optional: string;
@@ -47,6 +51,10 @@ function EmailsField({
   fullText: string;
   /** Why an address can't go on this list (it's your own, say), or null. */
   refuse?: ((email: string) => string | null) | undefined;
+  /** Something more on each chip, before its remove button (the co-host toggle). */
+  chipControl?: ((email: string) => ReactNode) | undefined;
+  /** Said as it becomes true, when the list isn't full (no more co-hosts, say). */
+  note?: string | undefined;
 }) {
   const t = useTranslations("Schedule");
   const inputId = useId();
@@ -122,6 +130,7 @@ function EmailsField({
               className="size-6 shrink-0 rounded-full"
             />
             <span className="truncate">{email}</span>
+            {chipControl?.(email)}
             <button
               type="button"
               aria-label={removeLabel(email)}
@@ -168,42 +177,90 @@ function EmailsField({
       ) : null}
       {/* At the cap the field stops taking addresses; say why, as it happens. */}
       <p role="status" className="text-muted-foreground text-sm empty:hidden">
-        {value.length >= max ? fullText : ""}
+        {value.length >= max ? fullText : (note ?? "")}
       </p>
     </div>
   );
 }
 
-/** Invite people by email. */
+/**
+ * Invite people by email, in one list. Each person's chip says whether they join as a
+ * co-host (when signed in with that address), as Google Calendar picks co-hosts from
+ * the guests: nobody is on the list twice. Never your own address: you host.
+ */
 export function InviteesField({
   label,
   optional,
-  value,
+  invitees,
+  cohosts,
   onChange,
+  hostEmail,
 }: {
   label: string;
   optional: string;
-  value: string[];
-  onChange: (emails: string[]) => void;
+  /** Everyone invited, in the order they were added. */
+  invitees: string[];
+  /** Those of them who join as co-hosts. */
+  cohosts: string[];
+  onChange: (people: { invitees: string[]; cohosts: string[] }) => void;
+  hostEmail: string;
 }) {
   const t = useTranslations("Schedule");
+  const own = hostEmail.toLowerCase();
+  const full = cohosts.length >= MAX_COHOSTS;
+  // Removing someone takes their co-host role with them.
+  const change = (nextInvitees: string[], nextCohosts: string[]) =>
+    onChange({
+      invitees: nextInvitees,
+      cohosts: nextCohosts.filter((email) => nextInvitees.includes(email)),
+    });
+
   return (
     <EmailsField
       label={label}
       optional={optional}
-      value={value}
-      onChange={onChange}
+      help={t("cohostsAbout", { count: MAX_COHOSTS })}
+      value={invitees}
+      onChange={(emails) => change(emails, cohosts)}
       max={MAX_INVITEES}
       removeLabel={(email) => t("removeInvitee", { email })}
       fullText={t("inviteesFull", { count: MAX_INVITEES })}
+      refuse={(email) => (email === own ? t("cohostIsYou") : null)}
+      note={full ? t("cohostsFull", { count: MAX_COHOSTS }) : undefined}
+      chipControl={(email) => {
+        const on = cohosts.includes(email);
+        return (
+          <button
+            type="button"
+            aria-pressed={on}
+            aria-label={t("cohostToggle", { email })}
+            disabled={!on && full}
+            onClick={() =>
+              change(
+                invitees,
+                on ? cohosts.filter((e) => e !== email) : [...cohosts, email],
+              )
+            }
+            className={cn(
+              "focus-visible:focus-ring flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-semibold outline-hidden disabled:opacity-50",
+              on
+                ? "bg-chip text-chip-foreground"
+                : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10",
+            )}
+          >
+            <Crown className="size-3.5" aria-hidden="true" />
+            {t("cohost")}
+          </button>
+        );
+      }}
     />
   );
 }
 
 /**
- * Co-hosts named ahead of time: they join as co-hosts when signed in with one of these
- * addresses, and are invited too where the meeting sends invitations. Never the host's
- * own address: they host.
+ * Co-hosts named ahead of time, on their own list where there are no invitees (the
+ * personal room): they join as co-hosts when signed in with one of these addresses.
+ * Never the host's own address: they host.
  */
 export function CohostsField({
   value,
