@@ -187,15 +187,19 @@ function throughTrackProcessor(
       const next = await reader.read().catch(() => null);
       if (!next || next.done) break;
       const frame = next.value;
+      let processed: VideoFrame | undefined;
       try {
         if (running && render(frame, frame.displayWidth, frame.displayHeight)) {
-          await writer.write(
-            new VideoFrame(canvas, { timestamp: frame.timestamp }),
-          );
+          processed = new VideoFrame(canvas, { timestamp: frame.timestamp });
+          // The generator takes the frame (and closes it) once written.
+          await writer.write(processed);
+          processed = undefined;
         }
       } catch {
+        // Stopped while writing: the frame never reached the generator.
         running = false;
       } finally {
+        processed?.close();
         frame.close();
       }
     }
