@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/desktop/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -55,3 +56,7 @@ next-env.d.ts
 /public/effects/vision_wasm_internal.*
 # RNNoise's worklet and Wasm, copied from node_modules by scripts/noise-assets.ts
 /public/noise/rnnoise*
+
+# the desktop app's build output
+/desktop/dist
+/desktop/release

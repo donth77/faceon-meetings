@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data:; style-src 'self'; script-src 'self'"
+    />
+    <title>Choose what to share</title>
+    <link rel="stylesheet" href="picker.css" />
+  </head>
+  <body>
+    <main>
+      <h1 id="title">Choose what to share</h1>
+      <div class="tabs" role="tablist" aria-labelledby="title">
+        <button
+          type="button"
+          role="tab"
+          id="tab-screen"
+          aria-controls="panel"
+          aria-selected="true"
+        >
+          Screens
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-window"
+          aria-controls="panel"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          Windows
+        </button>
+      </div>
+      <div id="panel" role="tabpanel" aria-labelledby="tab-screen">
+        <div
+          id="sources"
+          class="sources"
+          role="radiogroup"
+          aria-labelledby="tab-screen"
+        ></div>
+        <p id="empty" class="empty" hidden>Nothing to share here yet.</p>
+      </div>
+      <footer>
+        <label id="sound-row" class="sound" hidden>
+          <input type="checkbox" id="sound" />
+          Share sound from this computer
+        </label>
+        <div class="actions">
+          <button type="button" id="cancel" class="secondary">Cancel</button>
+          <button type="button" id="share" class="primary" disabled>
+            Share
+          </button>
+        </div>
+      </footer>
+    </main>
+    <script src="picker.js"></script>
+  </body>
+</html>

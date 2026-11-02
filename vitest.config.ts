@@ -12,11 +12,27 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
-    include: [
-      "src/**/*.test.ts",
-      "scripts/**/*.test.ts",
-      "google-addon/src/**/*.test.ts",
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "web",
+          environment: "node",
+          include: [
+            "src/**/*.test.ts",
+            "scripts/**/*.test.ts",
+            "google-addon/src/**/*.test.ts",
+          ],
+        },
+      },
+      {
+        // The desktop app's shell (desktop/): plain Node, nothing of the web app.
+        test: {
+          name: "desktop",
+          environment: "node",
+          include: ["desktop/tests/**/*.test.ts"],
+        },
+      },
     ],
   },
 });

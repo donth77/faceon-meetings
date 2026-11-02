@@ -1,7 +1,12 @@
 packages:
+  - desktop
   - google-addon
 
 ignoredBuiltDependencies:
+  # Electron's binary is fetched by the desktop scripts when they need it.
+  - electron
+  - electron-winstaller
+  - esbuild
   - "@parcel/watcher"
   - "@swc/core"
   - sharp

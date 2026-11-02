@@ -49,6 +49,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The desktop app's build output.
+    "desktop/dist/**",
+    "desktop/release/**",
   ]),
 ]);
 

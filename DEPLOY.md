@@ -401,6 +401,10 @@ FaceOn's own `brand/` uses every option: its mark and a version for dark backgro
 
 The four abstract backgrounds are drawn in FaceOn's colors by `scripts/backgrounds.ts`. They're backgrounds, not branding, but you can change their colors and run it too.
 
+## The desktop app (optional)
+
+The desktop app for macOS and Windows lives in `desktop/`. A copy builds its own: set `FACEON_APP_URL` (your site) and `NEXT_PUBLIC_APP_NAME` in `desktop/.env.local`, run `pnpm desktop:icons` after `pnpm brand`, and follow [desktop/README.md](desktop/README.md) for signing the Mac app on your own Mac, the Windows installer and releases.
+
 ## CI secrets (optional)
 
 GitHub Actions runs the browser tests on every push, against a database it throws away afterwards. The tests that join calls also need a **development** Stream app, never your production one. Add two repository secrets under **Settings → Secrets and variables → Actions → New repository secret**:
