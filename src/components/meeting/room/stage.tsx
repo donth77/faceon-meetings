@@ -16,7 +16,16 @@ import { useRoomTransition } from "./motion";
 import { useRoomControls } from "./room-controls";
 import { Tile } from "./tile";
 
-export type LayoutChoice = "auto" | "gallery" | "speaker";
+export type LayoutChoice = "auto" | "gallery" | "speaker" | "spotlight";
+
+/** How you've chosen to see the meeting: a layout, and who to leave out. */
+export type StageView = {
+  layout: LayoutChoice;
+  /** Your own tile, hidden from you (others still see you). */
+  hideSelf: boolean;
+  /** Tiles of people whose camera is off. */
+  hideNoVideo: boolean;
+};
 
 type StageTile = { participant: RoomParticipant; kind: "video" | "screen" };
 
@@ -55,13 +64,15 @@ const videoOf = (participant: RoomParticipant): StageTile => ({
 /**
  * The video area. Someone you pinned comes first, then a shared screen, then whoever a
  * host spotlighted. Otherwise Auto shows a one-on-one call as the other person with
- * you floating in the corner, and anything bigger as a gallery.
+ * you floating in the corner, and anything bigger as a gallery; Speaker puts whoever's
+ * talking large, and Spotlight shows only them (or the screen). Hide self view and Hide
+ * tiles without video leave tiles out, but never the one shown large.
  */
-export function Stage({ layout }: { layout: LayoutChoice }) {
+export function Stage({ view }: { view: StageView }) {
   const media = useRoomMedia();
   const { pinnedKey, spotlight } = useRoomControls();
-  const people = orderParticipants(media.participants);
-  const presenter = people.find((p) => p.screen);
+  const everyone = orderParticipants(media.participants);
+  const presenter = everyone.find((p) => p.screen);
   const screen: StageTile[] = presenter
     ? [{ participant: presenter, kind: "screen" }]
     : [];
@@ -69,77 +80,79 @@ export function Stage({ layout }: { layout: LayoutChoice }) {
     media.dominantSpeakerKey,
     SPEAKER_SWITCH_MS,
   );
+  // Who the view leaves in the strip or the gallery.
+  const people = everyone.filter(
+    (p) => !(view.hideSelf && p.isLocal) && !(view.hideNoVideo && !p.video),
+  );
+  const stripWithout = (main: RoomParticipant, withScreen = true) => [
+    ...(withScreen ? screen : []),
+    ...people.filter((p) => p !== main).map(videoOf),
+  ];
+  const focus = (main: StageTile, strip: StageTile[]) =>
+    view.layout === "spotlight" ? (
+      <StageFade kind="spotlight">
+        <Fitted>
+          <MainTile tile={main} />
+        </Fitted>
+      </StageFade>
+    ) : (
+      <StageFade kind="focus">
+        <FocusLayout main={main} strip={strip} />
+      </StageFade>
+    );
 
-  const pinned = people.find((p) => p.key === pinnedKey);
-  if (pinned) {
-    return (
-      <StageFade kind="focus">
-        <FocusLayout
-          main={videoOf(pinned)}
-          strip={[
-            ...screen,
-            ...people.filter((p) => p !== pinned).map(videoOf),
-          ]}
-        />
-      </StageFade>
+  const pinned = everyone.find((p) => p.key === pinnedKey);
+  if (pinned) return focus(videoOf(pinned), stripWithout(pinned));
+  if (presenter && view.layout !== "gallery") {
+    return focus(
+      { participant: presenter, kind: "screen" },
+      people.map(videoOf),
     );
   }
-  if (presenter && layout !== "gallery") {
-    return (
-      <StageFade kind="focus">
-        <FocusLayout
-          main={{ participant: presenter, kind: "screen" }}
-          strip={people.map(videoOf)}
-        />
-      </StageFade>
-    );
-  }
-  const spotlighted = people.find((p) => p.userId === spotlight);
-  if (spotlighted) {
-    return (
-      <StageFade kind="focus">
-        <FocusLayout
-          main={videoOf(spotlighted)}
-          strip={[
-            ...screen,
-            ...people.filter((p) => p !== spotlighted).map(videoOf),
-          ]}
-        />
-      </StageFade>
-    );
-  }
+  const spotlighted = everyone.find((p) => p.userId === spotlight);
+  if (spotlighted)
+    return focus(videoOf(spotlighted), stripWithout(spotlighted));
 
-  const self = people.find((p) => p.isLocal);
-  const others = people.filter((p) => !p.isLocal);
+  const self = everyone.find((p) => p.isLocal);
+  const others = everyone.filter((p) => !p.isLocal);
   const speaker = others.find((p) => p.key === speakerKey) ?? others[0] ?? self;
 
-  if (layout === "auto" && others.length === 1 && speaker) {
+  if (view.layout === "auto" && others.length === 1 && speaker) {
     return (
       <StageFade kind="oneOnOne">
-        <OneOnOne other={speaker} self={self} />
+        <OneOnOne other={speaker} self={view.hideSelf ? undefined : self} />
       </StageFade>
     );
   }
-  if (layout === "speaker" && speaker) {
-    return (
-      <StageFade kind="focus">
-        <FocusLayout
-          main={videoOf(speaker)}
-          strip={people.filter((p) => p !== speaker).map(videoOf)}
-        />
-      </StageFade>
-    );
+  if ((view.layout === "speaker" || view.layout === "spotlight") && speaker) {
+    return focus(videoOf(speaker), stripWithout(speaker, false));
   }
 
-  const tiles: StageTile[] = people.map((participant) => ({
-    participant,
-    kind: "video",
-  }));
+  const tiles: StageTile[] = people.map(videoOf);
   if (presenter) tiles.unshift({ participant: presenter, kind: "screen" });
+  if (tiles.length === 0) {
+    return (
+      <StageFade kind="empty">
+        <NobodyShown />
+      </StageFade>
+    );
+  }
   return (
     <StageFade kind="gallery">
       <Gallery tiles={tiles} />
     </StageFade>
+  );
+}
+
+/** When the view's choices leave nobody to show. */
+function NobodyShown() {
+  const t = useTranslations("Meeting");
+  return (
+    <div className="flex size-full items-center justify-center p-6">
+      <p className="text-muted-foreground max-w-xs text-center text-sm">
+        {t("nothingToShow")}
+      </p>
+    </div>
   );
 }
 

@@ -48,7 +48,7 @@ import { FloatingReactions } from "./reactions";
 import { moderates, roleIn, roomRoleOf } from "./roles";
 import { RoomBadgesProvider } from "./room-badges";
 import { RoomControlsProvider, type RoomControls } from "./room-controls";
-import { Stage, type LayoutChoice } from "./stage";
+import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
 import { useHostNotices } from "./use-host-notices";
@@ -174,7 +174,16 @@ export function MeetingShell({
   const media = useRoomMedia();
   const title = useMeetingTitle(meeting);
   const shellRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<LayoutChoice>("auto");
+  const [view, setView] = useState<StageView>({
+    layout: "auto",
+    hideSelf: false,
+    hideNoVideo: false,
+  });
+  function changeView(next: StageView) {
+    // Others still see you; say so, as Meet does.
+    if (next.hideSelf && !view.hideSelf) toast(t("selfHidden"));
+    setView(next);
+  }
   // Participants and Chat can both be open on desktop; a phone shows the latest one.
   const [panels, setPanels] = useState<PanelName[]>([]);
   const [settings, setSettings] = useState<InCallSection | null>(null);
@@ -456,14 +465,14 @@ export function MeetingShell({
             meeting={meeting}
             session={session}
             endsAt={endsAt}
-            layout={layout}
-            onLayoutChange={setLayout}
+            view={view}
+            onViewChange={changeView}
           />
           <ConnectionBanner status={media.status} />
           <div className="flex min-h-0 flex-1 px-3">
             <main className="relative min-h-0 min-w-0 flex-1">
               <RoomBadgesProvider value={badges}>
-                <Stage layout={layout} />
+                <Stage view={view} />
               </RoomBadgesProvider>
               <FloatingReactions
                 reactions={shownReactions}

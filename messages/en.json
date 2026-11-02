@@ -262,7 +262,8 @@
     "layouts": {
       "auto": "Auto",
       "gallery": "Gallery",
-      "speaker": "Speaker"
+      "speaker": "Speaker",
+      "spotlight": "Spotlight"
     },
     "flipCamera": "Switch camera",
     "reconnecting": "Reconnecting…",
@@ -465,7 +466,18 @@
     "showPreview": "Show preview",
     "previewHidden": "Preview hidden. Everyone else still sees your screen.",
     "tryAgain": "Try again",
-    "reactionFrom": "{name}: {reaction}"
+    "reactionFrom": "{name}: {reaction}",
+    "layoutHints": {
+      "auto": "Picks the layout for you",
+      "gallery": "Everyone the same size",
+      "speaker": "Whoever's talking, large, with everyone beside",
+      "spotlight": "Only whoever's talking, or the shared screen"
+    },
+    "viewOptions": "What to show",
+    "hideSelf": "Hide self view",
+    "hideNoVideo": "Hide tiles without video",
+    "selfHidden": "Your tile is hidden from you. Others still see you.",
+    "nothingToShow": "Nobody to show with these choices. Change them in Layout, at the top right."
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",

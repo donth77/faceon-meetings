@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -27,9 +28,10 @@ import { formatMeetingCode } from "@/lib/meetings/codes";
 
 import { useInvitation } from "../invitation";
 import { useRoomMedia } from "../media";
-import type { LayoutChoice } from "./stage";
+import type { LayoutChoice, StageView } from "./stage";
 
-const LAYOUTS: LayoutChoice[] = ["auto", "gallery", "speaker"];
+const LAYOUTS: LayoutChoice[] = ["auto", "gallery", "speaker", "spotlight"];
+const HIDES = ["hideSelf", "hideNoVideo"] as const;
 
 const iconButton =
   "flex size-9 items-center justify-center rounded-[10px] outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-ring";
@@ -164,40 +166,73 @@ function Elapsed() {
 }
 
 function LayoutMenu({
-  value,
+  view,
   onChange,
 }: {
-  value: LayoutChoice;
-  onChange: (layout: LayoutChoice) => void;
+  view: StageView;
+  onChange: (view: StageView) => void;
 }) {
   const t = useTranslations("Meeting");
 
-  function handleChange(keys: Selection) {
+  function chooseLayout(keys: Selection) {
     const [next] = keys === "all" ? [] : [...keys];
-    if (LAYOUTS.includes(next as LayoutChoice)) onChange(next as LayoutChoice);
+    const layout = LAYOUTS.find((choice) => choice === next);
+    if (layout) onChange({ ...view, layout });
+  }
+
+  function chooseHides(keys: Selection) {
+    const on = keys === "all" ? new Set<string>(HIDES) : new Set(keys);
+    onChange({
+      ...view,
+      hideSelf: on.has("hideSelf"),
+      hideNoVideo: on.has("hideNoVideo"),
+    });
   }
 
   return (
     <DropdownMenuTrigger>
       <Button
-        aria-label={t("layoutLabel", { layout: t(`layouts.${value}`) })}
+        aria-label={t("layoutLabel", { layout: t(`layouts.${view.layout}`) })}
         className="focus-visible:ring-ring flex h-9 items-center gap-2 rounded-[10px] bg-white/10 pr-2.5 pl-3 text-sm outline-none hover:bg-white/15 focus-visible:ring-2"
       >
         <LayoutGrid className="size-[18px]" aria-hidden="true" />
-        <span className="max-sm:hidden">{t(`layouts.${value}`)}</span>
+        <span className="max-sm:hidden">{t(`layouts.${view.layout}`)}</span>
         <ChevronDown className="size-4" aria-hidden="true" />
       </Button>
-      <DropdownMenu placement="bottom end" className="min-w-44">
+      <DropdownMenu placement="bottom end" className="min-w-64">
         <DropdownMenuGroup
           aria-label={t("layout")}
           selectionMode="single"
           disallowEmptySelection
-          selectedKeys={[value]}
-          onSelectionChange={handleChange}
+          selectedKeys={[view.layout]}
+          onSelectionChange={chooseLayout}
         >
           {LAYOUTS.map((layout) => (
-            <DropdownMenuItem key={layout} id={layout}>
-              {t(`layouts.${layout}`)}
+            <DropdownMenuItem
+              key={layout}
+              id={layout}
+              textValue={t(`layouts.${layout}`)}
+              className="py-1.5"
+            >
+              <span className="flex flex-col">
+                <span>{t(`layouts.${layout}`)}</span>
+                <span className="text-muted-foreground text-xs">
+                  {t(`layoutHints.${layout}`)}
+                </span>
+              </span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup
+          aria-label={t("viewOptions")}
+          selectionMode="multiple"
+          selectedKeys={HIDES.filter((hide) => view[hide])}
+          onSelectionChange={chooseHides}
+        >
+          {HIDES.map((hide) => (
+            <DropdownMenuItem key={hide} id={hide}>
+              {t(hide)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
@@ -243,15 +278,15 @@ export function TopBar({
   meeting,
   session,
   endsAt,
-  layout,
-  onLayoutChange,
+  view,
+  onViewChange,
 }: {
   title: string;
   meeting: AdmittedMeetingInfo;
   session: SessionInfo;
   endsAt: number | null;
-  layout: LayoutChoice;
-  onLayoutChange: (layout: LayoutChoice) => void;
+  view: StageView;
+  onViewChange: (view: StageView) => void;
 }) {
   return (
     <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:px-5">
@@ -267,7 +302,7 @@ export function TopBar({
         <FlipCamera />
         <TimeLimit session={session} endsAt={endsAt} />
         <Elapsed />
-        <LayoutMenu value={layout} onChange={onLayoutChange} />
+        <LayoutMenu view={view} onChange={onViewChange} />
       </div>
     </header>
   );

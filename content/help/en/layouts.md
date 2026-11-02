@@ -11,7 +11,10 @@ Select **Layout** at the top right of the meeting:
 
 - **Auto** picks for you. In a call with one other person, they fill the screen and you're in the corner. With more people, everyone shares the screen. A shared screen takes the main spot.
 - **Gallery** shows everyone at the same size.
-- **Speaker** shows whoever is talking, large.
+- **Speaker** shows whoever is talking, large, with everyone else beside them.
+- **Spotlight** shows only whoever is talking, or the shared screen.
+
+In the same menu, **Hide self view** hides your own tile from you (others still see you), and **Hide tiles without video** leaves out people whose camera is off.
 
 ## Pin someone
 
