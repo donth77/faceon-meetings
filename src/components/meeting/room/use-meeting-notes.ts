@@ -182,7 +182,9 @@ export function useMeetingNotes({
       toast(
         yours
           ? t("notes.downloadOffer")
-          : t("notes.bannerDownload", { name: notes.name }),
+          : t(shared ? "notes.bannerDownloadShared" : "notes.bannerDownload", {
+              name: notes.name,
+            }),
         {
           id: "notes-banner",
           duration: 20_000,
@@ -196,10 +198,16 @@ export function useMeetingNotes({
     }
     if (yours) return;
     if (selfState === "unsupported") {
-      toast(t("notes.bannerUnsupported", { name: notes.name }), {
-        id: "notes-banner",
-        duration: 15_000,
-      });
+      toast(
+        t(
+          shared ? "notes.bannerUnsupportedShared" : "notes.bannerUnsupported",
+          { name: notes.name },
+        ),
+        {
+          id: "notes-banner",
+          duration: 15_000,
+        },
+      );
       return;
     }
     toast(

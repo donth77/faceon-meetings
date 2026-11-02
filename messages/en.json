@@ -677,6 +677,8 @@
       "bannerShared": "{name} turned on AI notes. A summary will be made from what's said and shared with the participants, and you can choose not to be transcribed.",
       "bannerDownload": "{name} turned on AI notes. To put what you say in them, your browser needs a one-time download first.",
       "bannerUnsupported": "{name} turned on AI notes. This browser can't transcribe on your device, so what you say isn't in them.",
+      "bannerDownloadShared": "{name} turned on AI notes, which are shared with the participants. To put what you say in them, your browser needs a one-time download first.",
+      "bannerUnsupportedShared": "{name} turned on AI notes, which are shared with the participants. This browser can't transcribe on your device, so what you say isn't in them.",
       "stopped": "AI notes are off.",
       "dontTranscribe": "Don't transcribe me",
       "dontTranscribeHelp": "What you say stays out of the notes",
