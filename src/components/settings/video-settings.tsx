@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { MirroredVideo } from "@/components/device/mirrored-video";
 import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
-import { SwitchRow } from "@/components/schedule/fields";
+import { SwitchRow } from "@/components/ui/form-fields";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import {
   savePreferences,
