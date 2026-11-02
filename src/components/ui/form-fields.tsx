@@ -63,13 +63,23 @@ export function Field({
   );
 }
 
-/** The dot of a radio choice; put it inside a React Aria Radio with the group class. */
-export function RadioDot({ className }: { className?: string }) {
+/**
+ * The dot of a radio choice; put it inside a React Aria Radio with the group class. It
+ * shows keyboard focus, unless the choice is a card that shows it (`showFocus={false}`).
+ */
+export function RadioDot({
+  className,
+  showFocus = true,
+}: {
+  className?: string;
+  showFocus?: boolean;
+}) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "border-input group-data-selected:border-primary group-data-focus-visible:focus-ring flex size-[18px] shrink-0 items-center justify-center rounded-full border-2",
+        "border-input group-data-selected:border-primary flex size-[18px] shrink-0 items-center justify-center rounded-full border-2",
+        showFocus && "group-data-focus-visible:focus-ring",
         className,
       )}
     >

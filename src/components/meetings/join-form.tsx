@@ -66,7 +66,7 @@ export function JoinForm({ label }: { label?: string }) {
         </Button>
       </div>
       {invalid ? (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
+        <p id={errorId} role="alert" className="text-destructive-text text-sm">
           {t("error")}
         </p>
       ) : null}

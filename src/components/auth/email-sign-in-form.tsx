@@ -11,7 +11,13 @@ import { signIn } from "@/lib/auth/client";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
 import { safeRedirectPath } from "@/lib/routes";
 
-import { FormNotice, isEmailAddress, PasswordField, TextField } from "./fields";
+import {
+  focusFirstInvalid,
+  FormNotice,
+  isEmailAddress,
+  PasswordField,
+  TextField,
+} from "./fields";
 
 const forgotLinkClass =
   "text-primary rounded text-sm font-semibold underline-offset-4 hover:underline";
@@ -31,6 +37,7 @@ export function EmailSignInForm() {
     event.preventDefault();
     if (!isEmailAddress(email)) {
       setEmailError(t("errors.invalidEmail"));
+      focusFirstInvalid(event.currentTarget);
       return;
     }
     setEmailError(null);
@@ -80,14 +87,14 @@ export function EmailSignInForm() {
         onChange={setEmail}
         autoComplete="email"
         error={emailError}
-        disabled={pending}
+        pending={pending}
       />
       <PasswordField
         label={t("password")}
         value={password}
         onChange={setPassword}
         autoComplete="current-password"
-        disabled={pending}
+        pending={pending}
         aside={
           <Link href="/forgot-password" className={forgotLinkClass}>
             {t("forgotPassword")}

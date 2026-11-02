@@ -272,7 +272,7 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
               </LinkButton>
               <Button
                 variant="outline"
-                className="text-destructive hover:text-destructive h-[38px] rounded-[10px]"
+                className="text-destructive-text hover:text-destructive-text h-[38px] rounded-[10px]"
                 onPress={() => setDeleting(true)}
               >
                 <Trash2 aria-hidden="true" />

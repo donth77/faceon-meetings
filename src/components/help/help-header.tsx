@@ -271,7 +271,7 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
           ) : turn.status === "noMatch" ? (
             <p className="text-[15px]">{t("noMatch")}</p>
           ) : turn.status === "failed" && !turn.answer ? (
-            <p className="text-destructive text-[15px]">{t("failed")}</p>
+            <p className="text-destructive-text text-[15px]">{t("failed")}</p>
           ) : (
             <Answer text={turn.answer} />
           )}

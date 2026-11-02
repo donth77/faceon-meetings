@@ -10,7 +10,12 @@ import { requestPasswordReset } from "@/lib/auth/client";
 import { publicEnv } from "@/lib/env";
 
 import { AuthCard } from "./auth-card";
-import { FormNotice, isEmailAddress, TextField } from "./fields";
+import {
+  focusFirstInvalid,
+  FormNotice,
+  isEmailAddress,
+  TextField,
+} from "./fields";
 
 /**
  * "Reset your password": sends a reset link. The reply is the same whether or not the
@@ -29,6 +34,7 @@ export function ForgotPasswordCard() {
     event.preventDefault();
     if (!isEmailAddress(email)) {
       setEmailError(t("errors.invalidEmail"));
+      focusFirstInvalid(event.currentTarget);
       return;
     }
     setEmailError(null);
@@ -69,7 +75,7 @@ export function ForgotPasswordCard() {
           onChange={setEmail}
           autoComplete="email"
           error={emailError}
-          disabled={state === "sending"}
+          pending={state === "sending"}
         />
         <Button
           type="submit"

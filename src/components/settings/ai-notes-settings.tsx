@@ -205,12 +205,12 @@ function KeyField({
       </div>
       <p role="status" className="text-[13px] empty:hidden">
         {test.state === "works" ? (
-          <span className="text-live flex items-center gap-1.5 font-semibold">
+          <span className="text-live-text flex items-center gap-1.5 font-semibold">
             <Check className="size-4" aria-hidden="true" />
             {t("works")}
           </span>
         ) : test.state === "failed" ? (
-          <span className="text-destructive">
+          <span className="text-destructive-text">
             {tf(test.failure, { provider: name })}
             {test.detail
               ? ` ${t("providerSaid", { detail: test.detail })}`
@@ -255,15 +255,15 @@ export function AiNotesSettings() {
             <Radio
               key={id}
               value={id}
-              className="group bg-card data-focus-visible:ring-ring flex cursor-default items-start gap-3 rounded-xl p-4 ring-1 ring-[#e2e5ea] outline-none data-focus-visible:ring-2 data-selected:ring-2 data-selected:ring-[#1f5eff] dark:ring-white/10"
+              className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex cursor-default items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
             >
-              <RadioDot className="mt-0.5" />
+              <RadioDot className="mt-0.5" showFocus={false} />
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[15px] font-bold">
                   {choices[id].title}
                   {id === "onDevice" && onDevice ? (
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${onDevice === "ready" ? "bg-live/15 text-live" : "bg-black/5 dark:bg-white/10"}`}
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${onDevice === "ready" ? "bg-live/15 text-live-text" : "bg-black/5 dark:bg-white/10"}`}
                     >
                       {t(`onDeviceState.${onDevice}`)}
                     </span>

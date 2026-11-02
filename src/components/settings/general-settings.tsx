@@ -179,14 +179,14 @@ export function GeneralSettings({
               <Radio
                 key={option}
                 value={option}
-                className="group bg-card data-focus-visible:ring-ring flex min-w-0 flex-[1_1_160px] cursor-default flex-col gap-2 rounded-xl p-2.5 ring-1 ring-[#e2e5ea] outline-none data-focus-visible:ring-2 data-selected:ring-2 data-selected:ring-[#1f5eff] dark:ring-white/10"
+                className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex min-w-0 flex-[1_1_160px] cursor-default flex-col gap-2 rounded-xl p-2.5 ring-1 outline-hidden data-selected:ring-2"
               >
-                <span className="flex h-[72px] overflow-hidden rounded-lg ring-1 ring-[#e2e5ea] dark:ring-white/10">
+                <span className="ring-border flex h-[72px] overflow-hidden rounded-lg ring-1">
                   {option !== "dark" ? <ThemePreview dark={false} /> : null}
                   {option !== "light" ? <ThemePreview dark /> : null}
                 </span>
                 <span className="flex items-center gap-2 text-[15px] font-bold">
-                  <RadioDot className="mt-0.5" />
+                  <RadioDot className="mt-0.5" showFocus={false} />
                   {t(`themes.${option}`)}
                 </span>
                 <span className="text-muted-foreground text-[13px]">

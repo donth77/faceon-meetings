@@ -3,6 +3,7 @@
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { cn } from "cn";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { useId } from "react";
 import {
   Button,
   Calendar,
@@ -57,14 +58,16 @@ export function DateField({
   nextLabel: string;
 }) {
   const locale = useIntlLocale();
+  const valueId = useId();
   return (
     <DialogTrigger>
       <Button
         id={id}
-        aria-labelledby={labelId}
+        // The label, then the date: "Date, Tue, Nov 3, 2026".
+        aria-labelledby={`${labelId} ${valueId}`}
         className={cn(INPUT, "flex items-center gap-2 text-left")}
       >
-        <span className="min-w-0 flex-1 truncate">
+        <span id={valueId} className="min-w-0 flex-1 truncate">
           {formatted(value, locale)}
         </span>
         <CalendarDays
@@ -89,7 +92,7 @@ export function DateField({
                 <Button
                   slot="previous"
                   aria-label={previousLabel}
-                  className="focus-visible:ring-ring hover:bg-accent flex size-9 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
+                  className="hover:bg-accent data-focus-visible:focus-ring flex size-9 items-center justify-center rounded-lg outline-hidden"
                 >
                   <ChevronLeft className="size-5" aria-hidden="true" />
                 </Button>
@@ -97,7 +100,7 @@ export function DateField({
                 <Button
                   slot="next"
                   aria-label={nextLabel}
-                  className="focus-visible:ring-ring hover:bg-accent flex size-9 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
+                  className="hover:bg-accent data-focus-visible:focus-ring flex size-9 items-center justify-center rounded-lg outline-hidden"
                 >
                   <ChevronRight className="size-5" aria-hidden="true" />
                 </Button>
@@ -114,7 +117,7 @@ export function DateField({
                   {(date) => (
                     <CalendarCell
                       date={date}
-                      className="data-focus-visible:ring-ring data-hovered:bg-accent data-selected:bg-primary data-selected:text-primary-foreground data-disabled:text-muted-foreground/50 data-outside-month:text-muted-foreground/60 flex size-9 cursor-default items-center justify-center rounded-lg text-sm outline-none data-focus-visible:ring-2"
+                      className="data-hovered:bg-accent data-selected:bg-primary data-selected:text-primary-foreground data-disabled:text-muted-foreground/50 data-outside-month:text-muted-foreground/60 data-focus-visible:focus-ring-strong flex size-9 cursor-default items-center justify-center rounded-lg text-sm outline-hidden"
                     />
                   )}
                 </CalendarGridBody>

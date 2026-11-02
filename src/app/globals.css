@@ -24,6 +24,8 @@
   /* Solid red with white text (6.6:1), and red text on light surfaces. */
   --destructive: #b42318;
   --destructive-text: #b42318;
+  /* Red buttons with a white label (6.6:1 light, 4.8:1 dark). */
+  --destructive-fill: #b42318;
   --border: #e2e5ea;
   /* Field and switch outlines: 3:1 or more against white and the page (1.4.11). */
   --input: #7d8794;
@@ -32,7 +34,7 @@
   --brand: #1f5eff;
   --live: #1db46b;
   /* Green text: --live itself is too light on white. */
-  --live-text: #13804b;
+  --live-text: #0f7444;
   --ai: #5b4db3;
   /* Tinted chips and badges: brand text on a soft brand fill (5.8:1). */
   --chip: #e8eeff;
@@ -69,6 +71,7 @@
   /* Solid red for icons and fills; red text uses the lighter --destructive-text. */
   --destructive: #f04438;
   --destructive-text: #ff8a8a;
+  --destructive-fill: #d92d20;
   --border: #262c36;
   --input: #6b7482;
   --ring: #4d7eff;
@@ -190,6 +193,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-destructive-text: var(--destructive-text);
+  --color-destructive-fill: var(--destructive-fill);
   --color-live-text: var(--live-text);
   --color-chip: var(--chip);
   --color-chip-foreground: var(--chip-foreground);
@@ -254,6 +258,12 @@
 @utility focus-ring-inset {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
+}
+/* For choices whose selected look is already the brand colour (a picked day, avatar or
+   theme card), so focus and selection look different. */
+@utility focus-ring-strong {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
 }
 
 /* Overlays (dialogs, sheets, menus, popovers, tooltips) appear without zooming or

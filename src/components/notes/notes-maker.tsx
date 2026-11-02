@@ -109,7 +109,7 @@ function SaveControls({
       </div>
       <div role="status" className="text-[13px] leading-normal empty:hidden">
         {saveState === "failed" ? (
-          <p className="text-destructive">{t("saveFailed")}</p>
+          <p className="text-destructive-text">{t("saveFailed")}</p>
         ) : made.saved ? (
           <p className="text-muted-foreground">
             {shared ? t("savedShared") : t("savedPrivate")}{" "}
@@ -328,7 +328,7 @@ export function NotesMaker({
       body = (
         <div className="flex flex-col gap-3 text-sm leading-normal">
           {state.step === "failed" ? (
-            <p role="alert" className="text-destructive">
+            <p role="alert" className="text-destructive-text">
               {t(`failed.${state.failure.kind}`, { provider })}
               {"detail" in state.failure && state.failure.detail
                 ? ` ${t("providerSaid", { provider, detail: state.failure.detail })}`

@@ -14,7 +14,7 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
     <p
       id={id}
-      className="text-destructive flex items-start gap-1.5 text-[13px] leading-[1.45]"
+      className="text-destructive-text flex items-start gap-1.5 text-[13px] leading-[1.45]"
     >
       <TriangleAlert className="mt-px size-4 shrink-0" aria-hidden="true" />
       {children}
@@ -28,8 +28,19 @@ type FieldProps = {
   onChange: (value: string) => void;
   autoComplete: string;
   error?: string | null;
-  disabled?: boolean;
+  /** The form is being sent: read-only, so focus stays where it is. */
+  pending?: boolean;
 };
+
+/**
+ * After a submit finds problems: focus the first field with one, so its error is read
+ * out with it. Call it after setting the errors.
+ */
+export function focusFirstInvalid(form: HTMLFormElement | null) {
+  requestAnimationFrame(() =>
+    form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(),
+  );
+}
 
 /** A labelled text input with an inline error, as the account forms use. */
 export function TextField({
@@ -38,7 +49,7 @@ export function TextField({
   onChange,
   autoComplete,
   error,
-  disabled,
+  pending,
   type = "text",
 }: FieldProps & { type?: "text" | "email" }) {
   const id = useId();
@@ -55,7 +66,7 @@ export function TextField({
         onChange={(event) => onChange(event.target.value)}
         autoComplete={autoComplete}
         spellCheck={false}
-        disabled={disabled}
+        readOnly={pending}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         className={inputClass}
@@ -72,7 +83,7 @@ export function PasswordField({
   onChange,
   autoComplete,
   error,
-  disabled,
+  pending,
   hint,
   aside,
 }: FieldProps & {
@@ -101,7 +112,7 @@ export function PasswordField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           autoComplete={autoComplete}
-          disabled={disabled}
+          readOnly={pending}
           aria-invalid={error ? true : undefined}
           aria-describedby={message ? messageId : undefined}
           className={cn(inputClass, "pr-13")}

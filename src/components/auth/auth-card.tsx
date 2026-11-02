@@ -1,17 +1,30 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useRef, type ReactNode } from "react";
 
 /** The white card every account screen uses: optional icon, heading, subtitle, body. */
 export function AuthCard({
   title,
   subtitle,
   icon,
+  focusHeading,
   children,
 }: {
   title: string;
   subtitle?: ReactNode;
   icon?: ReactNode;
+  /**
+   * The card replaced a form (Check your email, Password changed): focus moves to its
+   * heading, so keyboard and screen reader users start from the new step.
+   */
+  focusHeading?: boolean;
   children?: ReactNode;
 }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focusHeading) heading.current?.focus();
+  }, [focusHeading, title]);
+
   return (
     <section
       aria-labelledby="auth-title"
@@ -20,8 +33,10 @@ export function AuthCard({
       {icon}
       <div className="flex flex-col gap-2">
         <h1
+          ref={heading}
           id="auth-title"
-          className="text-[26px] leading-tight font-bold tracking-tight text-balance sm:text-[30px]"
+          tabIndex={focusHeading ? -1 : undefined}
+          className="text-[26px] leading-tight font-bold tracking-tight text-balance outline-none sm:text-[30px]"
         >
           {title}
         </h1>

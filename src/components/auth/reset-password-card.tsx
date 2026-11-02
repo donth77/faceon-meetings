@@ -12,7 +12,7 @@ import { authProblem } from "@/lib/auth/problems";
 import { publicEnv } from "@/lib/env";
 
 import { AuthCard, AuthCardIcon } from "./auth-card";
-import { FormNotice, PasswordField } from "./fields";
+import { focusFirstInvalid, FormNotice, PasswordField } from "./fields";
 
 type State = "idle" | "saving" | "done" | "expired" | "tooMany" | "failed";
 
@@ -37,14 +37,17 @@ export function ResetPasswordCard() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     if (password.length < MIN_PASSWORD_LENGTH) {
       setErrors({
         password: t("errors.passwordShort", { min: MIN_PASSWORD_LENGTH }),
       });
+      focusFirstInvalid(form);
       return;
     }
     if (confirm !== password) {
       setErrors({ confirm: t("errors.passwordMismatch") });
+      focusFirstInvalid(form);
       return;
     }
     if (!token) return;
@@ -64,6 +67,7 @@ export function ResetPasswordCard() {
             : t("errors.passwordShort", { min: MIN_PASSWORD_LENGTH }),
       });
       setState("idle");
+      focusFirstInvalid(form);
     } else if (kind === "invalidToken") {
       setState("expired");
     } else {
@@ -76,6 +80,7 @@ export function ResetPasswordCard() {
       <AuthCard
         title={t("reset.expiredTitle")}
         subtitle={t("reset.expiredBody")}
+        focusHeading
       >
         <LinkButton href="/forgot-password" className={bigButton}>
           {t("reset.requestNew")}
@@ -89,6 +94,7 @@ export function ResetPasswordCard() {
       <AuthCard
         title={t("reset.doneTitle")}
         subtitle={t("reset.doneBody")}
+        focusHeading
         icon={
           <AuthCardIcon tone="success">
             <Check className="size-7" />
@@ -124,7 +130,7 @@ export function ResetPasswordCard() {
           autoComplete="new-password"
           hint={t("passwordHint", { min: MIN_PASSWORD_LENGTH })}
           error={errors.password}
-          disabled={saving}
+          pending={saving}
         />
         <PasswordField
           label={t("confirmPassword")}
@@ -132,7 +138,7 @@ export function ResetPasswordCard() {
           onChange={setConfirm}
           autoComplete="new-password"
           error={errors.confirm}
-          disabled={saving}
+          pending={saving}
         />
         <Button type="submit" isPending={saving} className={bigButton}>
           {saving ? (

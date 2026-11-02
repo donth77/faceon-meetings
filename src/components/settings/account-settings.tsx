@@ -16,7 +16,11 @@ import { useId, useState, type FormEvent } from "react";
 import { Radio, RadioGroup, ToggleButton } from "react-aria-components";
 import { toast } from "sonner";
 
-import { FormNotice, PasswordField } from "@/components/auth/fields";
+import {
+  focusFirstInvalid,
+  FormNotice,
+  PasswordField,
+} from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,15 +160,15 @@ function Profile({
                   key={option}
                   value={option}
                   aria-label={t("avatarOption", { n: index + 1 })}
-                  className="group relative size-16 cursor-pointer rounded-full outline-none"
+                  className="group data-focus-visible:focus-ring-strong relative size-16 cursor-pointer rounded-full outline-hidden"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={avatarSrc(option)}
                     alt=""
-                    className="size-16 rounded-full shadow-[0_0_0_1px_#e2e5ea] group-data-focus-visible:shadow-[0_0_0_3px_var(--card),0_0_0_5px_var(--ring)] group-data-selected:shadow-[0_0_0_3px_var(--card),0_0_0_5px_#1f5eff] dark:shadow-[0_0_0_1px_rgb(255_255_255/0.1)]"
+                    className="size-16 rounded-full shadow-[0_0_0_1px_var(--border)] group-data-selected:shadow-[0_0_0_3px_var(--card),0_0_0_5px_var(--primary)]"
                   />
-                  <span className="absolute -right-0.5 -bottom-0.5 hidden size-[22px] items-center justify-center rounded-full bg-[#1f5eff] text-white shadow-[0_0_0_2px_var(--card)] group-data-selected:flex">
+                  <span className="bg-primary text-primary-foreground absolute -right-0.5 -bottom-0.5 hidden size-[22px] items-center justify-center rounded-full shadow-[0_0_0_2px_var(--card)] group-data-selected:flex">
                     <Check className="size-3.5" aria-hidden="true" />
                   </span>
                 </Radio>
@@ -180,7 +184,7 @@ function Profile({
               <ToggleButton
                 isSelected={usesPhoto}
                 onChange={usePhoto}
-                className="focus-visible:ring-ring bg-background hover:bg-muted flex h-[38px] items-center gap-2 rounded-[10px] border border-[#c9cfd8] px-3.5 text-sm font-semibold whitespace-nowrap outline-none focus-visible:ring-2 data-selected:border-[#1f5eff] data-selected:bg-[#e8eeff] data-selected:text-[#1f5eff] dark:border-white/15 dark:data-selected:bg-[#1f5eff]/20 dark:data-selected:text-[#9bb5ff]"
+                className="bg-background hover:bg-muted border-input data-selected:border-primary data-selected:bg-chip data-selected:text-chip-foreground data-focus-visible:focus-ring flex h-[38px] items-center gap-2 rounded-[10px] border px-3.5 text-sm font-semibold whitespace-nowrap outline-hidden"
               >
                 <User className="size-[18px]" aria-hidden="true" />
                 {t("usePhoto", { provider: account.photoProvider })}
@@ -206,7 +210,11 @@ function Profile({
               className={cn(INPUT, "h-11 text-[15px]")}
             />
             {nameError ? (
-              <span id={nameErrorId} className="text-destructive text-[13px]">
+              <span
+                id={nameErrorId}
+                role="alert"
+                className="text-destructive-text text-[13px]"
+              >
                 {t("nameRequired")}
               </span>
             ) : null}
@@ -242,8 +250,10 @@ function PasswordDialog({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     if (next.length < MIN_PASSWORD_LENGTH) {
       setErrors({ next: tooShort() });
+      focusFirstInvalid(form);
       return;
     }
     setErrors({});
@@ -270,6 +280,7 @@ function PasswordDialog({
               ),
             });
           }
+          focusFirstInvalid(form);
           return;
         }
       } else {
@@ -284,6 +295,7 @@ function PasswordDialog({
                 ? { next: tooShort() }
                 : { form: authT("errors.generic") },
           );
+          focusFirstInvalid(form);
           return;
         }
       }
@@ -330,7 +342,7 @@ function PasswordDialog({
             onChange={setCurrent}
             autoComplete="current-password"
             error={errors.current}
-            disabled={saving}
+            pending={saving}
           />
         ) : null}
         <PasswordField
@@ -340,7 +352,7 @@ function PasswordDialog({
           autoComplete="new-password"
           hint={authT("passwordHint", { min: MIN_PASSWORD_LENGTH })}
           error={errors.next}
-          disabled={saving}
+          pending={saving}
         />
         <DialogFooter>
           <Button variant="outline" onPress={() => onClose(false)}>
@@ -546,8 +558,10 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
 
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     if (hasPassword && !password) {
       setProblem("password");
+      focusFirstInvalid(form);
       return;
     }
     setDeleting(true);
@@ -564,6 +578,7 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
           ? "signInAgain"
           : "failed",
     );
+    focusFirstInvalid(form);
   }
 
   async function signInAgain() {
@@ -583,7 +598,7 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
           variant="outline"
           className={cn(
             OUTLINE,
-            "text-[#c4282d] hover:text-[#c4282d] dark:text-[#ff8a8a] dark:hover:text-[#ff8a8a]",
+            "text-destructive-text hover:text-destructive-text",
           )}
           onPress={() => {
             setPassword("");
@@ -621,7 +636,7 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
               onChange={setPassword}
               autoComplete="current-password"
               error={problem === "password" ? t("wrongPassword") : null}
-              disabled={deleting}
+              pending={deleting}
             />
           ) : null}
           <DialogFooter>
@@ -636,7 +651,7 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
               <Button
                 type="submit"
                 isPending={deleting}
-                className="bg-[#c4282d] text-white hover:bg-[#a82227]"
+                className="bg-destructive-fill hover:bg-destructive-fill/90 text-white"
               >
                 {t("deleteForGood")}
               </Button>

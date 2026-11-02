@@ -218,7 +218,7 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
             </p>
             <Button
               variant="outline"
-              className="text-destructive"
+              className="text-destructive-text"
               onPress={() => setConfirming(true)}
             >
               <RefreshCw aria-hidden="true" />

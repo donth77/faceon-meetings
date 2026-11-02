@@ -130,7 +130,7 @@ export function InviteesField({
         />
       </div>
       {invalid ? (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
+        <p id={errorId} role="alert" className="text-destructive-text text-sm">
           {t("invalidEmail", { email: invalid })}
         </p>
       ) : null}

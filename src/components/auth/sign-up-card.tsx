@@ -13,7 +13,13 @@ import { authProblem, type AuthProblem } from "@/lib/auth/problems";
 import { publicEnv } from "@/lib/env";
 
 import { AuthCard, AuthCardIcon, OrDivider } from "./auth-card";
-import { FormNotice, isEmailAddress, PasswordField, TextField } from "./fields";
+import {
+  focusFirstInvalid,
+  FormNotice,
+  isEmailAddress,
+  PasswordField,
+  TextField,
+} from "./fields";
 import { SocialSignIn } from "./social-sign-in";
 import { verifyEmailCallback } from "./verify-callback";
 
@@ -46,6 +52,7 @@ function CheckEmail({
   return (
     <AuthCard
       title={t("title")}
+      focusHeading
       icon={
         <AuthCardIcon tone="brand">
           <Mail className="size-[26px]" />
@@ -120,10 +127,14 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     const found = validate();
     setErrors(found);
     setProblem(null);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0) {
+      focusFirstInvalid(form);
+      return;
+    }
 
     setPending(true);
     const { error } = await signUp.email({
@@ -148,7 +159,9 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
       setErrors({ email: t("errors.invalidEmail") });
     } else {
       setProblem(kind);
+      return;
     }
+    focusFirstInvalid(form);
   }
 
   if (sentTo) {
@@ -191,7 +204,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
               onChange={setName}
               autoComplete="name"
               error={errors.name}
-              disabled={pending}
+              pending={pending}
             />
             <TextField
               label={t("email")}
@@ -200,7 +213,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
               onChange={setEmail}
               autoComplete="email"
               error={errors.email}
-              disabled={pending}
+              pending={pending}
             />
             <PasswordField
               label={t("password")}
@@ -209,7 +222,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
               autoComplete="new-password"
               hint={t("passwordHint", { min: MIN_PASSWORD_LENGTH })}
               error={errors.password}
-              disabled={pending}
+              pending={pending}
             />
             <Button
               type="submit"
