@@ -10,11 +10,14 @@ import {
 } from "@/lib/platform";
 import { loadPreferences, withDefaults } from "@/lib/preferences";
 
+import { FOCUS_KEYS, spaceTalks } from "./push-to-talk";
+
 /**
  * Zoom's and Meet's shortcuts both work: Ctrl/⌘+D or Alt/⌥+A toggles the mic,
  * Ctrl/⌘+E or Alt/⌥+V the camera, and Alt/⌥+S screen sharing. With Push to talk on
  * (Settings → Audio, off by default as in Meet), holding Space talks while muted, unless
- * single-key shortcuts are off (Settings → Accessibility).
+ * single-key shortcuts are off (Settings → Accessibility), also when a control you clicked
+ * has focus (push-to-talk.ts).
  */
 export function useMeetingShortcuts(actions: {
   toggleMic: () => void;
@@ -32,6 +35,10 @@ export function useMeetingShortcuts(actions: {
     const apple = isAppleDevice();
     // Unmuted by holding Space; letting go mutes again.
     let talking = false;
+    // This press of Space is Push to talk's, from keydown to keyup.
+    let spaceHeld = false;
+    // Focus got where it is from the keyboard, rather than a click.
+    let keyboardFocus = false;
     const stopTalking = () => {
       if (!talking) return;
       talking = false;
@@ -39,19 +46,23 @@ export function useMeetingShortcuts(actions: {
     };
 
     function onSpace(event: KeyboardEvent): boolean {
-      const plain =
-        !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey;
-      if (
-        event.code !== "Space" ||
-        !plain ||
-        isInteractiveTarget(event.target)
-      ) {
-        return false;
-      }
+      if (event.code !== "Space") return false;
       const { singleKeyShortcuts, pushToTalk } =
         withDefaults(loadPreferences());
-      if (!pushToTalk || !singleKeyShortcuts) return false;
-      event.preventDefault(); // no page scroll while held
+      const talks = spaceTalks({
+        pushToTalk,
+        singleKeyShortcuts,
+        plain:
+          !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey,
+        typing: isTypingTarget(event.target),
+        onControl: isInteractiveTarget(event.target),
+        keyboardFocus,
+      });
+      if (!talks) return false;
+      // Not a press of the focused control, and no page scroll while held.
+      event.preventDefault();
+      event.stopPropagation();
+      spaceHeld = true;
       if (event.repeat || talking) return true;
       const { on, allowed } = micState();
       if (!on && allowed) {
@@ -62,7 +73,8 @@ export function useMeetingShortcuts(actions: {
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (isTypingTarget(event.target) || onSpace(event) || event.repeat)
+      if (FOCUS_KEYS.has(event.key)) keyboardFocus = true;
+      if (onSpace(event) || isTypingTarget(event.target) || event.repeat)
         return;
       const primary = apple ? event.metaKey : event.ctrlKey;
       const meet = primary && !event.altKey && !event.shiftKey;
@@ -81,15 +93,27 @@ export function useMeetingShortcuts(actions: {
       }
     }
     function onKeyUp(event: KeyboardEvent) {
-      if (event.code === "Space") stopTalking();
+      if (event.code !== "Space") return;
+      if (spaceHeld) {
+        spaceHeld = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      stopTalking();
     }
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
+    const onPointerDown = () => {
+      keyboardFocus = false;
+    };
+    // Capturing, ahead of the focused control's own handling of Space.
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("pointerdown", onPointerDown, true);
     // Switching away mid-press never sends the keyup.
     window.addEventListener("blur", stopTalking);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("blur", stopTalking);
     };
   }, []);
