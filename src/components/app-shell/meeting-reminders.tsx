@@ -2,10 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useEffectEvent } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "sonner";
 
 import { subscribeMeetingsChanged } from "@/lib/meetings/changes";
+import { reminderKey, staleReminders } from "@/lib/meetings/reminders";
 import {
   occurrencesAction,
   type OccurrenceRow,
@@ -24,6 +25,8 @@ const LOOK_AHEAD_MS = 24 * 60 * 60 * 1000;
 const REFRESH_MS = 10 * 60 * 1000;
 /** Reminders already shown, so a reload doesn't repeat them. */
 const SHOWN = "faceon.reminded";
+/** The page's own notifications, by reminder, to close one whose meeting goes. */
+const notices = new Map<string, Notification>();
 
 /**
  * A system notification that opens the meeting when it's selected. Through the service
@@ -58,9 +61,22 @@ async function notify(
       onOpen();
       notice.close();
     };
+    notice.onclose = () => notices.delete(options.tag);
+    notices.set(options.tag, notice);
   } catch {
     // This browser shows notifications only through a service worker.
   }
+}
+
+/** Closes a reminder's system notification, the service worker's or the page's own. */
+async function closeNotification(tag: string): Promise<void> {
+  notices.get(tag)?.close();
+  notices.delete(tag);
+  const worker = await navigator.serviceWorker
+    ?.getRegistration()
+    .catch(() => undefined);
+  const shown = await worker?.getNotifications({ tag }).catch(() => []);
+  shown?.forEach((notification) => notification.close());
 }
 
 function alreadyShown(key: string): boolean {
@@ -92,9 +108,11 @@ export function MeetingReminders() {
   const t = useTranslations("Reminders");
   const locale = useIntlLocale();
   const router = useRouter();
+  /** Reminders on screen now: one goes when its meeting is deleted or moved. */
+  const showing = useRef(new Set<string>());
 
   const remind = useEffectEvent((row: OccurrenceRow) => {
-    const key = `${row.code}@${row.start}`;
+    const key = reminderKey(row);
     if (alreadyShown(key)) return;
     markShown(key);
     const title = row.title ?? t("untitled", { name: row.hostName });
@@ -122,10 +140,15 @@ export function MeetingReminders() {
         },
       );
     }
+    showing.current.add(key);
+    const gone = () => showing.current.delete(key);
     toast(heading, {
+      id: key,
       description: t("body", { time: at }),
       duration: 60_000,
       action: { label: t("join"), onClick: () => router.push(link) },
+      onDismiss: gone,
+      onAutoClose: gone,
     });
   });
 
@@ -142,8 +165,14 @@ export function MeetingReminders() {
       const rows = await occurrencesAction(
         new Date(now).toISOString(),
         new Date(now + LOOK_AHEAD_MS).toISOString(),
-      ).catch(() => []);
-      if (cancelled) return;
+      ).catch(() => null);
+      if (cancelled || !rows) return;
+      // A meeting deleted or moved since its reminder showed: the reminder goes too.
+      for (const key of staleReminders(showing.current, rows)) {
+        showing.current.delete(key);
+        toast.dismiss(key);
+        void closeNotification(key);
+      }
       for (const row of rows) {
         const start = new Date(row.start).getTime();
         if (start <= Date.now()) continue;
