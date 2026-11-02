@@ -64,6 +64,8 @@ export type SessionInfo = {
   maxParticipants: number;
   maxMinutes: number | null;
   secondsLeft: number | null;
+  /** Ask "Are you still there?" after this long alone; null turns it off. */
+  aloneTimeoutMinutes: number | null;
 };
 
 export type JoinResponse =

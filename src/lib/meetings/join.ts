@@ -217,6 +217,7 @@ export async function joinMeeting(input: {
         ? Math.round(session.row.limits.maxDurationSeconds / 60)
         : null,
       secondsLeft: secondsLeft(session.row, now),
+      aloneTimeoutMinutes: serverEnv().ALONE_TIMEOUT_MINUTES || null,
     },
   };
 }

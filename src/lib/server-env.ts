@@ -49,6 +49,8 @@ const ServerEnv = z.object({
   DEMO_MAX_MINUTES: z.coerce.number().int().min(1).default(15),
   DEMO_MAX_PARTICIPANTS: z.coerce.number().int().min(2).default(4),
   DEMO_MEETINGS_PER_DAY: z.coerce.number().int().min(0).default(3),
+  /** Ask "Are you still there?" after this long alone in a meeting; 0 turns it off. */
+  ALONE_TIMEOUT_MINUTES: z.coerce.number().int().min(0).default(10),
   /** Meetings one account may create in a day; stops bots from burning the free credit. */
   MEETINGS_PER_USER_PER_DAY: z.coerce.number().int().min(1).default(20),
 });

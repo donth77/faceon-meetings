@@ -237,6 +237,12 @@
       "body": "Share this link with people you want in the meeting.",
       "dismiss": "Close"
     },
+    "aloneCheck": {
+      "title": "Are you still there?",
+      "body": "You’ve been the only one here for {minutes} minutes. You’ll leave the meeting in {seconds, plural, one {# second} other {# seconds}}.",
+      "stay": "Stay",
+      "leave": "Leave meeting"
+    },
     "elapsed": "Meeting time {time}",
     "demo": "Demo",
     "timeLeft": "{time} left",
@@ -258,7 +264,8 @@
       "endedByYou": "You ended the meeting for everyone",
       "removed": "You were removed from the meeting",
       "timeLimit": "The meeting reached its time limit",
-      "connectionLost": "You lost your connection to the meeting"
+      "connectionLost": "You lost your connection to the meeting",
+      "alone": "You left because nobody else was here"
     },
     "rejoin": "Rejoin",
     "returnHome": "Return home",

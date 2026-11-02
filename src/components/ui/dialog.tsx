@@ -66,6 +66,7 @@ function Dialog({
   showCloseButton = true,
   closeLabel = "Close",
   isDismissable = true,
+  role,
   ...props
 }: Omit<ModalOverlayPrimitiveProps, "className" | "children"> &
   Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> & {
@@ -74,6 +75,8 @@ function Dialog({
     showCloseButton?: boolean;
     /** The close button's accessible name, translated by the caller. */
     closeLabel?: string;
+    /** "alertdialog" for questions that need an answer. */
+    role?: DialogPrimitiveProps["role"];
   }) {
   return (
     <DialogOverlay isDismissable={isDismissable} {...props}>
@@ -86,6 +89,7 @@ function Dialog({
       >
         <DialogPrimitive
           data-slot="dialog"
+          role={role}
           className="[display:inherit] [gap:inherit] outline-none"
         >
           {children}

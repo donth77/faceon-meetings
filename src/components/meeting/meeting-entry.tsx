@@ -127,6 +127,7 @@ export default function MeetingEntry({
   const lastJoin = useRef<JoinInput | null>(null);
   const endingForAll = useRef(false);
   const endsAt = useRef<number | null>(null);
+  const leftAlone = useRef(false);
 
   useEffect(() => scrubLinkPasscode(), []);
 
@@ -145,6 +146,7 @@ export default function MeetingEntry({
         }
         if (input.passcode) rememberPasscode(code, input.passcode);
         endingForAll.current = false;
+        leftAlone.current = false;
         const { secondsLeft } = result.session;
         endsAt.current =
           secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
@@ -188,7 +190,9 @@ export default function MeetingEntry({
         ? "endedByYou"
         : reason === "ended" && timeUp
           ? "timeLimit"
-          : reason,
+          : reason === "left" && leftAlone.current
+            ? "alone"
+            : reason,
     });
   }, []);
 
@@ -239,6 +243,9 @@ export default function MeetingEntry({
             session={admission.session}
             endsAt={step.endsAt}
             onEndForAll={() => void endForAll()}
+            onAloneTimeout={() => {
+              leftAlone.current = true;
+            }}
           />
         </MeetingRoom>
       );

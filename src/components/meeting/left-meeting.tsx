@@ -9,10 +9,14 @@ import type { LeaveReason } from "./media";
 import { MeetingCard, MeetingPageFrame } from "./page-frame";
 
 /** Why the meeting closed for you. Ending it yourself is told apart from the host ending it. */
-export type LeftReason = LeaveReason | "endedByYou";
+export type LeftReason = LeaveReason | "endedByYou" | "alone";
 
 /** Rejoining makes sense only when the meeting is still going. */
-const CAN_REJOIN: ReadonlySet<LeftReason> = new Set(["left", "connectionLost"]);
+const CAN_REJOIN: ReadonlySet<LeftReason> = new Set([
+  "left",
+  "alone",
+  "connectionLost",
+]);
 
 /** "You left the meeting", worded for the reason, with Rejoin and Return home. */
 export function LeftMeeting({

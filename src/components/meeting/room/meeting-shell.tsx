@@ -15,6 +15,7 @@ import type {
 import { useRoomMedia, type RoomStatus } from "../media";
 import { useMeetingTitle } from "../meeting-title";
 import { AloneCard } from "./alone-card";
+import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ControlBar } from "./control-bar";
 import { Stage, type LayoutChoice } from "./stage";
 import { TopBar } from "./top-bar";
@@ -65,6 +66,7 @@ export function MeetingShell({
   session,
   endsAt,
   onEndForAll,
+  onAloneTimeout,
 }: {
   meeting: AdmittedMeetingInfo;
   self: SelfInfo;
@@ -72,11 +74,15 @@ export function MeetingShell({
   /** When the session's time limit runs out, on this device's clock. */
   endsAt: number | null;
   onEndForAll: () => void;
+  /** Called before leaving because nobody else was here. */
+  onAloneTimeout: () => void;
 }) {
   const media = useRoomMedia();
   const title = useMeetingTitle(meeting);
   const [layout, setLayout] = useState<LayoutChoice>("auto");
   useMeetingShortcuts(media);
+  const alone = media.participants.length === 1;
+  const aloneCheck = useAloneCheck(alone, session.aloneTimeoutMinutes);
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
 
@@ -96,10 +102,17 @@ export function MeetingShell({
       <ConnectionBanner status={media.status} />
       <main className="relative min-h-0 flex-1 px-3">
         <Stage layout={layout} />
-        {media.participants.length === 1 ? (
-          <AloneCard meeting={meeting} />
-        ) : null}
+        {alone ? <AloneCard meeting={meeting} /> : null}
       </main>
+      <AloneCheckDialog
+        askedAt={aloneCheck.askedAt}
+        minutes={session.aloneTimeoutMinutes ?? 0}
+        onStay={aloneCheck.stay}
+        onLeave={() => {
+          onAloneTimeout();
+          void media.leave();
+        }}
+      />
       <ControlBar
         title={title}
         isHost={self.role === "host"}
