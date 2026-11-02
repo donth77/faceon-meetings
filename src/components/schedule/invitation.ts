@@ -18,7 +18,11 @@ import {
   toRRule,
   type Recurrence,
 } from "@/lib/meetings/recurrence";
-import { useIntlLocale } from "@/lib/preferences";
+import {
+  loadPreferences,
+  useIntlLocale,
+  withDefaults,
+} from "@/lib/preferences";
 import { formatWhen, untilStamp, zoneCity } from "@/lib/time";
 
 import { inviteLink } from "../meeting/invitation";
@@ -92,6 +96,8 @@ export function useScheduledInvitation(meeting: ScheduledMeeting) {
     invitees: meeting.invitees,
     cancelled: meeting.cancelled,
     moved: meeting.moved,
+    // The calendar reminds you as FaceOn would (Settings → Notifications).
+    reminderMinutes: withDefaults(loadPreferences()).reminderMinutes,
   };
 
   async function copy(value: string, done: string, unsaved?: string) {

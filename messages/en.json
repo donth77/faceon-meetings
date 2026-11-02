@@ -1044,10 +1044,27 @@
       "popupLobby": {
         "label": "Waiting room",
         "help": "Who's asking to join, with Admit. Participants always lists them"
+      },
+      "reminders": {
+        "title": "Meeting reminders",
+        "label": "Remind me before meetings",
+        "off": "Don’t remind me",
+        "before": "{minutes} minutes before",
+        "help": "While FaceOn is open in a tab, for meetings you host or are invited to. Calendar files you add get the same reminder.",
+        "askBody": "To be reminded when FaceOn isn’t the tab you’re in, let your browser show notifications.",
+        "allow": "Allow notifications",
+        "blocked": "Your browser blocks FaceOn’s notifications, so reminders show only in FaceOn’s tab. Allow them in the site settings (the icon in the address bar).",
+        "allowed": "Reminders also show as notifications from your browser."
       }
     }
   },
   "Legal": {
     "updated": "Last updated {date}"
+  },
+  "Reminders": {
+    "startsSoon": "{title} starts in {minutes, plural, one {# minute} other {# minutes}}",
+    "body": "At {time}. Select to join.",
+    "join": "Join",
+    "untitled": "{name}’s meeting"
   }
 }

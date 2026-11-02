@@ -7,6 +7,7 @@ import type { Session } from "@/lib/auth/server";
 import { avatarUrl } from "@/lib/avatars/seed";
 
 import { AppSidebar } from "./app-sidebar";
+import { MeetingReminders } from "./meeting-reminders";
 import { MobileTabBar } from "./mobile-tab-bar";
 
 /**
@@ -29,6 +30,7 @@ export async function AppFrame({
       <AppSidebar user={{ name, email, image: avatarUrl(session.user) }} />
       <SidebarInset className="pb-16 md:pb-0">{children}</SidebarInset>
       <MobileTabBar />
+      <MeetingReminders />
       <Toaster position="bottom-center" />
     </SidebarProvider>
   );

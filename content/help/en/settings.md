@@ -32,6 +32,8 @@ Choose whether others' reactions show (yours always do), whether reactions float
 
 Choose which events make a sound (people joining and leaving, chat messages, raised hands, the waiting room) and which show a pop-up.
 
+**Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
+
 ## Accessibility
 
 {appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know:

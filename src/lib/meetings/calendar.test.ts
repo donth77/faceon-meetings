@@ -66,6 +66,13 @@ describe("icsFile", () => {
     );
   });
 
+  it("adds a reminder only when asked", () => {
+    expect(ics).not.toContain("BEGIN:VALARM");
+    const reminded = icsFile({ ...event, reminderMinutes: 10 });
+    expect(reminded).toContain("BEGIN:VALARM\r\nACTION:DISPLAY");
+    expect(reminded).toContain("TRIGGER:-PT10M");
+  });
+
   it("escapes text and uses CRLF line endings", () => {
     expect(ics).toContain(
       String.raw`DESCRIPTION:Maya is inviting you.\nJoin: https`,

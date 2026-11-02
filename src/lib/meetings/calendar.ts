@@ -21,6 +21,8 @@ export type CalendarEvent = {
   cancelled?: Date[];
   /** A series: occurrences moved or retitled. */
   moved?: Array<{ originalStart: Date; start: Date; end: Date; title: string }>;
+  /** Minutes before each meeting for the calendar to remind you; none when 0 or unset. */
+  reminderMinutes?: number;
 };
 
 /** "20261103T190000Z" */
@@ -110,6 +112,18 @@ function fold(line: string): string {
  * An iCalendar file (METHOD:PUBLISH) for the meeting: the series with its RRULE, an
  * EXDATE for each cancelled meeting and a RECURRENCE-ID event for each moved one.
  */
+/** A reminder for calendar apps to show before the meeting (VALARM). */
+const alarm = (event: Pick<CalendarEvent, "title" | "reminderMinutes">) =>
+  event.reminderMinutes && event.reminderMinutes > 0
+    ? [
+        "BEGIN:VALARM",
+        "ACTION:DISPLAY",
+        `DESCRIPTION:${escapeText(event.title)}`,
+        `TRIGGER:-PT${event.reminderMinutes}M`,
+        "END:VALARM",
+      ]
+    : [];
+
 export function icsFile(event: CalendarEvent, now = new Date()): string {
   const tz = event.timeZone;
   const at = (date: Date) => `;TZID=${tz}:${localStamp(date, tz)}`;
@@ -135,6 +149,7 @@ export function icsFile(event: CalendarEvent, now = new Date()): string {
     `SUMMARY:${escapeText(event.title)}`,
   );
   if (event.rrule) lines.push(`RRULE:${event.rrule}`);
+  lines.push(...alarm(event));
   for (const cancelled of event.cancelled ?? []) {
     lines.push(`EXDATE${at(cancelled)}`);
   }
@@ -147,6 +162,7 @@ export function icsFile(event: CalendarEvent, now = new Date()): string {
       `DTSTART${at(moved.start)}`,
       `DTEND${at(moved.end)}`,
       `SUMMARY:${escapeText(moved.title)}`,
+      ...alarm({ ...event, title: moved.title }),
       "END:VEVENT",
     );
   }

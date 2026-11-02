@@ -9,6 +9,10 @@ import { formattingLocale } from "@/lib/time";
  * Settings kept on this device (localStorage), for signed-in people and guests alike.
  * Unset means the default, so a default can improve later without a migration.
  */
+/** The reminder choices, in minutes before a meeting; 0 is off. */
+export const REMINDER_MINUTES = [0, 5, 10, 15] as const;
+export type ReminderMinutes = (typeof REMINDER_MINUTES)[number];
+
 export type Preferences = {
   /** 12- or 24-hour times; unset follows the region. */
   timeFormat?: "12" | "24";
@@ -48,6 +52,8 @@ export type Preferences = {
   popupLobby?: boolean;
   /** Hold Space to talk while muted. Default off, as in Meet. */
   pushToTalk?: boolean;
+  /** Minutes before a meeting to remind you; 0 for never. Default 5, as in Zoom. */
+  reminderMinutes?: ReminderMinutes;
 };
 
 const KEY = "faceon.prefs";
@@ -86,6 +92,8 @@ export function loadPreferences(): Preferences {
       if (p.timeFormat === "12" || p.timeFormat === "24")
         value.timeFormat = p.timeFormat;
       if (typeof p.timeZone === "string") value.timeZone = p.timeZone;
+      const minutes = REMINDER_MINUTES.find((m) => m === p.reminderMinutes);
+      if (minutes !== undefined) value.reminderMinutes = minutes;
       for (const key of BOOLEANS) {
         if (typeof p[key] === "boolean") value[key] = p[key];
       }
@@ -163,6 +171,7 @@ export function withDefaults(preferences: Preferences) {
     popupHands: preferences.popupHands ?? true,
     popupLobby: preferences.popupLobby ?? true,
     pushToTalk: preferences.pushToTalk ?? false,
+    reminderMinutes: preferences.reminderMinutes ?? 5,
   };
 }
 
