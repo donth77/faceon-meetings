@@ -13,6 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { GoogleAddonEvent } from "@/lib/addon/google/types";
 import type { GoogleEventIds } from "@/lib/google-calendar/shared";
 import type {
   MediaProviderId,
@@ -33,6 +34,11 @@ export const meetingType = pgEnum("meeting_type", [
   "instant",
   "scheduled",
   "personal",
+]);
+/** Where a meeting was made: in FaceOn, or in Google Calendar through the Workspace add-on. */
+export const meetingOrigin = pgEnum("meeting_origin", [
+  "faceon",
+  "google_addon",
 ]);
 export const meetingStatus = pgEnum("meeting_status", [
   "active",
@@ -79,6 +85,13 @@ export const meeting = pgTable(
      * was made for (a series rule's ID, or "single"). Null when it isn't synced.
      */
     googleEvents: jsonb("google_events").$type<GoogleEventIds>(),
+    /**
+     * Where it was made. A meeting made in Google Calendar (the Workspace add-on) keeps
+     * its title, time and repeat there: Calendar sync never adds it a second event.
+     */
+    origin: meetingOrigin("origin").notNull().default("faceon"),
+    /** The Workspace add-on's: the Calendar event it was made for. */
+    googleAddonEvent: jsonb("google_addon_event").$type<GoogleAddonEvent>(),
     createdAt: createdAt(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },

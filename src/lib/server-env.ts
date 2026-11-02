@@ -43,6 +43,11 @@ const ServerEnv = z.object({
   RESEND_API_KEY: z.string().optional(),
   /** The sender, e.g. "FaceOn <no-reply@mail.example.com>", on a domain verified in Resend. */
   EMAIL_FROM: z.string().optional(),
+  /**
+   * The Google Workspace add-on's OAuth client ID: the `aud` of the identity tokens it
+   * sends. Unset, the add-on's API (/api/addon/google/*) is off.
+   */
+  GOOGLE_ADDON_CLIENT_ID: z.string().min(1).optional(),
   /** Google Calendar sync for hosts who connect it ("on" or "off"); off leaves the calendar links. */
   GOOGLE_CALENDAR_SYNC: z.enum(["on", "off"]).default("on"),
   /**

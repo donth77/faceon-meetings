@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { NotFoundContent } from "@/components/app-shell/not-found-content";
@@ -41,6 +42,8 @@ async function EditMeeting({
   const session = await requireSession(`/meetings/${code}/edit`);
   const details = await meetingDetails({ code, viewer: session.user });
   if (!details?.isHost) return <NotFoundContent />;
+  // Made in Google Calendar: its title, time and repeat are changed there.
+  if (details.googleEventUrl) redirect(`/meetings/${code}`);
 
   const chosen =
     typeof occurrence === "string"

@@ -1118,7 +1118,9 @@
     "deleteTitle": "Delete this meeting?",
     "deleteBody": "Its link stops working, and it leaves Upcoming.",
     "deleted": "Meeting deleted",
-    "deleteFailed": "Couldn’t delete the meeting. Try again."
+    "deleteFailed": "Couldn’t delete the meeting. Try again.",
+    "fromCalendar": "Made in Google Calendar: change its title, time or repeat there, and FaceOn follows.",
+    "openInCalendar": "Open in Google Calendar"
   },
   "Upcoming": {
     "title": "Upcoming",

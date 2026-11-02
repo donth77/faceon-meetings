@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SwitchRow } from "@/components/ui/form-fields";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import { copyText } from "@/lib/clipboard";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
@@ -289,7 +290,19 @@ export function MeetingDetailsView({
               </DropdownMenuItem>
             </DropdownMenu>
           </DropdownMenuTrigger>
-          {details.isHost ? (
+          {details.googleEventUrl ? (
+            <LinkButton
+              href={details.googleEventUrl}
+              target="_blank"
+              rel="noreferrer"
+              variant="outline"
+              className="h-[38px] rounded-[10px]"
+            >
+              <ExternalLink aria-hidden="true" />
+              {t("openInCalendar")}
+              <NewTabNote />
+            </LinkButton>
+          ) : details.isHost ? (
             <>
               <LinkButton
                 href={editHref}
@@ -437,6 +450,15 @@ export function MeetingDetailsView({
                 aria-hidden="true"
               />
               {tc("onCalendarNote")}
+            </p>
+          ) : null}
+          {details.googleEventUrl ? (
+            <p className="text-muted-foreground flex items-start gap-2 border-t pt-3 text-[13px] leading-snug">
+              <CalendarCheck
+                className="text-primary mt-px size-4 shrink-0"
+                aria-hidden="true"
+              />
+              {t("fromCalendar")}
             </p>
           ) : null}
         </Card>

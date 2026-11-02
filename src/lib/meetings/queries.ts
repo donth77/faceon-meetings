@@ -80,8 +80,18 @@ export function readMeeting(row: typeof meeting.$inferSelect): Meeting {
   };
 }
 
-/** Creates an instant meeting (or one for later) with a fresh meeting ID and passcode. */
-export async function insertInstantMeeting(hostId: string): Promise<Meeting> {
+/**
+ * Creates an instant meeting (or one for later) with a fresh meeting ID and passcode.
+ * The Workspace add-on can give it a title, and mark it as Google Calendar's.
+ */
+export async function insertInstantMeeting(
+  hostId: string,
+  extra: {
+    title?: string | null;
+    origin?: Meeting["origin"];
+    googleAddonEvent?: Meeting["googleAddonEvent"];
+  } = {},
+): Promise<Meeting> {
   // Meeting IDs are random, so a collision is rare; try a new one on each.
   for (let attempt = 0; attempt < 5; attempt++) {
     const [row] = await db()
@@ -90,9 +100,12 @@ export async function insertInstantMeeting(hostId: string): Promise<Meeting> {
         code: generateMeetingCode(),
         hostId,
         type: "instant",
+        title: extra.title ?? null,
         passcode: generatePasscode(),
         settings: DEFAULT_SETTINGS.instant,
         expiresAt: keepUntil(),
+        origin: extra.origin ?? "faceon",
+        googleAddonEvent: extra.googleAddonEvent ?? null,
       })
       .onConflictDoNothing({ target: meeting.code })
       .returning();

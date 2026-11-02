@@ -135,7 +135,10 @@ export async function updateScheduleAction(
   occurrence: unknown,
 ): Promise<ScheduleResult> {
   const own = await ownMeeting(code);
-  if (!own) return { ok: false, reason: "notFound" };
+  // A meeting made in Google Calendar changes its time there (the add-on follows).
+  if (!own || own.row.origin === "google_addon") {
+    return { ok: false, reason: "notFound" };
+  }
   const { row, host } = own;
   const values = ScheduleInput.safeParse(input);
   const which = SeriesScope.safeParse(scope);
@@ -182,7 +185,9 @@ export async function deleteScheduleAction(
 ): Promise<DeleteResult> {
   const own = await ownMeeting(code);
   const which = SeriesScope.safeParse(scope);
-  if (!own || !which.success) return { ok: false };
+  if (!own || own.row.origin === "google_addon" || !which.success) {
+    return { ok: false };
+  }
   await deleteSchedule({
     row: own.row,
     scope: which.data,

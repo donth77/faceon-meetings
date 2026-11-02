@@ -1,3 +1,5 @@
+import { googleEventUrl } from "@/lib/addon/google/event-link";
+
 import "server-only";
 
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
@@ -126,6 +128,9 @@ export async function scheduleMeeting(input: {
   passcode: string;
   values: ScheduleValues;
   googleCalendar: boolean;
+  /** Made in Google Calendar by the Workspace add-on, for this event. */
+  origin?: Meeting["origin"];
+  googleAddonEvent?: Meeting["googleAddonEvent"];
 }): Promise<Meeting> {
   const { values } = input;
   const start = checked(values);
@@ -150,6 +155,8 @@ export async function scheduleMeeting(input: {
           timeZone: values.timeZone,
           expiresAt: expiryFor(start, values.durationMin, rules),
           googleEvents: input.googleCalendar ? {} : null,
+          origin: input.origin ?? "faceon",
+          googleAddonEvent: input.googleAddonEvent ?? null,
         })
         .returning();
     } catch (error) {
@@ -558,6 +565,8 @@ export type MeetingDetails = {
   }>;
   /** The host keeps it in their Google Calendar (Calendar sync); host only. */
   onGoogleCalendar: boolean;
+  /** Made in Google Calendar (the Workspace add-on): the event, where its time is changed. */
+  googleEventUrl: string | null;
   settings: Pick<
     MeetingSettings,
     | "waitingRoom"
@@ -672,6 +681,10 @@ export async function meetingDetails(input: {
       };
     }),
     onGoogleCalendar: isHost && row.googleEvents !== null,
+    googleEventUrl:
+      isHost && row.origin === "google_addon" && row.googleAddonEvent
+        ? googleEventUrl(row.googleAddonEvent)
+        : null,
     settings: {
       waitingRoom: row.settings.waitingRoom,
       allowGuests: row.settings.allowGuests,
