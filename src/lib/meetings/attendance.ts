@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/schema";
 import type { AttendanceEvent } from "@/lib/media/types";
 
-import { readMeeting } from "./queries";
+import { readMeeting, seenAt } from "./queries";
 import { changeSession } from "./session-state";
 
 /**
@@ -38,6 +38,16 @@ export async function recordAttendance(
       .where(eq(meetingSession.id, event.sessionId))
       .limit(1);
     if (!session) return "ignored";
+
+    await tx
+      .update(meetingSession)
+      .set({ lastSeenAt: seenAt(event.at) })
+      .where(
+        and(
+          eq(meetingSession.id, session.id),
+          eq(meetingSession.status, "open"),
+        ),
+      );
 
     if (event.type === "joined") {
       const [member] = await tx

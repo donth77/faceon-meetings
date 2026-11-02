@@ -89,6 +89,23 @@ export function isSessionStale(
   return snapshot.emptySince !== null && pastGrace(snapshot.emptySince);
 }
 
+/**
+ * When a session that's no longer usable ended. With someone still connected (the call
+ * was ended for everyone), now. Otherwise the last time anyone was seen in it, never
+ * before it started: a session closed late, by the next join or the daily sweep, keeps
+ * the length it really had.
+ */
+export function sessionEndedAt(
+  session: { startedAt: Date; lastSeenAt: Date | null },
+  snapshot: SessionSnapshot | null,
+  now: Date,
+): Date {
+  if (snapshot && snapshot.connectedUserIds.length > 0) return now;
+  const seen = session.lastSeenAt ?? session.startedAt;
+  const end = Math.max(session.startedAt.getTime(), seen.getTime());
+  return new Date(Math.min(now.getTime(), end));
+}
+
 export type EntryFacts = {
   role: MeetingRole;
   settings: MeetingSettings;

@@ -17,7 +17,7 @@ import {
   type MeetingHost,
   type MeetingSession,
 } from "./queries";
-import { isSessionStale } from "./rules";
+import { isSessionStale, sessionEndedAt } from "./rules";
 import { keepOpenSeriesAlive } from "./scheduling";
 
 /**
@@ -88,7 +88,7 @@ export async function currentSession(
   const snapshot = await provider.inspectSession(row.id);
   if (!isSessionStale(row.startedAt, snapshot, now)) return { row, snapshot };
 
-  await closeSession(row.id);
+  await closeSession(row.id, sessionEndedAt(row, snapshot, now));
   if (snapshot?.ended) {
     if (meeting.type === "instant") {
       await endMeeting(meeting.id);

@@ -8,6 +8,7 @@ import type { Admitted } from "./api";
 import { withheldFrom } from "./policy";
 import type { Principal } from "./principal";
 import {
+  markSessionSeen,
   upsertMember,
   type Meeting,
   type MeetingHost,
@@ -48,6 +49,7 @@ export async function admit(input: {
     image: self.image ?? null,
     role,
   });
+  await markSessionSeen(session.id, input.now);
   const connection = await provider.admit({
     sessionId: session.id,
     user: self,

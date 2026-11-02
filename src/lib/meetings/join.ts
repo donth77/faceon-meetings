@@ -16,6 +16,7 @@ import {
   findMember,
   findOpenSession,
   hostMemberIds,
+  markSessionSeen,
   type MeetingHost,
 } from "./queries";
 import { checkEntry, CLOSED_ERRORS, closedReason, resolveRole } from "./rules";
@@ -147,12 +148,28 @@ export async function refreshMeetingToken(input: {
     principal,
     input.room,
   );
+  await markSessionSeen(session.id, new Date());
 
   return mediaProvider(session.provider).refreshToken({
     sessionId: session.id,
     userId: member.mediaUserId,
     role: member.role,
   });
+}
+
+/**
+ * Someone admitted to the open session is leaving it (or is still in it): it was in use
+ * until now. The meeting page says so as it closes, so a session's end is known even
+ * where the provider's webhooks don't arrive (a development server, a copy without them).
+ */
+export async function markSeen(input: {
+  code: string;
+  principal: Principal | null;
+}): Promise<void> {
+  const { meeting } = await requireMeeting(input.code);
+  const principal = requirePrincipal(input.principal);
+  const { session } = await requireMember(meeting.id, principal);
+  await markSessionSeen(session.id, new Date());
 }
 
 /** Ends the meeting for everyone (host only). An instant meeting's link stops working. */

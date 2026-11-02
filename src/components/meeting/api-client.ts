@@ -95,6 +95,11 @@ export const meetingApi = {
       undefined,
       { keepalive },
     ),
+  /** Leaving: the session was in use until now. keepalive outlives a closing tab. */
+  seen: (code: string) =>
+    send<void>("POST", `/api/meetings/${code}/seen`, undefined, {
+      keepalive: true,
+    }),
   lobby: (code: string) =>
     send<LobbyResponse>("GET", `/api/meetings/${code}/lobby`),
   decide: (code: string, action: LobbyAction) =>

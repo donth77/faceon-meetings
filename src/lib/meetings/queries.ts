@@ -347,10 +347,33 @@ export async function openSession(input: {
   return existing;
 }
 
-export async function closeSession(sessionId: string): Promise<void> {
+/** Closes an open session as of `endedAt`: now, unless it ended earlier (sessionEndedAt). */
+export async function closeSession(
+  sessionId: string,
+  endedAt = new Date(),
+): Promise<void> {
   await db()
     .update(meetingSession)
-    .set({ status: "ended", endedAt: new Date() })
+    .set({ status: "ended", endedAt })
+    .where(
+      and(eq(meetingSession.id, sessionId), eq(meetingSession.status, "open")),
+    );
+}
+
+/** `lastSeenAt` moved on to `at`, never back: events can arrive out of order. */
+export const seenAt = (at: Date) => {
+  const when = sql`${at.toISOString()}::timestamptz`;
+  return sql`greatest(coalesce(${meetingSession.lastSeenAt}, ${when}), ${when})`;
+};
+
+/** Someone was in the open session at `at` (see meetingSession.lastSeenAt). */
+export async function markSessionSeen(
+  sessionId: string,
+  at: Date,
+): Promise<void> {
+  await db()
+    .update(meetingSession)
+    .set({ lastSeenAt: seenAt(at) })
     .where(
       and(eq(meetingSession.id, sessionId), eq(meetingSession.status, "open")),
     );

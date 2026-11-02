@@ -14,6 +14,7 @@ import {
   passcodeMatches,
   resolveRole,
   SESSION_GRACE_MS,
+  sessionEndedAt,
   type EntryFacts,
 } from "./rules";
 import { DEFAULT_SETTINGS } from "./settings";
@@ -136,6 +137,60 @@ describe("isSessionStale", () => {
   it("waits for a call that's still being created", () => {
     expect(isSessionStale(ago(1000), null, now)).toBe(false);
     expect(isSessionStale(ago(SESSION_GRACE_MS + 1), null, now)).toBe(true);
+  });
+});
+
+describe("sessionEndedAt", () => {
+  const now = new Date("2026-11-02T15:49:31Z");
+  const startedAt = new Date("2026-11-02T10:25:06Z");
+  const empty = {
+    ended: false,
+    connectedUserIds: [],
+    emptySince: new Date("2026-11-02T10:25:49Z"),
+  };
+
+  it("ends a session closed late when someone was last there, not when it was noticed", () => {
+    const lastSeenAt = new Date("2026-11-02T10:26:33Z");
+    expect(sessionEndedAt({ startedAt, lastSeenAt }, empty, now)).toEqual(
+      lastSeenAt,
+    );
+  });
+
+  it("ends a session nobody was seen in as it started", () => {
+    expect(sessionEndedAt({ startedAt, lastSeenAt: null }, empty, now)).toEqual(
+      startedAt,
+    );
+    expect(sessionEndedAt({ startedAt, lastSeenAt: null }, null, now)).toEqual(
+      startedAt,
+    );
+  });
+
+  it("ends now while someone is still connected (ended for everyone)", () => {
+    const ended = { ended: true, connectedUserIds: ["u_1"], emptySince: null };
+    expect(
+      sessionEndedAt(
+        { startedAt, lastSeenAt: new Date("2026-11-02T11:00:00Z") },
+        ended,
+        now,
+      ),
+    ).toEqual(now);
+  });
+
+  it("stays between the start and now, whatever the clocks say", () => {
+    expect(
+      sessionEndedAt(
+        { startedAt, lastSeenAt: new Date("2026-11-02T10:00:00Z") },
+        empty,
+        now,
+      ),
+    ).toEqual(startedAt);
+    expect(
+      sessionEndedAt(
+        { startedAt, lastSeenAt: new Date("2026-11-02T16:00:00Z") },
+        empty,
+        now,
+      ),
+    ).toEqual(now);
   });
 });
 

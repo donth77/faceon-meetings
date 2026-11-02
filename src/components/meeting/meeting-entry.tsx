@@ -162,8 +162,18 @@ export default function MeetingEntry({
   const endsAt = useRef<number | null>(null);
   const leftAlone = useRef(false);
   const lastSession = useRef<{ id: string; signedIn: boolean } | null>(null);
+  const inRoom = step.name === "room";
 
   useEffect(() => scrubLinkPasscode(), []);
+
+  // Leaving says when, so the session ends then, not whenever it's next noticed. Closing
+  // the tab mid-meeting is leaving too.
+  useEffect(() => {
+    if (!inRoom) return;
+    const onPageHide = () => void meetingApi.seen(code).catch(() => {});
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [inRoom, code]);
 
   // The tab's title follows the screen, so it says where you are (2.4.2). A notice
   // keeps the page's own title.
@@ -304,23 +314,27 @@ export default function MeetingEntry({
     setStep({ name: "prejoin", error: null });
   }
 
-  const handleLeft = useCallback((reason: LeaveReason) => {
-    // Once this host has asked to end the meeting, however the room closes, they ended it.
-    // A call that ends as its time runs out reached its limit, whatever the notice said.
-    const timeUp =
-      endsAt.current !== null && Date.now() >= endsAt.current - 10_000;
-    setStep({
-      name: "left",
-      session: lastSession.current,
-      reason: endingForAll.current
-        ? "endedByYou"
-        : reason === "ended" && timeUp
-          ? "timeLimit"
-          : reason === "left" && leftAlone.current
-            ? "alone"
-            : reason,
-    });
-  }, []);
+  const handleLeft = useCallback(
+    (reason: LeaveReason) => {
+      void meetingApi.seen(code).catch(() => {});
+      // Once this host has asked to end the meeting, however the room closes, they ended it.
+      // A call that ends as its time runs out reached its limit, whatever the notice said.
+      const timeUp =
+        endsAt.current !== null && Date.now() >= endsAt.current - 10_000;
+      setStep({
+        name: "left",
+        session: lastSession.current,
+        reason: endingForAll.current
+          ? "endedByYou"
+          : reason === "ended" && timeUp
+            ? "timeLimit"
+            : reason === "left" && leftAlone.current
+              ? "alone"
+              : reason,
+      });
+    },
+    [code],
+  );
 
   // Ending takes the server a moment (and Stream's "ended" a moment more), so the host
   // leaves at once while the meeting ends for everyone else.
@@ -409,7 +423,6 @@ export default function MeetingEntry({
         );
   }
 
-  const inRoom = step.name === "room";
   return (
     <>
       {content}
