@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { dismiss, useDismissed } from "@/lib/dismissals";
+
 /**
  * Installing FaceOn as an app. Chrome and Edge (on computers and Android) offer it
  * through `beforeinstallprompt`, kept here for FaceOn's own Install button. Safari has no
@@ -124,42 +126,8 @@ export function useInstall() {
   return { way, install };
 }
 
-const CARD_KEY = "faceon.installCard";
-const cardListeners = new Set<() => void>();
-let dismissedThisVisit = false;
-
-function cardDismissed(): boolean {
-  try {
-    return localStorage.getItem(CARD_KEY) === "dismissed";
-  } catch {
-    // Storage blocked (a private window, say): show it, and let Not now hide it for now.
-    return false;
-  }
-}
-
-function dismiss() {
-  dismissedThisVisit = true;
-  try {
-    localStorage.setItem(CARD_KEY, "dismissed");
-  } catch {
-    // Not remembered past this visit; nothing else to do.
-  }
-  cardListeners.forEach((listener) => listener());
-}
-
-function subscribeCard(listener: () => void) {
-  cardListeners.add(listener);
-  return () => {
-    cardListeners.delete(listener);
-  };
-}
-
 /** Home's one-time "Get the app" card on phones: whether it was put away, and putting it away. */
 export function useInstallCard() {
-  const dismissed = useSyncExternalStore(
-    subscribeCard,
-    () => dismissedThisVisit || cardDismissed(),
-    () => true,
-  );
-  return { dismissed, dismiss };
+  const dismissed = useDismissed("installCard", { hiddenOnServer: true });
+  return { dismissed, dismiss: () => dismiss("installCard") };
 }

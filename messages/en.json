@@ -1142,13 +1142,11 @@
       "title": "General",
       "region": "Language and region",
       "language": "Language",
-      "languageHelp": "Picked from your browser the first time. Languages FaceOn doesn’t have yet use English.",
       "timeFormat": "Time format",
       "hours12": "12-hour (2:00 PM)",
       "hours24": "24-hour (14:00)",
       "timeFormatHelp": "Starts on your region’s usual format.",
       "timeZone": "Time zone",
-      "timeZoneHelp": "Detected from your device. Example: {example}",
       "timeZoneChosen": "Chosen by you. Example: {example}",
       "useDeviceZone": "Use my device’s time zone",
       "theme": "Theme",
@@ -1161,8 +1159,7 @@
         "system": "Matches your device. The default.",
         "light": "Always light",
         "dark": "Always dark"
-      },
-      "themeNote": "Meetings always use the dark room, so video stands out."
+      }
     },
     "audio": {
       "title": "Audio",
@@ -1191,7 +1188,6 @@
       "title": "Video",
       "camera": "Camera",
       "mirroredForYou": "Mirrored for you",
-      "othersSee": "Others always see you the right way round, so text behind you reads normally for them.",
       "mirror": "Mirror my video",
       "mirrorHelp": "Only you see it mirrored",
       "hd": "Send HD video",
@@ -1400,6 +1396,8 @@
     "connectedAs": "Connected as {email}",
     "connect": "Connect Google Calendar",
     "connectHelp": "Connect Google Calendar once, and Google emails the people you invite.",
+    "notNow": "Not now",
+    "suggestionHidden": "Hidden. You can connect Google Calendar any time in Settings, under Calendar.",
     "reconnect": "Reconnect Google Calendar",
     "reconnectHelp": "Google stopped FaceOn’s access to your calendar. Reconnect so FaceOn can keep it up to date.",
     "connected": "Google Calendar connected",
