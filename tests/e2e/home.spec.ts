@@ -1,5 +1,14 @@
+import type { Page } from "@playwright/test";
+
 import { hostingRequests } from "./support/db";
 import { expect, expectNoErrors, test } from "./support/fixtures";
+
+/**
+ * The "for later" link dialog, by name: the New meeting menu it opens from is a dialog
+ * too (React Aria's popover) while it fades out, and the server can answer first.
+ */
+const linkDialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Here’s the link to your meeting" });
 
 test.describe("Home", () => {
   test("shows the time, New meeting and the join field, and says demo meetings are short", async ({
@@ -59,7 +68,7 @@ test.describe("Home", () => {
       page.getByRole("menuitem", { name: /instant meeting/ }),
     ).toBeVisible();
     await page.getByRole("menuitem", { name: /for later/ }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = linkDialog(page);
     await expect(dialog).toBeVisible();
     const link = await dialog.getByRole("textbox").inputValue();
     expect(link).toMatch(/\/j\/\d{10}/);
@@ -74,15 +83,9 @@ test.describe("Home", () => {
     await page.goto("/home");
     await page.getByRole("button", { name: /New meeting/ }).click();
     await page.getByRole("menuitem", { name: /for later/ }).click();
-    const link = await page
-      .getByRole("dialog")
-      .getByRole("textbox")
-      .inputValue();
+    const link = await linkDialog(page).getByRole("textbox").inputValue();
     const code = /\/j\/(\d{10})/.exec(link)?.[1] ?? "";
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Close" })
-      .click();
+    await linkDialog(page).getByRole("button", { name: "Close" }).click();
     await page.getByLabel("Meeting ID or link").fill(code);
     await page.getByRole("button", { name: "Join", exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/j/${code}`));
