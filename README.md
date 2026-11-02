@@ -39,14 +39,15 @@ Accounts: Google, GitHub, or email and password. Locally, email sign-up works wi
 
 Useful scripts:
 
-| Command          | What it does                                           |
-| ---------------- | ------------------------------------------------------ |
-| `pnpm dev`       | Start the dev server                                   |
-| `pnpm build`     | Production build                                       |
-| `pnpm lint`      | ESLint                                                 |
-| `pnpm typecheck` | Generate route types, then run the TypeScript compiler |
-| `pnpm test`      | Unit tests (Vitest)                                    |
-| `pnpm format`    | Format with Prettier                                   |
+| Command          | What it does                                             |
+| ---------------- | -------------------------------------------------------- |
+| `pnpm dev`       | Start the dev server                                     |
+| `pnpm build`     | Production build                                         |
+| `pnpm lint`      | ESLint                                                   |
+| `pnpm typecheck` | Generate route types, then run the TypeScript compiler   |
+| `pnpm test`      | Unit tests (Vitest)                                      |
+| `pnpm test:e2e`  | Browser tests (Playwright) against `pnpm build`'s output |
+| `pnpm format`    | Format with Prettier                                     |
 
 ## Deploy your own
 

@@ -68,7 +68,6 @@ export function AccountMenu({ user }: { user: AccountUser }) {
       <SidebarMenuButton
         size="lg"
         tooltip={user.name}
-        aria-label={t("menuLabel", { name: user.name })}
         className="data-[pressed]:bg-sidebar-accent"
       >
         <UserAvatar name={user.name} image={user.image} className="size-8" />
@@ -78,6 +77,8 @@ export function AccountMenu({ user }: { user: AccountUser }) {
             {user.email}
           </span>
         </span>
+        {/* Named by what it shows, then what it is (WCAG 2.5.3, label in name). */}
+        <span className="sr-only">{t("menuLabel")}</span>
         <ChevronsUpDown className="ml-auto size-4" aria-hidden="true" />
       </SidebarMenuButton>
       <DropdownMenu placement="top start" className="min-w-56">

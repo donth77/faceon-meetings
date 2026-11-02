@@ -1,0 +1,64 @@
+name: Nightly
+
+# The heavier browser tests (tagged @nightly): Firefox's path for backgrounds, and strong
+# noise suppression in a real call. Weekly while the repository is private, to save
+# Actions minutes; run it by hand from the Actions tab at any time.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: faceon
+          POSTGRES_PASSWORD: faceon
+          POSTGRES_DB: faceon
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U faceon"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://faceon:faceon@localhost:5432/faceon
+      DATABASE_URL_UNPOOLED: postgresql://faceon:faceon@localhost:5432/faceon
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      NEXT_PUBLIC_STREAM_API_KEY: ${{ secrets.STREAM_DEV_API_KEY }}
+      STREAM_API_SECRET: ${{ secrets.STREAM_DEV_API_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Throwaway secrets for this run
+        run: |
+          echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          echo "GUEST_SESSION_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          echo "CRON_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - run: pnpm db:migrate
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium firefox
+      - name: Browser tests
+        run: pnpm test:e2e:nightly
+      - name: Keep the report and traces of a failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-nightly
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

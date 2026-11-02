@@ -130,6 +130,10 @@ export function Tile({
 
   return (
     <div
+      // Who's in the tile and what it shows, for the browser tests (tests/e2e).
+      data-tile={kind}
+      data-name={participant.name}
+      data-local={participant.isLocal || undefined}
       className={cn(
         "group/tile bg-card relative size-full overflow-hidden rounded-xl",
         className,

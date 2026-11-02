@@ -288,6 +288,17 @@ In Vercel, open **Settings → Domains**, add your domain and follow the DNS ins
 5. If you set up Google Calendar, connect it in **Settings → Calendar**, schedule a meeting, and look for it in your calendar.
 6. Run the cleanup once ([step 11](#11-check-the-daily-cleanup)) and `pnpm stream:check`.
 
+## CI secrets (optional)
+
+GitHub Actions runs the browser tests on every push, against a database it throws away afterwards. The tests that join calls also need a **development** Stream app, never your production one. Add two repository secrets under **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret                  | Value                                                       |
+| ----------------------- | ----------------------------------------------------------- |
+| `STREAM_DEV_API_KEY`    | The API key of the Stream app you use for local development |
+| `STREAM_DEV_API_SECRET` | That app's secret                                           |
+
+Without them, those tests are skipped and every other test still runs; the job's summary says which. Nothing else is needed: each run makes its own throwaway secrets. While a repository is private, Actions minutes come from a monthly allowance, and the nightly workflow runs weekly to save them.
+
 ## Updating your copy
 
 Migrations aren't applied when Vercel deploys, so apply them before the new code goes live:

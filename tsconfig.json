@@ -30,6 +30,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "scripts/**/*.ts",
+    "tests/**/*.ts",
     "*.ts",
     "*.mts",
     ".next/types/**/*.ts",

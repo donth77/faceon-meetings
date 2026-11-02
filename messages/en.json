@@ -200,7 +200,7 @@
     "newTab": "(opens in a new tab)"
   },
   "Account": {
-    "menuLabel": "Account menu for {name}",
+    "menuLabel": "Account menu",
     "profile": "Profile",
     "theme": "Theme",
     "themes": {

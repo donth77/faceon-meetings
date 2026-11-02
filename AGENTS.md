@@ -14,13 +14,14 @@ FaceOn is a free, open-source (MIT), browser-based video meeting app that should
 
 ## Commands
 
-| Command                                                       | Use                                                                                                                   |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                                                    | Dev server on http://localhost:3000                                                                                   |
-| `pnpm build`                                                  | Production build (also what Vercel runs)                                                                              |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test`                  | ESLint / route types + `tsc` / Vitest; all three run in CI                                                            |
-| `pnpm format`                                                 | Prettier (with the Tailwind class-sorting plugin)                                                                     |
-| `pnpm stream:setup` / `stream:check` / `stream:lockdown-test` | Configure Stream (call type, grants, system user), report drift, prove the permission boundary. They use `.env.local` |
+| Command                                                       | Use                                                                                                                        |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                                    | Dev server on http://localhost:3000                                                                                        |
+| `pnpm build`                                                  | Production build (also what Vercel runs)                                                                                   |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test`                  | ESLint / route types + `tsc` / Vitest; all three run in CI                                                                 |
+| `pnpm format`                                                 | Prettier (with the Tailwind class-sorting plugin)                                                                          |
+| `pnpm test:e2e` / `pnpm test:e2e:nightly`                     | Browser tests (Playwright, `tests/e2e`) against `pnpm build`'s output; CI runs the first on every push (see Browser tests) |
+| `pnpm stream:setup` / `stream:check` / `stream:lockdown-test` | Configure Stream (call type, grants, system user), report drift, prove the permission boundary. They use `.env.local`      |
 
 Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integration), never with `vercel deploy`. Setting up a copy of your own (accounts, environment variables, migrations, Stream, domains) is in `DEPLOY.md`.
 
@@ -66,10 +67,18 @@ Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integr
 - **Accessibility.** WCAG 2.2 AA in light and dark themes: real buttons with labels, visible focus (the `focus-ring` utilities), keyboard access, and tooltips that also appear on focus. When a control removes itself or a screen changes, move focus somewhere sensible first.
 - **React Compiler.** It's on (`reactCompiler` in next.config.ts), so components and values are memoized for you: write plain code, and reach for `useMemo` or `useCallback` only where an effect or an external store needs a stable identity. It assumes module-level variables never change, so a function that changes one belongs at module level, outside any component or hook (see `lib/pwa/install.ts`).
 
+## Browser tests
+
+- **Where:** `tests/e2e/*.spec.ts`, with helpers in `tests/e2e/support/`. `people.signedIn()` and `people.guest()` give each person a browser of their own, and `createMeeting`, `createPastMeeting` and `needsStream()` set the scene. Their camera and microphone are `tests/fixtures/cam.y4m` and `mic.wav` (synthesized). Meeting tiles carry `data-tile`, `data-name` and `data-local` for finding a person's video.
+- **Who's signed in:** tests write their own users and sessions to the database and sign the session cookie with `BETTER_AUTH_SECRET`, so only the sign-in tests use the sign-in screens. Every test's users are unique and deleted afterwards, along with what they host.
+- **Which database:** the one in `E2E_DATABASE_URL` (or the app's own). The tests refuse a production deployment, the database `.env.production.local` names, and any database off this machine unless `E2E_ALLOW_REMOTE_DATABASE=1`. CI uses a Postgres container that's thrown away.
+- **Running them:** `pnpm build` with `NEXT_PUBLIC_APP_URL=http://localhost:3100`, then `pnpm test:e2e`, which starts the build on port 3100. With `.env.local`'s development database: `E2E_ALLOW_REMOTE_DATABASE=1 pnpm test:e2e`. The server it starts has no email delivery, OAuth apps or approved hosts, as in CI: nothing reaches a real inbox, and every test account hosts demo meetings. Tests that join calls need Stream's development keys, and are skipped without them.
+- **Writing one:** find things the way people do (by role and label), wait with `expect` rather than fixed pauses, end with `expectNoErrors`, and tag slow or Firefox-only tests `@nightly` (and `@firefox`).
+
 ## Definition of done
 
 - Typed, with no `any` leaks.
-- A unit and/or E2E test is added.
+- Tests are added: unit tests for logic, and a browser test in `tests/e2e` for anything people do on screen.
 - Works at 375 px and 1440 px.
 - Keyboard accessible, with visible focus, in light and dark themes.
 - All UI text comes from the message files.
