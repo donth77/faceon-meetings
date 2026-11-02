@@ -8,9 +8,11 @@ import type { CalendarOutcome } from "@/lib/google-calendar/shared";
 import { syncGoogleCalendar } from "@/lib/google-calendar/sync";
 import { serverEnv } from "@/lib/server-env";
 
+import { Passcode } from "./codes";
 import {
   countMeetingsCreatedSince,
   findMeetingByCode,
+  setMeetingPasscode,
   updateMeetingSettings,
 } from "./queries";
 import { DAY_MS } from "./retention";
@@ -80,7 +82,8 @@ export async function scheduleMeetingAction(
     created = await scheduleMeeting({
       hostId: session.user.id,
       code: signed.data.code,
-      passcode: signed.data.passcode,
+      // The host's own passcode, or the one the form previewed.
+      passcode: parsed.data.passcodeText ?? signed.data.passcode,
       values: parsed.data,
       googleCalendar: await wantsGoogleCalendar(
         parsed.data.googleCalendar,
@@ -229,6 +232,32 @@ export async function updateScheduledSettingsAction(
     ...(next.waitingRoom ? { joinBeforeHost: false } : {}),
   });
   return true;
+}
+
+/**
+ * A meeting's page → Change passcode: its host sets a new one (their own, or Generate's).
+ * The old one, and links with it, stop working; anyone already in the meeting stays.
+ * Google Calendar's events follow, for a synced meeting.
+ */
+export async function changePasscodeAction(
+  code: unknown,
+  passcode: unknown,
+): Promise<
+  { ok: true; passcode: string; calendar?: CalendarOutcome } | { ok: false }
+> {
+  const own = await ownMeeting(code);
+  const parsed = Passcode.safeParse(passcode);
+  if (!own || !parsed.success || own.row.passcode === null)
+    return { ok: false };
+  await setMeetingPasscode(own.row.id, own.row.hostId, parsed.data);
+  return {
+    ok: true,
+    passcode: parsed.data,
+    calendar:
+      own.row.googleEvents === null
+        ? undefined
+        : await syncGoogleCalendar(own.row.id),
+  };
 }
 
 /** Upcoming rows as the browser gets them: times in ISO 8601. */

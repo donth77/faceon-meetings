@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Eye, EyeOff, RefreshCw, Video } from "lucide-react";
+import { Copy, Eye, EyeOff, Pencil, RefreshCw, Video } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId, useState, type ReactNode } from "react";
 import { ToggleButton } from "react-aria-components";
@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { useInvitation } from "@/components/meeting/invitation";
 import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
 import { CohostsField } from "@/components/schedule/invitees-field";
+import { ChangePasscodeDialog } from "@/components/schedule/passcode-field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { copyText } from "@/lib/clipboard";
 import {
+  changePersonalRoomPasscode,
   regeneratePersonalRoom,
   updatePersonalRoomCohosts,
   updatePersonalRoomSettings,
@@ -86,8 +88,10 @@ export function PersonalRoomView({
   aiNotesAllowed: boolean;
 }) {
   const t = useTranslations("PersonalRoom");
+  const tp = useTranslations("Passcode");
   const [room, setRoom] = useState(initial);
   const [showPasscode, setShowPasscode] = useState(false);
+  const [changingPasscode, setChangingPasscode] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const { link, copyInvitation } = useInvitation(room);
@@ -107,6 +111,19 @@ export function PersonalRoomView({
     } finally {
       setRegenerating(false);
     }
+  }
+
+  async function changePasscode(passcode: string): Promise<boolean> {
+    const result = await changePersonalRoomPasscode(passcode).catch(
+      () => ({ ok: false }) as const,
+    );
+    if (!result.ok) {
+      toast.error(tp("failed"));
+      return false;
+    }
+    setRoom((current) => ({ ...current, passcode: result.passcode }));
+    toast.success(tp("changed"));
+    return true;
   }
 
   async function changeCohosts(cohosts: string[]) {
@@ -208,6 +225,14 @@ export function PersonalRoomView({
                   <Copy aria-hidden="true" />
                   {t("copy")}
                 </Button>
+                <Button
+                  variant="outline"
+                  aria-label={tp("changeLabel")}
+                  onPress={() => setChangingPasscode(true)}
+                >
+                  <Pencil aria-hidden="true" />
+                  {tp("change")}
+                </Button>
               </DetailRow>
             ) : null}
             <DetailRow
@@ -285,6 +310,13 @@ export function PersonalRoomView({
         </section>
       </div>
 
+      {changingPasscode && room.passcode ? (
+        <ChangePasscodeDialog
+          current={room.passcode}
+          onClose={() => setChangingPasscode(false)}
+          onSave={changePasscode}
+        />
+      ) : null}
       <ConfirmDialog
         isOpen={confirming}
         onClose={() => setConfirming(false)}

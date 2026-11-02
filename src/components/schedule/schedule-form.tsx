@@ -14,7 +14,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { GoogleCalendarField } from "@/components/google-calendar/calendar-field";
@@ -24,6 +24,7 @@ import {
 } from "@/components/google-calendar/outcome";
 import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogFooter,
@@ -46,6 +47,7 @@ import type {
   CalendarConnection,
   CalendarOutcome,
 } from "@/lib/google-calendar/shared";
+import { passcodeProblem, randomPasscode } from "@/lib/meetings/codes";
 import type { Recurrence } from "@/lib/meetings/recurrence";
 import {
   MAX_DESCRIPTION,
@@ -69,6 +71,7 @@ import {
 import { DateField } from "./date-field";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
 import { CohostsField, InviteesField } from "./invitees-field";
+import { PasscodeField } from "./passcode-field";
 import { RepeatField } from "./repeat-field";
 import { ScopeDialog } from "./scope-dialog";
 import { TimeZoneField } from "./time-zone-field";
@@ -85,6 +88,8 @@ export type ScheduleFormValues = {
   /** Named co-hosts: they join as co-hosts when signed in with these addresses. */
   cohosts: string[];
   passcode: boolean;
+  /** The passcode itself: the one generated, or the host's own. */
+  passcodeText: string;
   waitingRoom: boolean;
   allowGuests: boolean;
   joinBeforeHost: boolean;
@@ -129,6 +134,7 @@ export function defaultValues(): ScheduleFormValues {
     invitees: [],
     cohosts: [],
     passcode: true,
+    passcodeText: "",
     waitingRoom: true,
     allowGuests: true,
     joinBeforeHost: false,
@@ -156,6 +162,7 @@ const toInput = (values: ScheduleFormValues): ScheduleInput => ({
   durationMin: values.durationMin,
   recurrence: values.recurrence,
   passcode: values.passcode,
+  passcodeText: values.passcode ? values.passcodeText.trim() : undefined,
   waitingRoom: values.waitingRoom,
   allowGuests: values.allowGuests,
   joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
@@ -383,6 +390,7 @@ export function ScheduleForm({
 }) {
   const t = useTranslations("Schedule");
   const tc = useTranslations("GoogleCalendar");
+  const tp = useTranslations("Passcode");
   const locale = useIntlLocale();
   const router = useRouter();
   const showCalendarProblem = useCalendarProblemToast(calendar.email);
@@ -393,11 +401,18 @@ export function ScheduleForm({
         ...defaultValues(),
         // Once Google Calendar is connected, new meetings go on it unless switched off.
         googleCalendar: calendar.connection.status === "connected",
+        // The previewed passcode, which the host can keep or change.
+        passcodeText: draft?.passcode ?? "",
         ...initial,
       },
   );
   const [saving, setSaving] = useState(false);
   const [scoping, setScoping] = useState(false);
+  // A passcode that can't be used shows what's wrong once saving is tried.
+  const [triedSave, setTriedSave] = useState(false);
+  const passcodeInput = useRef<HTMLInputElement>(null);
+  // Changing an edited meeting's passcode stops the old one and its links working.
+  const [confirmingPasscode, setConfirmingPasscode] = useState(false);
   const [scheduled, setScheduled] = useState<{
     code: string;
     calendar: CalendarOutcome | undefined;
@@ -406,9 +421,7 @@ export function ScheduleForm({
     setValues((current) => ({ ...current, ...patch }));
 
   const code = edit?.code ?? draft?.code ?? "";
-  const passcode = values.passcode
-    ? (edit?.passcode ?? draft?.passcode ?? null)
-    : null;
+  const passcode = values.passcode ? values.passcodeText.trim() || null : null;
   const start = zonedToUtc(`${values.date}T${values.time}`, values.timeZone);
   const meeting: ScheduledMeeting = {
     code,
@@ -459,11 +472,27 @@ export function ScheduleForm({
     }
   }
 
+  /** Saves, asking first which meetings of a series an edit is for. */
+  function proceed() {
+    if (edit?.isSeries && edit.occurrence) setScoping(true);
+    else void save("all");
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!values.title.trim()) return;
-    if (edit?.isSeries && edit.occurrence) setScoping(true);
-    else void save("all");
+    if (values.passcode && passcodeProblem(values.passcodeText)) {
+      setTriedSave(true);
+      passcodeInput.current?.focus();
+      return;
+    }
+    // Capital letters don't matter to anyone joining, so only a real change asks.
+    const changed =
+      edit?.passcode != null &&
+      values.passcode &&
+      values.passcodeText.trim().toUpperCase() !== edit.passcode.toUpperCase();
+    if (changed) setConfirmingPasscode(true);
+    else proceed();
   }
 
   const timeOptions = TIMES.map((time) => ({
@@ -596,20 +625,28 @@ export function ScheduleForm({
             </legend>
             <SwitchRow
               label={t("requirePasscode")}
-              help={
-                values.passcode && passcode
-                  ? t.rich("passcodeHelp", {
-                      passcode: () => (
-                        <span className="text-foreground font-mono">
-                          {passcode}
-                        </span>
-                      ),
-                    })
-                  : undefined
-              }
+              help={values.passcode ? t("passcodeInLink") : undefined}
               isSelected={values.passcode}
-              onChange={(on) => set({ passcode: on })}
+              onChange={(on) =>
+                set({
+                  passcode: on,
+                  // Turned on with none yet: a generated one to start from.
+                  ...(on && !values.passcodeText.trim()
+                    ? { passcodeText: randomPasscode() }
+                    : {}),
+                })
+              }
             />
+            {values.passcode ? (
+              <div className="pt-1 pb-3">
+                <PasscodeField
+                  value={values.passcodeText}
+                  onChange={(passcodeText) => set({ passcodeText })}
+                  showProblem={triedSave}
+                  inputRef={passcodeInput}
+                />
+              </div>
+            ) : null}
             <SwitchRow
               label={t("waitingRoom")}
               help={t("waitingRoomHelp")}
@@ -677,6 +714,20 @@ export function ScheduleForm({
         </form>
         <InvitationCard meeting={meeting} saved={Boolean(edit)} />
       </div>
+      {confirmingPasscode ? (
+        <ConfirmDialog
+          isOpen
+          onClose={() => setConfirmingPasscode(false)}
+          title={tp("changeTitle")}
+          description={tp("changeBody")}
+          confirmLabel={tp("changeConfirm")}
+          cancelLabel={tp("cancel")}
+          onConfirm={() => {
+            setConfirmingPasscode(false);
+            proceed();
+          }}
+        />
+      ) : null}
       {scoping ? (
         <ScopeDialog
           title={t("editSeries")}

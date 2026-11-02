@@ -15,7 +15,7 @@ order: 2
    - Select **Play a test sound** to check your speaker.
 3. Enter your name if you're not signed in.
 4. To change the picture people see when your camera is off, select your avatar beside your name. Without an account, your choice is kept on this device for next time.
-5. If the link doesn't include the passcode, enter it. It's in the meeting invitation.
+5. If the link doesn't include the passcode, enter it. It's in the meeting invitation, and capital letters don't matter.
 6. Select **Join now**.
 
 To change anything else first (noise suppression, push to talk, your camera's settings, a background), select **Settings** on the preview. It's the same as **Settings** in the meeting, and it's there while you wait to be let in, too.

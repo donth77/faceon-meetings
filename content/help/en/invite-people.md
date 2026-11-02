@@ -19,6 +19,8 @@ While you're the only one there, a card in the corner shows the link too.
 
 ## About the passcode
 
-The passcode is part of the link, so people with the link don't need to type it. If you share only the meeting ID, share the passcode too. The invitation includes both.
+The passcode is part of the link, so people with the link don't need to type it. If you share only the meeting ID, share the passcode too. The invitation includes both. Capital letters in a passcode don't matter.
+
+You can choose your own passcode: 4 to 10 letters, numbers or @ - _ *. Type it when you schedule a meeting, or select **Change** next to the passcode on the meeting's page or the **Personal room** page; **Generate** makes a new random one. People with the old link or passcode then need the new one, so send them the new invitation. Anyone in the meeting at the time stays in.
 
 > **Tip:** An invitation is plain text, so you can paste it into an email, a chat or a calendar event.

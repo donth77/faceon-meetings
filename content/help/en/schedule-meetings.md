@@ -12,7 +12,7 @@ order: 3
 3. To make it repeat, choose an option under **Repeat**. **Custom** covers anything else, such as every other week or the last Friday of each month.
 4. Under **Invite people**, add email addresses if you like. Under **Co-hosts**, add anyone who should join as a co-host (see [Host controls](/help/host-controls)); they're invited too.
 5. With Google Calendar connected, leave **Add to my Google Calendar and send invitations** on (see below).
-6. Under **Security**, choose whether it needs a passcode, has a waiting room and lets guests in.
+6. Under **Security**, choose whether it needs a passcode (keep the one shown, type your own, or select **Generate**), has a waiting room and lets guests in.
 7. Under **When people join**, choose whether people join muted, can join before you, whether **AI notes start automatically**, and whether they're **shared with participants automatically** (once your meetings allow AI notes; see [AI notes](/help/ai-notes)).
 8. Select **Save**.
 

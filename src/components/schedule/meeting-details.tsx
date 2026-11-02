@@ -37,6 +37,7 @@ import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
 import {
+  changePasscodeAction,
   deleteScheduleAction,
   updateScheduledSettingsAction,
 } from "@/lib/meetings/schedule-actions";
@@ -45,6 +46,7 @@ import { useIntlLocale } from "@/lib/preferences";
 import { formatDay, formatTimeRange, zoneCity, zonedToUtc } from "@/lib/time";
 
 import { useScheduledInvitation } from "./invitation";
+import { ChangePasscodeDialog } from "./passcode-field";
 import { ScopeDialog } from "./scope-dialog";
 
 const CARD =
@@ -95,10 +97,14 @@ export function MeetingDetailsView({
   const t = useTranslations("MeetingDetails");
   const ts = useTranslations("Schedule");
   const tc = useTranslations("GoogleCalendar");
+  const tp = useTranslations("Passcode");
   const locale = useIntlLocale();
   const router = useRouter();
   const showCalendarProblem = useCalendarProblemToast(viewerEmail);
   const [showPasscode, setShowPasscode] = useState(false);
+  // The host can change it here; the invitation and Copy follow.
+  const [passcode, setPasscode] = useState(details.passcode);
+  const [changingPasscode, setChangingPasscode] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [settings, setSettings] = useState(details.settings);
 
@@ -115,7 +121,7 @@ export function MeetingDetailsView({
     : new Date(start.getTime() + details.durationMin * 60_000);
   const invitation = useScheduledInvitation({
     code: details.code,
-    passcode: details.passcode,
+    passcode,
     hostName: details.hostName,
     title: details.title,
     start,
@@ -165,6 +171,22 @@ export function MeetingDetailsView({
       setSettings(previous);
       toast.error(t("saveFailed"));
     }
+  }
+
+  async function changePasscode(next: string): Promise<boolean> {
+    const result = await changePasscodeAction(details.code, next).catch(
+      () => ({ ok: false }) as const,
+    );
+    if (!result.ok) {
+      toast.error(tp("failed"));
+      return false;
+    }
+    setPasscode(result.passcode);
+    toast.success(tp("changed"), {
+      description: result.calendar === "synced" ? tc("updated") : undefined,
+    });
+    showCalendarProblem(result.calendar, details.code);
+    return true;
   }
 
   async function remove(scope: SeriesScope) {
@@ -307,10 +329,10 @@ export function MeetingDetailsView({
                 </Button>
               }
             />
-            {details.passcode ? (
+            {passcode ? (
               <DetailRow
                 label={t("passcode")}
-                value={showPasscode ? details.passcode : "••••••"}
+                value={showPasscode ? passcode : "••••••"}
                 actions={
                   <>
                     <Button
@@ -330,13 +352,21 @@ export function MeetingDetailsView({
                     <Button
                       variant="outline"
                       aria-label={t("copyPasscode")}
-                      onPress={() =>
-                        void copy(details.passcode ?? "", t("copied"))
-                      }
+                      onPress={() => void copy(passcode, t("copied"))}
                     >
                       <Copy aria-hidden="true" />
                       {t("copy")}
                     </Button>
+                    {details.isHost ? (
+                      <Button
+                        variant="outline"
+                        aria-label={tp("changeLabel")}
+                        onPress={() => setChangingPasscode(true)}
+                      >
+                        <Pencil aria-hidden="true" />
+                        {tp("change")}
+                      </Button>
+                    ) : null}
                   </>
                 }
               />
@@ -475,6 +505,13 @@ export function MeetingDetailsView({
         ) : null}
       </div>
 
+      {changingPasscode && passcode ? (
+        <ChangePasscodeDialog
+          current={passcode}
+          onClose={() => setChangingPasscode(false)}
+          onSave={changePasscode}
+        />
+      ) : null}
       {deleting && recurrence ? (
         <ScopeDialog
           title={t("deleteSeries")}

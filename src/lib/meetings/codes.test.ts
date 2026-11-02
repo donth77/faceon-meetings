@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatMeetingCode, readMeetingInput } from "./codes";
+import {
+  formatMeetingCode,
+  Passcode,
+  passcodeProblem,
+  randomPasscode,
+  readMeetingInput,
+} from "./codes";
 
 describe("formatMeetingCode", () => {
   it("groups a valid ID as 3-3-4", () => {
@@ -60,6 +66,12 @@ describe("readMeetingInput", () => {
     );
   });
 
+  it("reads a host's own passcode, with every character it may have", () => {
+    expect(read("https://example.com/j/1234567890#pwd=Ab@_-*9")).toEqual(
+      ok("1234567890", "Ab@_-*9"),
+    );
+  });
+
   it("finds the meeting in a pasted invitation", () => {
     const invitation = [
       "Tom D is inviting you to a FaceOn meeting.",
@@ -91,5 +103,39 @@ describe("readMeetingInput", () => {
     expect(read("https://example.com/j/12345")).toEqual(no("brokenLink"));
     expect(read("https://example.com/j/0123456789")).toEqual(no("brokenLink"));
     expect(read("https://example.com/j/")).toEqual(no("brokenLink"));
+  });
+});
+
+describe("passcodes", () => {
+  it("are 4 to 10 letters, numbers or @ - _ *", () => {
+    for (const passcode of ["K7XQ", "abcd1234@-", "team_*", "K7XQ2M"]) {
+      expect(Passcode.safeParse(passcode).success).toBe(true);
+    }
+    for (const passcode of [
+      "abc",
+      "abcdefghijk",
+      "two words",
+      "pass!",
+      "é123",
+    ]) {
+      expect(Passcode.safeParse(passcode).success).toBe(false);
+    }
+    expect(Passcode.parse("  K7XQ  ")).toBe("K7XQ");
+  });
+
+  it("say what's wrong with one, for its field", () => {
+    expect(passcodeProblem("K7XQ2M")).toBeNull();
+    expect(passcodeProblem("abc")).toBe("length");
+    expect(passcodeProblem("abcdefghijk")).toBe("length");
+    expect(passcodeProblem("pass!")).toBe("characters");
+    expect(passcodeProblem("")).toBe("length");
+  });
+
+  it("are made from characters that don't look alike", () => {
+    for (let i = 0; i < 200; i++) {
+      const passcode = randomPasscode();
+      expect(passcode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/);
+      expect(Passcode.safeParse(passcode).success).toBe(true);
+    }
   });
 });

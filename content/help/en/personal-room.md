@@ -13,7 +13,7 @@ Select **Start** on **Home**, or on the **Personal room** page in the sidebar.
 
 ## Share it
 
-On the **Personal room** page, under **Join details**, you can copy the Personal Meeting ID, the passcode or the invite link. **Copy invitation** copies all of them as a ready-made message.
+On the **Personal room** page, under **Join details**, you can copy the Personal Meeting ID, the passcode or the invite link. **Copy invitation** copies all of them as a ready-made message. Select **Change** next to the passcode to choose your own (see [Invite people](/help/invite-people)).
 
 ## Room settings
 

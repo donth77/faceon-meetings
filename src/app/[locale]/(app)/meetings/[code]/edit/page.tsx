@@ -83,6 +83,7 @@ async function EditMeeting({
             .map((i) => i.email),
           cohosts: details.invitees.filter((i) => i.cohost).map((i) => i.email),
           passcode: details.passcode !== null,
+          passcodeText: details.passcode ?? "",
           waitingRoom: details.settings.waitingRoom,
           allowGuests: details.settings.allowGuests,
           joinBeforeHost: details.settings.joinBeforeHost,

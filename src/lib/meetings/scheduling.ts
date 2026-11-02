@@ -262,7 +262,7 @@ export async function updateSchedule(input: {
     const series = await seriesOf(row.id, tx);
     const isSeries = series.rules.length > 0;
     const passcode = values.passcode
-      ? (row.passcode ?? generatePasscode())
+      ? (values.passcodeText ?? row.passcode ?? generatePasscode())
       : null;
     const common = {
       description: values.description || null,

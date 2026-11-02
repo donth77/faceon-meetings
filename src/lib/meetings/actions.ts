@@ -4,11 +4,13 @@ import { requireSession } from "@/lib/auth/session";
 import { HOME_ROUTE, PERSONAL_ROOM_ROUTE } from "@/lib/routes";
 import { serverEnv } from "@/lib/server-env";
 
+import { Passcode } from "./codes";
 import {
   countMeetingsCreatedSince,
   getOrCreatePersonalRoom,
   insertInstantMeeting,
   rotatePersonalRoomCode,
+  setMeetingPasscode,
   setNamedCohosts,
   updateMeetingSettings,
 } from "./queries";
@@ -103,4 +105,20 @@ export async function updatePersonalRoomCohosts(
   const room = await getOrCreatePersonalRoom(session.user.id);
   await setNamedCohosts(room.id, parsed.data);
   return true;
+}
+
+/**
+ * Personal room → Change passcode: the host's own, or Generate's. The old one, and links
+ * with it, stop working; anyone already in the room stays. Regenerate ID still makes a
+ * new ID and passcode together.
+ */
+export async function changePersonalRoomPasscode(
+  passcode: unknown,
+): Promise<{ ok: true; passcode: string } | { ok: false }> {
+  const session = await requireSession(PERSONAL_ROOM_ROUTE);
+  const parsed = Passcode.safeParse(passcode);
+  if (!parsed.success) return { ok: false };
+  const room = await getOrCreatePersonalRoom(session.user.id);
+  await setMeetingPasscode(room.id, session.user.id, parsed.data);
+  return { ok: true, passcode: parsed.data };
 }

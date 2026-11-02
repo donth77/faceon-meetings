@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { CalendarOutcome } from "@/lib/google-calendar/shared";
 
+import { Passcode } from "./codes";
 import { latestSeriesEnd, Recurrence } from "./recurrence";
 
 /** Invite up to this many people by email. */
@@ -52,6 +53,11 @@ export const ScheduleInput = z
     recurrence: Recurrence.nullable(),
     /** Ask for a passcode (it's in the link, so invitees don't type it). */
     passcode: z.boolean(),
+    /**
+     * The passcode itself, where it asks for one: the one the form previewed, or the
+     * host's own. Without it, a new meeting keeps the previewed one and an edit its own.
+     */
+    passcodeText: Passcode.optional(),
     waitingRoom: z.boolean(),
     allowGuests: z.boolean(),
     joinBeforeHost: z.boolean(),

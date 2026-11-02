@@ -920,6 +920,22 @@
       "talk": "Talk while muted (hold)"
     }
   },
+  "Passcode": {
+    "label": "Passcode",
+    "rules": "4 to 10 letters, numbers or @ - _ *. Capital letters don't matter.",
+    "length": "Use 4 to 10 characters.",
+    "characters": "Use only letters, numbers and @ - _ *.",
+    "generate": "Generate",
+    "generateLabel": "Generate a new passcode",
+    "change": "Change",
+    "changeLabel": "Change passcode",
+    "changeTitle": "Change the passcode?",
+    "changeBody": "People with the old link or passcode will need the new one. Anyone in the meeting now stays in.",
+    "changeConfirm": "Change passcode",
+    "cancel": "Cancel",
+    "changed": "Passcode changed",
+    "failed": "Couldn't change the passcode. Try again."
+  },
   "PersonalRoom": {
     "title": "Personal room",
     "subtitle": "Your always-available meeting. Share it once and use it whenever you want to meet.",
@@ -999,7 +1015,7 @@
     "invalidEmail": "“{email}” isn’t an email address.",
     "security": "Security",
     "requirePasscode": "Require a passcode",
-    "passcodeHelp": "Passcode <passcode></passcode> is included in the invite link",
+    "passcodeInLink": "It's in the invite link, so people with the link don't type it.",
     "waitingRoom": "Waiting room",
     "waitingRoomHelp": "People wait until you or a co-host let them in",
     "allowGuests": "Let guests join without an account",

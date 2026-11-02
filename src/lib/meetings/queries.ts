@@ -177,6 +177,18 @@ export async function updateMeetingSettings(
   await db().update(meeting).set({ settings }).where(eq(meeting.id, meetingId));
 }
 
+/** A host sets their meeting's passcode. */
+export async function setMeetingPasscode(
+  meetingId: string,
+  hostId: string,
+  passcode: string,
+): Promise<void> {
+  await db()
+    .update(meeting)
+    .set({ passcode })
+    .where(and(eq(meeting.id, meetingId), eq(meeting.hostId, hostId)));
+}
+
 /** Postgres's unique_violation, possibly wrapped by Drizzle. */
 export function isUniqueViolation(error: unknown): boolean {
   const code = (value: unknown) =>
