@@ -1,49 +1,54 @@
 {
   "Metadata": {
-    "description": "Free, open-source video meetings in your browser. No downloads."
+    "description": "Free, open-source video meetings in your browser, on any device."
   },
   "Landing": {
     "headline": "Video meetings in your browser.",
-    "subline": "Free and open source. Nothing to install. Works on any device.",
+    "subline": "Free and open source. Works on any device.",
     "startMeeting": "Start a meeting",
     "newHere": "New here? <link>Create a free account</link> to host meetings.",
     "signIn": "Sign in",
     "signUp": "Sign up",
     "help": "Help",
     "primaryNav": "Site",
-    "productShotLabel": "A meeting in progress, with four people in a gallery and the meeting controls below",
     "featuresTitle": "Everything you expect from a meeting app",
     "features": {
       "noDownloads": {
-        "title": "No downloads",
-        "body": "Join from a link in any modern browser."
+        "title": "No download needed",
+        "short": "No download needed",
+        "body": "Join from a link in Chrome, Edge, Safari or Firefox."
       },
       "anyDevice": {
         "title": "Works on phones and tablets",
+        "short": "Phones and tablets",
         "body": "The same meeting on Windows, Mac, iPhone, iPad and Android."
       },
       "screenShare": {
         "title": "Screen sharing with sound",
+        "short": "Sharing with sound",
         "body": "Share a tab, a window or your whole screen."
       },
       "safety": {
         "title": "Waiting room and passcodes",
-        "body": "Hosts decide who gets in, and can remove anyone."
+        "short": "Waiting room",
+        "body": "Let people in when you're ready, and remove anyone."
       },
       "languages": {
         "title": "Six languages",
+        "short": "Six languages",
         "body": "English, Spanish, Portuguese, French, German and Japanese."
       },
       "openSource": {
         "title": "Free and open source",
-        "body": "MIT-licensed, with no ads and no tracking."
+        "short": "Free, open source",
+        "body": "MIT licensed, with no ads and no tracking. Run your own copy."
       }
     },
     "footerLabel": "Footer",
     "privacy": "Privacy",
     "terms": "Terms",
+    "credits": "Credits",
     "viewSource": "View source on GitHub",
-    "avatarCredit": "Avatars: <link>Dylan</link> by Natalia Spivak (CC BY 4.0)",
     "language": "Language",
     "languageCurrent": "Language: {language}",
     "homeLink": "{appName} home"
@@ -129,6 +134,8 @@
   "Join": {
     "label": "Meeting ID or link",
     "placeholder": "Enter a meeting ID or link",
+    "example": "123 456 7890",
+    "hint": "A meeting ID has 10 digits. A link from an invitation works too.",
     "submit": "Join",
     "problems": {
       "digits": "A meeting ID has 10 digits, like 123 456 7890.",

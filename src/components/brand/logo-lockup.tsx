@@ -31,9 +31,18 @@ export function LogoLockup({ className }: { className?: string }) {
   );
 }
 
-/** Just the mark, for where the name doesn't fit (the public header on small phones). */
-export function LogoMark({ className }: { className?: string }) {
-  const name = publicEnv.NEXT_PUBLIC_APP_NAME;
+/**
+ * Just the mark, for where the name doesn't fit (the public header on small phones), or
+ * as decoration (`decorative`: no alt text) where the name is already on the page.
+ */
+export function LogoMark({
+  className,
+  decorative = false,
+}: {
+  className?: string;
+  decorative?: boolean;
+}) {
+  const name = decorative ? "" : publicEnv.NEXT_PUBLIC_APP_NAME;
   return (
     <>
       <Image

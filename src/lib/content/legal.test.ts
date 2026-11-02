@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { MOTIONS, STILLS } from "@/lib/effects/effects";
+
 import { parseFrontMatter } from "./front-matter";
 import {
   fillPlaceholders,
@@ -8,7 +10,7 @@ import {
   type Operator,
 } from "./legal";
 
-const DOCUMENTS: LegalDocumentName[] = ["privacy", "terms"];
+const DOCUMENTS: LegalDocumentName[] = ["privacy", "terms", "credits"];
 
 const named: Operator = {
   appName: "FaceOn",
@@ -21,7 +23,7 @@ const named: Operator = {
 
 const unnamed: Operator = { appName: "FaceOn", site: "faceon.example" };
 
-describe("the privacy policy and the terms", () => {
+describe("the privacy policy, the terms and the credits", () => {
   it.each(DOCUMENTS)(
     "%s fills every placeholder, named or not",
     async (name) => {
@@ -72,5 +74,17 @@ describe("fillPlaceholders", () => {
     expect(fillPlaceholders("{governingLaw}", unnamed)).toBe(
       "the laws of the place where FaceOn's operator is based",
     );
+  });
+});
+
+describe("the credits", () => {
+  it("credit the avatars under their license, and every background's maker", async () => {
+    const credits = await readLegalSource("credits");
+    expect(credits).toContain("Natalia Spivak");
+    expect(credits).toContain("CC BY 4.0");
+    for (const background of [...STILLS, ...MOTIONS]) {
+      if (background.license === "ours") continue;
+      expect(credits).toContain(`by ${background.by}`);
+    }
   });
 });

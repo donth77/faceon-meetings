@@ -8,7 +8,8 @@ import { siteUrl } from "@/lib/site";
 
 import { parseFrontMatter } from "./front-matter";
 
-export type LegalDocumentName = "privacy" | "terms";
+/** The site's own documents: the privacy policy, the terms, and the credits. */
+export type LegalDocumentName = "privacy" | "terms" | "credits";
 
 export type LegalDocument = {
   title: string;
