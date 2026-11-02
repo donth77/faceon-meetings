@@ -10,13 +10,17 @@ import {
   Video,
   VideoOff,
   Volume2,
+  WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Button as AriaButton } from "react-aria-components";
 
+import { MirroredVideo } from "@/components/device/mirrored-video";
+import { useEffectProblems } from "@/components/effects/use-effect-problems";
+import { useEffectsTrack } from "@/components/effects/use-effects-track";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMediaDevices } from "@/hooks/use-media-devices";
@@ -27,6 +31,7 @@ import {
 } from "@/lib/device/preferences";
 import type { DeviceProblem } from "@/lib/device/problems";
 import { playTestSound } from "@/lib/device/test-sound";
+import { effectsSupported } from "@/lib/effects/support";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import {
   loadPreferences,
@@ -37,6 +42,7 @@ import {
 import { loadGuestName, saveGuestName } from "../guest-name";
 import { useMeetingTitle } from "../meeting-title";
 import { MeetingPageFrame } from "../page-frame";
+import { EffectsDialog } from "./effects-dialog";
 import { MicMeter } from "./mic-meter";
 import { useLocalTrack } from "./use-local-track";
 
@@ -80,33 +86,6 @@ export type JoinErrorKind =
 const canChooseSpeaker = () =>
   typeof HTMLMediaElement !== "undefined" &&
   "setSinkId" in HTMLMediaElement.prototype;
-
-function PreviewVideo({
-  track,
-  mirror,
-}: {
-  track: MediaStreamTrack;
-  mirror: boolean;
-}) {
-  const attach = useCallback(
-    (node: HTMLVideoElement | null) => {
-      if (node) node.srcObject = new MediaStream([track]);
-    },
-    [track],
-  );
-  return (
-    <video
-      ref={attach}
-      autoPlay
-      playsInline
-      muted
-      className={cn(
-        "absolute inset-0 size-full object-cover",
-        mirror && "-scale-x-100",
-      )}
-    />
-  );
-}
 
 /** A round on/off control on the preview, red while off, as in Meet. */
 function PreviewToggle({
@@ -228,6 +207,7 @@ export function PreJoin({
 }) {
   const t = useTranslations("PreJoin");
   const tm = useTranslations("Meeting");
+  const te = useTranslations("Effects");
   const title = useMeetingTitle(meeting);
   const nameId = useId();
   const passcodeId = useId();
@@ -254,9 +234,17 @@ export function PreJoin({
   );
   const lists = useMediaDevices(`${video.track?.id}|${audio.track?.id}`);
 
-  useEffect(() => saveDevicePreferences(devices), [devices]);
-  const update = (patch: Partial<DevicePreferences>) =>
+  // Only what you change here is remembered: "Join with camera off" in Settings turns
+  // the camera off for this meeting without making that stick.
+  function update(patch: Partial<DevicePreferences>) {
     setDevices((current) => ({ ...current, ...patch }));
+    saveDevicePreferences({ ...loadDevicePreferences(), ...patch });
+  }
+  const [canUseEffects] = useState(effectsSupported);
+  const [choosingEffect, setChoosingEffect] = useState(false);
+  const effect = canUseEffects ? settings.effect : null;
+  // With a background on, the preview shows it, and never the bare camera meanwhile.
+  const preview = useEffectsTrack(video.track, effect, useEffectProblems());
 
   const busy = status !== "idle";
   const signInHref = `/sign-in?next=${encodeURIComponent(`/j/${meeting.code}`)}`;
@@ -290,8 +278,16 @@ export function PreJoin({
       <div className="grid w-full max-w-[1220px] gap-x-12 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <div className="relative aspect-video w-full overflow-hidden rounded-[20px] bg-[#0e1013] text-[#f2f4f7]">
-            {video.track ? (
-              <PreviewVideo track={video.track} mirror={settings.mirrorVideo} />
+            {preview ? (
+              <MirroredVideo track={preview} mirror={settings.mirrorVideo} />
+            ) : video.track ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-sm">
+                <LoaderCircle
+                  className="size-8 animate-spin opacity-70 motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+                {te("starting")}
+              </div>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
                 {video.pending ? (
@@ -314,6 +310,12 @@ export function PreJoin({
                 )}
               </div>
             )}
+            {effect ? (
+              <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white">
+                <WandSparkles className="size-3.5" aria-hidden="true" />
+                {te("backgroundOn")}
+              </span>
+            ) : null}
             <div className="absolute inset-x-0 bottom-4 flex justify-center gap-3.5">
               <PreviewToggle
                 on={devices.micOn}
@@ -330,7 +332,28 @@ export function PreJoin({
                 onPress={() => update({ cameraOn: !devices.cameraOn })}
               />
             </div>
+            {canUseEffects ? (
+              // Pick a background before anyone sees you, as in Meet.
+              <AriaButton
+                aria-label={te("title")}
+                onPress={() => setChoosingEffect(true)}
+                className="absolute right-4 bottom-[22px] flex size-11 items-center justify-center gap-2 rounded-full bg-[#262b33]/90 text-sm font-semibold text-[#f2f4f7] outline-none hover:bg-[#303741] focus-visible:ring-2 focus-visible:ring-white sm:w-auto sm:px-3.5"
+              >
+                <WandSparkles className="size-[18px]" aria-hidden="true" />
+                <span className="max-sm:hidden">{te("title")}</span>
+              </AriaButton>
+            ) : null}
           </div>
+          {canUseEffects ? (
+            <EffectsDialog
+              isOpen={choosingEffect}
+              onClose={() => setChoosingEffect(false)}
+              track={preview}
+              cameraOn={devices.cameraOn}
+              mirror={settings.mirrorVideo}
+              value={effect}
+            />
+          ) : null}
 
           {video.problem ? (
             <ProblemNote

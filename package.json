@@ -8,8 +8,8 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/effects-assets.ts && next dev",
+    "build": "node scripts/effects-assets.ts && next build",
     "start": "next start",
     "lint": "eslint src scripts *.ts *.mjs",
     "typecheck": "next typegen && tsc --noEmit",
@@ -28,6 +28,7 @@
     "@dicebear/core": "^10.7.0",
     "@dicebear/styles": "^10.6.0",
     "@internationalized/date": "3.12.4",
+    "@mediapipe/tasks-vision": "1.2.0",
     "@stream-io/node-sdk": "^0.8.15",
     "@stream-io/video-react-sdk": "^1.45.0",
     "@vercel/functions": "^3.10.5",

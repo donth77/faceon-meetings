@@ -24,6 +24,10 @@ Choose your microphone and speaker, watch the microphone meter, and select **Tes
 
 See your camera, choose which one to use, and decide whether to mirror your video, send HD video, or start meetings with your camera off.
 
+## Backgrounds and effects
+
+Blur what's behind you, or choose a picture, a moving background or your own image or video, with a live preview. It's used in every meeting on this device. See [Backgrounds and effects](/help/backgrounds-and-effects).
+
 ## Reactions
 
 Choose whether others' reactions show (yours always do), whether reactions float up the screen, whether a soft sound plays with each, and what screen readers hear: nothing, a short summary at most every 10 seconds, or each reaction.

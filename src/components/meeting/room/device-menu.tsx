@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, Settings } from "lucide-react";
+import { ChevronUp, Settings, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button, type Selection } from "react-aria-components";
 
@@ -34,11 +34,14 @@ const deviceIdOf = (key: string) => key.slice(key.indexOf(":") + 1);
 export function DeviceMenu({
   label,
   sections,
+  extra,
   settingsLabel,
   onOpenSettings,
 }: {
   label: string;
   sections: DeviceSection[];
+  /** One more action above the settings, such as Backgrounds and effects. */
+  extra?: { label: string; icon: LucideIcon; onAction: () => void };
   /** "Audio settings…": the full settings for this device. */
   settingsLabel: string;
   onOpenSettings: () => void;
@@ -93,6 +96,12 @@ export function DeviceMenu({
           </DropdownMenuGroup>
         ))}
         <DropdownMenuSeparator />
+        {extra ? (
+          <DropdownMenuItem onAction={extra.onAction}>
+            <extra.icon aria-hidden="true" />
+            {extra.label}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onAction={onOpenSettings}>
           <Settings aria-hidden="true" />
           {settingsLabel}

@@ -991,7 +991,7 @@
     },
     "effects": {
       "title": "Backgrounds and effects",
-      "comingSoon": "Blurred and custom backgrounds are on their way."
+      "intro": "The background or effect on your camera, in every meeting on this device. You can change it in a meeting too, from the camera menu."
     },
     "aiNotes": {
       "title": "AI notes",
@@ -1227,5 +1227,74 @@
     "deleted": "Notes deleted",
     "showAll": "Show all {count, plural, one {# line} other {# lines}}",
     "showLess": "Show less"
+  },
+  "Effects": {
+    "title": "Backgrounds and effects",
+    "open": "Backgrounds and effects…",
+    "close": "Close backgrounds and effects",
+    "choices": "Background or effect",
+    "preview": "Your video with this background",
+    "starting": "Starting your background",
+    "cameraOff": "Turn on your camera to see your background.",
+    "backgroundOn": "Background on",
+    "mirrored": "Mirrored for you",
+    "groups": {
+      "effects": "Blur",
+      "art": "Art",
+      "places": "Places",
+      "abstract": "Abstract",
+      "motion": "Motion",
+      "yours": "Yours"
+    },
+    "none": "No effect",
+    "blur": {
+      "slight": "Slight blur",
+      "strong": "Blur"
+    },
+    "stills": {
+      "oxbow": "The Oxbow",
+      "wheat-field": "Wheat Field with Cypresses",
+      "great-wave": "The Great Wave",
+      "andes": "Heart of the Andes",
+      "library": "Library",
+      "valley": "Valley",
+      "earth": "Earth",
+      "coast": "Coast",
+      "blue": "Blue",
+      "mint": "Mint",
+      "dusk": "Dusk",
+      "graphite": "Graphite"
+    },
+    "motion": {
+      "aurora": "Aurora",
+      "waves": "Waves",
+      "bokeh": "Lights",
+      "drift": "Drift"
+    },
+    "motionNote": "Subtle motion looks best, and uses less data.",
+    "license": {
+      "publicDomain": "public domain",
+      "cc0": "CC0",
+      "ours": "made for FaceOn"
+    },
+    "credit": "{by}, {license}",
+    "add": "Add",
+    "addHelp": "An image (JPEG, PNG, WebP or GIF, up to {imageMegabytes} MB) or a looping video (MP4 or WebM, up to {videoSeconds} seconds and {videoMegabytes} MB). It stays in this browser.",
+    "uploadImage": "Your image {n}",
+    "uploadVideo": "Your video {n}",
+    "remove": "Remove {name}",
+    "adding": "Adding your background",
+    "rejected": {
+      "type": "That file isn’t an image or video FaceOn can use.",
+      "tooBig": "That file is too big.",
+      "tooLong": "Videos can be up to {seconds} seconds long.",
+      "unreadable": "That file couldn’t be read."
+    },
+    "tooSlow": "Effects were turned off to keep your video smooth.",
+    "failed": "Your background couldn’t start, so your video is off.",
+    "previewFailed": "That background couldn’t start on this device, so it’s off.",
+    "backgroundFailed": "That background couldn’t load.",
+    "private": "Everything happens on this device: nobody receives your video without the effect, and backgrounds you add never leave this browser.",
+    "unsupported": "This browser can’t add backgrounds and effects. Try a recent Chrome, Edge, Firefox or Safari."
   }
 }

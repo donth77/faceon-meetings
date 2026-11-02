@@ -18,6 +18,7 @@ import {
   Users,
   Video,
   VideoOff,
+  WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -129,7 +130,7 @@ function LeaveControl({
  * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
  * without labels.
  */
-export type PanelName = "people" | "chat" | "notes";
+export type PanelName = "people" | "chat" | "notes" | "effects";
 
 /** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
 function PanelButton({
@@ -298,6 +299,7 @@ function MoreMenu({
   onReaction,
   onOpenSettings,
   onOpenNotes,
+  onOpenEffects,
 }: {
   peopleCount: number;
   unreadChat: number;
@@ -306,8 +308,11 @@ function MoreMenu({
   onReaction: ((code: ReactionCode) => void) | null;
   onOpenSettings: () => void;
   onOpenNotes?: (() => void) | undefined;
+  /** Phones have no camera caret, so Backgrounds and effects is here. */
+  onOpenEffects?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
+  const te = useTranslations("Effects");
   return (
     <div className="flex md:hidden">
       <DropdownMenuTrigger>
@@ -359,6 +364,12 @@ function MoreMenu({
               ? t("chat.withUnread", { count: unreadChat })
               : t("chat.title")}
           </DropdownMenuItem>
+          {onOpenEffects ? (
+            <DropdownMenuItem onAction={onOpenEffects}>
+              <WandSparkles aria-hidden="true" />
+              {te("title")}
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuSeparator />
           <MoreItems
             onOpenSettings={onOpenSettings}
@@ -379,6 +390,7 @@ export function ControlBar({
   onOpenSettings,
   onOpenPictureInPicture,
   onOpenNotes,
+  onOpenEffects,
   unreadChat,
   waitingCount,
   onToggleMic,
@@ -400,6 +412,8 @@ export function ControlBar({
   onOpenPictureInPicture?: (() => void) | undefined;
   /** Opens AI notes; for hosts and co-hosts. */
   onOpenNotes?: (() => void) | undefined;
+  /** Opens Backgrounds and effects; absent where the browser can't run them. */
+  onOpenEffects?: (() => void) | undefined;
   unreadChat: number;
   /** People in the waiting room (hosts and co-hosts see them). */
   waitingCount: number;
@@ -416,6 +430,7 @@ export function ControlBar({
   onReaction: ((code: ReactionCode) => void) | null;
 }) {
   const t = useTranslations("Meeting");
+  const te = useTranslations("Effects");
   const media = useRoomMedia();
   const { mic, camera, speaker, screenShare } = media;
   const count = media.participants.length;
@@ -471,6 +486,15 @@ export function ControlBar({
             label={t("videoSettings")}
             settingsLabel={t("videoSettingsMore")}
             onOpenSettings={() => onOpenSettings("video")}
+            extra={
+              onOpenEffects
+                ? {
+                    label: te("open"),
+                    icon: WandSparkles,
+                    onAction: onOpenEffects,
+                  }
+                : undefined
+            }
             sections={[
               {
                 title: t("camera"),
@@ -507,6 +531,7 @@ export function ControlBar({
           onReaction={onReaction}
           onOpenSettings={() => onOpenSettings()}
           onOpenNotes={onOpenNotes}
+          onOpenEffects={onOpenEffects}
         />
         <LeaveControl isOwner={isOwner} onEndForAll={onEndForAll} />
       </div>

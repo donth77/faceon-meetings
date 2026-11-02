@@ -9,10 +9,12 @@ import {
 import { useEffect, useEffectEvent, useState } from "react";
 
 import type { DevicePreferences } from "@/lib/device/preferences";
+import type { CameraProcessor } from "@/lib/media/types";
 import { loadPreferences, withDefaults } from "@/lib/preferences";
 import { CALL_TYPE } from "@/lib/stream/constants";
 
 import type { RoomAdapterProps } from "../../media";
+import { setCameraProcessor } from "./camera-processor";
 import { StreamMedia } from "./stream-media";
 
 type Room = { client: StreamVideoClient; call: Call; joinedAt: number };
@@ -22,9 +24,13 @@ const SD = { width: 640, height: 360 };
 
 /**
  * Settings → Audio and Video first, then the remembered devices (a missing one falls
- * back to the default), then each on or off.
+ * back to the default), then the camera's effect, then each on or off.
  */
-async function applyDevices(call: Call, devices: DevicePreferences) {
+async function applyDevices(
+  call: Call,
+  devices: DevicePreferences,
+  cameraProcessor: CameraProcessor | undefined,
+) {
   const settings = withDefaults(loadPreferences());
   call.microphone.setDefaultConstraints({
     autoGainControl: true,
@@ -39,6 +45,8 @@ async function applyDevices(call: Call, devices: DevicePreferences) {
     devices.micId ? call.microphone.select(devices.micId) : null,
   ]);
   if (devices.speakerId) call.speaker.select(devices.speakerId);
+  // Before the camera starts, so the unprocessed picture is never sent.
+  if (cameraProcessor) await setCameraProcessor(call, cameraProcessor);
   // A device that fails to start leaves the call joined with it off; the room shows why.
   await Promise.allSettled([
     devices.cameraOn ? call.camera.enable() : call.camera.disable(),
@@ -53,6 +61,7 @@ export default function StreamRoom(props: RoomAdapterProps) {
     connection: props.connection,
     self: props.self,
     devices: props.devices,
+    cameraProcessor: props.cameraProcessor,
   }));
   const [room, setRoom] = useState<Room>();
   const refreshToken = useEffectEvent(() => props.refreshToken());
@@ -75,7 +84,7 @@ export default function StreamRoom(props: RoomAdapterProps) {
       const call = client.call(CALL_TYPE, setup.connection.room);
       joined = { client, call };
       (async () => {
-        await applyDevices(call, setup.devices);
+        await applyDevices(call, setup.devices, setup.cameraProcessor);
         await call.join();
         if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
       })().catch(() => {

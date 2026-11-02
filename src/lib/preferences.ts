@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
 
+import { Effect } from "@/lib/effects/effects";
 import { formattingLocale } from "@/lib/time";
 
 /**
@@ -56,6 +57,8 @@ export type Preferences = {
   pushToTalk?: boolean;
   /** Minutes before a meeting to remind you; 0 for never. Default 5, as in Zoom. */
   reminderMinutes?: ReminderMinutes;
+  /** The background or effect on your camera, in every meeting. Default none. */
+  effect?: Effect;
 };
 
 const KEY = "faceon.prefs";
@@ -97,6 +100,8 @@ export function loadPreferences(): Preferences {
       if (typeof p.timeZone === "string") value.timeZone = p.timeZone;
       const minutes = REMINDER_MINUTES.find((m) => m === p.reminderMinutes);
       if (minutes !== undefined) value.reminderMinutes = minutes;
+      const effect = Effect.safeParse(p.effect);
+      if (effect.success) value.effect = effect.data;
       for (const key of BOOLEANS) {
         if (typeof p[key] === "boolean") value[key] = p[key];
       }
@@ -176,6 +181,7 @@ export function withDefaults(preferences: Preferences) {
     pushToTalk: preferences.pushToTalk ?? false,
     autoPictureInPicture: preferences.autoPictureInPicture ?? true,
     reminderMinutes: preferences.reminderMinutes ?? 5,
+    effect: preferences.effect ?? null,
   };
 }
 

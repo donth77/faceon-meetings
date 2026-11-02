@@ -36,6 +36,7 @@ import {
   type RoomStatus,
   type ShareOptions,
 } from "../../media";
+import { setCameraProcessor } from "./camera-processor";
 import { StreamTrackView } from "./stream-track-view";
 
 function connectionOf(p: StreamVideoParticipant): ConnectionQuality {
@@ -323,6 +324,7 @@ export function StreamMedia({
         toggle: () => camera.camera.toggle(),
         select: (deviceId) => camera.camera.select(deviceId),
         flip: () => camera.camera.flip(),
+        setProcessor: (processor) => setCameraProcessor(call, processor),
       },
       speaker: {
         supported:

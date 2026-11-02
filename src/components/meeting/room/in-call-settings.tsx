@@ -14,8 +14,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
+import { MirroredVideo } from "@/components/device/mirrored-video";
+import { EffectsChooser } from "@/components/effects/effects-chooser";
 import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
 import { SwitchRow } from "@/components/schedule/fields";
 import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
@@ -25,7 +28,6 @@ import { GeneralSettings } from "@/components/settings/general-settings";
 import { NotificationsSettings } from "@/components/settings/notifications-settings";
 import { ReactionsSettings } from "@/components/settings/reactions-settings";
 import { SettingsChrome } from "@/components/settings/settings-nav";
-import { MirroredVideo } from "@/components/settings/video-settings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,6 +37,7 @@ import {
   type DevicePreferences,
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
+import { effectsSupported } from "@/lib/effects/support";
 import { aiNotesEnabled } from "@/lib/env";
 import {
   savePreferences,
@@ -229,12 +232,24 @@ function VideoSection() {
   );
 }
 
-function ComingSoon({ section }: { section: "effects" }) {
-  const t = useTranslations(`Settings.${section}`);
+/** The same choices as the meeting's panel, applied to the call at once. */
+function EffectsSection() {
+  const t = useTranslations("Effects");
+  const { camera } = useRoomMedia();
+  const { mirrorVideo, effect } = withDefaults(usePreferences());
+  const [supported] = useState(effectsSupported);
+  if (!supported) {
+    return <p className="text-muted-foreground text-sm">{t("unsupported")}</p>;
+  }
   return (
-    <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
-      {t("comingSoon")}
-    </p>
+    <EffectsChooser
+      track={camera.track}
+      mirror={mirrorVideo}
+      cameraOn={camera.enabled}
+      value={effect}
+      onChange={(next) => savePreferences({ effect: next ?? undefined })}
+      layout="split"
+    />
   );
 }
 
@@ -275,7 +290,7 @@ function SectionContent({ section }: { section: InCallSection }) {
         </div>
       );
     case "effects":
-      return <ComingSoon section={section} />;
+      return <EffectsSection />;
   }
 }
 

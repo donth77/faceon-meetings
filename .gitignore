@@ -41,3 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MediaPipe's Wasm runtime, copied from node_modules by scripts/effects-assets.ts
+/public/effects/vision_wasm_internal.*

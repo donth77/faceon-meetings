@@ -1,10 +1,9 @@
 "use client";
 
-import { cn } from "cn";
 import { LoaderCircle, VideoOff } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback } from "react";
 
+import { MirroredVideo } from "@/components/device/mirrored-video";
 import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
 import { SwitchRow } from "@/components/schedule/fields";
 import { useMediaDevices } from "@/hooks/use-media-devices";
@@ -20,34 +19,6 @@ import {
   useRememberedDevices,
 } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
-
-/** A live camera track, mirrored if you like it that way. */
-export function MirroredVideo({
-  track,
-  mirror,
-}: {
-  track: MediaStreamTrack;
-  mirror: boolean;
-}) {
-  const attach = useCallback(
-    (node: HTMLVideoElement | null) => {
-      if (node) node.srcObject = new MediaStream([track]);
-    },
-    [track],
-  );
-  return (
-    <video
-      ref={attach}
-      autoPlay
-      playsInline
-      muted
-      className={cn(
-        "absolute inset-0 size-full object-cover",
-        mirror && "-scale-x-100",
-      )}
-    />
-  );
-}
 
 /** Settings → Video: a camera preview, the camera, mirroring, HD and starting with it off. */
 export function VideoSettings() {

@@ -32,6 +32,7 @@ Guests get a cookie with a random ID and avatar, so they're recognized when they
 - **Audio and video** pass through the media service (below) to reach the other people in the meeting. They aren't recorded.
 - **Chat messages** go straight to the people in the meeting and aren't stored. **Save chat** saves a copy on your own device only.
 - **AI notes**, when a host turns them on: each person's speech is turned into text on their own device, and only the text goes to the host taking notes. The transcript and the notes stay in that host's browser tab; {appName} keeps them only if the host saves them (above). Anyone can choose not to be transcribed.
+- **Backgrounds and effects** are applied on your device before your video leaves it. Images and videos you add as backgrounds stay in your browser and are never uploaded.
 - **Settings on your device**, such as your microphone, camera and time format, stay in your browser.
 
 ## Why

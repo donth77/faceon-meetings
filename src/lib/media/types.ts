@@ -30,6 +30,15 @@ export type JoinInfo = {
 
 export type TrackKind = "audio" | "video" | "screenshare" | "screenshare_audio";
 
+/**
+ * Turns the camera's stream into another before anything is sent (backgrounds and
+ * effects). A provider's client runs it on every camera stream it opens.
+ */
+export type CameraProcessor = (input: MediaStream) => {
+  output: Promise<MediaStream>;
+  stop: () => void;
+};
+
 /** AI notes are on: who turned them on, and when (ISO 8601). */
 export type NotesState = { by: string; name: string; startedAt: string };
 

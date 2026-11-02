@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { DeviceProblem } from "@/lib/device/problems";
+import { effectsSupported } from "@/lib/effects/support";
 import { aiNotesEnabled } from "@/lib/env";
 import type {
   AdmittedMeetingInfo,
@@ -36,6 +37,7 @@ import { AloneCard } from "./alone-card";
 import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ChatPanel } from "./chat-panel";
 import { ControlBar, type PanelName } from "./control-bar";
+import { EffectsPanel } from "./effects-panel";
 import {
   MuteAllDialog,
   RemoveDialog,
@@ -51,6 +53,7 @@ import { FloatingReactions } from "./reactions";
 import { moderates, roleIn, roomRoleOf } from "./roles";
 import { RoomBadgesProvider } from "./room-badges";
 import { RoomControlsProvider, type RoomControls } from "./room-controls";
+import { useRoomEffects } from "./room-effects";
 import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
@@ -467,8 +470,13 @@ export function MeetingShell({
   }
 
   function openPanel(next: PanelName) {
+    // Backgrounds and effects takes the whole column, as in Meet.
     setPanels((open) =>
-      open.includes(next) ? open : phone ? [next] : [...open, next],
+      open.includes(next)
+        ? open
+        : phone || next === "effects"
+          ? [next]
+          : [...open.filter((panel) => panel !== "effects"), next],
     );
     if (next === "chat") chat.markRead();
   }
@@ -482,11 +490,12 @@ export function MeetingShell({
     else openPanel(next);
   }
 
-  // Desktop keeps Participants above Chat, then AI notes; a phone shows the one opened last.
+  // Desktop keeps Participants above Chat, then AI notes (Backgrounds and effects takes
+  // the column alone); a phone shows the one opened last.
   const shownPanels = (
     phone
       ? panels.slice(-1)
-      : (["people", "chat", "notes"] as const).filter((name) =>
+      : (["people", "chat", "notes", "effects"] as const).filter((name) =>
           panels.includes(name),
         )
   ).filter((name) => name !== "notes" || isHost);
@@ -525,8 +534,15 @@ export function MeetingShell({
     };
   }, [autoPictureInPicture, pip.supported]);
   usePresenceSounds(media.participants);
+  useRoomEffects();
+  const [canUseEffects] = useState(effectsSupported);
 
   function renderPanel(name: PanelName) {
+    if (name === "effects") {
+      return (
+        <EffectsPanel key="effects" onClose={() => closePanel("effects")} />
+      );
+    }
     if (name === "notes") {
       return (
         <NotesPanel
@@ -709,6 +725,9 @@ export function MeetingShell({
               pip.supported ? () => void pip.open() : undefined
             }
             onOpenNotes={canRunNotes ? () => openPanel("notes") : undefined}
+            onOpenEffects={
+              canUseEffects ? () => openPanel("effects") : undefined
+            }
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}

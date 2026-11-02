@@ -9,7 +9,7 @@ import { createContext, use, type ComponentType, type ReactNode } from "react";
 
 import type { DevicePreferences } from "@/lib/device/preferences";
 import type { DeviceProblem } from "@/lib/device/problems";
-import type { JoinInfo } from "@/lib/media/types";
+import type { CameraProcessor, JoinInfo } from "@/lib/media/types";
 import type {
   EventSender,
   ReactionCode,
@@ -79,7 +79,11 @@ export type RoomMedia = {
     /** Turns the browser's noise suppression on or off, now and for the rest of the call. */
     setNoiseSuppression: (on: boolean) => Promise<void>;
   };
-  camera: InputDevice & { flip: () => Promise<void> };
+  camera: InputDevice & {
+    flip: () => Promise<void>;
+    /** Runs a processor on the camera (backgrounds and effects); null removes it. */
+    setProcessor: (processor: CameraProcessor | null) => Promise<void>;
+  };
   speaker: {
     /** False where the browser can't choose an output device (Safari, phones). */
     supported: boolean;
@@ -128,6 +132,8 @@ export type RoomAdapterProps = {
   connection: JoinInfo;
   self: { id: string; name: string; image?: string };
   devices: DevicePreferences;
+  /** A background or effect to apply before the camera first sends anything. */
+  cameraProcessor?: CameraProcessor;
   refreshToken: () => Promise<string>;
   onLeft: (reason: LeaveReason) => void;
   /** Shown while connecting. */

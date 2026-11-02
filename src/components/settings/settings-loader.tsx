@@ -31,6 +31,10 @@ const Notifications = dynamic(
     ),
   { ssr: false, loading },
 );
+const Effects = dynamic(
+  () => import("./effects-settings").then((module) => module.EffectsSettings),
+  { ssr: false, loading },
+);
 const AiNotes = dynamic(
   () => import("./ai-notes-settings").then((module) => module.AiNotesSettings),
   { ssr: false, loading },
@@ -52,6 +56,7 @@ export function SettingsLoader({
     | "video"
     | "reactions"
     | "notifications"
+    | "effects"
     | "aiNotes"
     | "accessibility";
 }) {
@@ -66,6 +71,8 @@ export function SettingsLoader({
       return <Reactions />;
     case "notifications":
       return <Notifications />;
+    case "effects":
+      return <Effects />;
     case "aiNotes":
       return <AiNotes />;
     case "accessibility":
