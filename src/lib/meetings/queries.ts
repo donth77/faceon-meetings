@@ -12,6 +12,7 @@ import {
   lt,
   not,
   or,
+  sql,
 } from "drizzle-orm";
 
 import { db } from "@/lib/db";
@@ -313,6 +314,9 @@ export async function openSession(input: {
       meetingId: input.meeting.id,
       provider: input.provider,
       limits: input.limits,
+      // Whether the host allows AI notes, read as the row goes in, so a change to the
+      // setting either lands before it or finds this session open (allowNotesInMeetings).
+      notesAllowed: sql`(select ${user.aiNotes} from ${user} where ${user.id} = ${input.meeting.hostId})`,
       // This server's clock, the same one that later works out the time left.
       startedAt: new Date(),
     })
@@ -438,6 +442,21 @@ export async function banMember(
         eq(meetingMember.mediaUserId, mediaUserId),
       ),
     );
+}
+
+/** The open sessions of the meetings someone hosts, with their meetings. */
+export async function openSessionsHostedBy(
+  hostId: string,
+): Promise<Array<{ meeting: Meeting; session: MeetingSession }>> {
+  const rows = await db()
+    .select({ meeting, session: meetingSession })
+    .from(meetingSession)
+    .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
+    .where(and(eq(meeting.hostId, hostId), eq(meetingSession.status, "open")));
+  return rows.map((row) => ({
+    meeting: readMeeting(row.meeting),
+    session: row.session,
+  }));
 }
 
 /** Open sessions started before a moment, with their meetings: candidates for closing. */

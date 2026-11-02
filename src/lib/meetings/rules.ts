@@ -176,15 +176,19 @@ export function canModerate(input: {
 }
 
 /**
- * AI notes: hosts and co-hosts turn them on or off for everyone. Demo meetings can't turn
- * them on, but a host can still turn them off.
+ * AI notes: hosts and co-hosts turn them on or off for everyone. They go on only where
+ * the meeting's host allows them (Settings → AI notes) and it isn't a demo meeting; off
+ * always works.
  */
 export function canSetNotes(input: {
   actor: MeetingRole;
   on: boolean;
   demo: boolean;
+  /** The meeting's host allows AI notes in their meetings. */
+  allowed: boolean;
 }): boolean {
-  return isHostRole(input.actor) && !(input.on && input.demo);
+  if (!isHostRole(input.actor)) return false;
+  return !input.on || (input.allowed && !input.demo);
 }
 
 /** Saving AI notes to a session: hosts and co-hosts with an account. */

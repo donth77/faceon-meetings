@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Sparkles } from "lucide-react";
+import { Download, Settings, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
@@ -100,7 +100,8 @@ function Transcript({
 /**
  * AI notes, for the hosts and co-hosts who run them: what they do, then Start or Stop
  * for everyone. The notetaker (whoever started them) sees the transcript as it grows,
- * and who isn't in it; once they stop, the notes are made from it here.
+ * and who isn't in it; once they stop, the notes are made from it here. Where the
+ * meeting's host doesn't allow AI notes, it says so, and the host gets a way to Settings.
  */
 export function NotesPanel({
   code,
@@ -109,6 +110,9 @@ export function NotesPanel({
   title,
   notes,
   demo,
+  allowed,
+  isOwner,
+  hostName,
   isNotetaker,
   lines,
   notTranscribed,
@@ -127,6 +131,11 @@ export function NotesPanel({
   notes: NotesState | null;
   /** Demo meetings don't offer AI notes. */
   demo: boolean;
+  /** The meeting's host allows AI notes in their meetings (Settings → AI notes). */
+  allowed: boolean;
+  /** You host this meeting, so the choice is yours. */
+  isOwner: boolean;
+  hostName: string;
   /** You started them, so the transcript is in your browser. */
   isNotetaker: boolean;
   /** This tab's transcript. */
@@ -134,7 +143,7 @@ export function NotesPanel({
   notTranscribed: readonly NotTranscribed[];
   /** Turns AI notes on or off, for everyone. */
   onChange: (on: boolean) => Promise<void>;
-  /** Opens Settings → AI notes. */
+  /** Opens Settings → AI notes: making notes, and the host's switch. */
   onOpenSettings: () => void;
   /** Deletes this tab's transcript and notes. */
   onDiscard: () => void;
@@ -200,13 +209,51 @@ export function NotesPanel({
       </div>
     );
   } else {
+    let note = t("everyoneSees");
+    if (demo) note = t("notInDemo");
+    else if (!allowed) {
+      note = isOwner ? t("offForYou") : t("offByHost", { name: hostName });
+    }
     body = (
       <div className="flex flex-col gap-3 px-5 pb-1 text-sm leading-normal">
         <p>{t("intro")}</p>
-        <p className="text-muted-foreground">
-          {demo ? t("notInDemo") : t("everyoneSees")}
-        </p>
+        <p className="text-muted-foreground">{note}</p>
       </div>
+    );
+  }
+
+  // One button at the foot, whichever it is, so focus stays put as it changes.
+  let footer = null;
+  if (notes) {
+    footer = (
+      <Button
+        isPending={busy}
+        onPress={() => void change(false)}
+        className={`${FOOTER_BUTTON} bg-white/10 hover:bg-white/15`}
+      >
+        {t("stop")}
+      </Button>
+    );
+  } else if (!demo && allowed) {
+    footer = (
+      <Button
+        isPending={busy}
+        onPress={() => void change(true)}
+        className={`${FOOTER_BUTTON} bg-primary text-primary-foreground hover:bg-primary/90`}
+      >
+        <Sparkles className="size-[18px]" aria-hidden="true" />
+        {lines.length > 0 ? t("startAgain") : t("start")}
+      </Button>
+    );
+  } else if (!demo && isOwner) {
+    footer = (
+      <Button
+        onPress={onOpenSettings}
+        className={`${FOOTER_BUTTON} bg-white/10 hover:bg-white/15`}
+      >
+        <Settings className="size-[18px]" aria-hidden="true" />
+        {t("turnOnInSettings")}
+      </Button>
     );
   }
 
@@ -215,26 +262,7 @@ export function NotesPanel({
       title={t("title")}
       closeLabel={t("close")}
       onClose={onClose}
-      footer={
-        notes ? (
-          <Button
-            isPending={busy}
-            onPress={() => void change(false)}
-            className={`${FOOTER_BUTTON} bg-white/10 hover:bg-white/15`}
-          >
-            {t("stop")}
-          </Button>
-        ) : demo ? null : (
-          <Button
-            isPending={busy}
-            onPress={() => void change(true)}
-            className={`${FOOTER_BUTTON} bg-primary text-primary-foreground hover:bg-primary/90`}
-          >
-            <Sparkles className="size-[18px]" aria-hidden="true" />
-            {lines.length > 0 ? t("startAgain") : t("start")}
-          </Button>
-        )
-      }
+      footer={footer}
     >
       {body}
     </SidePanel>

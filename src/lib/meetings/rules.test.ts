@@ -323,23 +323,35 @@ describe("canModerate", () => {
 });
 
 describe("canSetNotes", () => {
+  const meeting = { demo: false, allowed: true };
+
   it("lets hosts and co-hosts turn AI notes on and off", () => {
     for (const actor of ["host", "cohost"] as const) {
-      expect(canSetNotes({ actor, on: true, demo: false })).toBe(true);
-      expect(canSetNotes({ actor, on: false, demo: false })).toBe(true);
+      expect(canSetNotes({ ...meeting, actor, on: true })).toBe(true);
+      expect(canSetNotes({ ...meeting, actor, on: false })).toBe(true);
     }
   });
 
   it("doesn't let participants or guests", () => {
     for (const actor of ["participant", "guest"] as const) {
-      expect(canSetNotes({ actor, on: true, demo: false })).toBe(false);
-      expect(canSetNotes({ actor, on: false, demo: false })).toBe(false);
+      expect(canSetNotes({ ...meeting, actor, on: true })).toBe(false);
+      expect(canSetNotes({ ...meeting, actor, on: false })).toBe(false);
     }
   });
 
   it("keeps them off in demo meetings", () => {
-    expect(canSetNotes({ actor: "host", on: true, demo: true })).toBe(false);
-    expect(canSetNotes({ actor: "host", on: false, demo: true })).toBe(true);
+    const demo = { ...meeting, demo: true };
+    expect(canSetNotes({ ...demo, actor: "host", on: true })).toBe(false);
+    expect(canSetNotes({ ...demo, actor: "host", on: false })).toBe(true);
+  });
+
+  it("starts them only where the meeting's host allows AI notes", () => {
+    const notAllowed = { ...meeting, allowed: false };
+    for (const actor of ["host", "cohost"] as const) {
+      expect(canSetNotes({ ...notAllowed, actor, on: true })).toBe(false);
+      // Turning them off always works, say just after the host stopped allowing them.
+      expect(canSetNotes({ ...notAllowed, actor, on: false })).toBe(true);
+    }
   });
 });
 

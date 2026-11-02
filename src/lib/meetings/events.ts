@@ -116,5 +116,7 @@ export const SharedSessionState = SessionPolicy.extend({
     .object({ by: z.string(), name: z.string(), startedAt: z.string() })
     .nullish()
     .transform((notes) => notes ?? null),
+  /** The meeting's host allows AI notes (Settings → AI notes). */
+  notesAllowed: z.boolean().default(false),
 });
 export type SharedSessionState = z.infer<typeof SharedSessionState>;

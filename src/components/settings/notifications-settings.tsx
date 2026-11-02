@@ -6,10 +6,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
 import {
+  chosenSettings,
   REMINDER_MINUTES,
   setPreference,
   usePreferences,
-  withDefaults,
 } from "@/lib/preferences";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
@@ -25,29 +25,40 @@ type Switch = (typeof SOUNDS)[number] | (typeof POPUPS)[number];
 
 /**
  * Settings → Notifications, as in Meet: which events make a sound, and which show a
- * pop-up. Everything is on to start; reactions have their own section.
+ * pop-up. Everything is on to start; reactions have their own section. One switch
+ * pauses them all and keeps each choice, which shows (unavailable) until it's back on.
  */
 export function NotificationsSettings() {
   const t = useTranslations("Settings.notifications");
-  const settings = withDefaults(usePreferences());
+  const settings = chosenSettings(usePreferences());
+  const paused = !settings.notifications;
   const row = (key: Switch) => (
     <SwitchRow
       key={key}
       label={t(`${key}.label`)}
       help={t(`${key}.help`)}
       isSelected={settings[key]}
+      isDisabled={paused}
       onChange={(on) => setPreference(key, on)}
     />
   );
   return (
     <>
       <SectionTitle title={t("title")} intro={t("intro")} />
+      <SettingsCard title={t("allTitle")}>
+        <SwitchRow
+          label={t("all")}
+          help={t("allHelp")}
+          isSelected={settings.notifications}
+          onChange={(on) => setPreference("notifications", on)}
+        />
+      </SettingsCard>
       <SettingsCard title={t("sounds")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           {SOUNDS.map(row)}
         </div>
       </SettingsCard>
-      <Reminders />
+      <Reminders paused={paused} />
       <SettingsCard title={t("popups")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           {POPUPS.map(row)}
@@ -62,10 +73,13 @@ type Permission = NotificationPermission | "unsupported";
 const permissionNow = (): Permission =>
   typeof Notification === "undefined" ? "unsupported" : Notification.permission;
 
-/** When to be reminded of a meeting, and whether this browser may show it. */
-function Reminders() {
+/**
+ * When to be reminded of a meeting, and whether this browser may show it. While
+ * Notifications are paused, the choice shows but can't change, and nothing asks.
+ */
+function Reminders({ paused }: { paused: boolean }) {
   const t = useTranslations("Settings.notifications.reminders");
-  const { reminderMinutes } = withDefaults(usePreferences());
+  const { reminderMinutes } = chosenSettings(usePreferences());
   const [permission, setPermission] = useState<Permission>(permissionNow);
 
   async function allow() {
@@ -83,6 +97,7 @@ function Reminders() {
             label: minutes === 0 ? t("off") : t("before", { minutes }),
           }))}
           value={String(reminderMinutes)}
+          isDisabled={paused}
           onChange={(value) => {
             const minutes =
               REMINDER_MINUTES.find((m) => String(m) === value) ?? 5;
@@ -93,7 +108,7 @@ function Reminders() {
         />
         <span className="text-muted-foreground text-[13px]">{t("help")}</span>
       </div>
-      {reminderMinutes > 0 ? (
+      {reminderMinutes > 0 && !paused ? (
         permission === "default" ? (
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm">{t("askBody")}</span>

@@ -24,7 +24,7 @@ export function sessionState(
   meeting: Meeting,
   session: Pick<
     MeetingSession,
-    "hands" | "rev" | "policy" | "spotlight" | "notes"
+    "hands" | "rev" | "policy" | "spotlight" | "notes" | "notesAllowed"
   >,
   cohosts: string[],
 ): SessionState {
@@ -36,6 +36,7 @@ export function sessionState(
     spotlight: session.spotlight,
     hands: session.hands,
     notes: session.notes ?? null,
+    notesAllowed: session.notesAllowed,
   };
 }
 
@@ -53,7 +54,19 @@ export type SessionChange =
   | { notesOn: NotesState }
   | { notesOff: true }
   /** Someone's last connection left: AI notes go off if they were taking them. */
-  | { notesOffFrom: string };
+  | { notesOffFrom: string }
+  /** The host allowed AI notes in their meetings, or stopped allowing them (and any on stop). */
+  | { notesAllowed: boolean };
+
+/** Allowing AI notes, or not: not allowing them also stops notes in progress. */
+function allowingNotes(
+  allowed: boolean,
+): Pick<MeetingSession, "notesAllowed"> &
+  Partial<Pick<MeetingSession, "notes">> {
+  return allowed
+    ? { notesAllowed: true }
+    : { notesAllowed: false, notes: null };
+}
 
 /**
  * The change as SQL on the row as it is under the lock, so each one is decided on the
@@ -84,6 +97,7 @@ function updatesFor(change: SessionChange, now: Date) {
     };
   }
   if ("notesOff" in change) return { notes: null };
+  if ("notesAllowed" in change) return allowingNotes(change.notesAllowed);
   if ("notesOffFrom" in change) {
     return {
       notes: sql`case when ${notes}->>'by' = ${change.notesOffFrom}::text then null else ${notes} end`,
@@ -150,4 +164,18 @@ export async function changeSession(
   change: SessionChange,
 ): Promise<SessionState> {
   return (await changeSessionFrom(meeting, session, change)).after;
+}
+
+/**
+ * Whether the host allows AI notes, stored without publishing: for when publishing
+ * failed, so the server holds to it now and the session's next change publishes it.
+ */
+export async function storeNotesAllowed(
+  sessionId: string,
+  allowed: boolean,
+): Promise<void> {
+  await db()
+    .update(meetingSession)
+    .set(allowingNotes(allowed))
+    .where(eq(meetingSession.id, sessionId));
 }

@@ -209,7 +209,13 @@ function EffectsSection() {
   );
 }
 
-function SectionContent({ section }: { section: InCallSection }) {
+function SectionContent({
+  section,
+  notesInMeetings,
+}: {
+  section: InCallSection;
+  notesInMeetings: boolean | undefined;
+}) {
   switch (section) {
     case "audio":
       return <AudioSection />;
@@ -242,7 +248,7 @@ function SectionContent({ section }: { section: InCallSection }) {
     case "aiNotes":
       return (
         <div className="flex flex-col gap-5">
-          <AiNotesSettings />
+          <AiNotesSettings notesInMeetings={notesInMeetings} />
         </div>
       );
     case "effects":
@@ -257,11 +263,17 @@ function SectionContent({ section }: { section: InCallSection }) {
  */
 export function InCallSettings({
   section,
+  notesInMeetings,
   onSectionChange,
   onClose,
 }: {
   /** The open section; null when Settings is closed. */
   section: InCallSection | null;
+  /**
+   * For the meeting's own host: whether their meetings offer AI notes, as this meeting
+   * has it. Left out for everyone else, whose own switch doesn't apply here.
+   */
+  notesInMeetings?: boolean | undefined;
   onSectionChange: (section: InCallSection) => void;
   onClose: () => void;
 }) {
@@ -321,7 +333,7 @@ export function InCallSettings({
               className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pt-5 pb-6 outline-none max-md:px-5"
             >
               <h3 className="pr-10 text-lg font-bold">{t(`section.${id}`)}</h3>
-              <SectionContent section={id} />
+              <SectionContent section={id} notesInMeetings={notesInMeetings} />
             </TabPanel>
           ))}
         </Tabs>

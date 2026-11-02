@@ -5,11 +5,17 @@ category: hosting
 order: 5
 ---
 
-AI notes turn what's said in a meeting into a short summary, a list of action items (with who will do each and by when, when that's clear) and the decisions made. They're off unless a host turns them on, everyone can see when they're on, and nothing is saved unless the notetaker chooses to.
+AI notes turn what's said in a meeting into a short summary, a list of action items (with who will do each and by when, when that's clear) and the decisions made. They're off unless the meeting's host allows them and a host starts them, everyone can see when they're on, and nothing is saved unless the notetaker chooses to.
+
+## Allow them in your meetings
+
+AI notes are off for every account to start. To use them in meetings you host, go to **Settings**, then **AI notes**, and turn on **AI notes in meetings you host**. In a meeting you host, **More**, then **AI notes** has a button that takes you there.
+
+This choice is kept with your account, so it covers your co-hosts as well: while it's off, nobody can start AI notes in your meetings. Turning it off also stops any that are on in a meeting you're hosting now.
 
 ## Turn them on
 
-Hosts and co-hosts select **More**, then **AI notes**, then **Start AI notes**. AI notes aren't available in demo meetings.
+Hosts and co-hosts select **More**, then **AI notes**, then **Start AI notes**. Each meeting starts with them off. AI notes aren't available in demo meetings, or in meetings whose host hasn't allowed them.
 
 Whoever starts them is the notetaker: the transcript collects in their browser, and the notes are made there. Select **Stop AI notes** to end them for everyone. They also stop when the notetaker leaves.
 

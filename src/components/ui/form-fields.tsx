@@ -101,6 +101,7 @@ export function SelectField({
   hideLabel,
   options,
   value,
+  isDisabled,
   onChange,
   icon: Icon,
   className,
@@ -112,6 +113,7 @@ export function SelectField({
   hideLabel?: boolean;
   options: Option[];
   value: string;
+  isDisabled?: boolean;
   onChange: (value: string) => void;
   icon?: LucideIcon;
   className?: string;
@@ -121,20 +123,26 @@ export function SelectField({
   return (
     <Select
       selectedKey={value}
+      isDisabled={isDisabled}
       onSelectionChange={(key: Key | null) => {
         if (key !== null) onChange(String(key));
       }}
       className={cn("flex min-w-0 flex-col gap-1.5", className)}
     >
-      {({ isOpen }) => (
+      {({ isOpen, isDisabled: disabled }) => (
         <>
-          <Label className={hideLabel ? "sr-only" : "text-sm font-semibold"}>
+          <Label
+            className={cn(
+              hideLabel ? "sr-only" : "text-sm font-semibold",
+              disabled && "text-muted-foreground",
+            )}
+          >
             {label}
           </Label>
           <Button
             className={cn(
               INPUT,
-              "flex items-center gap-2 text-left",
+              "flex items-center gap-2 text-left data-disabled:cursor-not-allowed data-disabled:opacity-50",
               isOpen && "border-ring",
               buttonClassName,
             )}

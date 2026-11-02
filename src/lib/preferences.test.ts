@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  chosenSettings,
   DEFAULTS,
   loadPreferences,
   preferencePatch,
   setPreference,
   withDefaults,
+  type Preferences,
 } from "./preferences";
 
 /** A stand-in for the browser's storage, holding what an earlier version saved. */
@@ -78,6 +80,73 @@ describe("withDefaults", () => {
     expect(settings.reminderMinutes).toBe(15);
     expect(settings.effect).toEqual({ kind: "blur", level: "slight" });
     expect(settings.mirrorVideo).toBe(DEFAULTS.mirrorVideo);
+  });
+});
+
+describe("Notifications", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("is on to start", () => {
+    expect(DEFAULTS.notifications).toBe(true);
+  });
+
+  it("pauses every sound, pop-up and reminder while off, keeping each choice", () => {
+    const preferences: Preferences = {
+      notifications: false,
+      soundChat: true,
+      popupHands: true,
+      reactionSound: true,
+      reminderMinutes: 10,
+    };
+    expect(withDefaults(preferences)).toMatchObject({
+      soundPeople: false,
+      soundChat: false,
+      soundHands: false,
+      soundLobby: false,
+      popupChat: false,
+      popupHands: false,
+      popupLobby: false,
+      reactionSound: false,
+      reminderMinutes: 0,
+    });
+    expect(chosenSettings(preferences)).toMatchObject({
+      soundChat: true,
+      popupHands: true,
+      reactionSound: true,
+      reminderMinutes: 10,
+    });
+  });
+
+  it("leaves screen readers and everything else as they are", () => {
+    const settings = withDefaults({
+      notifications: false,
+      reactionAnnouncements: "each",
+      showOthersReactions: false,
+    });
+    expect(settings.reactionAnnouncements).toBe("each");
+    expect(settings.showOthersReactions).toBe(false);
+    expect(settings.reactionAnimation).toBe(DEFAULTS.reactionAnimation);
+  });
+
+  it("brings each choice back when it's on again", () => {
+    expect(
+      withDefaults({
+        notifications: true,
+        soundChat: false,
+        reminderMinutes: 15,
+      }),
+    ).toMatchObject({
+      soundChat: false,
+      soundPeople: true,
+      reminderMinutes: 15,
+    });
+  });
+
+  it("reads the switch from storage", () => {
+    stored({ notifications: false });
+    expect(loadPreferences().notifications).toBe(false);
   });
 });
 

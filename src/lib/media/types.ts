@@ -63,6 +63,8 @@ export type SessionState = {
   hands: Record<string, string>;
   /** AI notes, while they're on; everyone sees that they are. */
   notes: NotesState | null;
+  /** The meeting's host allows AI notes (Settings → AI notes); nobody can start them otherwise. */
+  notesAllowed: boolean;
 };
 
 /** What someone may publish; kinds left out of a change stay as they are. */

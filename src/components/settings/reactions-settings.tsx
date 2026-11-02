@@ -3,7 +3,11 @@
 import { useTranslations } from "next-intl";
 
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
-import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
+import {
+  chosenSettings,
+  setPreference,
+  usePreferences,
+} from "@/lib/preferences";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
@@ -20,7 +24,8 @@ export function ReactionsSettings() {
     reactionAnimation,
     reactionSound,
     reactionAnnouncements,
-  } = withDefaults(usePreferences());
+    notifications,
+  } = chosenSettings(usePreferences());
 
   return (
     <>
@@ -41,8 +46,9 @@ export function ReactionsSettings() {
           />
           <SwitchRow
             label={t("sound")}
-            help={t("soundHelp")}
+            help={notifications ? t("soundHelp") : t("soundPaused")}
             isSelected={reactionSound}
+            isDisabled={!notifications}
             onChange={(on) => setPreference("reactionSound", on)}
           />
         </div>

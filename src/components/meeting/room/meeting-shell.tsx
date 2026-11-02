@@ -256,6 +256,9 @@ export function MeetingShell({
           title={title}
           notes={notes.notes}
           demo={session.demo}
+          allowed={notes.notesAllowed}
+          isOwner={selfRole === "host"}
+          hostName={meeting.hostName}
           isNotetaker={notes.isNotetaker}
           lines={notes.transcript.lines}
           notTranscribed={notes.notTranscribed}
@@ -423,6 +426,9 @@ export function MeetingShell({
           />
           <InCallSettings
             section={settings}
+            notesInMeetings={
+              selfRole === "host" ? notes.notesAllowed : undefined
+            }
             onSectionChange={setSettings}
             onClose={() => setSettings(null)}
           />

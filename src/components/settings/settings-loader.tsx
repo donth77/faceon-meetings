@@ -49,6 +49,7 @@ const Accessibility = dynamic(
 
 export function SettingsLoader({
   section,
+  notesInMeetings,
 }: {
   section:
     | "general"
@@ -59,6 +60,8 @@ export function SettingsLoader({
     | "effects"
     | "aiNotes"
     | "accessibility";
+  /** Settings → AI notes: the account's switch for meetings you host. */
+  notesInMeetings?: boolean;
 }) {
   switch (section) {
     case "general":
@@ -74,7 +77,7 @@ export function SettingsLoader({
     case "effects":
       return <Effects />;
     case "aiNotes":
-      return <AiNotes />;
+      return <AiNotes notesInMeetings={notesInMeetings} />;
     case "accessibility":
       return <Accessibility />;
   }

@@ -36,9 +36,13 @@ Choose whether others' reactions show (yours always do), whether reactions float
 
 Choose which events make a sound (people joining and leaving, chat messages, raised hands, the waiting room) and which show a pop-up.
 
+**Sounds, pop-ups and reminders**, at the top, pauses them all at once, the reaction sound and meeting reminders too. Your other choices stay as they are and come back when you turn it on again. What screen readers hear about reactions doesn't change, and people asking to join still show under **Participants**.
+
 **Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
 
 ## AI notes
+
+**AI notes in meetings you host** is off to start. Turn it on to start AI notes in your meetings; while it's off, neither you nor your co-hosts can. It's kept with your account, not just this device.
 
 How AI notes are made: **On this computer**, with Chrome's built-in AI, or with **Your own AI key** from OpenAI, Anthropic, Google, DeepSeek or OpenRouter. Your key stays in this browser. See [AI notes](/help/ai-notes).
 

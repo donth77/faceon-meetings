@@ -11,9 +11,12 @@ import { requireSession } from "@/lib/auth/session";
 import { parseAvatarSeed } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
+import { aiNotesEnabled } from "@/lib/env";
 import { DisplayName } from "@/lib/meetings/api";
+import { allowNotesInMeetings } from "@/lib/meetings/notes";
 
 const ACCOUNT_ROUTE = "/settings/account";
+const AI_NOTES_ROUTE = "/settings/ai-notes";
 
 const ProfileChange = z
   .object({
@@ -62,4 +65,18 @@ export async function setPasswordAction(
       ? "breached"
       : "failed";
   }
+}
+
+/**
+ * Settings → AI notes: whether meetings you host offer AI notes. It's kept with the
+ * account, since co-hosts' requests are checked against it too.
+ */
+export async function setNotesInMeetingsAction(
+  allowed: unknown,
+): Promise<boolean> {
+  const session = await requireSession(AI_NOTES_ROUTE);
+  const parsed = z.boolean().safeParse(allowed);
+  if (!parsed.success || !aiNotesEnabled) return false;
+  await allowNotesInMeetings(session.user.id, parsed.data);
+  return true;
 }

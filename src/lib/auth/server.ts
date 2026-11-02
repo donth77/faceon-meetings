@@ -115,6 +115,14 @@ export const auth = betterAuth({
       locale: { type: "string", required: false, input: false },
       avatarSeed: { type: "string", required: false, input: false },
       avatarSource: { type: "string", required: false, input: false },
+      // Settings → AI notes: whether meetings this person hosts offer AI notes. Read from
+      // the database (lib/meetings/notes.ts), since the session's copy can lag.
+      aiNotes: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   databaseHooks: {

@@ -34,6 +34,8 @@ export function useMeetingNotes({
   const isNotetaker = notes?.by === self.id;
   /** Hosts and co-hosts run AI notes, where this copy offers them. */
   const canRunNotes = isHost && aiNotesEnabled;
+  /** The meeting's host allows AI notes in their meetings (Settings → AI notes). */
+  const notesAllowed = media.sessionState?.notesAllowed ?? false;
   const transcript = useTranscript({
     media,
     sessionId: session.id,
@@ -110,6 +112,7 @@ export function useMeetingNotes({
     notes,
     isNotetaker,
     canRunNotes,
+    notesAllowed,
     transcript,
     transcription,
     notTranscribed,

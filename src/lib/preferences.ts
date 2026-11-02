@@ -37,6 +37,11 @@ export type Preferences = {
   reactionSound?: boolean;
   /** What screen readers hear about reactions. Default a summary. */
   reactionAnnouncements?: "off" | "summary" | "each";
+  /**
+   * Every meeting sound and pop-up, the reaction sound and meeting reminders. Off pauses
+   * them all, while each keeps its own choice for when they're back. Default on.
+   */
+  notifications?: boolean;
   /** Sounds as you and others join and leave, and as you're let in. Default on. */
   soundPeople?: boolean;
   /** A sound with a new chat message while Chat is closed. Default on. */
@@ -72,6 +77,7 @@ const BOOLEANS = [
   "showOthersReactions",
   "reactionAnimation",
   "reactionSound",
+  "notifications",
   "soundPeople",
   "soundChat",
   "soundHands",
@@ -180,6 +186,7 @@ export const DEFAULTS: Settings = {
   reactionAnimation: true,
   reactionSound: false,
   reactionAnnouncements: "summary",
+  notifications: true,
   soundPeople: true,
   soundChat: true,
   soundHands: true,
@@ -193,9 +200,35 @@ export const DEFAULTS: Settings = {
   effect: null,
 };
 
-/** The settings with their defaults filled in, for the code that acts on them. */
-export function withDefaults(preferences: Preferences): Settings {
+/** What turning Notifications off pauses. Screen-reader announcements aren't among them. */
+const PAUSED = {
+  soundPeople: false,
+  soundChat: false,
+  soundHands: false,
+  soundLobby: false,
+  popupChat: false,
+  popupHands: false,
+  popupLobby: false,
+  reactionSound: false,
+  reminderMinutes: 0,
+} satisfies Partial<Settings>;
+
+/**
+ * Each setting as chosen, with the defaults filled in: what Settings shows, including
+ * the sounds, pop-ups and reminders that Notifications has paused.
+ */
+export function chosenSettings(preferences: Preferences): Settings {
   return { ...DEFAULTS, ...preferences };
+}
+
+/**
+ * The settings with their defaults filled in, as the code that acts on them sees them.
+ * With Notifications off, every sound, pop-up and reminder is off, whatever each one's
+ * own choice (chosenSettings).
+ */
+export function withDefaults(preferences: Preferences): Settings {
+  const settings = chosenSettings(preferences);
+  return settings.notifications ? settings : { ...settings, ...PAUSED };
 }
 
 /**

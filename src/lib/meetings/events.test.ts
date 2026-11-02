@@ -21,6 +21,7 @@ describe("SharedSessionState", () => {
       name: "Ana",
       startedAt: "2026-11-01T12:05:00.000Z",
     },
+    notesAllowed: true,
   };
 
   it("reads the state our server publishes", () => {
@@ -58,6 +59,8 @@ describe("SharedSessionState", () => {
       cohosts: [],
       spotlight: null,
       notes: null,
+      // Off, as the host's switch for AI notes starts.
+      notesAllowed: false,
     });
   });
 });

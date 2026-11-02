@@ -16,15 +16,18 @@ import {
   RadioGroup,
   TextField,
 } from "react-aria-components";
+import { toast } from "sonner";
 
 import {
   FIELD_POPOVER,
   INPUT,
   RadioDot,
   SelectField,
+  SwitchRow,
 } from "@/components/ui/form-fields";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
+import { setNotesInMeetingsAction } from "@/lib/account/actions";
 import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
 import { ENGINES, type EngineId } from "@/lib/notes/notes";
 import {
@@ -228,7 +231,50 @@ function KeyField({
  * Settings → AI notes, as in the mockup: how notes are made (on this computer, or with
  * your own AI key), and the key, which stays in this browser.
  */
-export function AiNotesSettings() {
+/**
+ * Whether meetings you host offer AI notes. It's kept with your account, so it holds for
+ * your co-hosts too; in a meeting you host, `allowed` follows the meeting as it changes.
+ */
+function NotesInMeetings({ allowed }: { allowed: boolean }) {
+  const t = useTranslations("Settings.aiNotes");
+  const [value, setValue] = useState(allowed);
+  // A new value from outside (the meeting, say) replaces what's shown.
+  const [given, setGiven] = useState(allowed);
+  if (allowed !== given) {
+    setGiven(allowed);
+    setValue(allowed);
+  }
+
+  async function change(next: boolean) {
+    setValue(next);
+    const saved = await setNotesInMeetingsAction(next).catch(() => false);
+    if (!saved) {
+      setValue(!next);
+      toast.error(t("inMeetingsFailed"));
+    }
+  }
+
+  return (
+    <SettingsCard title={t("inMeetingsTitle")}>
+      <SwitchRow
+        label={t("inMeetings")}
+        help={t("inMeetingsHelp")}
+        isSelected={value}
+        onChange={(next) => void change(next)}
+      />
+    </SettingsCard>
+  );
+}
+
+/**
+ * Settings → AI notes. `notesInMeetings` is the account's switch for meetings you host:
+ * left out where it doesn't apply (a meeting someone else hosts).
+ */
+export function AiNotesSettings({
+  notesInMeetings,
+}: {
+  notesInMeetings?: boolean | undefined;
+}) {
   const t = useTranslations("Settings.aiNotes");
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
@@ -243,6 +289,9 @@ export function AiNotesSettings() {
   return (
     <>
       <SectionTitle title={t("title")} intro={t("intro")} />
+      {notesInMeetings === undefined ? null : (
+        <NotesInMeetings allowed={notesInMeetings} />
+      )}
       <SettingsCard title={t("how")}>
         <RadioGroup
           aria-label={t("how")}

@@ -110,6 +110,11 @@ export const meetingSession = pgTable(
     spotlight: text("spotlight"),
     /** AI notes, while a host has them on. */
     notes: jsonb("notes").$type<NotesState>(),
+    /**
+     * The meeting's host allows AI notes (Settings → AI notes). Taken as the session
+     * opens, and kept in step when they change it (allowNotesInMeetings).
+     */
+    notesAllowed: boolean("notes_allowed").notNull().default(false),
     /** Bumped on every change to the session's shared state; clients ignore older ones. */
     rev: integer("rev").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true })

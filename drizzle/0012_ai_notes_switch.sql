@@ -1,0 +1,2 @@
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "ai_notes" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "meeting_session" ADD COLUMN IF NOT EXISTS "notes_allowed" boolean DEFAULT false NOT NULL;
