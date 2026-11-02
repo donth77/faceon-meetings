@@ -5,10 +5,15 @@ import { useTranslations } from "next-intl";
 import { useRef } from "react";
 import { toast } from "sonner";
 
+import {
+  GetDesktopAppCard,
+  GetDesktopAppMenuItem,
+} from "@/components/desktop/get-desktop-app";
 import { SettingsCard } from "@/components/settings/settings-nav";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useDesktop } from "@/lib/desktop/use-desktop";
+import { useDesktop, useIsComputer } from "@/lib/desktop/use-desktop";
+import { useDesktopRelease } from "@/lib/desktop/use-desktop-release";
 import { publicEnv } from "@/lib/env";
 import { useInstall, useInstallCard } from "@/lib/pwa/install";
 
@@ -152,10 +157,37 @@ function InstallCardInBrowser() {
   );
 }
 
-// Install offers stay out of the desktop app, which is installed already.
-export const InstallAppCard = () =>
-  useDesktop() ? null : <InstallAppCardInBrowser />;
-export const InstallMenuItem = () =>
-  useDesktop() ? null : <InstallMenuItemInBrowser />;
+// Install offers stay out of the desktop app, which is installed already. On computers,
+// once the desktop app is out, they offer it instead; phones keep these.
+function useInstallOffer(): "none" | "desktop" | "web" {
+  const desktop = useDesktop();
+  const computer = useIsComputer();
+  const release = useDesktopRelease();
+  if (desktop) return "none";
+  if (!computer) return "web";
+  if (release === undefined) return "none";
+  return release ? "desktop" : "web";
+}
+
+export function InstallAppCard() {
+  const offer = useInstallOffer();
+  if (offer === "none") return null;
+  return offer === "desktop" ? (
+    <GetDesktopAppCard />
+  ) : (
+    <InstallAppCardInBrowser />
+  );
+}
+
+export function InstallMenuItem() {
+  const offer = useInstallOffer();
+  if (offer === "none") return null;
+  return offer === "desktop" ? (
+    <GetDesktopAppMenuItem />
+  ) : (
+    <InstallMenuItemInBrowser />
+  );
+}
+
 export const InstallCard = () =>
   useDesktop() ? null : <InstallCardInBrowser />;

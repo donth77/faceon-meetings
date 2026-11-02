@@ -24,6 +24,7 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import { Button as AriaButton } from "react-aria-components";
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
@@ -209,10 +210,13 @@ export function PreJoin({
   error,
   onJoin,
   onStopWaiting,
+  desktopOffer,
 }: {
   meeting: MeetingSummary;
   viewer: Viewer;
   avatar: JoinAvatar;
+  /** On a computer: a quiet offer of the desktop app, where there's one to get. */
+  desktopOffer?: ReactNode;
   initialPasscode: string | undefined;
   status: "idle" | "joining" | "waiting" | "asking";
   error: JoinErrorKind | null;
@@ -767,6 +771,7 @@ export function PreJoin({
                 >
                   {t("joinWithout")}
                 </Button>
+                {desktopOffer}
                 {viewer.kind === "guest" ? (
                   <>
                     <p className="text-muted-foreground text-center text-[13px] leading-normal">

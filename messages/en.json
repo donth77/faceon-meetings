@@ -13,15 +13,10 @@
     "primaryNav": "Site",
     "featuresTitle": "Everything you expect from a meeting app",
     "features": {
-      "noDownloads": {
-        "title": "No download needed",
-        "short": "No download needed",
-        "body": "Join from a link in Chrome, Edge, Safari or Firefox."
-      },
       "anyDevice": {
-        "title": "Works on phones and tablets",
-        "short": "Phones and tablets",
-        "body": "The same meeting on Windows, Mac, iPhone, iPad and Android."
+        "title": "Any device, no download",
+        "short": "Any device",
+        "body": "Join from a link on Windows, Mac, iPhone, iPad or Android, in Chrome, Edge, Safari or Firefox."
       },
       "screenShare": {
         "title": "Screen sharing with sound",
@@ -32,6 +27,11 @@
         "title": "Waiting room and passcodes",
         "short": "Waiting room",
         "body": "Let people in when you're ready, and remove anyone."
+      },
+      "desktopApp": {
+        "title": "Desktop app",
+        "short": "Desktop app",
+        "body": "For Mac and Windows: meeting links open in it, and you can mute from any app."
       },
       "languages": {
         "title": "Six languages",
@@ -1250,6 +1250,13 @@
         "system": "Matches your device. The default.",
         "light": "Always light",
         "dark": "Always dark"
+      },
+      "desktopLinks": {
+        "title": "Desktop app",
+        "label": "Open meeting links in the {appName} desktop app",
+        "ask": "Ask each time",
+        "always": "Always",
+        "never": "Never"
       }
     },
     "audio": {
@@ -1803,5 +1810,71 @@
     "expiredBody": "It took too long, or the link was used already. Start again.",
     "continueWith": "Continue with {provider}",
     "useEmail": "Use email and password instead"
+  },
+  "OpenInApp": {
+    "askTitle": "Open this meeting in the {appName} app?",
+    "askBody": "The {appName} app is on this computer. You can also join right here, in your browser.",
+    "openInApp": "Open in the {appName} app",
+    "joinHere": "Join in this browser",
+    "always": "Always open meeting links in the app",
+    "opening": "Opening {appName}…",
+    "didntOpen": "Didn’t open?",
+    "changeSetting": "Change this in Settings",
+    "askEachTime": "Ask me each time instead",
+    "suggest": "Have the {appName} app? <open>Open the meeting there</open> or <get>get the app</get>."
+  },
+  "DesktopApp": {
+    "cardTitle": "Desktop app",
+    "cardBody": "Get {appName} for Mac and Windows: meeting links open in it, you can mute from any app, and reminders come with no browser open.",
+    "get": "Get the desktop app"
+  },
+  "Download": {
+    "title": "{appName} for Mac and Windows",
+    "intro": "The {appName} you know, in an app: meeting links open in it, you can mute from any app, and reminders arrive with no browser open.",
+    "notYet": "The {appName} app isn’t out yet. You can join and host everything in your browser meanwhile.",
+    "for": {
+      "mac": "For Mac",
+      "windows": "For Windows"
+    },
+    "platform": {
+      "mac": "Mac",
+      "windows": "Windows"
+    },
+    "requires": {
+      "mac": "macOS 12 or later, on Apple silicon or Intel.",
+      "windows": "Windows 10 or 11, on x64 or Arm."
+    },
+    "download": "Download for {platform}",
+    "version": "Version {version}.",
+    "versionOn": "Version {version}, released {date}.",
+    "allFiles": "All files",
+    "addsTitle": "What the app adds",
+    "adds": {
+      "links": {
+        "title": "Links open in the app",
+        "body": "Choose it on a meeting's join page, once or always."
+      },
+      "shortcut": {
+        "title": "Mute from any app",
+        "body": "Ctrl+Shift+A, or ⇧⌘A on a Mac, while another app is in front."
+      },
+      "tray": {
+        "title": "In the tray or menu bar",
+        "body": "Start, join, mute or leave without finding the window."
+      },
+      "sound": {
+        "title": "Share with sound",
+        "body": "On Windows, your computer’s sound goes with your screen."
+      },
+      "reminders": {
+        "title": "Reminders",
+        "body": "Before your meetings, with no browser open."
+      },
+      "updates": {
+        "title": "Keeps itself up to date",
+        "body": "{appName} updates quietly, and installs when it restarts."
+      }
+    },
+    "help": "Questions about installing or signing in? <link>Get the desktop app</link> in Help covers them."
   }
 }

@@ -35,6 +35,14 @@ const ServerEnv = z.object({
   GUEST_SESSION_SECRET: z.string().optional(),
   /** Whether people without an account may join meetings (hosts can still say no). */
   ALLOW_GUESTS: z.stringbool().default(true),
+  /**
+   * The desktop app's public releases repository, as owner/name: /download and "Get the
+   * desktop app" read its latest release (lib/desktop/releases.ts). Empty: no desktop app.
+   */
+  DESKTOP_RELEASES_REPO: z
+    .string()
+    .regex(/^([\w.-]+\/[\w.-]+)?$/)
+    .optional(),
   /** Authorizes the scheduled sweep (sent as "Authorization: Bearer <secret>"). */
   CRON_SECRET: z.string().optional(),
   /** Cloudflare Turnstile's secret key, with NEXT_PUBLIC_TURNSTILE_SITE_KEY (lib/human-check). */

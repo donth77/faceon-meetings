@@ -19,7 +19,7 @@ export function markDesktopAppKnown() {
   }
 }
 
-function known(): boolean {
+export function desktopAppKnown(): boolean {
   try {
     return localStorage.getItem(KEY) !== null;
   } catch {
@@ -37,4 +37,4 @@ function subscribe(onChange: () => void) {
 }
 
 export const useDesktopAppKnown = () =>
-  useSyncExternalStore(subscribe, known, () => false);
+  useSyncExternalStore(subscribe, desktopAppKnown, () => false);

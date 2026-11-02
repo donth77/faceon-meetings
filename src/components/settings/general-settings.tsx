@@ -18,6 +18,7 @@ import {
 } from "@/lib/preferences";
 import { formattingLocale, systemTimeZone } from "@/lib/time";
 
+import { DesktopLinksSetting } from "./desktop-links-setting";
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -193,6 +194,7 @@ export function GeneralSettings({
         </SettingsCard>
       )}
 
+      {inMeeting ? null : <DesktopLinksSetting />}
       {inMeeting ? null : <InstallAppCard />}
     </>
   );

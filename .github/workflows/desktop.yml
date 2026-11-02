@@ -1,0 +1,73 @@
+name: Desktop
+
+# The desktop app's releases (desktop/README.md). A desktop-v* tag builds the Windows
+# installer and uploads it to the releases repository's draft; the Mac build is signed
+# and published from the owner's Mac. "Run workflow" builds without publishing, and can
+# add an unsigned Mac test build (macOS minutes count ten times while this is private).
+on:
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+    inputs:
+      mac:
+        description: Also build an unsigned Mac test build
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      DESKTOP_RELEASES_REPO: ${{ vars.DESKTOP_RELEASES_REPO }}
+      NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
+      FACEON_APP_URL: ${{ vars.FACEON_APP_URL }}
+      GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vitest run --project desktop
+      - name: Build, and publish for a tag when the releases repository is set
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* && -n "$GH_TOKEN" && -n "$DESKTOP_RELEASES_REPO" ]]; then
+            pnpm --filter @faceon/desktop dist:win --publish
+          else
+            pnpm --filter @faceon/desktop dist:win
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: desktop/release/*.exe
+          retention-days: 14
+
+  mac-test:
+    if: github.event_name == 'workflow_dispatch' && inputs.mac
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
+      FACEON_APP_URL: ${{ vars.FACEON_APP_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # No certificate here, so it's unsigned: for trying out, not for release.
+      - run: pnpm --filter @faceon/desktop dist:mac
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mac-unsigned
+          path: desktop/release/*.dmg
+          retention-days: 7

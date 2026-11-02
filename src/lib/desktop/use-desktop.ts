@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 import { BRIDGE_VERSION, type FaceonDesktop } from "./bridge";
+import { isComputer } from "./open-in-app";
 
 const subscribeNever = () => () => {};
 
@@ -23,4 +24,13 @@ export const isDesktopApp = () => desktopBridge() !== null;
  */
 export function useDesktop(): FaceonDesktop | null {
   return useSyncExternalStore(subscribeNever, desktopBridge, () => null);
+}
+
+/** A computer rather than a phone or tablet, decided after hydration (false on the server). */
+export function useIsComputer(): boolean {
+  return useSyncExternalStore(
+    subscribeNever,
+    () => isComputer(navigator.userAgent, navigator.maxTouchPoints),
+    () => false,
+  );
 }

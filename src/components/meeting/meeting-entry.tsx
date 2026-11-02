@@ -13,10 +13,18 @@ import { toast } from "sonner";
 
 import { Toaster } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { desktopAppKnown } from "@/lib/desktop/app-known";
+import {
+  appMeetingLink,
+  isComputer,
+  openInAppOffer,
+} from "@/lib/desktop/open-in-app";
+import { isDesktopApp } from "@/lib/desktop/use-desktop";
 import type { DevicePreferences } from "@/lib/device/preferences";
 import { publicEnv } from "@/lib/env";
 import type { JoinResponse, MeetingErrorCode } from "@/lib/meetings/api";
 import { oneOf } from "@/lib/narrow";
+import { loadPreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi, MeetingRequestError } from "./api-client";
 import { playSound } from "./chime";
@@ -29,6 +37,7 @@ import {
 import type { LeaveReason } from "./media";
 import { MeetingNotice, type NoticeKind } from "./meeting-notice";
 import { useMeetingTitle } from "./meeting-title";
+import { OpenInApp, SuggestDesktopApp } from "./open-in-app";
 import { useJoinAvatar, type Viewer } from "./pre-join/join-avatar";
 import {
   PreJoin,
@@ -42,6 +51,8 @@ import { MeetingShell } from "./room/meeting-shell";
 type Admission = Extract<JoinResponse, { state: "admitted" }>;
 
 type Step =
+  /** This browser knows the desktop app is here: open the meeting there, or join here. */
+  | { name: "openInApp" }
   | { name: "prejoin"; error: JoinErrorKind | null }
   /** Asking the API to join; on a rejoin, without showing pre-join again. */
   | { name: "joining"; rejoin?: boolean }
@@ -93,6 +104,7 @@ const toJoinError = (code: MeetingErrorCode | "NETWORK"): JoinErrorKind =>
 
 /** What the tab says at each step: where you are, then the meeting. */
 const STEP_TITLES = {
+  openInApp: "join",
   prejoin: "join",
   joining: "join",
   waiting: "waiting",
@@ -161,7 +173,21 @@ export default function MeetingEntry({
   const [initialPasscode] = useState(() => readLinkPasscode(code));
   const avatar = useJoinAvatar(viewer);
   const avatarSaving = avatar.saving;
-  const [step, setStep] = useState<Step>({ name: "prejoin", error: null });
+  // The desktop app, where this browser knows it's on this computer (lib/desktop/open-in-app.ts).
+  const [offer] = useState(() =>
+    openInAppOffer({
+      inApp: isDesktopApp(),
+      computer: isComputer(navigator.userAgent, navigator.maxTouchPoints),
+      appKnown: desktopAppKnown(),
+      setting: withDefaults(loadPreferences()).desktopLinks,
+      rejoin: false,
+    }),
+  );
+  const [step, setStep] = useState<Step>(() =>
+    offer === "ask" || offer === "launch"
+      ? { name: "openInApp" }
+      : { name: "prejoin", error: null },
+  );
   const lastJoin = useRef<JoinInput | null>(null);
   const endingForAll = useRef(false);
   const endsAt = useRef<number | null>(null);
@@ -441,6 +467,16 @@ export default function MeetingEntry({
       );
       break;
     }
+    case "openInApp":
+      content = (
+        <OpenInApp
+          link={appMeetingLink(code, initialPasscode)}
+          mode={offer === "launch" ? "launch" : "ask"}
+          signedIn={viewer.kind !== "guest"}
+          onJoinHere={() => setStep({ name: "prejoin", error: null })}
+        />
+      );
+      break;
     default:
       // Rejoining from the left screen goes straight back in, without pre-join.
       content =
@@ -456,6 +492,13 @@ export default function MeetingEntry({
             error={step.name === "prejoin" ? step.error : null}
             onJoin={(input) => void join(input)}
             onStopWaiting={stopWaiting}
+            desktopOffer={
+              offer === "suggest" ? (
+                <SuggestDesktopApp
+                  link={appMeetingLink(code, initialPasscode)}
+                />
+              ) : null
+            }
           />
         );
   }

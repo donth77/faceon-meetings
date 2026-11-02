@@ -1,35 +1,42 @@
 import {
-  AppWindow,
   CodeXml,
   DoorOpen,
   Languages,
+  Monitor,
   MonitorUp,
   TabletSmartphone,
   type LucideIcon,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-const FEATURES: ReadonlyArray<{
+import { latestDesktopRelease } from "@/lib/desktop/releases";
+
+type Feature = {
   key:
-    | "noDownloads"
     | "anyDevice"
     | "screenShare"
     | "safety"
+    | "desktopApp"
     | "languages"
     | "openSource";
   icon: LucideIcon;
-}> = [
-  { key: "noDownloads", icon: AppWindow },
+};
+
+/** The desktop app once it's out (lib/desktop/releases.ts); until then, the languages. */
+const features = (desktopApp: boolean): Feature[] => [
   { key: "anyDevice", icon: TabletSmartphone },
   { key: "screenShare", icon: MonitorUp },
   { key: "safety", icon: DoorOpen },
-  { key: "languages", icon: Languages },
+  desktopApp
+    ? { key: "desktopApp", icon: Monitor }
+    : { key: "languages", icon: Languages },
   { key: "openSource", icon: CodeXml },
 ];
 
 /** What FaceOn does, below the join card: titles only on phones, with a line each above. */
 export async function Features() {
   const t = await getTranslations("Landing");
+  const desktopApp = (await latestDesktopRelease()) !== null;
 
   return (
     <section
@@ -40,7 +47,7 @@ export async function Features() {
         {t("featuresTitle")}
       </h2>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:gap-x-10 sm:gap-y-7 lg:grid-cols-3">
-        {FEATURES.map(({ key, icon: Icon }) => (
+        {features(desktopApp).map(({ key, icon: Icon }) => (
           <li
             key={key}
             className="flex min-w-0 items-center gap-2.5 sm:flex-col sm:items-start sm:gap-2"

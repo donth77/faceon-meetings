@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
 
+import { DESKTOP_LINKS, type DesktopLinks } from "@/lib/desktop/open-in-app";
 import { Effect } from "@/lib/effects/effects";
 import {
   parseNoiseSuppression,
@@ -68,6 +69,11 @@ export type Preferences = {
   reminderMinutes?: ReminderMinutes;
   /** The background or effect on your camera, in every meeting. Default none. */
   effect?: Effect;
+  /**
+   * Where this browser knows the desktop app is installed: meeting links open it ("always"),
+   * offer it ("ask", the default) or don't ("never").
+   */
+  desktopLinks?: DesktopLinks;
 };
 
 const KEY = "faceon.prefs";
@@ -109,6 +115,8 @@ export function loadPreferences(): Preferences {
       if (typeof p.timeZone === "string") value.timeZone = p.timeZone;
       const minutes = REMINDER_MINUTES.find((m) => m === p.reminderMinutes);
       if (minutes !== undefined) value.reminderMinutes = minutes;
+      const links = DESKTOP_LINKS.find((value) => value === p.desktopLinks);
+      if (links) value.desktopLinks = links;
       const effect = Effect.safeParse(p.effect);
       if (effect.success) value.effect = effect.data;
       const noise = parseNoiseSuppression(p.noiseSuppression);
@@ -203,6 +211,7 @@ export const DEFAULTS: Settings = {
   autoPictureInPicture: true,
   reminderMinutes: 5,
   effect: null,
+  desktopLinks: "ask",
 };
 
 /** What turning Notifications off pauses. Screen-reader announcements aren't among them. */

@@ -82,7 +82,11 @@ If you're in the European Economic Area, the United Kingdom or somewhere with si
 - **`NEXT_LOCALE`** remembers the language you picked, for a year.
 - **`sidebar_state`** remembers whether the sidebar is open, for a week.
 
-Your browser also keeps some things for {appName} that aren't sent to its server. Your settings, a guest's name, backgrounds you add and a host's AI key stay until you clear them. A meeting's passcode, and the transcript and notes a host is taking, go when you close the tab.
+Your browser also keeps some things for {appName} that aren't sent to its server. Your settings, a guest's name, backgrounds you add, a host's AI key, and whether you've signed the desktop app in from this browser stay until you clear them. A meeting's passcode, and the transcript and notes a host is taking, go when you close the tab.
+
+## The desktop app
+
+If you use {appName}'s app for Mac or Windows, it keeps on your computer its settings (**Settings → Desktop app**), the size and place of its window, your reminder time, and its own sign-in, separate from your browser's. While it runs, it asks {appName} for your next day's meetings about every ten minutes, to remind you of them, and checks for a new version of itself every six hours. Signing the app in with Google or GitHub happens in your browser, which hands the app a code that works once, within a minute; {appName} keeps only a scrambled copy of that code, for that minute.
 
 ## Who else handles your information
 
@@ -93,6 +97,7 @@ Your browser also keeps some things for {appName} that aren't sent to its server
 - **Stream** runs the meetings. It carries audio, video, screen sharing, chat and reactions, and the text for AI notes on its way to the host taking them. It keeps the name and picture each person uses in meetings and a record of each call and who was in it, and it handles the technical details needed to connect you, such as your IP address and connection quality.
 - **Resend** sends account emails, such as verifying your address or resetting your password.
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
+- **GitHub** hosts the desktop app's downloads and updates. It sees your IP address when the app checks for an update or you download it.
 - **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations.
 - **Cloudflare Turnstile**, if {appName} turns it on, checks there's a person behind signing up, asking for a password reset or a new verification email, and joining as a guest for the first time. It sees your IP address and details of your browser and device while it checks.
 - **Sentry**, if {appName} turns error reports on, receives a report when something breaks: the error, where in the code it happened, your browser and operating system, and the page's address with meeting IDs and passcodes taken out. Reports never include your name, email address, IP address, chat, notes or keys.
