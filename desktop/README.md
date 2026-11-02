@@ -127,7 +127,7 @@ and links to the download.
 same for tags: `desktop/release/FaceOn Setup <version>.exe`, one installer for x64 and
 Arm64 (about 225 MB). If it stops with NSIS saying it "could not find" an include, the
 clone's folder path is too long for NSIS (Windows' 260-character limit): clone somewhere
-shorter, such as `C:\srcaceon-meetings`. It's unsigned for now, so Windows SmartScreen shows "Windows
+shorter, such as `C:\src\faceon-meetings`. It's unsigned for now, so Windows SmartScreen shows "Windows
 protected your PC" (More info → Run anyway) until it's signed. Once the code is public,
 SignPath gives open-source projects free code signing; until then, Azure Trusted Signing
 (about $10 a month) is the paid route. Either goes into the `desktop-v*` workflow.
