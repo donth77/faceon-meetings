@@ -8,6 +8,15 @@ const [owner, repo] = releases.split("/");
 module.exports = {
   appId: process.env.DESKTOP_APP_ID || "app.joinfaceon.desktop",
   productName: name,
+  // The package's own name ("@faceon/desktop") would name the installer's files and
+  // the updater's folder; the app's name reads better.
+  extraMetadata: {
+    name:
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "faceon",
+  },
   copyright: `Copyright © ${new Date().getFullYear()} ${name} contributors`,
   directories: { output: "release", buildResources: "build" },
   files: ["dist/**/*", "package.json"],
