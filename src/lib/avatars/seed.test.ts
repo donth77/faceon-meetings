@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { lookForName } from "./name-look";
 import {
   avatarUrl,
   createAvatarSeed,
   fallbackAvatarSeed,
-  lookForName,
   parseAvatarSeed,
 } from "./seed";
 
@@ -25,7 +25,7 @@ describe("lookForName", () => {
 
 describe("avatar seeds", () => {
   it("round-trips a created seed", () => {
-    const seed = createAvatarSeed("Maya");
+    const seed = createAvatarSeed(lookForName("Maya"));
     expect(parseAvatarSeed(seed)).toEqual({
       seed: seed.slice(0, 16),
       look: "f",

@@ -1,9 +1,12 @@
+import "server-only";
+
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { haveIBeenPwned, oAuthProxy } from "better-auth/plugins";
 
 import { endHostedCalls, forgetMediaUser } from "@/lib/account/deletion";
+import { lookForName } from "@/lib/avatars/name-look";
 import { createAvatarSeed } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
@@ -17,6 +20,7 @@ import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/site";
 
 import { dropUnverifiedPassword } from "./linking";
+import { authOrigins } from "./origins";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
 /** Production origin. Preview deployments send OAuth through it (oAuthProxy). */
@@ -85,7 +89,7 @@ export const auth = betterAuth({
     customSyntheticUser: ({ coreFields, additionalFields, id }) => ({
       ...coreFields,
       ...additionalFields,
-      avatarSeed: createAvatarSeed(coreFields.name),
+      avatarSeed: createAvatarSeed(lookForName(coreFields.name)),
       avatarSource: "dicebear",
       id,
     }),
@@ -129,7 +133,7 @@ export const auth = betterAuth({
         before: async (user) => ({
           data: {
             ...user,
-            avatarSeed: createAvatarSeed(user.name),
+            avatarSeed: createAvatarSeed(lookForName(user.name)),
             avatarSource: "dicebear",
           },
         }),
@@ -147,15 +151,16 @@ export const auth = betterAuth({
       "/send-verification-email": { window: 60, max: 3 },
     },
   },
-  trustedOrigins: [
+  trustedOrigins: authOrigins({
     productionUrl,
-    "http://localhost:3000",
-    "https://*-tom-9345s-projects.vercel.app",
-  ],
+    vercelUrl: process.env.VERCEL_URL,
+    vercelBranchUrl: process.env.VERCEL_BRANCH_URL,
+    development: process.env.NODE_ENV !== "production",
+  }),
   plugins: [
     oAuthProxy({ productionURL: productionUrl }),
-    // Refuses passwords known from data breaches (only a hash prefix leaves the server).
-    // Rejects passwords known from breaches, including one set in Settings → Account.
+    // Refuses passwords known from data breaches, including one set in Settings →
+    // Account (only a hash prefix leaves the server).
     haveIBeenPwned({
       paths: [
         "/sign-up/email",

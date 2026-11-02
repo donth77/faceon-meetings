@@ -8,6 +8,7 @@ import {
   zonedInstant,
 } from "./occurrences";
 import {
+  latestSeriesEnd,
   presetOf,
   presetRecurrence,
   startFacts,
@@ -170,5 +171,21 @@ describe("occurrences", () => {
     expect(lastStartOf(counted)?.toISOString()).toBe(
       "2026-11-10T15:00:00.000Z",
     );
+  });
+
+  it("treats a series too long to count as one that repeats forever", () => {
+    // Saved before end dates were capped: daily for over 30 years.
+    const daily = {
+      ...rule,
+      rrule: `FREQ=DAILY;UNTIL=${untilUtc("2060-01-01", NY)}`,
+    };
+    expect(lastStartOf(daily)).toBeNull();
+  });
+});
+
+describe("latestSeriesEnd", () => {
+  it("lets a repeating meeting run five years", () => {
+    expect(latestSeriesEnd("2026-11-02")).toBe("2031-11-02");
+    expect(latestSeriesEnd("2028-02-29")).toBe("2033-02-28");
   });
 });

@@ -1,31 +1,15 @@
-import nameLooks from "./name-looks.json";
+/**
+ * Default avatars (DiceBear "Dylan"): seeds and URLs. Safe in the browser; the look a
+ * name suggests comes from name-look.ts, on the server.
+ */
 
 /** A default avatar's look: feminine-leaning, masculine-leaning or the full mix. */
 export type Look = "f" | "m" | "n";
 
-const FEMININE = new Set(nameLooks.f);
-const MASCULINE = new Set(nameLooks.m);
 const SEED_PATTERN = /^([a-z0-9]{16})-([fmn])$/;
 
-/**
- * The look a first name suggests, only to pick a default avatar. Unisex, rare and
- * non-Latin names get the full mix ("n"); nothing is stored or shown as a gender.
- */
-export function lookForName(name: string): Look {
-  const first = (name.trim().split(/\s+/)[0] ?? "")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-  if (FEMININE.has(first)) return "f";
-  if (MASCULINE.has(first)) return "m";
-  return "n";
-}
-
 /** A new random avatar seed carrying the look, e.g. "k3x9…q2-f". */
-export function createAvatarSeed(
-  name: string,
-  look = lookForName(name),
-): string {
+export function createAvatarSeed(look: Look): string {
   const random = crypto.randomUUID().replaceAll("-", "").slice(0, 16);
   return `${random}-${look}`;
 }

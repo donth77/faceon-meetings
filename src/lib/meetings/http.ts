@@ -2,6 +2,8 @@ import "server-only";
 
 import type { z } from "zod";
 
+import { loggable } from "@/lib/log";
+
 import {
   MEETING_ERRORS,
   type MeetingErrorBody,
@@ -50,7 +52,7 @@ export async function handleMeetingRequest(
     return await handler();
   } catch (error) {
     if (error instanceof MeetingError) return errorResponse(error.code);
-    console.error("Meeting API request failed", error);
+    console.error("Meeting API request failed", loggable(error));
     return errorResponse("UNAVAILABLE");
   }
 }

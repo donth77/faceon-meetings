@@ -48,6 +48,22 @@ export type StartFacts = {
 const daysInMonth = (year: number, month: number) =>
   new Date(Date.UTC(year, month, 0)).getUTCDate();
 
+/** A series ends at most this long after it starts, so its meetings stay countable. */
+export const MAX_SERIES_YEARS = 5;
+
+/** The latest end date ("YYYY-MM-DD") for a series starting on this local date. */
+export function latestSeriesEnd(startDate: string): string {
+  const [year = 1970, month = 1, day = 1] = startDate
+    .slice(0, 10)
+    .split("-")
+    .map(Number);
+  const endYear = year + MAX_SERIES_YEARS;
+  const endDay = Math.min(day, daysInMonth(endYear, month));
+  const pad = (value: number, length = 2) =>
+    String(value).padStart(length, "0");
+  return `${pad(endYear, 4)}-${pad(month)}-${pad(endDay)}`;
+}
+
 /** Facts about a local date, "YYYY-MM-DD". */
 export function startFacts(localDate: string): StartFacts {
   const [year = 1970, month = 1, day = 1] = localDate

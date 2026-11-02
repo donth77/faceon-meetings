@@ -1,6 +1,10 @@
 import { guestsEnabled, newGuest, saveGuest } from "@/lib/guest-session";
 import { JoinRequest } from "@/lib/meetings/api";
-import { FAILED_JOIN, joinAttemptLimits } from "@/lib/meetings/attempts";
+import {
+  FAILED_JOIN,
+  joinAttemptLimits,
+  waitingRoomLimits,
+} from "@/lib/meetings/attempts";
 import { MeetingError } from "@/lib/meetings/errors";
 import { handleMeetingRequest, readJson } from "@/lib/meetings/http";
 import { joinMeeting } from "@/lib/meetings/join";
@@ -20,20 +24,32 @@ export async function POST(
     const { code } = await params;
     const { name, passcode } = await readJson(request, JoinRequest);
     const limits = joinAttemptLimits(request, code);
-    if (await isLimited(limits)) throw new MeetingError("RATE_LIMITED");
+    const lobbyLimits = waitingRoomLimits(request);
+    const [limited, lobbyFull] = await Promise.all([
+      isLimited(limits),
+      isLimited(lobbyLimits),
+    ]);
+    if (limited) throw new MeetingError("RATE_LIMITED");
 
     const principal =
       (await getPrincipal(request)) ??
       (guestsEnabled() ? guestPrincipal(newGuest(name)) : null);
     let result;
     try {
-      result = await joinMeeting({ code, name, passcode, principal });
+      result = await joinMeeting({
+        code,
+        name,
+        passcode,
+        principal,
+        canAskHosts: !lobbyFull,
+      });
     } catch (error) {
       if (error instanceof MeetingError && FAILED_JOIN.has(error.code)) {
         await recordAttempt(limits);
       }
       throw error;
     }
+    if (result.state === "waiting") await recordAttempt(lobbyLimits);
     // Keep (and renew) the guest ID, so a refresh or rejoin is the same person.
     if (principal?.kind === "guest") await saveGuest(principal.guest);
     return Response.json(result, {

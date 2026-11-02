@@ -1,7 +1,8 @@
 /**
  * Sets up Stream Video for FaceOn. It is idempotent, so it's safe to run again.
  *
- * - The `meeting` call type: non-members get no grants; members, co-hosts and hosts get theirs.
+ * - The `meeting` call type: non-members get no grants; members, co-hosts and hosts get the
+ *   same member grants (host controls go through FaceOn's API).
  * - Stream's built-in call types are locked down. Call tokens add access rather than confine
  *   it, so only call grants keep a user's token from reaching other calls.
  * - The `system` user, which sends server events.
@@ -27,8 +28,8 @@ if (!apiKey || !secret) {
 const checkOnly = process.argv.includes("--check");
 const client = new StreamClient(apiKey, secret);
 
-// Grant names (not capability names): reactions are "create-call-reaction", chat and other custom
-// events need "send-event", and "pin-call-track" is spotlight (pin for everyone).
+// Grant names (not capability names): reactions are "create-call-reaction", and chat and
+// other custom events need "send-event".
 const MEMBER = [
   "read-call",
   "join-call",
@@ -38,23 +39,11 @@ const MEMBER = [
   "create-call-reaction",
   "send-event",
 ];
-const COHOST = [
-  ...MEMBER,
-  "mute-users",
-  "pin-call-track",
-  "update-call-permissions",
-  "kick-user",
-  "block-user",
-];
-const HOST = [
-  ...COHOST,
-  "end-call",
-  "update-call",
-  "update-call-settings",
-  "update-call-member",
-  "update-call-member-role",
-  "remove-call-member",
-];
+// Hosts and co-hosts moderate through FaceOn's API, which checks who may do what (a
+// co-host can't remove the host, say) and acts with the server's credentials. Their
+// browsers get no more than everyone's, so Stream's SDK can't go around those rules.
+const COHOST = MEMBER;
+const HOST = MEMBER;
 const OUTSIDERS: Record<string, string[]> = {
   user: [],
   guest: [],

@@ -3,12 +3,14 @@ import "server-only";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
 import { avatarUrl } from "@/lib/avatars/seed";
-import { db } from "@/lib/db";
+import { db, type Executor, type Transaction } from "@/lib/db";
 import {
   meeting,
   meetingException,
   meetingInvitee,
   meetingRule,
+  meetingSession,
+  participantSession,
   user,
 } from "@/lib/db/schema";
 import { localParts } from "@/lib/time";
@@ -93,7 +95,7 @@ function checked(values: ScheduleValues): Date {
 
 /**
  * Creates a scheduled meeting, one-off or repeating, with the code and passcode the
- * form previewed (a fresh pair if that code was taken meanwhile).
+ * form previewed. If that code was taken meanwhile, it's refused as invalid.
  */
 export async function scheduleMeeting(input: {
   hostId: string;
@@ -147,14 +149,18 @@ export async function scheduleMeeting(input: {
   });
 }
 
-export async function seriesOf(meetingId: string): Promise<Series> {
+/** A meeting's repeat rules and one-off changes; inside a transaction, through it. */
+export async function seriesOf(
+  meetingId: string,
+  executor: Executor = db(),
+): Promise<Series> {
   const [rules, exceptions] = await Promise.all([
-    db()
+    executor
       .select()
       .from(meetingRule)
       .where(eq(meetingRule.meetingId, meetingId))
       .orderBy(asc(meetingRule.firstStart)),
-    db()
+    executor
       .select()
       .from(meetingException)
       .where(eq(meetingException.meetingId, meetingId)),
@@ -188,12 +194,16 @@ export function occurrencesOf(
   return [{ originalStart: start, start, end, title: null, moved: false }];
 }
 
-async function replaceInvitees(meetingId: string, emails: string[]) {
-  await db()
+async function replaceInvitees(
+  tx: Transaction,
+  meetingId: string,
+  emails: string[],
+) {
+  await tx
     .delete(meetingInvitee)
     .where(eq(meetingInvitee.meetingId, meetingId));
   if (emails.length > 0) {
-    await db()
+    await tx
       .insert(meetingInvitee)
       .values([...new Set(emails)].map((email) => ({ meetingId, email })))
       .onConflictDoNothing();
@@ -214,105 +224,104 @@ export async function updateSchedule(input: {
 }): Promise<void> {
   const { row, values, scope, occurrence } = input;
   const start = checked(values);
-  const series = await seriesOf(row.id);
-  const isSeries = series.rules.length > 0;
-  const passcode = values.passcode
-    ? (row.passcode ?? generatePasscode())
-    : null;
-  const common = {
-    description: values.description || null,
-    passcode,
-    settings: settingsFrom(values),
-  };
+  const rule = ruleFor(values, start);
+  // All or nothing: a failure halfway never leaves a series half edited.
+  await db().transaction(async (tx) => {
+    const series = await seriesOf(row.id, tx);
+    const isSeries = series.rules.length > 0;
+    const passcode = values.passcode
+      ? (row.passcode ?? generatePasscode())
+      : null;
+    const common = {
+      description: values.description || null,
+      passcode,
+      settings: settingsFrom(values),
+    };
 
-  if (isSeries && scope === "this" && occurrence) {
-    await db()
-      .insert(meetingException)
-      .values({
-        meetingId: row.id,
-        originalStart: occurrence,
-        startsAt: start,
-        durationMin: values.durationMin,
-        title: values.title === row.title ? null : values.title,
-      })
-      .onConflictDoUpdate({
-        target: [meetingException.meetingId, meetingException.originalStart],
-        set: {
-          cancelled: false,
+    if (isSeries && scope === "this" && occurrence) {
+      await tx
+        .insert(meetingException)
+        .values({
+          meetingId: row.id,
+          originalStart: occurrence,
           startsAt: start,
           durationMin: values.durationMin,
           title: values.title === row.title ? null : values.title,
-        },
-      });
-    await db().update(meeting).set(common).where(eq(meeting.id, row.id));
-    await replaceInvitees(row.id, values.invitees);
-    return;
-  }
+        })
+        .onConflictDoUpdate({
+          target: [meetingException.meetingId, meetingException.originalStart],
+          set: {
+            cancelled: false,
+            startsAt: start,
+            durationMin: values.durationMin,
+            title: values.title === row.title ? null : values.title,
+          },
+        });
+      await tx.update(meeting).set(common).where(eq(meeting.id, row.id));
+      await replaceInvitees(tx, row.id, values.invitees);
+      return;
+    }
 
-  const rule = ruleFor(values, start);
-  let rules: RuleRow[];
-  if (isSeries && scope === "following" && occurrence) {
-    // The old rules stop just before this meeting; a new one starts here.
-    const before = new Date(occurrence.getTime() - 1000);
-    await db()
-      .update(meetingRule)
-      .set({ lastStart: before })
-      .where(
-        and(
-          eq(meetingRule.meetingId, row.id),
-          or(
-            sql`${meetingRule.lastStart} is null`,
-            sql`${meetingRule.lastStart} >= ${occurrence}`,
+    let rules: RuleRow[];
+    if (isSeries && scope === "following" && occurrence) {
+      // The old rules stop just before this meeting; a new one starts here.
+      const before = new Date(occurrence.getTime() - 1000);
+      await tx
+        .update(meetingRule)
+        .set({ lastStart: before })
+        .where(
+          and(
+            eq(meetingRule.meetingId, row.id),
+            or(
+              sql`${meetingRule.lastStart} is null`,
+              sql`${meetingRule.lastStart} >= ${occurrence}`,
+            ),
           ),
-        ),
-      );
-    await db()
-      .delete(meetingRule)
-      .where(
-        and(
-          eq(meetingRule.meetingId, row.id),
-          lt(meetingRule.lastStart, meetingRule.firstStart),
-        ),
-      );
-    await db()
-      .delete(meetingException)
-      .where(
-        and(
-          eq(meetingException.meetingId, row.id),
-          sql`${meetingException.originalStart} >= ${occurrence}`,
-        ),
-      );
-    if (rule)
-      await db()
-        .insert(meetingRule)
-        .values({ meetingId: row.id, ...rule });
-    rules = (await seriesOf(row.id)).rules;
-  } else {
-    // All meetings (or a one-off): the rule is replaced, and old one-off changes go.
-    await db().delete(meetingRule).where(eq(meetingRule.meetingId, row.id));
-    await db()
-      .delete(meetingException)
-      .where(eq(meetingException.meetingId, row.id));
-    if (rule)
-      await db()
-        .insert(meetingRule)
-        .values({ meetingId: row.id, ...rule });
-    rules = rule ? [{ ...rule, lastStart: null }] : [];
-  }
+        );
+      await tx
+        .delete(meetingRule)
+        .where(
+          and(
+            eq(meetingRule.meetingId, row.id),
+            lt(meetingRule.lastStart, meetingRule.firstStart),
+          ),
+        );
+      await tx
+        .delete(meetingException)
+        .where(
+          and(
+            eq(meetingException.meetingId, row.id),
+            sql`${meetingException.originalStart} >= ${occurrence}`,
+          ),
+        );
+      if (rule)
+        await tx.insert(meetingRule).values({ meetingId: row.id, ...rule });
+      rules = (await seriesOf(row.id, tx)).rules;
+    } else {
+      // All meetings (or a one-off): the rule is replaced, and old one-off changes go.
+      await tx.delete(meetingRule).where(eq(meetingRule.meetingId, row.id));
+      await tx
+        .delete(meetingException)
+        .where(eq(meetingException.meetingId, row.id));
+      if (rule)
+        await tx.insert(meetingRule).values({ meetingId: row.id, ...rule });
+      rules = rule ? [{ ...rule, lastStart: null }] : [];
+    }
 
-  const firstStart = rules[0]?.firstStart ?? start;
-  await db()
-    .update(meeting)
-    .set({
-      ...common,
-      title: values.title,
-      startsAt: firstStart,
-      durationMin: values.durationMin,
-      timeZone: values.timeZone,
-      expiresAt: expiryFor(firstStart, values.durationMin, rules),
-    })
-    .where(eq(meeting.id, row.id));
-  await replaceInvitees(row.id, values.invitees);
+    const firstStart = rules[0]?.firstStart ?? start;
+    await tx
+      .update(meeting)
+      .set({
+        ...common,
+        title: values.title,
+        startsAt: firstStart,
+        durationMin: values.durationMin,
+        timeZone: values.timeZone,
+        expiresAt: expiryFor(firstStart, values.durationMin, rules),
+      })
+      .where(eq(meeting.id, row.id));
+    await replaceInvitees(tx, row.id, values.invitees);
+  });
 }
 
 /** Deletes one meeting of a series, it and the ones after it, or the whole meeting. */
@@ -322,52 +331,58 @@ export async function deleteSchedule(input: {
   occurrence: Date | null;
 }): Promise<void> {
   const { row, scope, occurrence } = input;
-  const series = await seriesOf(row.id);
-  if (series.rules.length > 0 && occurrence && scope === "this") {
-    await db()
-      .insert(meetingException)
-      .values({ meetingId: row.id, originalStart: occurrence, cancelled: true })
-      .onConflictDoUpdate({
-        target: [meetingException.meetingId, meetingException.originalStart],
-        set: { cancelled: true },
-      });
-    return;
-  }
-  const firstStart = series.rules[0]?.firstStart;
-  if (
-    series.rules.length > 0 &&
-    occurrence &&
-    scope === "following" &&
-    firstStart &&
-    occurrence > firstStart
-  ) {
-    await db()
-      .update(meetingRule)
-      .set({ lastStart: new Date(occurrence.getTime() - 1000) })
-      .where(
-        and(
-          eq(meetingRule.meetingId, row.id),
-          or(
-            sql`${meetingRule.lastStart} is null`,
-            sql`${meetingRule.lastStart} >= ${occurrence}`,
+  await db().transaction(async (tx) => {
+    const series = await seriesOf(row.id, tx);
+    if (series.rules.length > 0 && occurrence && scope === "this") {
+      await tx
+        .insert(meetingException)
+        .values({
+          meetingId: row.id,
+          originalStart: occurrence,
+          cancelled: true,
+        })
+        .onConflictDoUpdate({
+          target: [meetingException.meetingId, meetingException.originalStart],
+          set: { cancelled: true },
+        });
+      return;
+    }
+    const firstStart = series.rules[0]?.firstStart;
+    if (
+      series.rules.length > 0 &&
+      occurrence &&
+      scope === "following" &&
+      firstStart &&
+      occurrence > firstStart
+    ) {
+      await tx
+        .update(meetingRule)
+        .set({ lastStart: new Date(occurrence.getTime() - 1000) })
+        .where(
+          and(
+            eq(meetingRule.meetingId, row.id),
+            or(
+              sql`${meetingRule.lastStart} is null`,
+              sql`${meetingRule.lastStart} >= ${occurrence}`,
+            ),
           ),
-        ),
-      );
-    await db()
-      .delete(meetingRule)
-      .where(
-        and(
-          eq(meetingRule.meetingId, row.id),
-          sql`${meetingRule.firstStart} >= ${occurrence}`,
-        ),
-      );
-    return;
-  }
-  // Everything: the link stops working.
-  await db()
-    .update(meeting)
-    .set({ status: "cancelled" })
-    .where(eq(meeting.id, row.id));
+        );
+      await tx
+        .delete(meetingRule)
+        .where(
+          and(
+            eq(meetingRule.meetingId, row.id),
+            sql`${meetingRule.firstStart} >= ${occurrence}`,
+          ),
+        );
+      return;
+    }
+    // Everything: the link stops working.
+    await tx
+      .update(meeting)
+      .set({ status: "cancelled" })
+      .where(eq(meeting.id, row.id));
+  });
 }
 
 export type UpcomingItem = {
@@ -517,7 +532,8 @@ const iso = (date: Date) => date.toISOString();
 
 /**
  * A scheduled meeting for its page: its host sees everything; someone invited (by their
- * verified email) sees it too, without the settings. Null for anyone else.
+ * verified email) sees it too (the page shows the settings only to the host). Null for
+ * anyone else.
  */
 export async function meetingDetails(input: {
   code: string;
@@ -548,10 +564,14 @@ export async function meetingDetails(input: {
   const first = lastRule?.firstStart ?? row.startsAt ?? now;
   const local = localParts(first, timeZone);
 
+  // Names and pictures only for invitees who have already come to this meeting with a
+  // verified account; anyone else is just their email. Otherwise inviting an address
+  // would tell the host whether it has an account (and an unverified sign-up could
+  // pick the name shown for someone else's email).
   const people =
     invitees.length > 0
       ? await db()
-          .select({
+          .selectDistinct({
             id: user.id,
             email: user.email,
             name: user.name,
@@ -560,7 +580,18 @@ export async function meetingDetails(input: {
             avatarSource: user.avatarSource,
           })
           .from(user)
-          .where(inArray(user.email, invitees))
+          .innerJoin(participantSession, eq(participantSession.userId, user.id))
+          .innerJoin(
+            meetingSession,
+            eq(meetingSession.id, participantSession.sessionId),
+          )
+          .where(
+            and(
+              inArray(user.email, invitees),
+              eq(user.emailVerified, true),
+              eq(meetingSession.meetingId, row.id),
+            ),
+          )
       : [];
 
   return {

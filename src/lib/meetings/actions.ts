@@ -54,14 +54,14 @@ const PersonalRoomChanges = MeetingSettings.pick({
   muteOnEntry: true,
 }).partial();
 
+/** False when the changes aren't settings this page has, as the other actions do. */
 export async function updatePersonalRoomSettings(
   changes: unknown,
-): Promise<void> {
+): Promise<boolean> {
   const session = await requireSession(PERSONAL_ROOM_ROUTE);
+  const parsed = PersonalRoomChanges.safeParse(changes);
+  if (!parsed.success) return false;
   const room = await getOrCreatePersonalRoom(session.user.id);
-  await updateMeetingSettings(
-    room.id,
-    session.user.id,
-    PersonalRoomChanges.parse(changes),
-  );
+  await updateMeetingSettings(room.id, session.user.id, parsed.data);
+  return true;
 }

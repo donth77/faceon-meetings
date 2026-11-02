@@ -142,6 +142,10 @@ export async function tidyUpAfterLeaving(
     await changeSession(theMeeting, row.session, { lower: left.mediaUserId });
   }
   if (row.session.notes?.by === left.mediaUserId) {
-    await changeSession(theMeeting, row.session, { notes: null });
+    // Only if they're still theirs under the lock: someone else may have just started
+    // them again.
+    await changeSession(theMeeting, row.session, {
+      notesOffFrom: left.mediaUserId,
+    });
   }
 }

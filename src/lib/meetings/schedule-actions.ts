@@ -1,22 +1,24 @@
 "use server";
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
 
 import { requireSession } from "@/lib/auth/session";
 import { serverEnv } from "@/lib/server-env";
 
-import { generateMeetingCode, generatePasscode } from "./generate";
 import {
   countMeetingsCreatedSince,
   findMeetingByCode,
   updateMeetingSettings,
 } from "./queries";
+import { DAY_MS } from "./retention";
 import {
   OccurrenceRef,
+  ScheduleDraft,
   ScheduleInput,
   SeriesScope,
   type ScheduleResult,
 } from "./schedule";
+import { draftIsValid } from "./schedule-draft";
 import {
   deleteSchedule,
   ScheduleError,
@@ -27,52 +29,20 @@ import {
 } from "./scheduling";
 import { MeetingSettings } from "./settings";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const SCHEDULE_ROUTE = "/schedule";
 
-/**
- * A meeting ID and passcode the schedule form can preview before saving, signed so a
- * client can't choose its own. Good for a day.
- */
-export type ScheduleDraft = { code: string; passcode: string; token: string };
-
-const sign = (payload: string) => {
-  const secret = serverEnv().BETTER_AUTH_SECRET;
-  if (!secret) throw new Error("BETTER_AUTH_SECRET is not set.");
-  return createHmac("sha256", secret)
-    .update(`schedule-draft:${payload}`)
-    .digest("base64url");
-};
-
-export async function newScheduleDraft(): Promise<ScheduleDraft> {
-  const code = generateMeetingCode();
-  const passcode = generatePasscode();
-  const expires = Date.now() + DAY_MS;
-  return {
-    code,
-    passcode,
-    token: `${expires}.${sign(`${code}.${passcode}.${expires}`)}`,
-  };
-}
-
-function draftIsValid(draft: ScheduleDraft): boolean {
-  const [expires = "", mac = ""] = draft.token.split(".");
-  if (Number(expires) < Date.now()) return false;
-  const expected = Buffer.from(
-    sign(`${draft.code}.${draft.passcode}.${expires}`),
-  );
-  const given = Buffer.from(mac);
-  return expected.length === given.length && timingSafeEqual(expected, given);
-}
+/** Actions are public endpoints: every argument is checked, whatever its type says. */
+const MeetingCode = z.string().max(32);
 
 /** Schedule a meeting: one-off or repeating, with the previewed ID and passcode. */
 export async function scheduleMeetingAction(
   input: unknown,
-  draft: ScheduleDraft,
+  draft: unknown,
 ): Promise<ScheduleResult> {
   const session = await requireSession(SCHEDULE_ROUTE);
   const parsed = ScheduleInput.safeParse(input);
-  if (!parsed.success || !draftIsValid(draft)) {
+  const signed = ScheduleDraft.safeParse(draft);
+  if (!parsed.success || !signed.success || !draftIsValid(signed.data)) {
     return { ok: false, reason: "invalid" };
   }
   const today = await countMeetingsCreatedSince(
@@ -85,8 +55,8 @@ export async function scheduleMeetingAction(
   try {
     const created = await scheduleMeeting({
       hostId: session.user.id,
-      code: draft.code,
-      passcode: draft.passcode,
+      code: signed.data.code,
+      passcode: signed.data.passcode,
       values: parsed.data,
     });
     return { ok: true, code: created.code, passcode: created.passcode };
@@ -98,9 +68,10 @@ export async function scheduleMeetingAction(
 }
 
 /** The meeting with this ID, if the caller hosts it. */
-async function ownMeeting(code: string) {
+async function ownMeeting(code: unknown) {
   const session = await requireSession(SCHEDULE_ROUTE);
-  const found = await findMeetingByCode(code);
+  const parsed = MeetingCode.safeParse(code);
+  const found = parsed.success ? await findMeetingByCode(parsed.data) : null;
   if (
     !found ||
     found.meeting.hostId !== session.user.id ||
@@ -119,7 +90,7 @@ const occurrenceOf = (value: unknown): Date | null => {
 
 /** Save the edit form: for a series, this meeting, this and following, or all. */
 export async function updateScheduleAction(
-  code: string,
+  code: unknown,
   input: unknown,
   scope: unknown,
   occurrence: unknown,
@@ -147,7 +118,7 @@ export async function updateScheduleAction(
 
 /** Delete: for a series, this meeting, this and following, or all. */
 export async function deleteScheduleAction(
-  code: string,
+  code: unknown,
   scope: unknown,
   occurrence: unknown,
 ): Promise<boolean> {
@@ -170,7 +141,7 @@ const DetailsSettings = MeetingSettings.pick({
 
 /** The settings switches on a meeting's page. */
 export async function updateScheduledSettingsAction(
-  code: string,
+  code: unknown,
   changes: unknown,
 ): Promise<boolean> {
   const row = await ownMeeting(code);

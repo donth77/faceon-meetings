@@ -56,9 +56,9 @@ To run the service: to sign you in, connect your meetings, show your upcoming an
 ## How long it's kept
 
 - **Your account**, until you delete it. Deleting your account removes your account, your meetings and their records, and your profile at Stream, and ends any meeting you're hosting. Meetings you joined that other people host keep your name in who joined, until that's deleted after 90 days.
-- **Instant meetings** are deleted after 30 days without use.
+- **Instant meetings** stop working after 30 days without use, and are deleted with their history once it's gone from Previous (90 days after their last use).
 - **Who joined and left** is deleted after 90 days, and so are **saved AI notes**. Whoever saved them, or the meeting's host, can delete them sooner.
-- **Waiting room requests and admission records** are deleted a week after the meeting.
+- **Waiting room requests and admission records** are deleted a week after the meeting. That someone was removed from a meeting is kept as long as who joined (90 days), so they can't read its shared notes.
 - **Records of sign-in and join attempts**, kept to slow down password and passcode guessing, include your IP address and are deleted after a day.
 
 ## Your choices and rights

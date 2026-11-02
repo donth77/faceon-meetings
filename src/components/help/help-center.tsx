@@ -10,20 +10,9 @@ import { GitHubIcon } from "@/components/auth/provider-icons";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import { Button } from "@/components/ui/button";
 import { publicEnv } from "@/lib/env";
+import type { HelpEntry, HelpSection } from "@/lib/help/sections";
 
 import { HelpHeader } from "./help-header";
-
-/** What the browser needs about an article: enough to list it and search it. */
-export type HelpEntry = {
-  slug: string;
-  title: string;
-  summary: string;
-  category: string;
-  /** The article's words, for search. */
-  text: string;
-};
-
-export type HelpSection = { id: string; name: string; entries: HelpEntry[] };
 
 function EntryLink({ entry }: { entry: HelpEntry }) {
   return (

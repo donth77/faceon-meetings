@@ -17,7 +17,11 @@ import {
   type MeetingSession,
 } from "./queries";
 import { canModerate, isHostRole } from "./rules";
-import { changeSession, sessionPolicy } from "./session-state";
+import {
+  changeSession,
+  changeSessionFrom,
+  sessionPolicy,
+} from "./session-state";
 import { admitEveryone } from "./waiting-room";
 
 /** After a policy change, gives every participant's publishing rights back or takes them. */
@@ -112,10 +116,10 @@ export async function moderate(input: {
       );
       await provider.mute(session.id, everyoneElse, ["audio"]);
       if (request.selfUnmute !== policy.selfUnmute) {
-        const state = await changeSession(meeting, session, {
+        const { before, after } = await changeSessionFrom(meeting, session, {
           policy: { selfUnmute: request.selfUnmute },
         });
-        await applyPolicy(provider, session, policy, state);
+        await applyPolicy(provider, session, before, after);
       }
       return;
     }
@@ -171,12 +175,14 @@ export async function moderate(input: {
     }
 
     case "setPolicy": {
-      const state = await changeSession(meeting, session, {
+      // Compared with the policy as it was under the lock, not as read above: two hosts
+      // changing it at once each apply only what their change did.
+      const { before, after } = await changeSessionFrom(meeting, session, {
         policy: request.policy,
       });
-      await applyPolicy(provider, session, policy, state);
+      await applyPolicy(provider, session, before, after);
       // Turning the waiting room off lets everyone waiting in, as in Zoom.
-      if (policy.waitingRoom && !state.waitingRoom) {
+      if (before.waitingRoom && !after.waitingRoom) {
         await admitEveryone(session);
       }
       return;

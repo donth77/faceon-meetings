@@ -31,15 +31,20 @@ export async function setNotes(input: {
     demo: session.limits.demo === true,
   });
   if (!allowed) throw new MeetingError("NOT_ALLOWED");
-  // Already as asked: keep who turned them on, and when.
+  // Already as asked: keep who turned them on, and when. (The change itself checks
+  // again under the session's lock, in case another host just did the same.)
   if (input.request.on === (session.notes != null)) return;
-  await changeSession(meeting, session, {
-    notes: input.request.on
+  await changeSession(
+    meeting,
+    session,
+    input.request.on
       ? {
-          by: principal.mediaUserId,
-          name: member.displayName,
-          startedAt: new Date().toISOString(),
+          notesOn: {
+            by: principal.mediaUserId,
+            name: member.displayName,
+            startedAt: new Date().toISOString(),
+          },
         }
-      : null,
-  });
+      : { notesOff: true },
+  );
 }

@@ -123,6 +123,8 @@ export const meetingSession = pgTable(
     uniqueIndex("meeting_session_one_open")
       .on(table.meetingId)
       .where(sql`${table.status} = 'open'`),
+    // A meeting's sessions by start: demo limits, the sweep, deletes.
+    index("meeting_session_meeting").on(table.meetingId, table.startedAt),
   ],
 );
 
@@ -150,7 +152,11 @@ export const meetingMember = pgTable(
       .notNull(),
     bannedAt: timestamp("banned_at", { withTimezone: true }),
   },
-  (table) => [primaryKey({ columns: [table.sessionId, table.mediaUserId] })],
+  (table) => [
+    primaryKey({ columns: [table.sessionId, table.mediaUserId] }),
+    // Someone's sessions (Previous), and clearing them when their account goes.
+    index("meeting_member_user").on(table.userId),
+  ],
 );
 
 export const admissionStatus = pgEnum("admission_status", [
@@ -189,6 +195,7 @@ export const admissionRequest = pgTable(
   },
   (table) => [
     index("admission_request_session").on(table.sessionId, table.status),
+    index("admission_request_user").on(table.userId),
     // One open request per person per session.
     uniqueIndex("admission_request_one_pending")
       .on(table.sessionId, table.mediaUserId)
@@ -280,7 +287,10 @@ export const participantSession = pgTable(
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull(),
     leftAt: timestamp("left_at", { withTimezone: true }),
   },
-  (table) => [index("participant_session_session").on(table.sessionId)],
+  (table) => [
+    index("participant_session_session").on(table.sessionId),
+    index("participant_session_user").on(table.userId),
+  ],
 );
 
 /**
@@ -288,23 +298,29 @@ export const participantSession = pgTable(
  * show under Previous for the session's signed-in attendees. They go with the session,
  * with the account that saved them, or after 90 days with the session's attendance.
  */
-export const meetingNotes = pgTable("meeting_notes", {
-  sessionId: uuid("session_id")
-    .primaryKey()
-    .references(() => meetingSession.id, { onDelete: "cascade" }),
-  savedBy: text("saved_by")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  notes: jsonb("notes").$type<MeetingNotes>().notNull(),
-  /** The transcript as text ("Ana (10:02): …"), when it fit. */
-  transcript: text("transcript"),
-  engine: text("engine").$type<EngineId>().notNull(),
-  provider: text("provider").$type<ProviderId>(),
-  /** When the notes were made, which can be before they were saved. */
-  madeAt: timestamp("made_at", { withTimezone: true }).notNull(),
-  shared: boolean("shared").notNull().default(false),
-  savedAt: timestamp("saved_at", { withTimezone: true }).defaultNow().notNull(),
-});
+export const meetingNotes = pgTable(
+  "meeting_notes",
+  {
+    sessionId: uuid("session_id")
+      .primaryKey()
+      .references(() => meetingSession.id, { onDelete: "cascade" }),
+    savedBy: text("saved_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    notes: jsonb("notes").$type<MeetingNotes>().notNull(),
+    /** The transcript as text ("Ana (10:02): …"), when it fit. */
+    transcript: text("transcript"),
+    engine: text("engine").$type<EngineId>().notNull(),
+    provider: text("provider").$type<ProviderId>(),
+    /** When the notes were made, which can be before they were saved. */
+    madeAt: timestamp("made_at", { withTimezone: true }).notNull(),
+    shared: boolean("shared").notNull().default(false),
+    savedAt: timestamp("saved_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("meeting_notes_saved_by").on(table.savedBy)],
+);
 
 /** Webhook deliveries already handled, so a retry or replay changes nothing. */
 export const webhookEvent = pgTable("webhook_event", {

@@ -1,6 +1,15 @@
 import "server-only";
 
-import { and, count, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  countDistinct,
+  eq,
+  inArray,
+  isNull,
+  lt,
+  sql,
+} from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -8,6 +17,7 @@ import {
   meetingMember,
   meetingNotes,
   meetingSession,
+  participantSession,
   user,
 } from "@/lib/db/schema";
 import { aiNotesEnabled } from "@/lib/env";
@@ -18,6 +28,7 @@ import {
   type MeetingNotes,
 } from "@/lib/notes/notes";
 import type { ProviderId } from "@/lib/notes/providers";
+import { isUuid } from "@/lib/uuid";
 
 import { requireMeeting, requirePrincipal } from "./access";
 import type { SaveNotesRequest } from "./api";
@@ -26,14 +37,10 @@ import type { Principal } from "./principal";
 import { attendedBy, findMember } from "./queries";
 import { canManageNotes, canReadNotes, canSaveNotes } from "./rules";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** Session IDs are UUIDs; anything else names no session. */
-const isSessionId = (value: string) => UUID.test(value);
-
 /** A session of the meeting with this code, ended or not. */
 async function sessionOf(code: string, sessionId: string) {
   const { meeting: found } = await requireMeeting(code);
-  const [session] = isSessionId(sessionId)
+  const [session] = isUuid(sessionId)
     ? await db()
         .select()
         .from(meetingSession)
@@ -50,8 +57,9 @@ async function sessionOf(code: string, sessionId: string) {
 }
 
 /**
- * Saves AI notes to a session, replacing any saved before: hosts and co-hosts with an
- * account who were in it, also after it ended.
+ * Saves AI notes to a session: hosts and co-hosts with an account who were in it, also
+ * after it ended. Notes already saved are replaced only by whoever saved them, or by
+ * the host, as with sharing and deleting them.
  */
 export async function saveNotes(input: {
   code: string;
@@ -61,7 +69,10 @@ export async function saveNotes(input: {
 }): Promise<void> {
   if (!aiNotesEnabled) throw new MeetingError("NOT_ALLOWED");
   const principal = requirePrincipal(input.principal);
-  const { session } = await sessionOf(input.code, input.sessionId);
+  const { meeting: found, session } = await sessionOf(
+    input.code,
+    input.sessionId,
+  );
   const member = await findMember(session.id, principal.mediaUserId);
   const userId = principal.kind === "user" ? principal.userId : null;
   if (
@@ -86,10 +97,18 @@ export async function saveNotes(input: {
     shared: input.request.shared,
     savedAt: new Date(),
   };
-  await db()
+  // One statement, so two people saving at once can't replace each other's notes.
+  const saved = await db()
     .insert(meetingNotes)
     .values({ sessionId: session.id, ...row })
-    .onConflictDoUpdate({ target: meetingNotes.sessionId, set: row });
+    .onConflictDoUpdate({
+      target: meetingNotes.sessionId,
+      set: row,
+      setWhere:
+        userId === found.hostId ? undefined : eq(meetingNotes.savedBy, userId),
+    })
+    .returning({ sessionId: meetingNotes.sessionId });
+  if (saved.length === 0) throw new MeetingError("NOT_ALLOWED");
 }
 
 /** The saved notes, and whether the signed-in viewer may change them. */
@@ -151,7 +170,7 @@ export type SavedNotes = {
   hostName: string;
   start: string;
   end: string;
-  /** How many people were let in. */
+  /** How many people came. */
   people: number;
   notes: MeetingNotes;
   transcript: string | null;
@@ -168,7 +187,7 @@ export async function savedNotesFor(
   sessionId: string,
   viewerId: string,
 ): Promise<SavedNotes | null> {
-  if (!isSessionId(sessionId)) return null;
+  if (!isUuid(sessionId)) return null;
   const [row] = await db()
     .select({
       notes: meetingNotes,
@@ -200,15 +219,22 @@ export async function savedNotesFor(
   ) {
     return null;
   }
-  const [people] = await db()
-    .select({ count: count() })
-    .from(meetingMember)
-    .where(
-      and(
-        eq(meetingMember.sessionId, sessionId),
-        isNull(meetingMember.bannedAt),
+  // From attendance, which lasts as long as the notes; admissions go after a week.
+  const [[attended], [admitted]] = await Promise.all([
+    db()
+      .select({ count: countDistinct(participantSession.mediaUserId) })
+      .from(participantSession)
+      .where(eq(participantSession.sessionId, sessionId)),
+    db()
+      .select({ count: count() })
+      .from(meetingMember)
+      .where(
+        and(
+          eq(meetingMember.sessionId, sessionId),
+          isNull(meetingMember.bannedAt),
+        ),
       ),
-    );
+  ]);
   return {
     sessionId,
     code: row.code,
@@ -216,7 +242,7 @@ export async function savedNotesFor(
     hostName: row.hostName,
     start: row.session.startedAt.toISOString(),
     end: (row.session.endedAt ?? row.notes.madeAt).toISOString(),
-    people: people?.count ?? 0,
+    people: attended?.count || admitted?.count || 0,
     notes: row.notes.notes,
     transcript: row.notes.transcript,
     engine: row.notes.engine,

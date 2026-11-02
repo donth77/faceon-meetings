@@ -49,11 +49,18 @@ export type SessionChange =
   | { forget: string }
   /** Someone became, or stopped being, a co-host. */
   | { roles: true }
-  /** AI notes went on (who, when) or off. */
-  | { notes: NotesState | null };
+  /** AI notes went on: who and when. If they're already on, they stay whose they were. */
+  | { notesOn: NotesState }
+  | { notesOff: true }
+  /** Someone's last connection left: AI notes go off if they were taking them. */
+  | { notesOffFrom: string };
 
+/**
+ * The change as SQL on the row as it is under the lock, so each one is decided on the
+ * latest state, not on what the caller read before (two hosts at once, say).
+ */
 function updatesFor(change: SessionChange, now: Date) {
-  const { hands, policy, spotlight } = meetingSession;
+  const { hands, notes, policy, spotlight } = meetingSession;
   if ("lowerAll" in change) return { hands: sql`'{}'::jsonb` };
   if ("lower" in change) {
     return { hands: sql`${hands} - ${change.lower}::text` };
@@ -71,7 +78,17 @@ function updatesFor(change: SessionChange, now: Date) {
     };
   }
   if ("spotlight" in change) return { spotlight: change.spotlight };
-  if ("notes" in change) return { notes: change.notes };
+  if ("notesOn" in change) {
+    return {
+      notes: sql`coalesce(${notes}, ${JSON.stringify(change.notesOn)}::jsonb)`,
+    };
+  }
+  if ("notesOff" in change) return { notes: null };
+  if ("notesOffFrom" in change) {
+    return {
+      notes: sql`case when ${notes}->>'by' = ${change.notesOffFrom}::text then null else ${notes} end`,
+    };
+  }
   if ("forget" in change) {
     return {
       hands: sql`${hands} - ${change.forget}::text`,
@@ -84,16 +101,22 @@ function updatesFor(change: SessionChange, now: Date) {
 /**
  * Changes the session's shared state, then publishes all of it. One writer per session at
  * a time (an advisory lock), so updates reach the provider in order and none is lost.
+ * Returns the state just before the change too, as read under the lock.
  */
-export async function changeSession(
+export async function changeSessionFrom(
   meeting: Meeting,
   session: MeetingSession,
   change: SessionChange,
-): Promise<SessionState> {
+): Promise<{ before: SessionState; after: SessionState }> {
   return db().transaction(async (tx) => {
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtext(${session.id}))`,
     );
+    const [previous] = await tx
+      .select()
+      .from(meetingSession)
+      .where(eq(meetingSession.id, session.id))
+      .limit(1);
     const [row] = await tx
       .update(meetingSession)
       .set({
@@ -102,7 +125,7 @@ export async function changeSession(
       })
       .where(eq(meetingSession.id, session.id))
       .returning();
-    if (!row) throw new Error("The session is gone.");
+    if (!previous || !row) throw new Error("The session is gone.");
     const cohosts = await tx
       .select({ id: meetingMember.mediaUserId })
       .from(meetingMember)
@@ -113,12 +136,18 @@ export async function changeSession(
           isNull(meetingMember.bannedAt),
         ),
       );
-    const state = sessionState(
-      meeting,
-      row,
-      cohosts.map((c) => c.id),
-    );
-    await mediaProvider(session.provider).setSessionState(session.id, state);
-    return state;
+    const ids = cohosts.map((c) => c.id);
+    const after = sessionState(meeting, row, ids);
+    await mediaProvider(session.provider).setSessionState(session.id, after);
+    return { before: sessionState(meeting, previous, ids), after };
   });
+}
+
+/** Changes the session's shared state (see changeSessionFrom); returns the new state. */
+export async function changeSession(
+  meeting: Meeting,
+  session: MeetingSession,
+  change: SessionChange,
+): Promise<SessionState> {
+  return (await changeSessionFrom(meeting, session, change)).after;
 }

@@ -113,10 +113,10 @@ function Profile({
 
   function shuffle() {
     // Keeps the avatar you have, with seven new ones beside it.
-    const look = parseAvatarSeed(seed)?.look;
+    const look = parseAvatarSeed(seed)?.look ?? "n";
     setSeeds([
       seed,
-      ...Array.from({ length: 7 }, () => createAvatarSeed(name, look)),
+      ...Array.from({ length: 7 }, () => createAvatarSeed(look)),
     ]);
   }
 

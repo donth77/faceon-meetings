@@ -40,6 +40,8 @@ export async function joinMeeting(input: {
   name: string;
   passcode: string | undefined;
   principal: Principal | null;
+  /** False when this caller has asked to join too often lately (RATE_LIMITED). */
+  canAskHosts?: boolean;
 }): Promise<JoinResponse> {
   const now = new Date();
   const { meeting, host } = await requireMeeting(input.code);
@@ -96,6 +98,7 @@ export async function joinMeeting(input: {
   if (blocked === "waiting_room") {
     // Only reached while a host is in the session, so it's open.
     if (!live) return { state: "waiting_for_host" };
+    if (input.canAskHosts === false) throw new MeetingError("RATE_LIMITED");
     const requestId = await askToJoin({
       session: live.row,
       principal,

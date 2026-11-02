@@ -4,7 +4,8 @@ import { LinkButton } from "@/components/ui/button";
 
 import { MeetingCard, MeetingPageFrame } from "./page-frame";
 
-export type NoticeKind = "notFound" | "ended" | "signIn" | "removed";
+export type NoticeKind =
+  "notFound" | "ended" | "signIn" | "removed" | "tooManyTries";
 
 const bigButton = "h-12 px-6 text-base";
 

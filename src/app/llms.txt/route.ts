@@ -12,7 +12,7 @@ export function GET() {
     "",
     `> ${name} is a free, open-source (MIT) video meeting app that runs in the browser. It works like Zoom or Google Meet: start or schedule a meeting, share the link, and people join from any device without installing anything.`,
     "",
-    "- Guests join a meeting with just their name; hosts sign in with Google or GitHub.",
+    "- Guests join a meeting with just their name; hosts sign in with Google, GitHub, or an email and password.",
     "- Meetings have IDs, passcodes, a waiting room and host controls, plus chat, reactions, raise hand and screen sharing.",
     "- Meeting links (/j/...) and account pages are private and must not be crawled or summarized.",
     "",

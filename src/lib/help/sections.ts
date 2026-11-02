@@ -2,9 +2,19 @@ import "server-only";
 
 import { getTranslations } from "next-intl/server";
 
-import type { HelpSection } from "@/components/help/help-center";
-
 import { HELP_CATEGORIES, helpArticles, plainText } from "./articles";
+
+/** What the browser needs about an article: enough to list it and search it. */
+export type HelpEntry = {
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  /** The article's words, for search. */
+  text: string;
+};
+
+export type HelpSection = { id: string; name: string; entries: HelpEntry[] };
 
 /** The articles grouped by category, named in the reader's language. */
 export async function helpSections(

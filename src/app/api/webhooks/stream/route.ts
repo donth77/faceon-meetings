@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 
+import { loggable } from "@/lib/log";
 import {
   recordAttendance,
   tidyUpAfterLeaving,
 } from "@/lib/meetings/attendance";
-import { parseStreamWebhook, verifyStreamWebhook } from "@/lib/stream/server";
+import { verifyStreamWebhook } from "@/lib/stream/server";
+import { parseStreamWebhook } from "@/lib/stream/webhook";
 
 /**
  * POST /api/webhooks/stream: Stream's webhooks, signed with our API secret. Attendance
@@ -32,7 +34,10 @@ export async function POST(request: Request) {
     // A hand left raised would greet them when they come back, and AI notes they were
     // taking would have nobody to take them.
     await tidyUpAfterLeaving(event).catch((error: unknown) =>
-      console.error("Could not tidy up after someone who left.", error),
+      console.error(
+        "Could not tidy up after someone who left.",
+        loggable(error),
+      ),
     );
   }
   return new Response(null, { status: 200 });

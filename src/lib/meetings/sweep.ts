@@ -1,5 +1,6 @@
 import "server-only";
 
+import { loggable } from "@/lib/log";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 
 import { pruneAttendance, pruneWebhookEvents } from "./attendance";
@@ -8,22 +9,21 @@ import {
   openSessionsStartedBefore,
   pruneEndedSessionMembers,
 } from "./queries";
+import { daysBefore, KEEP_DAYS } from "./retention";
 import { SESSION_GRACE_MS } from "./rules";
 import { pruneSavedNotes } from "./saved-notes";
 import { currentSession } from "./sessions";
 import { pruneEndedSessionRequests } from "./waiting-room";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 /**
  * Housekeeping, run on a schedule (and safe to run any time):
  * - closes sessions whose call ended or sat empty past the grace period, ending their
  *   calls, so they don't count as running and old tokens can't rejoin;
- * - deletes instant meetings unused for 30 days (their expiry);
- * - drops admission records and waiting-room requests a week after their session ended,
- *   attendance and saved AI notes after 90 days, and attempt counters and sign-in rate
- *   limits after a day.
- *   The privacy policy promises these.
+ * - deletes expired meetings once nothing of theirs is left in Previous;
+ * - drops admission records and waiting-room requests a week after their session ended
+ *   (removals after 90 days), attendance and saved AI notes after 90 days, and attempt
+ *   counters and sign-in rate limits after a day.
+ *   The privacy policy promises these (retention.ts).
  */
 export async function sweep(now = new Date()) {
   let closedSessions = 0;
@@ -34,36 +34,27 @@ export async function sweep(now = new Date()) {
     // currentSession closes the session when it's no longer usable.
     const result = await currentSession(meeting, now).catch(
       (error: unknown) => {
-        console.error("Sweep could not check a session", error);
+        console.error("Sweep could not check a session", loggable(error));
         return "error" as const;
       },
     );
     if (result === null || result === "meeting-ended") closedSessions++;
   }
 
+  const history = daysBefore(now, KEEP_DAYS.history);
+  const admissions = daysBefore(now, KEEP_DAYS.admissions);
+  const counters = daysBefore(now, KEEP_DAYS.counters);
   return {
     closedSessions,
     deletedMeetings: await deleteExpiredMeetings(now),
-    prunedMembers: await pruneEndedSessionMembers(
-      new Date(now.getTime() - 7 * DAY_MS),
-    ),
-    prunedRequests: await pruneEndedSessionRequests(
-      new Date(now.getTime() - 7 * DAY_MS),
-    ),
-    prunedAttemptCounters: await pruneAttempts(
-      new Date(now.getTime() - DAY_MS),
-    ),
-    prunedAuthRateLimits: await pruneAuthRateLimits(
-      new Date(now.getTime() - DAY_MS),
-    ),
-    prunedAttendance: await pruneAttendance(
-      new Date(now.getTime() - 90 * DAY_MS),
-    ),
-    prunedSavedNotes: await pruneSavedNotes(
-      new Date(now.getTime() - 90 * DAY_MS),
-    ),
+    prunedMembers: await pruneEndedSessionMembers(admissions, history),
+    prunedRequests: await pruneEndedSessionRequests(admissions),
+    prunedAttemptCounters: await pruneAttempts(counters),
+    prunedAuthRateLimits: await pruneAuthRateLimits(counters),
+    prunedAttendance: await pruneAttendance(history),
+    prunedSavedNotes: await pruneSavedNotes(history),
     prunedWebhookEvents: await pruneWebhookEvents(
-      new Date(now.getTime() - 7 * DAY_MS),
+      daysBefore(now, KEEP_DAYS.webhookDeliveries),
     ),
   };
 }

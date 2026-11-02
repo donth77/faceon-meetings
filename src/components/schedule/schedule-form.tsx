@@ -30,11 +30,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Recurrence } from "@/lib/meetings/recurrence";
-import type { ScheduleInput, SeriesScope } from "@/lib/meetings/schedule";
+import type {
+  ScheduleDraft,
+  ScheduleInput,
+  SeriesScope,
+} from "@/lib/meetings/schedule";
 import {
   scheduleMeetingAction,
   updateScheduleAction,
-  type ScheduleDraft,
 } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
 import { deviceTimeZone, zonedToUtc } from "@/lib/time";

@@ -4,6 +4,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
 
+import { lookForName } from "@/lib/avatars/name-look";
 import { avatarUrl, createAvatarSeed } from "@/lib/avatars/seed";
 import { serverEnv } from "@/lib/server-env";
 
@@ -66,7 +67,7 @@ export function decodeGuest(value: string | undefined): GuestIdentity | null {
 export function newGuest(name: string): GuestIdentity {
   return {
     id: randomBytes(10).toString("hex"),
-    avatarSeed: createAvatarSeed(name),
+    avatarSeed: createAvatarSeed(lookForName(name)),
   };
 }
 
@@ -91,11 +92,6 @@ export async function saveGuest(guest: GuestIdentity): Promise<void> {
     path: "/",
     maxAge: MAX_AGE_SECONDS,
   });
-}
-
-/** Forget me on this device: removes the guest cookie. */
-export async function forgetGuest(): Promise<void> {
-  (await cookies()).delete(COOKIE);
 }
 
 export const guestAvatarUrl = (guest: GuestIdentity) =>

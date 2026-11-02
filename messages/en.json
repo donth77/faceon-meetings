@@ -298,6 +298,10 @@
         "title": "You can’t rejoin this meeting",
         "body": "The host removed you from this meeting."
       },
+      "tooManyTries": {
+        "title": "Too many tries",
+        "body": "Wait a few minutes, then open the link again."
+      },
       "signInAction": "Sign in",
       "returnHome": "Return home"
     },

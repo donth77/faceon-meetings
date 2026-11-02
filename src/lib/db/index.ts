@@ -8,6 +8,12 @@ import * as schema from "./schema";
 
 let database: NodePgDatabase<typeof schema> | undefined;
 
+type Database = NodePgDatabase<typeof schema>;
+/** A transaction from db().transaction(), for helpers that run inside one. */
+export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+/** The database, or a transaction in progress: where a helper runs its queries. */
+export type Executor = Database | Transaction;
+
 /**
  * The app's database: Neon's pooled connection through node-postgres, which supports
  * transactions. Created on first use, so pages that never touch the database build

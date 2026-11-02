@@ -158,7 +158,12 @@ export function lastStartOf(row: RuleRow): Date | null {
   const rule = ruleOf(row);
   const options = rule.options();
   if (options.count === undefined && options.until === undefined) return null;
-  const all = rule.all();
-  const last = all.at(-1);
-  return last ? new Date(last.epochMilliseconds) : null;
+  try {
+    const last = rule.all().at(-1);
+    return last ? new Date(last.epochMilliseconds) : null;
+  } catch {
+    // More meetings than the library will count (an end decades away, saved before the
+    // form capped it): treat it as repeating forever, which keeps the link working.
+    return null;
+  }
 }

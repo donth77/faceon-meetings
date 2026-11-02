@@ -10,6 +10,7 @@ import {
 } from "@/components/settings/account-settings";
 import { auth } from "@/lib/auth/server";
 import { requireSession } from "@/lib/auth/session";
+import { lookForName } from "@/lib/avatars/name-look";
 import {
   createAvatarSeed,
   fallbackAvatarSeed,
@@ -57,7 +58,7 @@ async function Account({
   });
   const { user } = session;
   const seed = user.avatarSeed ?? fallbackAvatarSeed(user.id);
-  const look = parseAvatarSeed(seed)?.look;
+  const look = parseAvatarSeed(seed)?.look ?? lookForName(user.name);
   return (
     <AccountSettings
       account={{
@@ -72,9 +73,7 @@ async function Account({
         passwordSignIn: emailPasswordEnabled(),
       }}
       // Seven more avatars to pick from, made here so the page renders the same twice.
-      avatarChoices={Array.from({ length: 7 }, () =>
-        createAvatarSeed(user.name, look),
-      )}
+      avatarChoices={Array.from({ length: 7 }, () => createAvatarSeed(look))}
       linkError={typeof error === "string" ? error : null}
     />
   );

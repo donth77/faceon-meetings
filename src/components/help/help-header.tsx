@@ -40,8 +40,7 @@ import {
   relevant,
   type Doc,
 } from "@/lib/help/assistant";
-
-import type { HelpEntry } from "./help-center";
+import type { HelpEntry } from "@/lib/help/sections";
 
 /** How well an article matches: in its title first, then its summary, then its text. */
 const scoreOf = (query: string, entry: HelpEntry) =>

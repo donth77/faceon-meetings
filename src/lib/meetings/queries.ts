@@ -7,8 +7,10 @@ import {
   exists,
   gte,
   inArray,
+  isNotNull,
   isNull,
   lt,
+  not,
   or,
 } from "drizzle-orm";
 
@@ -28,6 +30,7 @@ import type {
 
 import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
+import { daysBefore, KEEP_DAYS } from "./retention";
 import { isJoinable } from "./rules";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
 
@@ -454,17 +457,38 @@ export async function openSessionsStartedBefore(
   return rows.map((row) => readMeeting(row.meeting));
 }
 
-/** Deletes meetings past their expiry (unused instant meetings), with their sessions. */
+/**
+ * Deletes meetings past their expiry, with their sessions: unused instant meetings, and
+ * scheduled ones a month after their last meeting. The link stops working at expiry
+ * (isJoinable); the meeting itself stays until its last session leaves Previous, so
+ * history and saved AI notes last as long as promised.
+ */
 export async function deleteExpiredMeetings(now: Date): Promise<number> {
+  const recentSession = db()
+    .select({ one: meetingSession.id })
+    .from(meetingSession)
+    .where(
+      and(
+        eq(meetingSession.meetingId, meeting.id),
+        gte(meetingSession.startedAt, daysBefore(now, KEEP_DAYS.history)),
+      ),
+    );
   const deleted = await db()
     .delete(meeting)
-    .where(lt(meeting.expiresAt, now))
+    .where(and(lt(meeting.expiresAt, now), not(exists(recentSession))))
     .returning({ id: meeting.id });
   return deleted.length;
 }
 
-/** Deletes admission records of sessions that ended before a moment. */
-export async function pruneEndedSessionMembers(before: Date): Promise<number> {
+/**
+ * Deletes admission records of sessions that ended before a moment. Removals stay as
+ * long as attendance does (until `removalsBefore`), so someone removed never counts as
+ * having attended the session, and can't read its shared notes.
+ */
+export async function pruneEndedSessionMembers(
+  before: Date,
+  removalsBefore: Date,
+): Promise<number> {
   const ended = db()
     .select({ id: meetingSession.id })
     .from(meetingSession)
@@ -476,38 +500,62 @@ export async function pruneEndedSessionMembers(before: Date): Promise<number> {
     );
   const deleted = await db()
     .delete(meetingMember)
-    .where(inArray(meetingMember.sessionId, ended))
+    .where(
+      and(
+        inArray(meetingMember.sessionId, ended),
+        or(
+          isNull(meetingMember.bannedAt),
+          lt(meetingMember.bannedAt, removalsBefore),
+        ),
+      ),
+    )
     .returning({ sessionId: meetingMember.sessionId });
   return deleted.length;
 }
 
 /**
- * Someone with an account was in the session: admitted to it, or in its attendance.
- * Admission records go a week after a session; attendance stays 90 days.
+ * Someone with an account was in the session (admitted to it, or in its attendance) and
+ * wasn't removed from it. Admission records go a week after a session; attendance and
+ * removals stay as long as the session does.
  */
 export function attendedBy(viewerId: string) {
-  return or(
-    exists(
-      db()
-        .select({ one: meetingMember.sessionId })
-        .from(meetingMember)
-        .where(
-          and(
-            eq(meetingMember.sessionId, meetingSession.id),
-            eq(meetingMember.userId, viewerId),
-          ),
+  const removed = exists(
+    db()
+      .select({ one: meetingMember.sessionId })
+      .from(meetingMember)
+      .where(
+        and(
+          eq(meetingMember.sessionId, meetingSession.id),
+          eq(meetingMember.userId, viewerId),
+          isNotNull(meetingMember.bannedAt),
         ),
-    ),
-    exists(
-      db()
-        .select({ one: participantSession.sessionId })
-        .from(participantSession)
-        .where(
-          and(
-            eq(participantSession.sessionId, meetingSession.id),
-            eq(participantSession.userId, viewerId),
+      ),
+  );
+  return and(
+    or(
+      exists(
+        db()
+          .select({ one: meetingMember.sessionId })
+          .from(meetingMember)
+          .where(
+            and(
+              eq(meetingMember.sessionId, meetingSession.id),
+              eq(meetingMember.userId, viewerId),
+            ),
           ),
-        ),
+      ),
+      exists(
+        db()
+          .select({ one: participantSession.sessionId })
+          .from(participantSession)
+          .where(
+            and(
+              eq(participantSession.sessionId, meetingSession.id),
+              eq(participantSession.userId, viewerId),
+            ),
+          ),
+      ),
     ),
+    not(removed),
   );
 }

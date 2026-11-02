@@ -5,13 +5,14 @@ import { and, count, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { admissionRequest, meetingSession } from "@/lib/db/schema";
 import { mediaProvider } from "@/lib/media";
+import { isUuid } from "@/lib/uuid";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import { admit } from "./admission";
 import type { AdmissionResponse, LobbyAction, LobbyEntry } from "./api";
 import { MeetingError } from "./errors";
 import type { Principal } from "./principal";
-import { findOpenSession, type MeetingSession } from "./queries";
+import { findMember, findOpenSession, type MeetingSession } from "./queries";
 import { isHostRole } from "./rules";
 
 /**
@@ -88,11 +89,13 @@ export async function askToJoin(input: {
 
 /** The caller's own request, or NOT_FOUND. */
 async function ownRequest(requestId: string, principal: Principal) {
-  const [request] = await db()
-    .select()
-    .from(admissionRequest)
-    .where(eq(admissionRequest.id, requestId))
-    .limit(1);
+  const [request] = isUuid(requestId)
+    ? await db()
+        .select()
+        .from(admissionRequest)
+        .where(eq(admissionRequest.id, requestId))
+        .limit(1)
+    : [];
   if (!request || request.mediaUserId !== principal.mediaUserId) {
     throw new MeetingError("NOT_FOUND");
   }
@@ -130,16 +133,23 @@ export async function pollAdmission(input: {
         .where(eq(admissionRequest.id, request.id));
       return { state: "waiting" };
     }
-    case "admitted":
+    case "admitted": {
+      // Let in once; after that, the request only reconnects someone still welcome,
+      // as what they are now (a co-host stays one). Someone removed stays out.
+      const member = await findMember(session.id, principal.mediaUserId);
+      if (member?.bannedAt) return { state: "denied" };
       return admit({
         meeting,
         host,
         session,
         principal,
         name: request.displayName,
-        role: principal.kind === "guest" ? "guest" : "participant",
+        role:
+          member?.role ??
+          (principal.kind === "guest" ? "guest" : "participant"),
         now,
       });
+    }
     case "denied":
       return { state: "denied" };
     default:

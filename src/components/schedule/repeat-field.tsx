@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { describeRecurrence, presetLabel } from "@/lib/meetings/describe";
 import {
+  latestSeriesEnd,
   presetOf,
   presetRecurrence,
   REPEAT_PRESETS,
@@ -258,6 +259,7 @@ function CustomDialog({
                 labelId={untilId}
                 value={untilDate}
                 minValue={startDate}
+                maxValue={latestSeriesEnd(startDate)}
                 onChange={(date) => update({ end: { kind: "on", date } })}
                 previousLabel={t("previousMonth")}
                 nextLabel={t("nextMonth")}

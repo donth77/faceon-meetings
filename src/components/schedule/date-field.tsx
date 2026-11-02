@@ -42,6 +42,7 @@ export function DateField({
   value,
   onChange,
   minValue,
+  maxValue,
   previousLabel,
   nextLabel,
 }: {
@@ -51,6 +52,8 @@ export function DateField({
   onChange: (value: string) => void;
   /** The earliest date to offer ("YYYY-MM-DD"). */
   minValue?: string;
+  /** The latest date to offer ("YYYY-MM-DD"). */
+  maxValue?: string;
   previousLabel: string;
   nextLabel: string;
 }) {
@@ -79,6 +82,7 @@ export function DateField({
             <Calendar
               value={parseDate(value)}
               minValue={minValue ? parseDate(minValue) : undefined}
+              maxValue={maxValue ? parseDate(maxValue) : undefined}
               onChange={(date: CalendarDate) => {
                 onChange(date.toString());
                 close();

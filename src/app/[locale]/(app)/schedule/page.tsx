@@ -6,7 +6,7 @@ import type { ScheduleFormValues } from "@/components/schedule/schedule-form";
 import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
 import { findMeetingByCode } from "@/lib/meetings/queries";
-import { newScheduleDraft } from "@/lib/meetings/schedule-actions";
+import { newScheduleDraft } from "@/lib/meetings/schedule-draft";
 import { inviteesOf } from "@/lib/meetings/scheduling";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,7 +31,7 @@ export default function SchedulePage(props: PageProps<"/[locale]/schedule">) {
  */
 async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
   const session = await requireSession("/schedule");
-  const draft = await newScheduleDraft();
+  const draft = newScheduleDraft();
   const { again } = await searchParams;
   const earlier =
     typeof again === "string" ? await findMeetingByCode(again) : null;

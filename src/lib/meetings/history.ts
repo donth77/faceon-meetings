@@ -13,24 +13,18 @@ import {
   user,
 } from "@/lib/db/schema";
 
+import {
+  attendeesOf,
+  minutesBetween,
+  type Attendee,
+  type Visit,
+} from "./attendees";
+import { userMediaId } from "./principal";
 import { attendedBy } from "./queries";
+import { daysBefore, KEEP_DAYS } from "./retention";
 import { notesInPrevious } from "./saved-notes";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Someone who came to a past meeting, with their first join and last leave. */
-export type Attendee = {
-  name: string;
-  image: string | null;
-  /** Each time they joined and left, when they came more than once. */
-  visits: Array<{ joinedAt: string; leftAt: string }>;
-  isHost: boolean;
-  isGuest: boolean;
-  isYou: boolean;
-  joinedAt: string;
-  leftAt: string;
-  minutes: number;
-};
+export type { Attendee } from "./attendees";
 
 /** A past meeting for Previous, ready for the browser (times in ISO 8601). */
 export type PastMeeting = {
@@ -48,9 +42,6 @@ export type PastMeeting = {
   notes: { shared: boolean } | null;
 };
 
-const minutesBetween = (from: Date, to: Date) =>
-  Math.max(1, Math.round((to.getTime() - from.getTime()) / 60_000));
-
 /**
  * Previous: sessions from the last 90 days that someone hosted or attended, newest
  * first, with who came and for how long (from the media provider's webhooks, or from
@@ -59,7 +50,7 @@ const minutesBetween = (from: Date, to: Date) =>
 export async function previousMeetings(viewer: {
   id: string;
 }): Promise<PastMeeting[]> {
-  const since = new Date(Date.now() - 90 * DAY_MS);
+  const since = daysBefore(new Date(), KEEP_DAYS.history);
   const attended = or(eq(meeting.hostId, viewer.id), attendedBy(viewer.id));
   const sessions = await db()
     .select({
@@ -127,102 +118,39 @@ export async function previousMeetings(viewer: {
   );
   const imageOf = (userId: string | null, stored: string | null) =>
     (userId ? avatars.get(userId) : undefined) ?? stored;
+  const viewerMediaId = userMediaId(viewer.id);
 
   return sessions.map(({ session, meeting: row, hostName }) => {
     const sessionEnd = session.endedAt ?? session.startedAt;
-    const people = new Map<string, Attendee & { joined: Date; left: Date }>();
-    const roleOf = (mediaUserId: string) =>
-      members.find(
-        (m) => m.sessionId === session.id && m.mediaUserId === mediaUserId,
-      );
-    const add = (
-      mediaUserId: string,
-      name: string,
-      image: string | null,
-      joined: Date,
-      left: Date,
-    ) => {
-      // Admission times come from the database's clock and ends from the app's; a
-      // few seconds apart can't put the leave before the join.
-      if (left < joined) left = joined;
-      const member = roleOf(mediaUserId);
-      const current = people.get(mediaUserId);
-      const minutes = minutesBetween(joined, left);
-      const visit = {
-        joinedAt: joined.toISOString(),
-        leftAt: left.toISOString(),
-      };
-      if (current) {
-        current.visits.push(visit);
-        current.joined = joined < current.joined ? joined : current.joined;
-        current.left = left > current.left ? left : current.left;
-        current.minutes += minutes;
-        return;
-      }
-      people.set(mediaUserId, {
-        name,
-        image,
-        isHost: member?.role === "host",
-        isGuest: mediaUserId.startsWith("g_"),
-        isYou: member?.userId === viewer.id,
-        visits: [visit],
-        joinedAt: "",
-        leftAt: "",
-        minutes,
-        joined,
-        left,
-      });
-    };
-
+    const admitted = members.filter((m) => m.sessionId === session.id);
     const own = connections.filter((c) => c.sessionId === session.id);
-    if (own.length > 0) {
-      for (const c of own) {
-        add(
-          c.mediaUserId,
-          c.displayName,
-          imageOf(
-            c.userId,
-            c.image ??
-              members.find(
-                (m) =>
-                  m.sessionId === session.id && m.mediaUserId === c.mediaUserId,
-              )?.image ??
-              null,
-          ),
-          c.joinedAt,
-          c.leftAt ?? sessionEnd,
-        );
-      }
-    } else {
-      for (const m of members.filter((m) => m.sessionId === session.id)) {
-        add(
-          m.mediaUserId,
-          m.displayName,
-          imageOf(m.userId, m.image),
-          m.admittedAt,
-          sessionEnd,
-        );
-      }
-    }
-
-    const list = [...people.values()]
-      .sort((a, b) => a.joined.getTime() - b.joined.getTime())
-      .map(({ joined, left, visits, ...person }) => ({
-        ...person,
-        // One visit says no more than joined and left do.
-        visits:
-          visits.length > 1
-            ? visits.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))
-            : [],
-        joinedAt: joined.toISOString(),
-        leftAt: left.toISOString(),
-      }));
-    const start = list.length
-      ? new Date(Math.min(...list.map((p) => new Date(p.joinedAt).getTime())))
-      : session.startedAt;
-    const end = list.length
-      ? new Date(Math.max(...list.map((p) => new Date(p.leftAt).getTime())))
-      : sessionEnd;
+    const visits: Visit[] =
+      own.length > 0
+        ? own.map((c) => ({
+            mediaUserId: c.mediaUserId,
+            name: c.displayName,
+            image: imageOf(
+              c.userId,
+              c.image ??
+                admitted.find((m) => m.mediaUserId === c.mediaUserId)?.image ??
+                null,
+            ),
+            joinedAt: c.joinedAt,
+            leftAt: c.leftAt ?? sessionEnd,
+          }))
+        : admitted.map((m) => ({
+            mediaUserId: m.mediaUserId,
+            name: m.displayName,
+            image: imageOf(m.userId, m.image),
+            joinedAt: m.admittedAt,
+            leftAt: sessionEnd,
+          }));
+    const { attendees, start, end } = attendeesOf(visits, {
+      viewerMediaId,
+      hostMediaId: userMediaId(row.hostId),
+    });
+    const from = start ?? session.startedAt;
+    const to = end ?? sessionEnd;
 
     return {
       sessionId: session.id,
@@ -231,10 +159,10 @@ export async function previousMeetings(viewer: {
       hostName,
       hostedByYou: row.hostId === viewer.id,
       recurring: series.some((s) => s.meetingId === row.id),
-      start: start.toISOString(),
-      end: end.toISOString(),
-      minutes: minutesBetween(start, end),
-      attendees: list,
+      start: from.toISOString(),
+      end: to.toISOString(),
+      minutes: minutesBetween(from, to),
+      attendees,
       notes: notes.get(session.id) ?? null,
     };
   });

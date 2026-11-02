@@ -145,9 +145,10 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
       ...current,
       settings: { ...current.settings, [setting]: value },
     }));
-    try {
-      await updatePersonalRoomSettings({ [setting]: value });
-    } catch {
+    const saved = await updatePersonalRoomSettings({ [setting]: value }).catch(
+      () => false,
+    );
+    if (!saved) {
       setRoom((current) => ({
         ...current,
         settings: { ...current.settings, [setting]: previous },
