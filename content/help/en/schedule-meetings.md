@@ -13,8 +13,9 @@ order: 3
 4. Under **Invite people**, add email addresses if you like. Under **Co-hosts**, add anyone who should join as a co-host (see [Host controls](/help/host-controls)); they're invited too.
 5. With Google Calendar connected, leave **Add to my Google Calendar and send invitations** on (see below).
 6. Under **Security**, choose whether it needs a passcode (keep the one shown, type your own, or select **Generate**), has a waiting room and lets guests in.
-7. Under **When people join**, choose whether people join muted, can join before you, whether **AI notes start automatically**, and whether they're **shared with participants automatically** (once your meetings allow AI notes; see [AI notes](/help/ai-notes)).
-8. Select **Save**.
+7. Under **When people join**, choose whether people join muted and can join before you.
+8. Under **AI notes** (once your meetings allow AI notes; see [AI notes](/help/ai-notes)), choose whether they **start automatically** and whether they're **shared with participants automatically**.
+9. Select **Save**.
 
 Then copy the link or invitation, or add the meeting to Google Calendar, Outlook or any calendar app.
 

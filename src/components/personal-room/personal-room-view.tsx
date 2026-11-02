@@ -7,7 +7,11 @@ import { ToggleButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useInvitation } from "@/components/meeting/invitation";
-import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
+import {
+  AutoNotesRow,
+  notesOptionsShown,
+  ShareNotesRow,
+} from "@/components/notes/auto-notes-row";
 import { CohostsField } from "@/components/schedule/invitees-field";
 import { ChangePasscodeDialog } from "@/components/schedule/passcode-field";
 import { Button, LinkButton } from "@/components/ui/button";
@@ -296,18 +300,28 @@ export function PersonalRoomView({
               isSelected={room.settings.muteOnEntry}
               onChange={(value) => void changeSetting("muteOnEntry", value)}
             />
-            <AutoNotesRow
-              allowed={aiNotesAllowed}
-              isSelected={room.settings.autoNotes}
-              onChange={(value) => void changeSetting("autoNotes", value)}
-            />
-            <ShareNotesRow
-              allowed={aiNotesAllowed}
-              isSelected={room.settings.shareNotes}
-              onChange={(value) => void changeSetting("shareNotes", value)}
-            />
           </div>
         </section>
+
+        {notesOptionsShown(aiNotesAllowed) ? (
+          <section aria-labelledby="room-ai-notes" className={card}>
+            <h2 id="room-ai-notes" className="text-lg font-bold">
+              {t("aiNotes")}
+            </h2>
+            <div className="divide-y">
+              <AutoNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={room.settings.autoNotes}
+                onChange={(value) => void changeSetting("autoNotes", value)}
+              />
+              <ShareNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={room.settings.shareNotes}
+                onChange={(value) => void changeSetting("shareNotes", value)}
+              />
+            </div>
+          </section>
+        ) : null}
       </div>
 
       {changingPasscode && room.passcode ? (

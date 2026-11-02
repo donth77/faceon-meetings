@@ -22,7 +22,11 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { useCalendarProblemToast } from "@/components/google-calendar/outcome";
-import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
+import {
+  AutoNotesRow,
+  notesOptionsShown,
+  ShareNotesRow,
+} from "@/components/notes/auto-notes-row";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -515,6 +519,13 @@ export function MeetingDetailsView({
                 isSelected={settings.muteOnEntry}
                 onChange={(value) => void changeSetting("muteOnEntry", value)}
               />
+            </div>
+          </Card>
+        ) : null}
+
+        {details.isHost && notesOptionsShown(aiNotesAllowed) ? (
+          <Card title={t("aiNotes")}>
+            <div className="flex flex-col divide-y">
               <AutoNotesRow
                 allowed={aiNotesAllowed}
                 isSelected={settings.autoNotes}

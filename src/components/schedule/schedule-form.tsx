@@ -22,7 +22,11 @@ import {
   CalendarOutcomeNote,
   useCalendarProblemToast,
 } from "@/components/google-calendar/outcome";
-import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
+import {
+  AutoNotesRow,
+  notesOptionsShown,
+  ShareNotesRow,
+} from "@/components/notes/auto-notes-row";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -678,17 +682,24 @@ export function ScheduleForm({
               isDisabled={values.waitingRoom}
               onChange={(on) => set({ joinBeforeHost: on })}
             />
-            <AutoNotesRow
-              allowed={aiNotesAllowed}
-              isSelected={values.autoNotes}
-              onChange={(on) => set({ autoNotes: on })}
-            />
-            <ShareNotesRow
-              allowed={aiNotesAllowed}
-              isSelected={values.shareNotes}
-              onChange={(on) => set({ shareNotes: on })}
-            />
           </fieldset>
+          {notesOptionsShown(aiNotesAllowed) ? (
+            <fieldset className="flex flex-col">
+              <legend className="text-muted-foreground mb-1 text-[13px] font-bold tracking-[0.06em] uppercase">
+                {t("aiNotes")}
+              </legend>
+              <AutoNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={values.autoNotes}
+                onChange={(on) => set({ autoNotes: on })}
+              />
+              <ShareNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={values.shareNotes}
+                onChange={(on) => set({ shareNotes: on })}
+              />
+            </fieldset>
+          ) : null}
           <div className="flex gap-2">
             <Button
               type="submit"

@@ -21,7 +21,12 @@ On the **Personal room** page, under **Join details**, you can copy the Personal
 - **Let guests join without an account:** guests only need the link and a name.
 - **Mute people when they join:** they can unmute themselves.
 - **Co-hosts:** people who join your room as co-hosts when signed in with these email addresses (see [Host controls](/help/host-controls)).
-- **Start AI notes automatically:** AI notes start as you or a co-host joins, once your meetings allow AI notes (see [AI notes](/help/ai-notes)).
+
+## AI notes
+
+Once your meetings allow AI notes (see [AI notes](/help/ai-notes)), your room has its own **AI notes** section:
+
+- **Start AI notes automatically:** AI notes start as you or a co-host joins.
 - **Share AI notes with participants automatically:** notes made in your room are saved with it and shared as soon as they're made.
 
 ## Get a new ID

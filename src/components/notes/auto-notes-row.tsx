@@ -6,6 +6,13 @@ import { SwitchRow } from "@/components/ui/form-fields";
 import { aiNotesEnabled } from "@/lib/env";
 
 /**
+ * Whether a host's meeting settings show an AI notes section: this copy offers AI notes,
+ * and the host's meetings allow them (Settings → AI notes).
+ */
+export const notesOptionsShown = (allowed: boolean) =>
+  aiNotesEnabled && allowed;
+
+/**
  * "Start AI notes automatically", for a meeting you host: on the schedule form, the
  * meeting's page and the personal room's. Only where your meetings offer AI notes
  * (Settings → AI notes); otherwise nothing mentions them.
