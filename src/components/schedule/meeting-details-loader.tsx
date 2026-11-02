@@ -14,9 +14,17 @@ const View = dynamic(
 export function MeetingDetailsLoader({
   details,
   viewerEmail,
+  aiNotesAllowed,
 }: {
   details: MeetingDetails;
   viewerEmail: string;
+  aiNotesAllowed: boolean;
 }) {
-  return <View details={details} viewerEmail={viewerEmail} />;
+  return (
+    <View
+      details={details}
+      viewerEmail={viewerEmail}
+      aiNotesAllowed={aiNotesAllowed}
+    />
+  );
 }

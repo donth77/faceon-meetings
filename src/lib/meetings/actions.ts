@@ -52,6 +52,7 @@ const PersonalRoomChanges = MeetingSettings.pick({
   waitingRoom: true,
   allowGuests: true,
   muteOnEntry: true,
+  autoNotes: true,
 }).partial();
 
 /** False when the changes aren't settings this page has, as the other actions do. */

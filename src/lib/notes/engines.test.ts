@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ModelApi, ModelOptions } from "@/lib/ai/built-in";
 
 import {
+  canMakeNotes,
   notesOnDevice,
   preferredEngine,
   providerChoice,
@@ -148,5 +149,28 @@ describe("providerChoice", () => {
       model: "gpt-5",
       key: "",
     });
+  });
+});
+
+describe("canMakeNotes", () => {
+  it("can with Chrome's model, ready or downloadable", () => {
+    expect(canMakeNotes({}, "ready")).toBe(true);
+    expect(canMakeNotes({}, "download")).toBe(true);
+  });
+
+  it("can with a key where the model doesn't work", () => {
+    expect(canMakeNotes({ keys: { openai: "sk" } }, "none")).toBe(true);
+  });
+
+  it("can't with neither", () => {
+    expect(canMakeNotes({}, "none")).toBe(false);
+    expect(canMakeNotes({}, "enable")).toBe(false);
+  });
+
+  it("follows the host's choice", () => {
+    expect(canMakeNotes({ engine: "ownKey" }, "ready")).toBe(false);
+    expect(
+      canMakeNotes({ engine: "onDevice", keys: { openai: "sk" } }, "update"),
+    ).toBe(false);
   });
 });

@@ -70,6 +70,7 @@ async function MeetingGate({
         hostName: summary.hostName,
         askToJoin: summary.waitingRoom && session?.user.id !== summary.hostId,
         notesOn: summary.notesOn,
+        notesAuto: summary.notesAuto,
       }}
       viewer={
         session

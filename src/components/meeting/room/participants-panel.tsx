@@ -15,7 +15,7 @@ import type { SessionPolicy } from "@/lib/meetings/policy";
 
 import { useInvitation } from "../invitation";
 import { useRoomMedia, type RoomParticipant } from "../media";
-import { MeetingSettingsMenu } from "./meeting-settings";
+import { MeetingSettingsMenu, type AutoNotesSetting } from "./meeting-settings";
 import { ParticipantMenu } from "./participant-menu";
 import { moderates } from "./roles";
 import { useRoomControls } from "./room-controls";
@@ -231,6 +231,7 @@ export function ParticipantsPanel({
   onLowerAll,
   onMuteAll,
   onPolicyChange,
+  autoNotes,
   onEndForAll,
   onClose,
 }: {
@@ -243,6 +244,8 @@ export function ParticipantsPanel({
   onLowerAll: () => void;
   onMuteAll: () => void;
   onPolicyChange: (policy: Partial<SessionPolicy>) => void;
+  /** The meeting's host: whether AI notes start automatically. */
+  autoNotes?: AutoNotesSetting | undefined;
   onEndForAll: () => void;
   onClose: () => void;
 }) {
@@ -293,6 +296,7 @@ export function ParticipantsPanel({
                 state={state}
                 isOwner={selfRole === "host"}
                 onChange={onPolicyChange}
+                autoNotes={autoNotes}
                 onEndForAll={onEndForAll}
               />
             </>

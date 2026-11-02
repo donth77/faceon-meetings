@@ -121,6 +121,11 @@ export const meetingSession = pgTable(
      * opens, and kept in step when they change it (allowNotesInMeetings).
      */
     notesAllowed: boolean("notes_allowed").notNull().default(false),
+    /**
+     * A host or co-host stopped AI notes in this session, so they don't start again by
+     * themselves (the meeting's autoNotes); starting them by hand clears it.
+     */
+    notesStopped: boolean("notes_stopped").notNull().default(false),
     /** Bumped on every change to the session's shared state; clients ignore older ones. */
     rev: integer("rev").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true })

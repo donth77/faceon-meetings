@@ -6,6 +6,7 @@ import type { ScheduleFormValues } from "@/components/schedule/schedule-form";
 import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
+import { notesAllowedFor } from "@/lib/meetings/notes";
 import { findMeetingByCode } from "@/lib/meetings/queries";
 import { newScheduleDraft } from "@/lib/meetings/schedule-draft";
 import { inviteesOf } from "@/lib/meetings/scheduling";
@@ -50,6 +51,7 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
             allowGuests: earlier.meeting.settings.allowGuests,
             joinBeforeHost: earlier.meeting.settings.joinBeforeHost,
             muteOnEntry: earlier.meeting.settings.muteOnEntry,
+            autoNotes: earlier.meeting.settings.autoNotes,
             invitees: await inviteesOf(earlier.meeting.id),
           }
         : {}),
@@ -63,6 +65,7 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
         email: session.user.email,
         synced: false,
       }}
+      aiNotesAllowed={await notesAllowedFor(session.user.id)}
       draft={draft}
       initial={initial}
     />

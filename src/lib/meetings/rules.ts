@@ -221,6 +221,45 @@ export function canSetNotes(input: {
   return !input.on || (input.allowed && !input.demo);
 }
 
+/**
+ * Whether AI notes start by themselves in a meeting: it's set to start them, its host
+ * allows AI notes, it isn't a demo, and nobody stopped them in this session. Pre-join
+ * tells people in advance.
+ */
+export function notesStartAutomatically(input: {
+  /** The meeting's "Start AI notes automatically". */
+  autoNotes: boolean;
+  /** The meeting's host allows AI notes in their meetings. */
+  allowed: boolean;
+  demo: boolean;
+  /** Someone stopped AI notes earlier in this session. */
+  stopped: boolean;
+}): boolean {
+  return input.autoNotes && input.allowed && !input.demo && !input.stopped;
+}
+
+/**
+ * What a host's or co-host's browser does about AI notes as they join a meeting: start
+ * them where they start automatically, or say why it can't (this browser can't make
+ * notes: Chrome's built-in model isn't available and there's no AI key). Nothing when
+ * notes are already on, or don't start by themselves, or for everyone else.
+ */
+export function notesOnJoin(
+  input: Parameters<typeof notesStartAutomatically>[0] & {
+    /** A host or co-host, where this copy offers AI notes. */
+    runsNotes: boolean;
+    /** AI notes are already on. */
+    on: boolean;
+    /** This browser can make notes (Settings → AI notes). */
+    canMake: boolean;
+  },
+): "start" | "cantMake" | null {
+  if (!input.runsNotes || input.on || !notesStartAutomatically(input)) {
+    return null;
+  }
+  return input.canMake ? "start" : "cantMake";
+}
+
 /** Saving AI notes to a session: hosts and co-hosts with an account. */
 export function canSaveNotes(member: {
   role: MeetingRole;

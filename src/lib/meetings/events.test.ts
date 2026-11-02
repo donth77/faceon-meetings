@@ -22,6 +22,7 @@ describe("SharedSessionState", () => {
       startedAt: "2026-11-01T12:05:00.000Z",
     },
     notesAllowed: true,
+    notesStopped: false,
   };
 
   it("reads the state our server publishes", () => {
@@ -61,6 +62,7 @@ describe("SharedSessionState", () => {
       notes: null,
       // Off, as the host's switch for AI notes starts.
       notesAllowed: false,
+      notesStopped: false,
     });
   });
 });

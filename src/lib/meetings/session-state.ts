@@ -24,7 +24,13 @@ export function sessionState(
   meeting: Meeting,
   session: Pick<
     MeetingSession,
-    "hands" | "rev" | "policy" | "spotlight" | "notes" | "notesAllowed"
+    | "hands"
+    | "rev"
+    | "policy"
+    | "spotlight"
+    | "notes"
+    | "notesAllowed"
+    | "notesStopped"
   >,
   cohosts: string[],
 ): SessionState {
@@ -37,6 +43,7 @@ export function sessionState(
     hands: session.hands,
     notes: session.notes ?? null,
     notesAllowed: session.notesAllowed,
+    notesStopped: session.notesStopped,
   };
 }
 
@@ -50,8 +57,13 @@ export type SessionChange =
   | { forget: string }
   /** Someone became, or stopped being, a co-host. */
   | { roles: true }
-  /** AI notes went on: who and when. If they're already on, they stay whose they were. */
-  | { notesOn: NotesState }
+  /**
+   * AI notes went on: who and when. If they're already on, they stay whose they were.
+   * `auto`: started by themselves as someone joined, which a stop earlier in the
+   * session prevents; started by hand, they clear that stop.
+   */
+  | { notesOn: NotesState; auto?: boolean }
+  /** Someone stopped AI notes, so they don't start again by themselves this session. */
   | { notesOff: true }
   /** Someone's last connection left: AI notes go off if they were taking them. */
   | { notesOffFrom: string }
@@ -73,7 +85,7 @@ function allowingNotes(
  * latest state, not on what the caller read before (two hosts at once, say).
  */
 function updatesFor(change: SessionChange, now: Date) {
-  const { hands, notes, policy, spotlight } = meetingSession;
+  const { hands, notes, notesStopped, policy, spotlight } = meetingSession;
   if ("lowerAll" in change) return { hands: sql`'{}'::jsonb` };
   if ("lower" in change) {
     return { hands: sql`${hands} - ${change.lower}::text` };
@@ -92,11 +104,12 @@ function updatesFor(change: SessionChange, now: Date) {
   }
   if ("spotlight" in change) return { spotlight: change.spotlight };
   if ("notesOn" in change) {
-    return {
-      notes: sql`coalesce(${notes}, ${JSON.stringify(change.notesOn)}::jsonb)`,
-    };
+    const on = sql`coalesce(${notes}, ${JSON.stringify(change.notesOn)}::jsonb)`;
+    return change.auto
+      ? { notes: sql`case when ${notesStopped} then ${notes} else ${on} end` }
+      : { notes: on, notesStopped: false };
   }
-  if ("notesOff" in change) return { notes: null };
+  if ("notesOff" in change) return { notes: null, notesStopped: true };
   if ("notesAllowed" in change) return allowingNotes(change.notesAllowed);
   if ("notesOffFrom" in change) {
     return {

@@ -7,6 +7,7 @@ import { meetingApi } from "@/components/meeting/api-client";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { modelApi } from "@/lib/ai/built-in";
 import {
+  canMakeNotes,
   notesOnDevice,
   notesWithKey,
   preferredEngine,
@@ -77,10 +78,7 @@ export function useNotesMaker({
   useEffect(() => () => running.current?.abort(), []);
 
   /** Whether making notes can start now, without a trip to Settings. */
-  const ready =
-    engine === "onDevice"
-      ? onDevice === "ready" || onDevice === "download"
-      : choice.key !== "";
+  const ready = canMakeNotes(settings, onDevice ?? "none");
 
   async function make() {
     running.current?.abort();

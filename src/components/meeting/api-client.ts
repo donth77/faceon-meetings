@@ -1,6 +1,7 @@
 import {
   MEETING_ERRORS,
   type AdmissionResponse,
+  type AutoNotesRequest,
   type HandRequest,
   type JoinRequest,
   type JoinResponse,
@@ -75,6 +76,8 @@ export const meetingApi = {
     post<void>(`/api/meetings/${code}/hand`, request),
   notes: (code: string, request: NotesRequest) =>
     post<void>(`/api/meetings/${code}/notes`, request),
+  autoNotes: (code: string, request: AutoNotesRequest) =>
+    send<void>("PATCH", `/api/meetings/${code}/notes`, request),
   saveNotes: (code: string, sessionId: string, request: SaveNotesRequest) =>
     send<void>("PUT", `/api/meetings/${code}/notes/${sessionId}`, request),
   shareNotes: (code: string, sessionId: string, shared: boolean) =>

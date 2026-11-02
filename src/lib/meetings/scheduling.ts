@@ -87,6 +87,7 @@ function settingsFrom(values: ScheduleValues): MeetingSettings {
     // Only hosts can let people in, so join-before-host needs the waiting room off.
     joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
     muteOnEntry: values.muteOnEntry,
+    autoNotes: values.autoNotes,
   });
 }
 
@@ -529,7 +530,11 @@ export type MeetingDetails = {
   onGoogleCalendar: boolean;
   settings: Pick<
     MeetingSettings,
-    "waitingRoom" | "allowGuests" | "muteOnEntry" | "joinBeforeHost"
+    | "waitingRoom"
+    | "allowGuests"
+    | "muteOnEntry"
+    | "joinBeforeHost"
+    | "autoNotes"
   >;
   cancelled: string[];
   moved: Array<{
@@ -639,6 +644,7 @@ export async function meetingDetails(input: {
       allowGuests: row.settings.allowGuests,
       muteOnEntry: row.settings.muteOnEntry,
       joinBeforeHost: row.settings.joinBeforeHost,
+      autoNotes: row.settings.autoNotes,
     },
     cancelled: series.exceptions
       .filter((e) => e.cancelled)

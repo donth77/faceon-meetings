@@ -532,6 +532,10 @@
       "share": "Who can share their screen",
       "shareEveryone": "Everyone",
       "shareHosts": "Hosts only",
+      "autoNotes": "Start AI notes automatically",
+      "autoNotesHelp": "In this meeting, whenever you or a co-host joins",
+      "autoNotesOff": "Your meetings don't offer AI notes.",
+      "autoNotesSettings": "Turn on in Settings",
       "endForAll": "End meeting for all"
     },
     "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}",
@@ -577,6 +581,9 @@
       "offByHost": "{name} has AI notes turned off for their meetings.",
       "turnOnInSettings": "Turn on in Settings",
       "failed": "Couldn't change AI notes. Try again.",
+      "autoCantMake": "AI notes didn't start: this browser can't make notes yet. Set that up in Settings, then select Start AI notes.",
+      "autoSettings": "Settings",
+      "autoFailed": "Couldn't change Start AI notes automatically. Try again.",
       "youTakeNotes": "You're taking notes. What everyone says appears here, transcribed on each person's device.",
       "takingNotes": "{name} is taking notes. The transcript is in their browser.",
       "transcript": "Transcript",
@@ -636,7 +643,8 @@
     "askingTitle": "Waiting for the host to let you in",
     "askingMeeting": "{title} · Hosted by {name}",
     "leaveWaitingRoom": "Leave",
-    "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
+    "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed.",
+    "notesAuto": "AI notes start automatically in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
   },
   "DeviceProblems": {
     "microphone": {
@@ -1350,7 +1358,12 @@
     "transcriptLeftOut": "The transcript was too long to save with them; Download keeps it.",
     "openSaved": "Open in Previous meetings",
     "onlyYouGuest": "Only you can see these notes, in this tab. Audio is never stored. Copy or Download them to keep them.",
-    "audioNeverStored": "Audio is never stored."
+    "audioNeverStored": "Audio is never stored.",
+    "auto": {
+      "label": "Start AI notes automatically",
+      "help": "When you or a co-host joins. Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
+      "off": "Turn on AI notes in <settings>Settings</settings> first."
+    }
   },
   "SavedNotes": {
     "back": "Previous meetings",

@@ -1,0 +1,1 @@
+ALTER TABLE "meeting_session" ADD COLUMN IF NOT EXISTS "notes_stopped" boolean DEFAULT false NOT NULL;

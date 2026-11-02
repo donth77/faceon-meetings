@@ -71,6 +71,8 @@ export type AdmittedMeetingInfo = {
   /** Join with the mic (or camera) off; hosts and co-hosts aren't affected. */
   muteOnEntry: boolean;
   videoOffOnEntry: boolean;
+  /** AI notes start by themselves when a host or co-host joins (where the host allows them). */
+  autoNotes: boolean;
 };
 
 /** The session's limits; the time left is in seconds when admitted, so no clocks disagree. */
@@ -143,8 +145,16 @@ export const HandRequest = z.union([
 export type HandRequest = z.infer<typeof HandRequest>;
 
 /** AI notes: hosts and co-hosts turn them on or off, for everyone. */
-export const NotesRequest = z.object({ on: z.boolean() });
+export const NotesRequest = z.object({
+  on: z.boolean(),
+  /** Started by themselves as a host joined: a stop earlier in the session wins. */
+  auto: z.boolean().optional(),
+});
 export type NotesRequest = z.infer<typeof NotesRequest>;
+
+/** The meeting's host: whether AI notes start automatically in this meeting from now on. */
+export const AutoNotesRequest = z.object({ autoNotes: z.boolean() });
+export type AutoNotesRequest = z.infer<typeof AutoNotesRequest>;
 
 /** Saving AI notes to a session, replacing any saved before. */
 export const SaveNotesRequest = z.object({

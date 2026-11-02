@@ -19,10 +19,16 @@ Hosts and co-hosts select **More**, then **AI notes**, then **Start AI notes**. 
 
 Whoever starts them is the notetaker: the transcript collects in their browser, and the notes are made there. Select **Stop AI notes** to end them for everyone. They also stop when the notetaker leaves.
 
+## Start them automatically
+
+Once your meetings allow AI notes, a meeting can start them by itself: turn on **Start AI notes automatically** when you schedule it, on the meeting's page, on your **Personal room** page, or in the meeting (**Participants**, then **⋯**). From then on, AI notes start as soon as you or a co-host joins, with the same message for everyone, and people about to join are told beforehand.
+
+They start in the browser of whoever joins, as long as it can make notes (see How the notes are made, below). If it can't, they don't start, and {appName} says why, with a way to **Settings**. Once someone selects **Stop AI notes**, they stay off for the rest of that meeting, even if someone rejoins.
+
 ## What everyone sees
 
 - **AI notes on** at the top of the meeting, and a message saying who turned them on.
-- People about to join see the same note before they join.
+- People about to join see the same note before they join, or, in a meeting that starts AI notes automatically, that they'll start.
 - To stay out of the notes, select **AI notes on**, then turn on **Don't transcribe me**. From then on, what you say isn't transcribed, and the notetaker sees that you chose this.
 
 ## How speech becomes text

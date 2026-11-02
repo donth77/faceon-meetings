@@ -65,6 +65,8 @@ export type SessionState = {
   notes: NotesState | null;
   /** The meeting's host allows AI notes (Settings → AI notes); nobody can start them otherwise. */
   notesAllowed: boolean;
+  /** Someone stopped AI notes in this session, so they don't start again by themselves. */
+  notesStopped: boolean;
 };
 
 /** What someone may publish; kinds left out of a change stay as they are. */

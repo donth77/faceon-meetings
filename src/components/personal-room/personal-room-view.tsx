@@ -7,6 +7,7 @@ import { ToggleButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useInvitation } from "@/components/meeting/invitation";
+import { AutoNotesRow } from "@/components/notes/auto-notes-row";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SwitchRow } from "@/components/ui/form-fields";
@@ -26,6 +27,7 @@ export type PersonalRoom = {
     waitingRoom: boolean;
     allowGuests: boolean;
     muteOnEntry: boolean;
+    autoNotes: boolean;
   };
 };
 
@@ -67,7 +69,14 @@ function DetailRow({
  * The personal room: its Personal Meeting ID, passcode and link to share, Start, a way
  * to get a new ID when the old one has spread too far, and the room's settings.
  */
-export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
+export function PersonalRoomView({
+  room: initial,
+  aiNotesAllowed,
+}: {
+  room: PersonalRoom;
+  /** The host's meetings offer AI notes (Settings → AI notes). */
+  aiNotesAllowed: boolean;
+}) {
   const t = useTranslations("PersonalRoom");
   const [room, setRoom] = useState(initial);
   const [showPasscode, setShowPasscode] = useState(false);
@@ -235,6 +244,11 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
               help={t("muteOnEntryHint")}
               isSelected={room.settings.muteOnEntry}
               onChange={(value) => void changeSetting("muteOnEntry", value)}
+            />
+            <AutoNotesRow
+              allowed={aiNotesAllowed}
+              isSelected={room.settings.autoNotes}
+              onChange={(value) => void changeSetting("autoNotes", value)}
             />
           </div>
         </section>

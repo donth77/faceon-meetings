@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { MeetingDetailsLoader } from "@/components/schedule/meeting-details-loader";
 import { requireSession } from "@/lib/auth/session";
+import { notesAllowedFor } from "@/lib/meetings/notes";
 import { meetingDetails } from "@/lib/meetings/scheduling";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,6 +34,12 @@ async function Details({
   const details = await meetingDetails({ code, viewer: session.user });
   if (!details) notFound();
   return (
-    <MeetingDetailsLoader details={details} viewerEmail={session.user.email} />
+    <MeetingDetailsLoader
+      details={details}
+      viewerEmail={session.user.email}
+      aiNotesAllowed={
+        details.isHost ? await notesAllowedFor(session.user.id) : false
+      }
+    />
   );
 }

@@ -22,6 +22,7 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { useCalendarProblemToast } from "@/components/google-calendar/outcome";
+import { AutoNotesRow } from "@/components/notes/auto-notes-row";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -83,9 +84,12 @@ function DetailRow({
 export function MeetingDetailsView({
   details,
   viewerEmail,
+  aiNotesAllowed,
 }: {
   details: MeetingDetails;
   viewerEmail: string;
+  /** The host's meetings offer AI notes (Settings → AI notes). */
+  aiNotesAllowed: boolean;
 }) {
   const t = useTranslations("MeetingDetails");
   const ts = useTranslations("Schedule");
@@ -453,6 +457,11 @@ export function MeetingDetailsView({
                 label={ts("muteOnEntry")}
                 isSelected={settings.muteOnEntry}
                 onChange={(value) => void changeSetting("muteOnEntry", value)}
+              />
+              <AutoNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={settings.autoNotes}
+                onChange={(value) => void changeSetting("autoNotes", value)}
               />
             </div>
           </Card>

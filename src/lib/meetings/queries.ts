@@ -23,6 +23,7 @@ import {
   participantSession,
   user,
 } from "@/lib/db/schema";
+import { aiNotesEnabled } from "@/lib/env";
 import type {
   MediaProviderId,
   MeetingRole,
@@ -31,8 +32,13 @@ import type {
 
 import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
+import { hostingPlan } from "./hosting";
 import { daysBefore, KEEP_DAYS } from "./retention";
-import { closedReason, type ClosedReason } from "./rules";
+import {
+  closedReason,
+  notesStartAutomatically,
+  type ClosedReason,
+} from "./rules";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
 
 export type Meeting = Omit<typeof meeting.$inferSelect, "settings"> & {
@@ -49,6 +55,7 @@ export type MeetingHost = Pick<
   | "image"
   | "avatarSeed"
   | "avatarSource"
+  | "aiNotes"
 >;
 
 /** Unused instant meetings are deleted this long after they were last used. */
@@ -191,6 +198,7 @@ export async function findMeetingByCode(
         image: user.image,
         avatarSeed: user.avatarSeed,
         avatarSource: user.avatarSource,
+        aiNotes: user.aiNotes,
       },
     })
     .from(meeting)
@@ -214,6 +222,8 @@ export async function getMeetingSummary(code: string): Promise<{
   waitingRoom: boolean;
   /** AI notes are on in the session running now. */
   notesOn: boolean;
+  /** AI notes start by themselves once a host or co-host is in. */
+  notesAuto: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
@@ -228,6 +238,17 @@ export async function getMeetingSummary(code: string): Promise<{
     allowGuests: found.meeting.settings.allowGuests,
     waitingRoom: found.meeting.settings.waitingRoom,
     notesOn: open?.notes != null,
+    // As the session has it once one is open; before that, as it would open.
+    notesAuto:
+      aiNotesEnabled &&
+      notesStartAutomatically({
+        autoNotes: found.meeting.settings.autoNotes,
+        allowed: open ? open.notesAllowed : found.host.aiNotes,
+        demo: open
+          ? open.limits.demo === true
+          : hostingPlan(found.host) === "demo",
+        stopped: open?.notesStopped ?? false,
+      }),
   };
 }
 

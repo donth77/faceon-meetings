@@ -199,6 +199,7 @@ const DetailsSettings = MeetingSettings.pick({
   waitingRoom: true,
   allowGuests: true,
   muteOnEntry: true,
+  autoNotes: true,
 }).partial();
 
 /** The settings switches on a meeting's page. */

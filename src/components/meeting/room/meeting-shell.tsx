@@ -157,6 +157,8 @@ export function MeetingShell({
     session,
     self,
     isHost,
+    autoNotes: meeting.autoNotes,
+    onOpenSettings: () => setSettings("aiNotes"),
   });
   const reactions = useRoomReactions({
     media,
@@ -283,6 +285,17 @@ export function MeetingShell({
         onMuteAll={() => setMutingAll(true)}
         onPolicyChange={(policy) =>
           void moderate({ action: "setPolicy", policy })
+        }
+        autoNotes={
+          // The meeting's own setting: its host's to change.
+          selfRole === "host" && notes.canRunNotes && !session.demo
+            ? {
+                on: notes.autoNotes,
+                allowed: notes.notesAllowed,
+                onChange: (on) => void notes.setAutoNotes(on),
+                onOpenSettings: () => setSettings("aiNotes"),
+              }
+            : undefined
         }
         onEndForAll={onEndForAll}
         onClose={close}

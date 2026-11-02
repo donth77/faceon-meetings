@@ -57,6 +57,8 @@ export type MeetingSummary = {
   askToJoin: boolean;
   /** AI notes are on in the meeting now, so everyone joining is told. */
   notesOn: boolean;
+  /** AI notes start by themselves once a host or co-host is in: told in advance too. */
+  notesAuto: boolean;
 };
 
 /** Who is about to join: signed in, or a guest (whose name we remember on this device). */
@@ -464,7 +466,7 @@ export function PreJoin({
                 : ""}
           </p>
 
-          {meeting.notesOn ? (
+          {meeting.notesOn || meeting.notesAuto ? (
             <p
               role="note"
               className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal"
@@ -473,7 +475,7 @@ export function PreJoin({
                 className="text-primary mt-px size-5 shrink-0"
                 aria-hidden="true"
               />
-              {t("notesOn")}
+              {meeting.notesOn ? t("notesOn") : t("notesAuto")}
             </p>
           ) : null}
 

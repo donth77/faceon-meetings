@@ -1,11 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { aiNotesEnabled } from "@/lib/env";
 import type { SelfInfo, SessionInfo } from "@/lib/meetings/api";
+import { notesOnJoin } from "@/lib/meetings/rules";
+import { canMakeNotes } from "@/lib/notes/engines";
+import { useNotesSettings } from "@/lib/notes/settings";
 
 import { meetingApi } from "../api-client";
 import type { RoomMedia } from "../media";
@@ -15,6 +19,8 @@ import { useTranscript, useTranscription } from "./use-notes";
 /**
  * AI notes in the room: everyone hears when they go on, and each device transcribes its
  * own person unless they'd rather not. The notetaker's device collects the transcript.
+ * In a meeting set to start them automatically, a host or co-host starts them as they
+ * join, if their browser can make notes; otherwise they're told why not.
  */
 export function useMeetingNotes({
   media,
@@ -22,12 +28,18 @@ export function useMeetingNotes({
   session,
   self,
   isHost,
+  autoNotes: initialAutoNotes,
+  onOpenSettings,
 }: {
   media: RoomMedia;
   code: string;
   session: SessionInfo;
   self: SelfInfo;
   isHost: boolean;
+  /** The meeting's "Start AI notes automatically", as it was when you joined. */
+  autoNotes: boolean;
+  /** Opens Settings → AI notes. */
+  onOpenSettings: () => void;
 }) {
   const t = useTranslations("Meeting");
   const notes = media.sessionState?.notes ?? null;
@@ -48,6 +60,59 @@ export function useMeetingNotes({
     onLine: transcript.addOwn,
   });
   const { setOptedOut, download } = transcription;
+
+  // The meeting's host can change "Start AI notes automatically" from the room.
+  const [autoNotes, setAutoNotesState] = useState(initialAutoNotes);
+  async function setAutoNotes(on: boolean) {
+    setAutoNotesState(on);
+    try {
+      await meetingApi.autoNotes(code, { autoNotes: on });
+    } catch {
+      setAutoNotesState(!on);
+      toast.error(t("notes.autoFailed"));
+    }
+  }
+
+  // Joining a meeting that starts AI notes automatically: decided once, as soon as the
+  // session's state and whether this browser can make notes are known.
+  const settings = useNotesSettings();
+  const onDevice = useOnDeviceModel();
+  const state = media.sessionState;
+  const joined = useRef(false);
+  useEffect(() => {
+    if (joined.current || !state || onDevice === null) return;
+    joined.current = true;
+    const action = notesOnJoin({
+      runsNotes: canRunNotes,
+      autoNotes: initialAutoNotes,
+      allowed: state.notesAllowed,
+      demo: session.demo,
+      stopped: state.notesStopped,
+      on: state.notes !== null,
+      canMake: canMakeNotes(settings, onDevice),
+    });
+    if (action === "start") {
+      meetingApi
+        .notes(code, { on: true, auto: true })
+        .catch(() => toast.error(t("notes.failed")));
+    } else if (action === "cantMake") {
+      toast(t("notes.autoCantMake"), {
+        id: "notes-auto",
+        duration: 20_000,
+        action: { label: t("notes.autoSettings"), onClick: onOpenSettings },
+      });
+    }
+  }, [
+    state,
+    onDevice,
+    canRunNotes,
+    initialAutoNotes,
+    session.demo,
+    settings,
+    code,
+    t,
+    onOpenSettings,
+  ]);
 
   const announced = useRef<string | null>(null);
   useEffect(() => {
@@ -113,6 +178,8 @@ export function useMeetingNotes({
     isNotetaker,
     canRunNotes,
     notesAllowed,
+    autoNotes,
+    setAutoNotes,
     transcript,
     transcription,
     notTranscribed,

@@ -8,10 +8,10 @@ import { aiNotesEnabled } from "@/lib/env";
 import { loggable } from "@/lib/log";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
-import type { NotesRequest } from "./api";
+import type { AutoNotesRequest, NotesRequest } from "./api";
 import { MeetingError } from "./errors";
 import type { Principal } from "./principal";
-import { openSessionsHostedBy } from "./queries";
+import { openSessionsHostedBy, updateMeetingSettings } from "./queries";
 import { canSetNotes } from "./rules";
 import { changeSession, storeNotesAllowed } from "./session-state";
 
@@ -19,6 +19,8 @@ import { changeSession, storeNotesAllowed } from "./session-state";
  * AI notes on or off, for everyone: hosts and co-hosts only, where the meeting's host
  * allows them, and not in demo meetings. Everyone's browser sees it in the session's
  * shared state, so the chip and the banner reach every participant, and late joiners.
+ * `auto`: a host's browser starting them as they join a meeting set to start them
+ * automatically, which doesn't undo someone stopping them earlier in the session.
  */
 export async function setNotes(input: {
   code: string;
@@ -31,6 +33,9 @@ export async function setNotes(input: {
   if (input.request.on && !aiNotesEnabled) {
     throw new MeetingError("NOT_ALLOWED");
   }
+  const auto = input.request.on && input.request.auto === true;
+  if (auto && !meeting.settings.autoNotes)
+    throw new MeetingError("NOT_ALLOWED");
   const allowed = canSetNotes({
     actor: member.role,
     on: input.request.on,
@@ -51,9 +56,29 @@ export async function setNotes(input: {
             name: member.displayName,
             startedAt: new Date().toISOString(),
           },
+          auto,
         }
       : { notesOff: true },
   );
+}
+
+/**
+ * The meeting's host, in the meeting: whether AI notes start automatically from now on,
+ * the same setting as on the schedule form and the personal room's page.
+ */
+export async function setAutoNotes(input: {
+  code: string;
+  principal: Principal | null;
+  request: AutoNotesRequest;
+}): Promise<void> {
+  const { meeting } = await requireMeeting(input.code);
+  const principal = requirePrincipal(input.principal);
+  if (principal.kind !== "user" || principal.userId !== meeting.hostId) {
+    throw new MeetingError("NOT_ALLOWED");
+  }
+  await updateMeetingSettings(meeting.id, meeting.hostId, {
+    autoNotes: input.request.autoNotes,
+  });
 }
 
 /** Whether the meetings someone hosts offer AI notes (Settings → AI notes). */

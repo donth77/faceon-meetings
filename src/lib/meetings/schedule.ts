@@ -30,6 +30,8 @@ export const ScheduleInput = z
     allowGuests: z.boolean(),
     joinBeforeHost: z.boolean(),
     muteOnEntry: z.boolean(),
+    /** AI notes start by themselves when a host or co-host joins. */
+    autoNotes: z.boolean().default(false),
     invitees: z
       .array(z.email().transform((email) => email.toLowerCase()))
       .max(MAX_INVITEES),

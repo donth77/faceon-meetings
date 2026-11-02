@@ -12,6 +12,11 @@ export const MeetingSettings = z.object({
   screenShare: z.enum(["host", "all"]),
   chat: z.boolean(),
   reactions: z.boolean(),
+  /**
+   * AI notes start by themselves when a host or co-host joins, where the meeting's host
+   * allows AI notes (Settings → AI notes).
+   */
+  autoNotes: z.boolean(),
 });
 export type MeetingSettings = z.infer<typeof MeetingSettings>;
 
@@ -25,6 +30,7 @@ const BASE: MeetingSettings = {
   screenShare: "all",
   chat: true,
   reactions: true,
+  autoNotes: false,
 };
 
 /** Defaults by meeting type: personal rooms use the waiting room; scheduled ones wait for the host. */

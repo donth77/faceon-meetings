@@ -11,6 +11,8 @@ import {
   checkEntry,
   closedReason,
   isSessionStale,
+  notesOnJoin,
+  notesStartAutomatically,
   passcodeMatches,
   resolveRole,
   SESSION_GRACE_MS,
@@ -442,6 +444,54 @@ describe("canSetNotes", () => {
       // Turning them off always works, say just after the host stopped allowing them.
       expect(canSetNotes({ ...notAllowed, actor, on: false })).toBe(true);
     }
+  });
+});
+
+describe("AI notes that start automatically", () => {
+  const meeting = {
+    autoNotes: true,
+    allowed: true,
+    demo: false,
+    stopped: false,
+  };
+  const joining = { ...meeting, runsNotes: true, on: false, canMake: true };
+
+  it("start for a meeting set to start them, where its host allows AI notes", () => {
+    expect(notesStartAutomatically(meeting)).toBe(true);
+    expect(notesStartAutomatically({ ...meeting, autoNotes: false })).toBe(
+      false,
+    );
+    expect(notesStartAutomatically({ ...meeting, allowed: false })).toBe(false);
+  });
+
+  it("never start in demo meetings", () => {
+    expect(notesStartAutomatically({ ...meeting, demo: true })).toBe(false);
+  });
+
+  it("stay off once someone stopped them in the session", () => {
+    expect(notesStartAutomatically({ ...meeting, stopped: true })).toBe(false);
+    expect(notesOnJoin({ ...joining, stopped: true })).toBeNull();
+  });
+
+  it("are started by a host or co-host joining, if their browser can make notes", () => {
+    expect(notesOnJoin(joining)).toBe("start");
+    expect(notesOnJoin({ ...joining, runsNotes: false })).toBeNull();
+  });
+
+  it("tell a host whose browser can't make notes why they didn't start", () => {
+    expect(notesOnJoin({ ...joining, canMake: false })).toBe("cantMake");
+  });
+
+  it("change nothing when notes are already on", () => {
+    expect(notesOnJoin({ ...joining, on: true })).toBeNull();
+    expect(notesOnJoin({ ...joining, on: true, canMake: false })).toBeNull();
+  });
+
+  it("don't concern meetings that start them by hand", () => {
+    expect(notesOnJoin({ ...joining, autoNotes: false })).toBeNull();
+    expect(
+      notesOnJoin({ ...joining, autoNotes: false, canMake: false }),
+    ).toBeNull();
   });
 });
 

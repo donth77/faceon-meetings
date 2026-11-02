@@ -118,5 +118,7 @@ export const SharedSessionState = SessionPolicy.extend({
     .transform((notes) => notes ?? null),
   /** The meeting's host allows AI notes (Settings → AI notes). */
   notesAllowed: z.boolean().default(false),
+  /** Someone stopped AI notes in this session, so they don't start again by themselves. */
+  notesStopped: z.boolean().default(false),
 });
 export type SharedSessionState = z.infer<typeof SharedSessionState>;

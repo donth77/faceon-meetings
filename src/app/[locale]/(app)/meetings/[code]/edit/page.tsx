@@ -7,6 +7,7 @@ import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 import { fromRRule } from "@/lib/meetings/describe";
+import { notesAllowedFor } from "@/lib/meetings/notes";
 import { meetingDetails } from "@/lib/meetings/scheduling";
 import { localParts } from "@/lib/time";
 
@@ -61,6 +62,7 @@ async function EditMeeting({
         email: session.user.email,
         synced: details.onGoogleCalendar,
       }}
+      aiNotesAllowed={await notesAllowedFor(session.user.id)}
       edit={{
         code: details.code,
         passcode: details.passcode,
@@ -82,6 +84,7 @@ async function EditMeeting({
           allowGuests: details.settings.allowGuests,
           joinBeforeHost: details.settings.joinBeforeHost,
           muteOnEntry: details.settings.muteOnEntry,
+          autoNotes: details.settings.autoNotes,
           // A meeting not on Google Calendar yet goes there only if switched on.
           googleCalendar: false,
         },

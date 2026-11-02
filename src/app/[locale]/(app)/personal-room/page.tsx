@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { PanelLoading } from "@/components/app-shell/loading";
 import { PersonalRoomView } from "@/components/personal-room/personal-room-view";
 import { requireSession } from "@/lib/auth/session";
+import { notesAllowedFor } from "@/lib/meetings/notes";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
 import { PERSONAL_ROOM_ROUTE } from "@/lib/routes";
 
@@ -24,9 +25,13 @@ export default function PersonalRoomPage() {
 /** The signed-in user's personal room, created the first time they open this page. */
 async function PersonalRoom() {
   const session = await requireSession(PERSONAL_ROOM_ROUTE);
-  const room = await getOrCreatePersonalRoom(session.user.id);
+  const [room, aiNotesAllowed] = await Promise.all([
+    getOrCreatePersonalRoom(session.user.id),
+    notesAllowedFor(session.user.id),
+  ]);
   return (
     <PersonalRoomView
+      aiNotesAllowed={aiNotesAllowed}
       room={{
         code: room.code,
         passcode: room.passcode,
@@ -36,6 +41,7 @@ async function PersonalRoom() {
           waitingRoom: room.settings.waitingRoom,
           allowGuests: room.settings.allowGuests,
           muteOnEntry: room.settings.muteOnEntry,
+          autoNotes: room.settings.autoNotes,
         },
       }}
     />

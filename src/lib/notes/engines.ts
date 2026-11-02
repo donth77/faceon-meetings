@@ -211,3 +211,16 @@ export function preferredEngine(
   if (onDevice === "ready" || onDevice === "download") return "onDevice";
   return providerChoice(settings).key ? "ownKey" : "onDevice";
 }
+
+/**
+ * Whether this browser can make notes as the settings say, without a trip to Settings:
+ * Chrome's model works here (or downloads when asked), or there's a key.
+ */
+export function canMakeNotes(
+  settings: NotesSettings,
+  onDevice: ModelState,
+): boolean {
+  return preferredEngine(settings, onDevice) === "onDevice"
+    ? onDevice === "ready" || onDevice === "download"
+    : providerChoice(settings).key !== "";
+}

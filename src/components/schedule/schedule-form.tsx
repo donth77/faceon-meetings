@@ -22,6 +22,7 @@ import {
   CalendarOutcomeNote,
   useCalendarProblemToast,
 } from "@/components/google-calendar/outcome";
+import { AutoNotesRow } from "@/components/notes/auto-notes-row";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -83,6 +84,8 @@ export type ScheduleFormValues = {
   allowGuests: boolean;
   joinBeforeHost: boolean;
   muteOnEntry: boolean;
+  /** AI notes start by themselves when you or a co-host joins. */
+  autoNotes: boolean;
   /** Add it to the host's Google Calendar (Calendar sync). */
   googleCalendar: boolean;
 };
@@ -122,6 +125,7 @@ export function defaultValues(): ScheduleFormValues {
     allowGuests: true,
     joinBeforeHost: false,
     muteOnEntry: false,
+    autoNotes: false,
     googleCalendar: false,
   };
 }
@@ -147,6 +151,7 @@ const toInput = (values: ScheduleFormValues): ScheduleInput => ({
   allowGuests: values.allowGuests,
   joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
   muteOnEntry: values.muteOnEntry,
+  autoNotes: values.autoNotes,
   invitees: values.invitees,
   googleCalendar: values.googleCalendar,
 });
@@ -343,12 +348,15 @@ function ScheduledDialog({
 export function ScheduleForm({
   hostName,
   calendar,
+  aiNotesAllowed,
   draft,
   initial,
   edit,
 }: {
   hostName: string;
   calendar: ScheduleCalendar;
+  /** The host's meetings offer AI notes (Settings → AI notes). */
+  aiNotesAllowed: boolean;
   /** New meetings: the ID and passcode the invitation previews. */
   draft?: ScheduleDraft;
   /** New meetings: values to start from (Schedule again). */
@@ -590,6 +598,11 @@ export function ScheduleForm({
               isSelected={values.joinBeforeHost && !values.waitingRoom}
               isDisabled={values.waitingRoom}
               onChange={(on) => set({ joinBeforeHost: on })}
+            />
+            <AutoNotesRow
+              allowed={aiNotesAllowed}
+              isSelected={values.autoNotes}
+              onChange={(on) => set({ autoNotes: on })}
             />
           </fieldset>
           <div className="flex gap-2">

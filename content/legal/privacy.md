@@ -19,9 +19,9 @@ updated: 2026-11-02
 
 ### Meetings you host
 
-- Each meeting you create: its title, description, times and time zone, how it repeats, its meeting ID and passcode, and its settings.
+- Each meeting you create: its title, description, times and time zone, how it repeats, its meeting ID and passcode, and its settings, including whether AI notes start automatically.
 - The **email addresses of people you invite** to a scheduled meeting, so you can edit the invitation later. They're deleted with the meeting.
-- While a meeting runs: who's in it and their role, who's asking to join, raised hands, who's spotlighted, whether its host allows AI notes, and whether they're on.
+- While a meeting runs: who's in it and their role, who's asking to join, raised hands, who's spotlighted, whether its host allows AI notes, whether they're on, and whether someone stopped them.
 
 ### Meetings you join
 
@@ -53,7 +53,7 @@ To slow down password and passcode guessing, {appName} counts recent attempts. S
 
 - **Audio, video and screen sharing** go through Stream (below) to the other people in the meeting. They aren't recorded.
 - **Chat messages and reactions** go straight to the people in the meeting and aren't stored. **Save chat** keeps a copy on your own device only.
-- **AI notes while they're made.** AI notes can be turned on only in meetings whose host allows them in **Settings**, and turning that off stops any notes in progress. When a host turns AI notes on, everyone sees it, and anyone can choose **Don't transcribe me**. Each person's speech is turned into text on their own device, so no audio leaves it for this, and only the text goes to the host taking notes. The transcript and notes stay in that host's browser tab until the host saves them (above) or closes the tab.
+- **AI notes while they're made.** AI notes can be turned on only in meetings whose host allows them in **Settings**, and turning that off stops any notes in progress. A host can set a meeting to start them automatically when they or a co-host joins; people about to join are told first. When AI notes go on, everyone sees it, and anyone can choose **Don't transcribe me**. Each person's speech is turned into text on their own device, so no audio leaves it for this, and only the text goes to the host taking notes. The transcript and notes stay in that host's browser tab until the host saves them (above) or closes the tab.
 - **A host's AI key.** Hosts can make notes with their own key from an AI provider. The key stays in the host's browser and goes only to that provider. {appName}'s server never receives it.
 - **Backgrounds and effects** are applied on your device before your video leaves it. Pictures and videos you add stay in your browser and are never uploaded.
 - **Questions you ask Help's assistant** are answered on your device, by the model built into Chrome, and aren't sent anywhere.

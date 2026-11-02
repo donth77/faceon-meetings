@@ -74,6 +74,7 @@ export async function admit(input: {
       hostName: host.name,
       muteOnEntry: meeting.settings.muteOnEntry,
       videoOffOnEntry: meeting.settings.videoOffOnEntry,
+      autoNotes: meeting.settings.autoNotes,
     },
     session: {
       id: session.id,
