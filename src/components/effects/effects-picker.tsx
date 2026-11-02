@@ -31,7 +31,7 @@ import type { ShownUpload } from "./use-uploads";
 
 /** Focus is an outline around the tile; the chosen one also has a ring and a check. */
 const TILE =
-  "group relative block aspect-video cursor-default overflow-hidden rounded-lg bg-[#1a1f26] ring-1 ring-black/10 outline-hidden data-focus-visible:focus-ring-strong data-selected:ring-[3px] data-selected:ring-primary dark:ring-white/10";
+  "group relative block aspect-video overflow-hidden rounded-lg bg-[#1a1f26] ring-1 ring-black/10 outline-hidden data-focus-visible:focus-ring-strong data-selected:ring-[3px] data-selected:ring-primary dark:ring-white/10";
 
 function Tile({
   value,

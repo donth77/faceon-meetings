@@ -306,7 +306,7 @@ export function InCallSettings({
                 <Tab
                   key={id}
                   id={id}
-                  className="data-focus-visible:focus-ring flex min-h-[42px] shrink-0 cursor-default items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-hidden hover:bg-white/5 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7] data-selected:shadow-[inset_3px_0_0_var(--color-ring)] max-md:data-selected:shadow-[inset_0_-3px_0_var(--color-ring)]"
+                  className="data-focus-visible:focus-ring flex min-h-[42px] shrink-0 items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-hidden hover:bg-white/5 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7] data-selected:shadow-[inset_3px_0_0_var(--color-ring)] max-md:data-selected:shadow-[inset_0_-3px_0_var(--color-ring)]"
                 >
                   <Icon className="size-[18px]" aria-hidden="true" />
                   {t(`section.${id}`)}

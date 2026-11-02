@@ -160,7 +160,7 @@ function Profile({
                   key={option}
                   value={option}
                   aria-label={t("avatarOption", { n: index + 1 })}
-                  className="group data-focus-visible:focus-ring-strong relative size-16 cursor-pointer rounded-full outline-hidden"
+                  className="group data-focus-visible:focus-ring-strong relative size-16 rounded-full outline-hidden"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img

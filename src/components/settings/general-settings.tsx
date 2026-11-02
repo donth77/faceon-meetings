@@ -129,7 +129,7 @@ export function GeneralSettings({
             <Radio
               key={value}
               value={value}
-              className="group flex cursor-default items-start gap-3 py-2 text-[15px] font-semibold outline-none"
+              className="group flex items-start gap-3 py-2 text-[15px] font-semibold outline-none"
             >
               <RadioDot className="mt-0.5" />
               {t(value === "12" ? "hours12" : "hours24")}
@@ -179,7 +179,7 @@ export function GeneralSettings({
               <Radio
                 key={option}
                 value={option}
-                className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex min-w-0 flex-[1_1_160px] cursor-default flex-col gap-2 rounded-xl p-2.5 ring-1 outline-hidden data-selected:ring-2"
+                className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex min-w-0 flex-[1_1_160px] flex-col gap-2 rounded-xl p-2.5 ring-1 outline-hidden data-selected:ring-2"
               >
                 <span className="ring-border flex h-[72px] overflow-hidden rounded-lg ring-1">
                   {option !== "dark" ? <ThemePreview dark={false} /> : null}

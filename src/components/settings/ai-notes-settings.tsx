@@ -113,7 +113,7 @@ function ModelField({
             <ListBoxItem
               id={option.id}
               textValue={option.id}
-              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-primary flex min-h-10 cursor-default items-center rounded-lg px-2.5 font-mono text-[15px] outline-hidden data-selected:font-semibold"
+              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-primary flex min-h-10 items-center rounded-lg px-2.5 font-mono text-[15px] outline-hidden data-selected:font-semibold"
             >
               {option.label}
             </ListBoxItem>
@@ -257,7 +257,7 @@ export function AiNotesSettings() {
             <Radio
               key={id}
               value={id}
-              className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex cursor-default items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
+              className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
             >
               <RadioDot className="mt-0.5" showFocus={false} />
               <span className="flex min-w-0 flex-col gap-1">

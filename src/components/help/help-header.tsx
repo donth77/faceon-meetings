@@ -105,7 +105,7 @@ function HelpSearch({ entries }: { entries: HelpEntry[] }) {
             <ListBoxItem
               id={entry.slug}
               textValue={entry.title}
-              className="data-focused:bg-muted data-focus-visible:focus-ring-inset flex cursor-default flex-col gap-0.5 rounded-lg px-3 py-2 outline-hidden"
+              className="data-focused:bg-muted data-focus-visible:focus-ring-inset flex flex-col gap-0.5 rounded-lg px-3 py-2 outline-hidden"
             >
               <span className="text-[15px] font-semibold">{entry.title}</span>
               <span className="text-muted-foreground text-[13px] leading-snug">

@@ -94,7 +94,7 @@ function DropdownMenuLabel({
 }
 
 const dropdownMenuItemVariants = cva(
-  "group/dropdown-menu-item relative flex cursor-default items-center outline-hidden select-none data-focus-visible:focus-ring-inset data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "group/dropdown-menu-item relative flex items-center outline-hidden select-none data-focus-visible:focus-ring-inset data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       selectionMode: {
@@ -173,7 +173,7 @@ function DropdownMenuSubTrigger({
       data-inset={inset}
       textValue={typeof children === "string" ? children : props.textValue}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

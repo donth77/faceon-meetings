@@ -134,13 +134,13 @@ export function MeetingSettingsMenu({
             >
               <Radio
                 value="all"
-                className="data-focus-visible:focus-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
+                className="data-focus-visible:focus-ring flex-1 rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
               >
                 {t("shareEveryone")}
               </Radio>
               <Radio
                 value="host"
-                className="data-focus-visible:focus-ring flex-1 cursor-default rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
+                className="data-focus-visible:focus-ring flex-1 rounded-lg py-1.5 text-center text-sm font-semibold text-white/70 outline-hidden data-selected:bg-white/15 data-selected:text-white data-selected:ring-1 data-selected:ring-white/70"
               >
                 {t("shareHosts")}
               </Radio>

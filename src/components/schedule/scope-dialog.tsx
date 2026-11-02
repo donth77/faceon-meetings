@@ -54,7 +54,7 @@ export function ScopeDialog({
           <Radio
             key={value}
             value={value}
-            className="group flex min-h-10 cursor-default items-center gap-3 text-[15px] outline-none"
+            className="group flex min-h-10 items-center gap-3 text-[15px] outline-none"
           >
             <span
               aria-hidden="true"

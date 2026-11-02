@@ -36,7 +36,7 @@ import { DateField } from "./date-field";
 
 const NUMBER = cn(INPUT, "h-10 w-16 px-2.5 text-[15px]");
 const RADIO =
-  "group flex min-h-10 cursor-default items-center gap-3 text-[15px] outline-hidden";
+  "group flex min-h-10 items-center gap-3 text-[15px] outline-hidden";
 const FREQS = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
 const MONTHLY = ["date", "weekday", "lastWeekday"] as const;
 

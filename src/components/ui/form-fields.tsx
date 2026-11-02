@@ -31,7 +31,7 @@ export const FIELD_POPOVER =
 
 /** An option in a field's list. */
 export const FIELD_OPTION =
-  "data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-hidden";
+  "data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-10 items-center gap-2 rounded-lg px-2 text-[15px] outline-hidden";
 
 /** A label above a control, with "(optional)" and a helper line when given. */
 export function Field({

@@ -60,7 +60,7 @@ export function Segment({
   return (
     <Radio
       value={value}
-      className="text-muted-foreground data-focus-visible:focus-ring data-selected:bg-card data-selected:text-foreground flex h-[34px] cursor-default items-center gap-1.5 rounded-lg px-3 text-sm font-medium outline-hidden data-selected:font-bold data-selected:shadow-[0_1px_2px_rgba(18,22,28,0.14)] dark:data-selected:bg-white/15"
+      className="text-muted-foreground data-focus-visible:focus-ring data-selected:bg-card data-selected:text-foreground flex h-[34px] items-center gap-1.5 rounded-lg px-3 text-sm font-medium outline-hidden data-selected:font-bold data-selected:shadow-[0_1px_2px_rgba(18,22,28,0.14)] dark:data-selected:bg-white/15"
     >
       {children}
     </Radio>

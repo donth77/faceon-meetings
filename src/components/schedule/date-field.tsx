@@ -117,7 +117,7 @@ export function DateField({
                   {(date) => (
                     <CalendarCell
                       date={date}
-                      className="data-hovered:bg-accent data-selected:bg-primary data-selected:text-primary-foreground data-disabled:text-muted-foreground/50 data-outside-month:text-muted-foreground/60 data-focus-visible:focus-ring-strong flex size-9 cursor-default items-center justify-center rounded-lg text-sm outline-hidden"
+                      className="data-hovered:bg-accent data-selected:bg-primary data-selected:text-primary-foreground data-disabled:text-muted-foreground/50 data-outside-month:text-muted-foreground/60 data-focus-visible:focus-ring-strong flex size-9 items-center justify-center rounded-lg text-sm outline-hidden"
                     />
                   )}
                 </CalendarGridBody>
