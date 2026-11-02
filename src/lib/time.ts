@@ -163,6 +163,152 @@ export function formatTimeRange(
   }).formatRange(start, end);
 }
 
+/** Whether two instants fall on the same day in a zone. */
+export function isSameDay(a: Date, b: Date, timeZone: string): boolean {
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return day.format(a) === day.format(b);
+}
+
+/**
+ * Two times joined the way the locale joins a range ("10:32 PM – 10:49 AM", "22:32–10:49
+ * Uhr"), for times on different days, which Intl's own ranges would spell out in full.
+ * The pattern comes from a range on one day whose ends share nothing (1 AM, 1 PM).
+ */
+function joinTimes(from: string, to: string, locale: string): string {
+  const parts = new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).formatRangeToParts(
+    new Date(Date.UTC(2026, 0, 1, 1)),
+    new Date(Date.UTC(2026, 0, 1, 13)),
+  );
+  let joined = "";
+  let placed = 0;
+  let previous: string | undefined;
+  for (const part of parts) {
+    if (part.source === "shared") joined += part.value;
+    else if (part.source !== previous) {
+      joined += part.source === "startRange" ? from : to;
+      placed++;
+    }
+    previous = part.source;
+  }
+  return placed === 2 ? joined : `${from} – ${to}`;
+}
+
+/**
+ * A meeting's times in a zone, for a list grouped by the day it started: "2:00 – 3:00
+ * PM", or, when it ends on a later day, "10:32 PM – 10:49 AM" and that day ("Mon, Nov 2")
+ * to show with it.
+ */
+export function timeRangeParts(
+  start: Date,
+  end: Date,
+  timeZone: string,
+  locale: string,
+): { times: string; endDay: string | null } {
+  if (isSameDay(start, end, timeZone)) {
+    return {
+      times: formatTimeRange(start, end, timeZone, locale),
+      endDay: null,
+    };
+  }
+  const time = new Intl.DateTimeFormat(locale, {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return {
+    times: joinTimes(time.format(start), time.format(end), locale),
+    endDay: new Intl.DateTimeFormat(locale, {
+      timeZone,
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }).format(end),
+  };
+}
+
+/**
+ * A range on its own, with its days: "Sun, Nov 1 · 2:00 – 3:00 PM", or across days
+ * "Sun, Nov 1, 10:32 PM – Mon, Nov 2, 10:49 AM". The year shows only when it isn't
+ * this year's.
+ */
+export function formatSpan(
+  start: Date,
+  end: Date,
+  timeZone: string,
+  locale: string,
+): string {
+  const days: Intl.DateTimeFormatOptions = {
+    timeZone,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  };
+  if (isSameDay(start, end, timeZone)) {
+    return `${formatDay(start, locale, days)} · ${formatTimeRange(start, end, timeZone, locale)}`;
+  }
+  const thisYear = (at: Date) =>
+    new Intl.DateTimeFormat("en", { timeZone, year: "numeric" }).format(at) ===
+    new Intl.DateTimeFormat("en", { timeZone, year: "numeric" }).format(
+      new Date(),
+    );
+  return new Intl.DateTimeFormat(locale, {
+    ...days,
+    ...(thisYear(start) && thisYear(end) ? {} : { year: "numeric" }),
+    hour: "numeric",
+    minute: "2-digit",
+  }).formatRange(start, end);
+}
+
+/** Intl.DurationFormat, which TypeScript's libraries don't describe yet. */
+type DurationFormatConstructor = new (
+  locale: string,
+  options: { style: "short" | "long"; minutesDisplay?: "always" | "auto" },
+) => { format(duration: { hours?: number; minutes?: number }): string };
+
+/**
+ * A length of time in whole minutes, as the locale says it: "31 min", "1 hr, 15 min"
+ * ("1 hour, 15 minutes" in the long style). Intl.DurationFormat where the browser has
+ * it, otherwise the same from unit numbers and a list.
+ */
+export function formatDuration(
+  minutes: number,
+  locale: string,
+  style: "short" | "long" = "short",
+): string {
+  const total = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+  const DurationFormat = (
+    Intl as unknown as { DurationFormat?: DurationFormatConstructor }
+  ).DurationFormat;
+  if (DurationFormat) {
+    return new DurationFormat(locale, {
+      style,
+      minutesDisplay: hours === 0 ? "always" : "auto",
+    }).format(hours === 0 ? { minutes: rest } : { hours, minutes: rest });
+  }
+  const unit = (value: number, kind: "hour" | "minute") =>
+    new Intl.NumberFormat(locale, {
+      style: "unit",
+      unit: kind,
+      unitDisplay: style,
+    }).format(value);
+  const units = [
+    ...(hours > 0 ? [unit(hours, "hour")] : []),
+    ...(rest > 0 || hours === 0 ? [unit(rest, "minute")] : []),
+  ];
+  return new Intl.ListFormat(locale, { style, type: "unit" }).format(units);
+}
+
 /** "Tue, Nov 3, 2026 · 2:00 – 3:00 PM". */
 export function formatWhen(
   start: Date,

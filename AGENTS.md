@@ -57,7 +57,7 @@ Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integr
 - **Secrets stay on the server.** Only `NEXT_PUBLIC_*` values may reach the browser. Server modules that read secrets import `server-only`.
 - **Hosts' AI keys never reach our server.** They're kept in the host's browser and sent only to their AI provider; no route accepts, stores or logs them.
 - **Media SDKs only in adapter folders.** `@stream-io/*` and `livekit-*` may only be imported inside the media adapter folders. UI code talks to the provider-neutral interface.
-- **UI text.** Every user-facing string comes from the message files, including `aria-label`s, tooltips and screen-reader announcements: English first; es, pt-BR, fr, de and ja follow. Format dates, times and numbers with `Intl`.
+- **UI text.** Every user-facing string comes from the message files, including `aria-label`s, tooltips and screen-reader announcements: English first; es, pt-BR, fr, de and ja follow. Format dates, times and numbers with `Intl`; `lib/time.ts` has the shared helpers (days, time ranges that cross midnight, lengths of time such as "1 hr, 15 min").
 - **Familiar words.** Use the words Zoom and Meet users know: Mute / Unmute, Start video / Stop video, Share screen / Stop sharing, Participants, Chat, Raise hand / Lower hand, Waiting room, Admit, Leave meeting, End meeting for all, Meeting ID, Passcode.
 - **Icons.** Lucide first; another open-licensed set in the same style only when Lucide has no fit.
 - **Accessibility.** WCAG 2.2 AA in light and dark themes: real buttons with labels, visible focus (the `focus-ring` utilities), keyboard access, and tooltips that also appear on focus. When a control removes itself or a screen changes, move focus somewhere sensible first.

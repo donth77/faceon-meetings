@@ -55,7 +55,12 @@ import {
   updateScheduleAction,
 } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
-import { localParts, viewerTimeZone, zonedToUtc } from "@/lib/time";
+import {
+  formatDuration,
+  localParts,
+  viewerTimeZone,
+  zonedToUtc,
+} from "@/lib/time";
 
 import { DateField } from "./date-field";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
@@ -128,23 +133,6 @@ function formatTime(time: string, locale: string) {
     minute: "2-digit",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(2026, 0, 1, h, m)));
-}
-
-function formatDuration(minutes: number, locale: string) {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  const unit = (value: number, kind: "hour" | "minute") =>
-    new Intl.NumberFormat(locale, {
-      style: "unit",
-      unit: kind,
-      unitDisplay: "long",
-    }).format(value);
-  if (hours === 0) return unit(rest, "minute");
-  if (rest === 0) return unit(hours, "hour");
-  return new Intl.ListFormat(locale, { style: "narrow", type: "unit" }).format([
-    unit(hours, "hour"),
-    unit(rest, "minute"),
-  ]);
 }
 
 const toInput = (values: ScheduleFormValues): ScheduleInput => ({
@@ -464,7 +452,7 @@ export function ScheduleForm({
   }));
   const durationOptions = DURATIONS.map((minutes) => ({
     id: String(minutes),
-    label: formatDuration(minutes, locale),
+    label: formatDuration(minutes, locale, "long"),
   }));
 
   return (

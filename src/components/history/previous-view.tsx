@@ -19,7 +19,14 @@ import { Sheet, SheetTitle } from "@/components/ui/sheet";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
-import { formatDay } from "@/lib/time";
+import {
+  formatDay,
+  formatDuration,
+  formatSpan,
+  formatTimeRange,
+  isSameDay,
+  timeRangeParts,
+} from "@/lib/time";
 
 const SHOW = ["all", "hosted"] as const;
 
@@ -77,7 +84,7 @@ function Avatars({ people, label }: { people: Attendee[]; label: string }) {
   );
 }
 
-/** Times and days in the viewer's time zone (Settings → General). */
+/** Times, days and lengths in the viewer's time zone (Settings → General). */
 function useFormats() {
   const locale = useIntlLocale();
   const timeZone = useViewerTimeZone();
@@ -87,20 +94,35 @@ function useFormats() {
     timeZone,
   });
   return {
-    range: (start: string, end: string) =>
-      time.formatRange(new Date(start), new Date(end)),
+    /** For the list, grouped by the day a meeting started (see timeRangeParts). */
+    rangeParts: (start: string, end: string) =>
+      timeRangeParts(new Date(start), new Date(end), timeZone, locale),
+    /** On its own: the day and times, or both days across midnight. */
+    span: (start: string, end: string) =>
+      formatSpan(new Date(start), new Date(end), timeZone, locale),
+    /** Within a meeting's day: the times, with the days only across midnight. */
+    range: (start: string, end: string) => {
+      const [from, to] = [new Date(start), new Date(end)];
+      return isSameDay(from, to, timeZone)
+        ? formatTimeRange(from, to, timeZone, locale)
+        : formatSpan(from, to, timeZone, locale);
+    },
     time: (at: string) => time.format(new Date(at)),
+    /** The day of `at` ("Mon, Nov 2") when it's later than the meeting's start. */
+    laterDay: (at: string, start: string) =>
+      isSameDay(new Date(at), new Date(start), timeZone)
+        ? null
+        : formatDay(new Date(at), locale, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            timeZone,
+          }),
+    duration: (minutes: number) => formatDuration(minutes, locale),
     day: (at: string) =>
       formatDay(new Date(at), locale, {
         weekday: "long",
         month: "long",
-        day: "numeric",
-        timeZone,
-      }),
-    shortDay: (at: string) =>
-      formatDay(new Date(at), locale, {
-        weekday: "short",
-        month: "short",
         day: "numeric",
         timeZone,
       }),
@@ -111,6 +133,42 @@ function useFormats() {
         timeZone,
       }),
   };
+}
+
+/**
+ * A meeting's times in the list's time column. One that ran past midnight shows its
+ * times on one line and the day it ended under them, rather than both full dates.
+ */
+function TimeRange({
+  parts,
+}: {
+  parts: { times: string; endDay: string | null };
+}) {
+  const t = useTranslations("Previous");
+  return (
+    <span className="flex w-[168px] shrink-0 flex-col gap-0.5 font-mono text-sm tabular-nums">
+      {parts.times}
+      {parts.endDay ? (
+        <span className="text-muted-foreground font-sans text-xs">
+          {t("endsOn", { day: parts.endDay })}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+/** A time in the attendance table, with its day when it's after the meeting's first. */
+function TimeOf({ time, day }: { time: string; day: string | null }) {
+  return (
+    <>
+      {time}
+      {day ? (
+        <span className="text-muted-foreground block font-sans text-xs">
+          {day}
+        </span>
+      ) : null}
+    </>
+  );
 }
 
 /**
@@ -129,14 +187,14 @@ function Details({ meeting }: { meeting: PastMeeting }) {
       <div className="flex min-w-0 flex-col gap-1.5 pr-10">
         <SheetTitle className="text-2xl font-bold">{title}</SheetTitle>
         <span className="text-muted-foreground text-[15px]">
-          {f.shortDay(meeting.start)} · {f.range(meeting.start, meeting.end)} ·{" "}
+          {f.span(meeting.start, meeting.end)} ·{" "}
           {t("hostedBy", { name: meeting.hostName })}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
         <Chip>
           <Clock3 className="size-3.5" aria-hidden="true" />
-          {t("minutes", { count: meeting.minutes })}
+          {f.duration(meeting.minutes)}
         </Chip>
         <Chip>
           <Users className="size-3.5" aria-hidden="true" />
@@ -149,6 +207,7 @@ function Details({ meeting }: { meeting: PastMeeting }) {
           </Chip>
         ) : null}
       </div>
+      {/* Times stay on one line; on a phone they're set in the narrower sans face. */}
       <table className="w-full border-collapse">
         <caption className="mb-2 text-left text-base font-bold">
           {t("attendance")}
@@ -158,13 +217,13 @@ function Details({ meeting }: { meeting: PastMeeting }) {
             <th scope="col" className="py-2 text-left">
               {t("name")}
             </th>
-            <th scope="col" className="py-2 text-right">
+            <th scope="col" className="py-2 pl-2 text-right sm:pl-3">
               {t("joined")}
             </th>
-            <th scope="col" className="py-2 text-right">
+            <th scope="col" className="py-2 pl-2 text-right sm:pl-3">
               {t("left")}
             </th>
-            <th scope="col" className="py-2 text-right">
+            <th scope="col" className="py-2 pl-2 text-right sm:pl-3">
               {t("time")}
             </th>
           </tr>
@@ -203,14 +262,20 @@ function Details({ meeting }: { meeting: PastMeeting }) {
                   </span>
                 ) : null}
               </th>
-              <td className="py-2.5 text-right font-mono text-[13px]">
-                {f.time(person.joinedAt)}
+              <td className="py-2.5 pl-2 text-right text-[13px] whitespace-nowrap tabular-nums sm:pl-3 sm:font-mono">
+                <TimeOf
+                  time={f.time(person.joinedAt)}
+                  day={f.laterDay(person.joinedAt, meeting.start)}
+                />
               </td>
-              <td className="py-2.5 text-right font-mono text-[13px]">
-                {f.time(person.leftAt)}
+              <td className="py-2.5 pl-2 text-right text-[13px] whitespace-nowrap tabular-nums sm:pl-3 sm:font-mono">
+                <TimeOf
+                  time={f.time(person.leftAt)}
+                  day={f.laterDay(person.leftAt, meeting.start)}
+                />
               </td>
-              <td className="py-2.5 text-right font-mono text-[13px]">
-                {t("minutes", { count: person.minutes })}
+              <td className="py-2.5 pl-2 text-right text-[13px] whitespace-nowrap tabular-nums sm:pl-3 sm:font-mono">
+                {f.duration(person.minutes)}
               </td>
             </tr>
           ))}
@@ -341,9 +406,9 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                         "bg-chip ring-primary ring-2",
                     )}
                   >
-                    <span className="w-[150px] shrink-0 font-mono text-sm tabular-nums">
-                      {f.range(meeting.start, meeting.end)}
-                    </span>
+                    <TimeRange
+                      parts={f.rangeParts(meeting.start, meeting.end)}
+                    />
                     <div className="flex min-w-0 flex-[1_1_240px] flex-col gap-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-base font-bold">{title}</span>
@@ -361,7 +426,7 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                         ) : null}
                       </div>
                       <span className="text-muted-foreground flex items-center gap-3 text-[13px]">
-                        {t("minutes", { count: meeting.minutes })}
+                        {f.duration(meeting.minutes)}
                         <Avatars
                           people={meeting.attendees}
                           label={t("people", {
