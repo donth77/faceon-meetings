@@ -333,10 +333,7 @@ export default function MeetingEntry({
 
   const handleLeft = useCallback(
     (reason: LeaveReason) => {
-      // Only while the session goes on without you: an ended one has nothing to update.
-      if (reason === "left" || reason === "connectionLost") {
-        void meetingApi.seen(code).catch(() => {});
-      }
+      void meetingApi.seen(code).catch(() => {});
       // It filled up as you came in: pre-join says so, and Join tries again.
       if (reason === "full") {
         setStep({ name: "prejoin", error: "FULL" });
