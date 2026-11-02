@@ -4,12 +4,16 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
+  meeting,
   meetingMember,
   meetingSession,
   participantSession,
   webhookEvent,
 } from "@/lib/db/schema";
 import type { AttendanceEvent } from "@/lib/media/types";
+
+import { readMeeting } from "./queries";
+import { changeSession } from "./session-state";
 
 /**
  * Records attendance from a webhook delivery, once: the delivery's ID is stored in the
@@ -95,4 +99,42 @@ export async function pruneWebhookEvents(before: Date): Promise<number> {
     .where(sql`${webhookEvent.receivedAt} < ${before}`)
     .returning({ id: webhookEvent.id });
   return deleted.length;
+}
+
+/**
+ * Someone left: their raised hand goes down once their last connection has gone, as in
+ * Meet. (Another tab or device keeps it up.) Coming back, they start with it down.
+ */
+export async function lowerHandOnLeave(event: AttendanceEvent): Promise<void> {
+  if (event.type !== "left") return;
+  // The event names the connection; its row says whose it was.
+  const [left] = await db()
+    .select({ mediaUserId: participantSession.mediaUserId })
+    .from(participantSession)
+    .where(eq(participantSession.connectionId, event.connectionId))
+    .limit(1);
+  if (!left) return;
+  const [stillHere] = await db()
+    .select({ id: participantSession.id })
+    .from(participantSession)
+    .where(
+      and(
+        eq(participantSession.sessionId, event.sessionId),
+        eq(participantSession.mediaUserId, left.mediaUserId),
+        isNull(participantSession.leftAt),
+      ),
+    )
+    .limit(1);
+  if (stillHere) return;
+  const [row] = await db()
+    .select({ session: meetingSession, meeting })
+    .from(meetingSession)
+    .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
+    .where(eq(meetingSession.id, event.sessionId))
+    .limit(1);
+  if (!row || row.session.status !== "open") return;
+  if (!(left.mediaUserId in (row.session.hands ?? {}))) return;
+  await changeSession(readMeeting(row.meeting), row.session, {
+    lower: left.mediaUserId,
+  });
 }
