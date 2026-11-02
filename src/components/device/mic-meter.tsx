@@ -71,7 +71,8 @@ export function MicMeter({ track }: { track: MediaStreamTrack | null }) {
           />
         ))}
       </span>
-      <span className="text-muted-foreground truncate text-sm">
+      {/* A status, so "Your mic is working" is heard when it comes. */}
+      <span role="status" className="text-muted-foreground truncate text-sm">
         {!track ? t("micOff") : heard ? t("micWorking") : t("speakToTest")}
       </span>
     </div>

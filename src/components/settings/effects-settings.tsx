@@ -3,18 +3,15 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { DeviceProblemNote } from "@/components/device/device-problem-note";
+import { useLocalTrack } from "@/components/device/use-local-track";
 import { EffectsChooser } from "@/components/effects/effects-chooser";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
-import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
 import { effectsSupported } from "@/lib/effects/support";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
-import { DeviceProblemNote, useRememberedDevices } from "./device-fields";
+import { useRememberedDevices } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /**
@@ -41,9 +38,7 @@ export function EffectsSettings() {
               mirror={mirrorVideo}
               cameraOn={camera.track !== null || camera.pending}
               value={effect}
-              onChange={(next) =>
-                savePreferences({ effect: next ?? undefined })
-              }
+              onChange={(next) => setPreference("effect", next)}
               layout="split"
             />
             {camera.problem ? (

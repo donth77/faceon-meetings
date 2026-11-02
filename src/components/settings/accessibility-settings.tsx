@@ -4,11 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { ShortcutsList } from "@/components/shortcuts/shortcuts-list";
 import { SwitchRow } from "@/components/ui/form-fields";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
@@ -31,9 +27,7 @@ export function AccessibilitySettings() {
             label={t("singleKeys")}
             help={t("singleKeysHelp")}
             isSelected={singleKeyShortcuts}
-            onChange={(on) =>
-              savePreferences({ singleKeyShortcuts: on ? undefined : false })
-            }
+            onChange={(on) => setPreference("singleKeyShortcuts", on)}
           />
         </div>
         <p className="text-muted-foreground text-sm">{ts("description")}</p>

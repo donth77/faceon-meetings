@@ -3,31 +3,24 @@
 import { Volume2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
-import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
+import { DeviceProblemNote } from "@/components/device/device-problem-note";
+import { MicMeter } from "@/components/device/mic-meter";
+import { AudioPreferenceRows } from "@/components/device/preference-rows";
+import { useLocalTrack } from "@/components/device/use-local-track";
 import { Button } from "@/components/ui/button";
-import { SwitchRow } from "@/components/ui/form-fields";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import { playTestSound } from "@/lib/device/test-sound";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { canChooseSpeaker } from "@/lib/platform";
+import { usePreferences, withDefaults } from "@/lib/preferences";
 
-import {
-  canChooseSpeaker,
-  DeviceField,
-  DeviceProblemNote,
-  useRememberedDevices,
-} from "./device-fields";
+import { DeviceField, useRememberedDevices } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /** Settings → Audio: microphone with a level meter, speaker with a test, noise suppression. */
 export function AudioSettings() {
   const t = useTranslations("Settings.audio");
   const [devices, update] = useRememberedDevices();
-  const { noiseSuppression, pushToTalk } = withDefaults(usePreferences());
+  const { noiseSuppression } = withDefaults(usePreferences());
   const mic = useLocalTrack("audio", true, devices.micId, noiseSuppression);
   const lists = useMediaDevices(mic.track?.id ?? "");
   const chooseSpeaker = canChooseSpeaker() && lists.speakers.length > 0;
@@ -82,22 +75,7 @@ export function AudioSettings() {
           </p>
         )}
         <div className="divide-y divide-[#e2e5ea] border-t border-[#e2e5ea] dark:divide-white/10 dark:border-white/10">
-          <SwitchRow
-            label={t("noiseSuppression")}
-            help={t("noiseSuppressionHelp")}
-            isSelected={noiseSuppression}
-            onChange={(on) =>
-              savePreferences({ noiseSuppression: on ? undefined : false })
-            }
-          />
-          <SwitchRow
-            label={t("pushToTalk")}
-            help={t("pushToTalkHelp")}
-            isSelected={pushToTalk}
-            onChange={(on) =>
-              savePreferences({ pushToTalk: on ? true : undefined })
-            }
-          />
+          <AudioPreferenceRows />
         </div>
       </SettingsCard>
     </>

@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { EffectsProblem } from "@/lib/effects/camera-effects";
-import { savePreferences } from "@/lib/preferences";
+import { setPreference } from "@/lib/preferences";
 
 /**
  * What a preview outside a meeting (pre-join, Settings) does when an effect can't keep
@@ -14,11 +14,11 @@ export function useEffectProblems(): (problem: EffectsProblem) => void {
   const t = useTranslations("Effects");
   return (problem) => {
     if (problem.kind === "backgroundFailed") {
-      savePreferences({ effect: problem.showing });
+      setPreference("effect", problem.showing);
       toast(t("backgroundFailed"));
       return;
     }
-    savePreferences({ effect: undefined });
+    setPreference("effect", null);
     toast(t(problem.kind === "tooSlow" ? "tooSlow" : "previewFailed"));
   };
 }

@@ -21,7 +21,7 @@ import type { Effect } from "@/lib/effects/effects";
 import { effectsSupported } from "@/lib/effects/support";
 import {
   loadPreferences,
-  savePreferences,
+  setPreference,
   usePreferences,
   withDefaults,
 } from "@/lib/preferences";
@@ -91,14 +91,14 @@ export function useRoomEffects() {
 
   const handleProblem = useEffectEvent((problem: EffectsProblem) => {
     if (problem.kind === "backgroundFailed") {
-      savePreferences({ effect: problem.showing });
+      setPreference("effect", problem.showing);
       toast(t("backgroundFailed"));
       return;
     }
     if (problem.kind === "failed" && media.camera.enabled) {
       void media.camera.toggle().catch(() => {});
     }
-    savePreferences({ effect: undefined });
+    setPreference("effect", null);
     toast(t(problem.kind === "tooSlow" ? "tooSlow" : "failed"));
   });
 

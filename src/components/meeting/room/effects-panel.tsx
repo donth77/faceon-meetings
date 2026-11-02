@@ -3,11 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { EffectsChooser } from "@/components/effects/effects-chooser";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { useRoomMedia } from "../media";
 import { SidePanel } from "./side-panel";
@@ -29,7 +25,7 @@ export function EffectsPanel({ onClose }: { onClose: () => void }) {
           mirror={mirrorVideo}
           cameraOn={camera.enabled}
           value={effect}
-          onChange={(next) => savePreferences({ effect: next ?? undefined })}
+          onChange={(next) => setPreference("effect", next)}
         />
       </div>
     </SidePanel>

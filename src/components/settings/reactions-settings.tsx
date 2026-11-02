@@ -3,11 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
@@ -35,25 +31,19 @@ export function ReactionsSettings() {
             label={t("showOthers")}
             help={t("showOthersHelp")}
             isSelected={showOthersReactions}
-            onChange={(on) =>
-              savePreferences({ showOthersReactions: on ? undefined : false })
-            }
+            onChange={(on) => setPreference("showOthersReactions", on)}
           />
           <SwitchRow
             label={t("animation")}
             help={t("animationHelp")}
             isSelected={reactionAnimation}
-            onChange={(on) =>
-              savePreferences({ reactionAnimation: on ? undefined : false })
-            }
+            onChange={(on) => setPreference("reactionAnimation", on)}
           />
           <SwitchRow
             label={t("sound")}
             help={t("soundHelp")}
             isSelected={reactionSound}
-            onChange={(on) =>
-              savePreferences({ reactionSound: on ? true : undefined })
-            }
+            onChange={(on) => setPreference("reactionSound", on)}
           />
         </div>
       </SettingsCard>
@@ -68,9 +58,7 @@ export function ReactionsSettings() {
             value={reactionAnnouncements}
             onChange={(value) => {
               const mode = ANNOUNCE.find((id) => id === value) ?? "summary";
-              savePreferences({
-                reactionAnnouncements: mode === "summary" ? undefined : mode,
-              });
+              setPreference("reactionAnnouncements", mode);
             }}
           />
           <span className="text-muted-foreground text-[13px]">

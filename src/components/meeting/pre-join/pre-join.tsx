@@ -18,7 +18,10 @@ import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 import { Button as AriaButton } from "react-aria-components";
 
+import { DeviceProblemNote } from "@/components/device/device-problem-note";
+import { MicMeter } from "@/components/device/mic-meter";
 import { MirroredVideo } from "@/components/device/mirrored-video";
+import { useLocalTrack } from "@/components/device/use-local-track";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
 import { Button } from "@/components/ui/button";
@@ -29,10 +32,10 @@ import {
   saveDevicePreferences,
   type DevicePreferences,
 } from "@/lib/device/preferences";
-import type { DeviceProblem } from "@/lib/device/problems";
 import { playTestSound } from "@/lib/device/test-sound";
 import { effectsSupported } from "@/lib/effects/support";
 import { formatMeetingCode } from "@/lib/meetings/codes";
+import { canChooseSpeaker } from "@/lib/platform";
 import {
   loadPreferences,
   usePreferences,
@@ -43,8 +46,6 @@ import { loadGuestName, saveGuestName } from "../guest-name";
 import { useMeetingTitle } from "../meeting-title";
 import { MeetingPageFrame } from "../page-frame";
 import { EffectsDialog } from "./effects-dialog";
-import { MicMeter } from "./mic-meter";
-import { useLocalTrack } from "./use-local-track";
 
 export type MeetingSummary = {
   code: string;
@@ -82,10 +83,6 @@ export type JoinErrorKind =
   | "NETWORK"
   | "UNAVAILABLE"
   | "BAD_REQUEST";
-
-const canChooseSpeaker = () =>
-  typeof HTMLMediaElement !== "undefined" &&
-  "setSinkId" in HTMLMediaElement.prototype;
 
 /** A round on/off control on the preview, red while off, as in Meet. */
 function PreviewToggle({
@@ -157,30 +154,6 @@ function DeviceSelect({
         )}
       </select>
     </div>
-  );
-}
-
-function ProblemNote({
-  device,
-  problem,
-  onRetry,
-}: {
-  device: "microphone" | "camera";
-  problem: DeviceProblem;
-  onRetry: () => void;
-}) {
-  const t = useTranslations("DeviceProblems");
-  const tp = useTranslations("PreJoin");
-  return (
-    <p className="text-sm">
-      {t(`${device}.${problem}`)}{" "}
-      <AriaButton
-        onPress={onRetry}
-        className="text-primary focus-visible:ring-ring rounded font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-2"
-      >
-        {tp("tryAgain")}
-      </AriaButton>
-    </p>
   );
 }
 
@@ -356,14 +329,14 @@ export function PreJoin({
           ) : null}
 
           {video.problem ? (
-            <ProblemNote
+            <DeviceProblemNote
               device="camera"
               problem={video.problem}
               onRetry={video.retry}
             />
           ) : null}
           {audio.problem ? (
-            <ProblemNote
+            <DeviceProblemNote
               device="microphone"
               problem={audio.problem}
               onRetry={audio.retry}

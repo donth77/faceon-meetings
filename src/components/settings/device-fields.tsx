@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Button as AriaButton } from "react-aria-components";
 
 import { SelectField } from "@/components/ui/form-fields";
 import {
@@ -10,7 +9,6 @@ import {
   saveDevicePreferences,
   type DevicePreferences,
 } from "@/lib/device/preferences";
-import type { DeviceProblem } from "@/lib/device/problems";
 
 /**
  * The camera, microphone and speaker remembered on this device: the ones the next
@@ -63,32 +61,3 @@ export function DeviceField({
     />
   );
 }
-
-/** Why the camera or microphone didn't start, with Try again. */
-export function DeviceProblemNote({
-  device,
-  problem,
-  onRetry,
-}: {
-  device: "microphone" | "camera";
-  problem: DeviceProblem;
-  onRetry: () => void;
-}) {
-  const t = useTranslations("DeviceProblems");
-  const tp = useTranslations("PreJoin");
-  return (
-    <p role="alert" className="text-sm">
-      {t(`${device}.${problem}`)}{" "}
-      <AriaButton
-        onPress={onRetry}
-        className="text-primary focus-visible:ring-ring rounded font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-2"
-      >
-        {tp("tryAgain")}
-      </AriaButton>
-    </p>
-  );
-}
-
-export const canChooseSpeaker = () =>
-  typeof HTMLMediaElement !== "undefined" &&
-  "setSinkId" in HTMLMediaElement.prototype;

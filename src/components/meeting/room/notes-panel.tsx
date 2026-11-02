@@ -6,7 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
 
 import { NotesMaker } from "@/components/notes/notes-maker";
-import { SwitchRow } from "@/components/schedule/fields";
+import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import type { NotesState } from "@/lib/media/types";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";

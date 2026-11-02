@@ -17,10 +17,13 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
+import { MicMeter } from "@/components/device/mic-meter";
 import { MirroredVideo } from "@/components/device/mirrored-video";
+import {
+  AudioPreferenceRows,
+  VideoPreferenceRows,
+} from "@/components/device/preference-rows";
 import { EffectsChooser } from "@/components/effects/effects-chooser";
-import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
-import { SwitchRow } from "@/components/schedule/fields";
 import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
 import { AiNotesSettings } from "@/components/settings/ai-notes-settings";
 import { DeviceField } from "@/components/settings/device-fields";
@@ -39,11 +42,8 @@ import {
 import { playTestSound } from "@/lib/device/test-sound";
 import { effectsSupported } from "@/lib/effects/support";
 import { aiNotesEnabled } from "@/lib/env";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { oneOf } from "@/lib/narrow";
+import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { useRoomMedia } from "../media";
 
@@ -76,7 +76,6 @@ const remember = (patch: Partial<DevicePreferences>) =>
 function AudioSection() {
   const t = useTranslations("Settings.audio");
   const { mic, speaker } = useRoomMedia();
-  const { noiseSuppression, pushToTalk } = withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
       <div className="flex max-w-[480px] flex-col gap-3">
@@ -120,21 +119,9 @@ function AudioSection() {
         </p>
       )}
       <div className="divide-y divide-white/10 border-t border-white/10">
-        <SwitchRow
-          label={t("noiseSuppression")}
-          help={t("noiseSuppressionHelp")}
-          isSelected={noiseSuppression}
-          onChange={(on) => {
-            savePreferences({ noiseSuppression: on ? undefined : false });
-            void mic.setNoiseSuppression(on).catch(() => {});
-          }}
-        />
-        <SwitchRow
-          label={t("pushToTalk")}
-          help={t("pushToTalkHelp")}
-          isSelected={pushToTalk}
-          onChange={(on) =>
-            savePreferences({ pushToTalk: on ? true : undefined })
+        <AudioPreferenceRows
+          onNoiseSuppression={(on) =>
+            void mic.setNoiseSuppression(on).catch(() => {})
           }
         />
       </div>
@@ -147,8 +134,7 @@ function VideoSection() {
   const tm = useTranslations("Meeting");
   const tp = useTranslations("PreJoin");
   const { camera } = useRoomMedia();
-  const { mirrorVideo, hdVideo, cameraOffOnJoin, autoPictureInPicture } =
-    withDefaults(usePreferences());
+  const { mirrorVideo } = withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-start gap-5">
@@ -196,37 +182,7 @@ function VideoSection() {
         </div>
       </div>
       <div className="divide-y divide-white/10 border-t border-white/10">
-        <SwitchRow
-          label={t("mirror")}
-          help={t("mirrorHelp")}
-          isSelected={mirrorVideo}
-          onChange={(on) =>
-            savePreferences({ mirrorVideo: on ? undefined : false })
-          }
-        />
-        <SwitchRow
-          label={t("hd")}
-          help={t("hdHelp")}
-          isSelected={hdVideo}
-          onChange={(on) =>
-            savePreferences({ hdVideo: on ? undefined : false })
-          }
-        />
-        <SwitchRow
-          label={t("offOnJoin")}
-          isSelected={cameraOffOnJoin}
-          onChange={(on) =>
-            savePreferences({ cameraOffOnJoin: on ? true : undefined })
-          }
-        />
-        <SwitchRow
-          label={t("autoPip")}
-          help={t("autoPipHelp")}
-          isSelected={autoPictureInPicture}
-          onChange={(on) =>
-            savePreferences({ autoPictureInPicture: on ? undefined : false })
-          }
-        />
+        <VideoPreferenceRows />
       </div>
     </div>
   );
@@ -247,7 +203,7 @@ function EffectsSection() {
       mirror={mirrorVideo}
       cameraOn={camera.enabled}
       value={effect}
-      onChange={(next) => savePreferences({ effect: next ?? undefined })}
+      onChange={(next) => setPreference("effect", next)}
       layout="split"
     />
   );
@@ -326,7 +282,13 @@ export function InCallSettings({
         <Tabs
           orientation={phone ? "horizontal" : "vertical"}
           selectedKey={section ?? "audio"}
-          onSelectionChange={(key) => onSectionChange(key as InCallSection)}
+          onSelectionChange={(key) => {
+            const next = oneOf(
+              SECTIONS.map(({ id }) => id),
+              key,
+            );
+            if (next) onSectionChange(next);
+          }}
           className="flex size-full min-h-0 max-md:flex-col"
         >
           <div className="flex shrink-0 flex-col bg-[#171a1f] px-3 py-5 max-md:pb-2 md:w-[260px]">
@@ -344,7 +306,7 @@ export function InCallSettings({
                 <Tab
                   key={id}
                   id={id}
-                  className="data-focus-visible:ring-ring flex min-h-[42px] shrink-0 cursor-default items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-none hover:bg-white/5 data-focus-visible:ring-2 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7]"
+                  className="data-focus-visible:focus-ring flex min-h-[42px] shrink-0 cursor-default items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-hidden hover:bg-white/5 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7] data-selected:shadow-[inset_3px_0_0_var(--color-ring)] max-md:data-selected:shadow-[inset_0_-3px_0_var(--color-ring)]"
                 >
                   <Icon className="size-[18px]" aria-hidden="true" />
                   {t(`section.${id}`)}

@@ -3,21 +3,14 @@
 import { LoaderCircle, VideoOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { DeviceProblemNote } from "@/components/device/device-problem-note";
 import { MirroredVideo } from "@/components/device/mirrored-video";
-import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
-import { SwitchRow } from "@/components/ui/form-fields";
+import { VideoPreferenceRows } from "@/components/device/preference-rows";
+import { useLocalTrack } from "@/components/device/use-local-track";
 import { useMediaDevices } from "@/hooks/use-media-devices";
-import {
-  savePreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { usePreferences, withDefaults } from "@/lib/preferences";
 
-import {
-  DeviceField,
-  DeviceProblemNote,
-  useRememberedDevices,
-} from "./device-fields";
+import { DeviceField, useRememberedDevices } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /** Settings → Video: a camera preview, the camera, mirroring, HD and starting with it off. */
@@ -25,8 +18,7 @@ export function VideoSettings() {
   const t = useTranslations("Settings.video");
   const tp = useTranslations("PreJoin");
   const [devices, update] = useRememberedDevices();
-  const { mirrorVideo, hdVideo, cameraOffOnJoin, autoPictureInPicture } =
-    withDefaults(usePreferences());
+  const { mirrorVideo } = withDefaults(usePreferences());
   const camera = useLocalTrack("video", true, devices.cameraId);
   const lists = useMediaDevices(camera.track?.id ?? "");
 
@@ -84,37 +76,7 @@ export function VideoSettings() {
           </div>
         </div>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
-          <SwitchRow
-            label={t("mirror")}
-            help={t("mirrorHelp")}
-            isSelected={mirrorVideo}
-            onChange={(on) =>
-              savePreferences({ mirrorVideo: on ? undefined : false })
-            }
-          />
-          <SwitchRow
-            label={t("hd")}
-            help={t("hdHelp")}
-            isSelected={hdVideo}
-            onChange={(on) =>
-              savePreferences({ hdVideo: on ? undefined : false })
-            }
-          />
-          <SwitchRow
-            label={t("offOnJoin")}
-            isSelected={cameraOffOnJoin}
-            onChange={(on) =>
-              savePreferences({ cameraOffOnJoin: on ? true : undefined })
-            }
-          />
-          <SwitchRow
-            label={t("autoPip")}
-            help={t("autoPipHelp")}
-            isSelected={autoPictureInPicture}
-            onChange={(on) =>
-              savePreferences({ autoPictureInPicture: on ? undefined : false })
-            }
-          />
+          <VideoPreferenceRows />
         </div>
       </SettingsCard>
     </>

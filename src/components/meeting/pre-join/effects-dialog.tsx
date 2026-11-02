@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { EffectsChooser } from "@/components/effects/effects-chooser";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import type { Effect } from "@/lib/effects/effects";
-import { savePreferences } from "@/lib/preferences";
+import { setPreference } from "@/lib/preferences";
 
 /**
  * Backgrounds and effects before joining, from the preview's button, so you can pick
@@ -46,7 +46,7 @@ export function EffectsDialog({
         mirror={mirror}
         cameraOn={cameraOn}
         value={value}
-        onChange={(next) => savePreferences({ effect: next ?? undefined })}
+        onChange={(next) => setPreference("effect", next)}
         layout="split"
       />
     </Dialog>

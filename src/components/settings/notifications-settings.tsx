@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
 import {
   REMINDER_MINUTES,
-  savePreferences,
+  setPreference,
   usePreferences,
   withDefaults,
 } from "@/lib/preferences";
@@ -36,7 +36,7 @@ export function NotificationsSettings() {
       label={t(`${key}.label`)}
       help={t(`${key}.help`)}
       isSelected={settings[key]}
-      onChange={(on) => savePreferences({ [key]: on ? undefined : false })}
+      onChange={(on) => setPreference(key, on)}
     />
   );
   return (
@@ -86,9 +86,7 @@ function Reminders() {
           onChange={(value) => {
             const minutes =
               REMINDER_MINUTES.find((m) => String(m) === value) ?? 5;
-            savePreferences({
-              reminderMinutes: minutes === 5 ? undefined : minutes,
-            });
+            setPreference("reminderMinutes", minutes);
             // Choosing a reminder is a good moment to ask for notifications.
             if (minutes > 0) void allow();
           }}

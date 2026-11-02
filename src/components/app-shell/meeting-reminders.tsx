@@ -11,6 +11,7 @@ import {
 } from "@/lib/meetings/schedule-actions";
 import {
   loadPreferences,
+  subscribePreferences,
   useIntlLocale,
   withDefaults,
 } from "@/lib/preferences";
@@ -117,12 +118,19 @@ export function MeetingReminders() {
 
     void plan();
     const every = setInterval(() => void plan(), REFRESH_MS);
-    const onChange = () => void plan();
-    window.addEventListener("faceon:prefs", onChange);
+    // A new reminder time in Settings (here or in another tab) plans again; other
+    // settings don't need another look at the calendar.
+    let minutes = withDefaults(loadPreferences()).reminderMinutes;
+    const unsubscribe = subscribePreferences(() => {
+      const now = withDefaults(loadPreferences()).reminderMinutes;
+      if (now === minutes) return;
+      minutes = now;
+      void plan();
+    });
     return () => {
       cancelled = true;
       clearInterval(every);
-      window.removeEventListener("faceon:prefs", onChange);
+      unsubscribe();
       timers.forEach(clearTimeout);
     };
   }, []);

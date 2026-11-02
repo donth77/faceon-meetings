@@ -144,7 +144,8 @@ export function savePreferences(patch: Preferences): void {
   window.dispatchEvent(new Event(CHANGED));
 }
 
-function subscribe(onChange: () => void) {
+/** Calls `onChange` when any setting changes, here or in another tab. */
+export function subscribePreferences(onChange: () => void) {
   window.addEventListener("storage", onChange);
   window.addEventListener(CHANGED, onChange);
   return () => {
@@ -156,33 +157,65 @@ function subscribe(onChange: () => void) {
 const NONE: Preferences = {};
 
 export function usePreferences(): Preferences {
-  return useSyncExternalStore(subscribe, loadPreferences, () => NONE);
+  return useSyncExternalStore(
+    subscribePreferences,
+    loadPreferences,
+    () => NONE,
+  );
 }
 
+/** The settings that have a default, as the code that acts on them sees them. */
+export type Settings = Required<
+  Omit<Preferences, "timeFormat" | "timeZone" | "effect">
+> & { effect: Effect | null };
+
+/** Every setting's default: one place to change one. */
+export const DEFAULTS: Settings = {
+  noiseSuppression: true,
+  mirrorVideo: true,
+  hdVideo: true,
+  cameraOffOnJoin: false,
+  singleKeyShortcuts: true,
+  showOthersReactions: true,
+  reactionAnimation: true,
+  reactionSound: false,
+  reactionAnnouncements: "summary",
+  soundPeople: true,
+  soundChat: true,
+  soundHands: true,
+  soundLobby: true,
+  popupChat: true,
+  popupHands: true,
+  popupLobby: true,
+  pushToTalk: false,
+  autoPictureInPicture: true,
+  reminderMinutes: 5,
+  effect: null,
+};
+
 /** The settings with their defaults filled in, for the code that acts on them. */
-export function withDefaults(preferences: Preferences) {
-  return {
-    noiseSuppression: preferences.noiseSuppression ?? true,
-    mirrorVideo: preferences.mirrorVideo ?? true,
-    hdVideo: preferences.hdVideo ?? true,
-    cameraOffOnJoin: preferences.cameraOffOnJoin ?? false,
-    singleKeyShortcuts: preferences.singleKeyShortcuts ?? true,
-    showOthersReactions: preferences.showOthersReactions ?? true,
-    reactionAnimation: preferences.reactionAnimation ?? true,
-    reactionSound: preferences.reactionSound ?? false,
-    reactionAnnouncements: preferences.reactionAnnouncements ?? "summary",
-    soundPeople: preferences.soundPeople ?? true,
-    soundChat: preferences.soundChat ?? true,
-    soundHands: preferences.soundHands ?? true,
-    soundLobby: preferences.soundLobby ?? true,
-    popupChat: preferences.popupChat ?? true,
-    popupHands: preferences.popupHands ?? true,
-    popupLobby: preferences.popupLobby ?? true,
-    pushToTalk: preferences.pushToTalk ?? false,
-    autoPictureInPicture: preferences.autoPictureInPicture ?? true,
-    reminderMinutes: preferences.reminderMinutes ?? 5,
-    effect: preferences.effect ?? null,
-  };
+export function withDefaults(preferences: Preferences): Settings {
+  return { ...DEFAULTS, ...preferences };
+}
+
+/**
+ * What saving one setting stores: nothing when it's the default, so a default can
+ * improve later for everyone who never changed it.
+ */
+export function preferencePatch<K extends keyof Settings>(
+  key: K,
+  value: Settings[K],
+): Preferences {
+  // Keys of Settings are keys of Preferences, with null standing for "unset".
+  return { [key]: value === DEFAULTS[key] ? undefined : value } as Preferences;
+}
+
+/** Saves one setting (see preferencePatch). */
+export function setPreference<K extends keyof Settings>(
+  key: K,
+  value: Settings[K],
+): void {
+  savePreferences(preferencePatch(key, value));
 }
 
 function subscribeLanguages(onChange: () => void) {
