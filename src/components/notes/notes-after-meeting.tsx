@@ -19,8 +19,11 @@ export function NotesAfterMeeting({
 }: {
   code: string;
   title: string;
-  /** The session you left, and whether you're signed in to save notes with it. */
-  session: { id: string; signedIn: boolean };
+  /**
+   * The session you left, whether you're signed in to save notes with it, and whether
+   * the meeting shares them with its participants.
+   */
+  session: { id: string; signedIn: boolean; shareNotes: boolean };
 }) {
   const t = useTranslations("Notes");
   const [lines, setLines] = useState(() => loadTranscript(session.id));
@@ -45,6 +48,7 @@ export function NotesAfterMeeting({
         lines={lines}
         settings={{ href: "/settings/ai-notes" }}
         autoStart
+        autoShare={session.shareNotes}
         onDiscard={() => {
           saveTranscript(session.id, []);
           setLines([]);

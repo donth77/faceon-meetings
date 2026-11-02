@@ -52,7 +52,7 @@ function SettingSwitch({
 }
 
 /** "Start AI notes automatically", which the meeting's host can change from the room. */
-/** "Start AI notes automatically": for the meeting's host, where their meetings offer AI notes. */
+/** A meeting's AI notes switch, for its host where their meetings offer AI notes. */
 export type AutoNotesSetting = {
   on: boolean;
   onChange: (on: boolean) => void;
@@ -69,6 +69,7 @@ export function MeetingSettingsMenu({
   isOwner,
   onChange,
   autoNotes,
+  shareNotes,
   onEndForAll,
 }: {
   state: SharedSessionState | null;
@@ -76,6 +77,8 @@ export function MeetingSettingsMenu({
   isOwner: boolean;
   onChange: (policy: Partial<SessionPolicy>) => void;
   autoNotes?: AutoNotesSetting | undefined;
+  /** "Share AI notes with participants automatically": the same, beside it. */
+  shareNotes?: AutoNotesSetting | undefined;
   onEndForAll: () => void;
 }) {
   const t = useTranslations("Meeting.meetingSettings");
@@ -96,7 +99,7 @@ export function MeetingSettingsMenu({
         className="w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl bg-[#1c2026] p-2 shadow-[0_20px_48px_rgba(0,0,0,0.55)] ring-1 ring-[#2f3640]"
       >
         <Dialog aria-label={t("title")} className="flex flex-col outline-none">
-          {({ close }) => (
+          {() => (
             <>
               <SettingSwitch
                 label={t("lock")}
@@ -165,6 +168,15 @@ export function MeetingSettingsMenu({
                   isSelected={autoNotes.on}
                   isDisabled={false}
                   onChange={autoNotes.onChange}
+                />
+              ) : null}
+              {shareNotes ? (
+                <SettingSwitch
+                  label={t("shareNotes")}
+                  help={t("shareNotesHelp")}
+                  isSelected={shareNotes.on}
+                  isDisabled={false}
+                  onChange={shareNotes.onChange}
                 />
               ) : null}
               {isOwner ? (

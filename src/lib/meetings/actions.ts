@@ -9,8 +9,10 @@ import {
   getOrCreatePersonalRoom,
   insertInstantMeeting,
   rotatePersonalRoomCode,
+  setNamedCohosts,
   updateMeetingSettings,
 } from "./queries";
+import { CohostList, cohostsAllowed } from "./schedule";
 import { demoMeetingsLeft } from "./sessions";
 import { MeetingSettings } from "./settings";
 
@@ -71,6 +73,7 @@ const PersonalRoomChanges = MeetingSettings.pick({
   allowGuests: true,
   muteOnEntry: true,
   autoNotes: true,
+  shareNotes: true,
 }).partial();
 
 /** False when the changes aren't settings this page has, as the other actions do. */
@@ -82,5 +85,22 @@ export async function updatePersonalRoomSettings(
   if (!parsed.success) return false;
   const room = await getOrCreatePersonalRoom(session.user.id);
   await updateMeetingSettings(room.id, session.user.id, parsed.data);
+  return true;
+}
+
+/**
+ * Personal room → Co-hosts: the people who join it as co-hosts when signed in with these
+ * addresses. False when the list isn't valid (or names the host).
+ */
+export async function updatePersonalRoomCohosts(
+  emails: unknown,
+): Promise<boolean> {
+  const session = await requireSession(PERSONAL_ROOM_ROUTE);
+  const parsed = CohostList.safeParse(emails);
+  if (!parsed.success || !cohostsAllowed(parsed.data, session.user.email)) {
+    return false;
+  }
+  const room = await getOrCreatePersonalRoom(session.user.id);
+  await setNamedCohosts(room.id, parsed.data);
   return true;
 }

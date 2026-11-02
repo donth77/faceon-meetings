@@ -232,6 +232,7 @@ export function ParticipantsPanel({
   onMuteAll,
   onPolicyChange,
   autoNotes,
+  shareNotes,
   onEndForAll,
   onClose,
 }: {
@@ -246,6 +247,8 @@ export function ParticipantsPanel({
   onPolicyChange: (policy: Partial<SessionPolicy>) => void;
   /** The meeting's host: whether AI notes start automatically. */
   autoNotes?: AutoNotesSetting | undefined;
+  /** "Share AI notes with participants automatically", for the meeting's host. */
+  shareNotes?: AutoNotesSetting | undefined;
   onEndForAll: () => void;
   onClose: () => void;
 }) {
@@ -297,6 +300,7 @@ export function ParticipantsPanel({
                 isOwner={selfRole === "host"}
                 onChange={onPolicyChange}
                 autoNotes={autoNotes}
+                shareNotes={shareNotes}
                 onEndForAll={onEndForAll}
               />
             </>

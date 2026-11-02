@@ -6,7 +6,11 @@ import { toast } from "sonner";
 
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { aiNotesEnabled } from "@/lib/env";
-import type { SelfInfo, SessionInfo } from "@/lib/meetings/api";
+import type {
+  AdmittedMeetingInfo,
+  SelfInfo,
+  SessionInfo,
+} from "@/lib/meetings/api";
 import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
 import { canMakeNotes } from "@/lib/notes/engines";
 import { useNotesSettings } from "@/lib/notes/settings";
@@ -29,6 +33,7 @@ export function useMeetingNotes({
   self,
   isHost,
   autoNotes: initialAutoNotes,
+  meeting,
   onOpenSettings,
 }: {
   media: RoomMedia;
@@ -38,6 +43,8 @@ export function useMeetingNotes({
   isHost: boolean;
   /** The meeting's "Start AI notes automatically", as it was when you joined. */
   autoNotes: boolean;
+  /** The meeting as you joined it, until the session's state arrives. */
+  meeting: Pick<AdmittedMeetingInfo, "shareNotes">;
   /** Opens Settings → AI notes. */
   onOpenSettings: () => void;
 }) {
@@ -74,7 +81,7 @@ export function useMeetingNotes({
   async function setAutoNotes(on: boolean) {
     setAutoNotesState(on);
     try {
-      await meetingApi.autoNotes(code, { autoNotes: on });
+      await meetingApi.notesSettings(code, { autoNotes: on });
     } catch {
       setAutoNotesState(!on);
       toast.error(t("notes.autoFailed"));
@@ -86,6 +93,28 @@ export function useMeetingNotes({
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
   const state = media.sessionState;
+
+  // Whether the meeting shares AI notes with its participants as they're made: the
+  // session's state brings it to everyone, live. Its host can change it from the room;
+  // the switch shows their choice until the session's state moves on from what it was.
+  const sharedLive = state?.shareNotes ?? meeting.shareNotes;
+  const [sharePending, setSharePending] = useState<{
+    on: boolean;
+    was: boolean;
+  } | null>(null);
+  const shareNotes =
+    sharePending && sharedLive === sharePending.was
+      ? sharePending.on
+      : sharedLive;
+  async function setShareNotes(on: boolean) {
+    setSharePending({ on, was: sharedLive });
+    try {
+      await meetingApi.notesSettings(code, { shareNotes: on });
+    } catch {
+      setSharePending(null);
+      toast.error(t("notes.shareFailed"));
+    }
+  }
   const joined = useRef(false);
   useEffect(() => {
     if (joined.current || !state || onDevice === null) return;
@@ -122,6 +151,8 @@ export function useMeetingNotes({
     onOpenSettings,
   ]);
 
+  // Said up front, so everyone knows where the notes go before they speak.
+  const shared = shareNotes;
   const announced = useRef<string | null>(null);
   useEffect(() => {
     const key = notes ? `${notes.by}@${notes.startedAt}` : null;
@@ -133,15 +164,18 @@ export function useMeetingNotes({
       return;
     }
     if (notes.by === self.id) return;
-    toast(t("notes.banner", { name: notes.name }), {
-      id: "notes-banner",
-      duration: 15_000,
-      action: {
-        label: t("notes.dontTranscribe"),
-        onClick: () => setOptedOut(true),
+    toast(
+      t(shared ? "notes.bannerShared" : "notes.banner", { name: notes.name }),
+      {
+        id: "notes-banner",
+        duration: 15_000,
+        action: {
+          label: t("notes.dontTranscribe"),
+          onClick: () => setOptedOut(true),
+        },
       },
-    });
-  }, [notes, self.id, t, setOptedOut]);
+    );
+  }, [notes, self.id, t, setOptedOut, shared]);
 
   // Where this browser needs its one-time speech download, offer it once.
   const offeredDownload = useRef(false);
@@ -188,6 +222,8 @@ export function useMeetingNotes({
     notesAllowed,
     notesOffered,
     autoNotes,
+    shareNotes,
+    setShareNotes,
     setAutoNotes,
     transcript,
     transcription,

@@ -8,6 +8,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Button, LinkButton } from "@/components/ui/button";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
+import { autoSharing } from "@/lib/meetings/rules";
 import type { NotesProgress } from "@/lib/notes/engines";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import {
@@ -139,6 +140,7 @@ function MadeNotesView({
   lines,
   settings,
   save,
+  cantShare,
   onMakeAgain,
 }: {
   made: MadeNotes;
@@ -155,6 +157,8 @@ function MadeNotesView({
         onSave: (shared: boolean) => void;
       }
     | undefined;
+  /** The meeting shares AI notes, but these can't be saved (no account): say so. */
+  cantShare: boolean;
   onMakeAgain: () => void;
 }) {
   const t = useTranslations("Notes");
@@ -209,9 +213,11 @@ function MadeNotesView({
       <p className="text-muted-foreground text-[13px] leading-normal">
         {made.saved
           ? t("audioNeverStored")
-          : save
-            ? t("onlyYou")
-            : t("onlyYouGuest")}
+          : cantShare
+            ? t("autoShareNeedsAccount")
+            : save
+              ? t("onlyYou")
+              : t("onlyYouGuest")}
       </p>
     </div>
   );
@@ -229,6 +235,7 @@ export function NotesMaker({
   lines,
   settings,
   autoStart = false,
+  autoShare = false,
   onDiscard,
 }: {
   code: string;
@@ -240,6 +247,11 @@ export function NotesMaker({
   lines: readonly TranscriptLine[];
   settings: SettingsLink;
   autoStart?: boolean;
+  /**
+   * The meeting shares AI notes with its participants: saved and shared as soon as
+   * they're made, or, where they can't be saved (no account), it says so.
+   */
+  autoShare?: boolean;
   /** Deletes the transcript and the notes from this tab. */
   onDiscard: () => void;
 }) {
@@ -276,6 +288,23 @@ export function NotesMaker({
     start();
   }, [autoStart, state.step, instant]);
 
+  // Shared as soon as they're made, once; afterwards Stop sharing (here or in Previous)
+  // is the notetaker's, as is saving notes made again.
+  const sharing = autoSharing({
+    shareNotes: autoShare,
+    canSave,
+    saved: state.step === "done" && state.made.saved !== undefined,
+  });
+  const autoShared = useRef(false);
+  const share = useEffectEvent(() => void maker.save(true));
+  useEffect(() => {
+    if (state.step !== "done" || sharing !== "share" || autoShared.current) {
+      return;
+    }
+    autoShared.current = true;
+    share();
+  }, [state.step, sharing]);
+
   let body;
   switch (state.step) {
     case "done":
@@ -295,6 +324,7 @@ export function NotesMaker({
                 }
               : undefined
           }
+          cantShare={sharing === "cantSave"}
           onMakeAgain={() => void maker.make()}
         />
       );

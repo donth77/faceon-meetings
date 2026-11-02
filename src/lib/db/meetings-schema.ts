@@ -226,7 +226,10 @@ export const admissionRequest = pgTable(
   ],
 );
 
-/** People invited to a scheduled meeting, by email. Deleted with the meeting. */
+/**
+ * People invited to a meeting by email: a scheduled meeting's invitees, and any meeting's
+ * named co-hosts, who are invited too where it sends invitations. Deleted with the meeting.
+ */
 export const meetingInvitee = pgTable(
   "meeting_invitee",
   {
@@ -235,6 +238,8 @@ export const meetingInvitee = pgTable(
       .references(() => meeting.id, { onDelete: "cascade" }),
     /** Lowercased. */
     email: text("email").notNull(),
+    /** A named co-host: joins as one when signed in with this address, verified. */
+    cohost: boolean("cohost").notNull().default(false),
     addedAt: timestamp("added_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

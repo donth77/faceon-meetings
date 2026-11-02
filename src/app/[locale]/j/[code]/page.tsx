@@ -46,9 +46,19 @@ async function MeetingGate({
     getMeetingSummary(
       code,
       session
-        ? { userId: session.user.id, mediaUserId: userMediaId(session.user.id) }
+        ? {
+            userId: session.user.id,
+            mediaUserId: userMediaId(session.user.id),
+            verifiedEmail: session.user.emailVerified
+              ? session.user.email.toLowerCase()
+              : null,
+          }
         : guest
-          ? { userId: null, mediaUserId: guestMediaId(guest.id) }
+          ? {
+              userId: null,
+              mediaUserId: guestMediaId(guest.id),
+              verifiedEmail: null,
+            }
           : null,
     ),
     isLimited(attempts.limits),
@@ -63,6 +73,7 @@ async function MeetingGate({
   if (!session && !(guestsEnabled() && summary.allowGuests)) {
     return <MeetingNotice kind="signIn" code={code} />;
   }
+  const youHost = session?.user.id === summary.hostId;
 
   return (
     <MeetingEntryLoader
@@ -71,11 +82,13 @@ async function MeetingGate({
         code,
         title: summary.title,
         hostName: summary.hostName,
-        askToJoin: summary.waitingRoom && session?.user.id !== summary.hostId,
+        askToJoin: summary.waitingRoom && !youHost && !summary.joinsAsCohost,
         notesOn: summary.notesOn,
         notesAuto: summary.notesAuto,
+        notesShared: summary.notesShared,
         limits: summary.limits,
-        youHost: session?.user.id === summary.hostId,
+        youHost,
+        youCohost: summary.joinsAsCohost,
         needsPasscode: summary.needsPasscode,
       }}
       viewer={

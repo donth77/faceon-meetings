@@ -2,6 +2,7 @@ import "server-only";
 
 import { avatarUrl } from "@/lib/avatars/seed";
 import { guestsEnabled } from "@/lib/guest-session";
+import { loggable } from "@/lib/log";
 import { mediaProvider } from "@/lib/media";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
@@ -16,6 +17,7 @@ import {
   findMember,
   findOpenSession,
   hostMemberIds,
+  isNamedCohost,
   markSessionSeen,
   type MeetingHost,
 } from "./queries";
@@ -26,7 +28,7 @@ import {
   providerParticipantCap,
   resolveRole,
 } from "./rules";
-import { sessionPolicy, sessionState } from "./session-state";
+import { changeSession, sessionPolicy, sessionState } from "./session-state";
 import { currentSession, startSession } from "./sessions";
 import { askToJoin, timesDenied } from "./waiting-room";
 
@@ -77,6 +79,13 @@ export async function joinMeeting(input: {
     isOwner,
     isGuest: principal.kind === "guest",
     memberRole: member?.role,
+    // Only asked of someone new to the session; the role they have there stands.
+    namedCohost:
+      !isOwner &&
+      !member &&
+      principal.kind === "user" &&
+      principal.verifiedEmail !== null &&
+      (await isNamedCohost(meeting.id, principal.verifiedEmail)),
   });
   const connected = live?.snapshot?.connectedUserIds ?? [];
   const policy = live
@@ -135,7 +144,7 @@ export async function joinMeeting(input: {
     });
   }
 
-  return admit({
+  const admitted = await admit({
     meeting,
     host,
     session: session.row,
@@ -144,6 +153,17 @@ export async function joinMeeting(input: {
     role,
     now,
   });
+  // A co-host the meeting names, new to the session: everyone's room learns it from the
+  // session's shared state, as with a co-host made during the meeting.
+  if (role === "cohost" && member?.role !== "cohost") {
+    try {
+      await changeSession(meeting, session.row, { roles: true });
+    } catch (error) {
+      // They're a co-host either way; the session's next change publishes it.
+      console.error("Couldn't publish a named co-host", loggable(error));
+    }
+  }
+  return admitted;
 }
 
 /** A fresh media token for someone still admitted to the meeting's open session. */

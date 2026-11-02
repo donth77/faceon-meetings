@@ -3,7 +3,14 @@
 import { cn } from "cn";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
 import { toast } from "sonner";
 
@@ -84,6 +91,7 @@ export function MeetingShell({
   endsAt,
   onEndForAll,
   onAloneTimeout,
+  onShareNotesChange,
 }: {
   meeting: AdmittedMeetingInfo;
   self: SelfInfo;
@@ -93,6 +101,8 @@ export function MeetingShell({
   onEndForAll: () => void;
   /** Called before leaving because nobody else was here. */
   onAloneTimeout: () => void;
+  /** Whether the meeting shares AI notes, as it changes: notes made after leaving follow it. */
+  onShareNotesChange: (on: boolean) => void;
 }) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
@@ -168,8 +178,11 @@ export function MeetingShell({
     self,
     isHost,
     autoNotes: meeting.autoNotes,
+    meeting,
     onOpenSettings: () => setSettings("aiNotes"),
   });
+  const reportSharing = useEffectEvent(onShareNotesChange);
+  useEffect(() => reportSharing(notes.shareNotes), [notes.shareNotes]);
   const reactions = useRoomReactions({
     media,
     selfId: self.id,
@@ -292,6 +305,7 @@ export function MeetingShell({
           notes={notes.notes}
           demo={session.demo}
           allowed={notes.notesAllowed}
+          shared={notes.shareNotes}
           isOwner={selfRole === "host"}
           hostName={meeting.hostName}
           isNotetaker={notes.isNotetaker}
@@ -329,6 +343,18 @@ export function MeetingShell({
             ? {
                 on: notes.autoNotes,
                 onChange: (on) => void notes.setAutoNotes(on),
+              }
+            : undefined
+        }
+        shareNotes={
+          // The same: the meeting's host, where their meetings offer AI notes.
+          selfRole === "host" &&
+          notes.canRunNotes &&
+          notes.notesAllowed &&
+          !session.demo
+            ? {
+                on: notes.shareNotes,
+                onChange: (on) => void notes.setShareNotes(on),
               }
             : undefined
         }

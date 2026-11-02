@@ -23,10 +23,17 @@ describe("SharedSessionState", () => {
     },
     notesAllowed: true,
     notesStopped: false,
+    shareNotes: true,
   };
 
   it("reads the state our server publishes", () => {
     expect(SharedSessionState.parse(stored)).toEqual(stored);
+  });
+
+  it("reads a session published before notes could be shared as not sharing them", () => {
+    const older: Record<string, unknown> = { ...stored };
+    delete older.shareNotes;
+    expect(SharedSessionState.parse(older).shareNotes).toBe(false);
   });
 
   it("reads Stream's null for an empty list", () => {

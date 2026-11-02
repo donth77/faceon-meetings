@@ -1,6 +1,6 @@
-import { AutoNotesRequest, NotesRequest } from "@/lib/meetings/api";
+import { NotesRequest, NotesSettingsRequest } from "@/lib/meetings/api";
 import { handleMeetingRequest, readJson } from "@/lib/meetings/http";
-import { setAutoNotes, setNotes } from "@/lib/meetings/notes";
+import { setNotes, setNotesSettings } from "@/lib/meetings/notes";
 import { getPrincipal } from "@/lib/meetings/principal";
 
 /** POST /api/meetings/{code}/notes: a host or co-host turns AI notes on or off. */
@@ -21,7 +21,7 @@ export async function POST(
 
 /**
  * PATCH /api/meetings/{code}/notes: the meeting's host sets whether AI notes start
- * automatically in this meeting.
+ * automatically in this meeting, and whether they're shared with its participants.
  */
 export async function PATCH(
   request: Request,
@@ -29,10 +29,10 @@ export async function PATCH(
 ) {
   return handleMeetingRequest(request, async () => {
     const { code } = await params;
-    await setAutoNotes({
+    await setNotesSettings({
       code,
       principal: await getPrincipal(request),
-      request: await readJson(request, AutoNotesRequest),
+      request: await readJson(request, NotesSettingsRequest),
     });
     return new Response(null, { status: 204 });
   });

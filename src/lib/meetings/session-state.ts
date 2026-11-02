@@ -44,6 +44,7 @@ export function sessionState(
     notes: session.notes ?? null,
     notesAllowed: session.notesAllowed,
     notesStopped: session.notesStopped,
+    shareNotes: meeting.settings.shareNotes,
   };
 }
 
@@ -68,7 +69,9 @@ export type SessionChange =
   /** Someone's last connection left: AI notes go off if they were taking them. */
   | { notesOffFrom: string }
   /** The host allowed AI notes in their meetings, or stopped allowing them (and any on stop). */
-  | { notesAllowed: boolean };
+  | { notesAllowed: boolean }
+  /** The meeting's own settings changed (sharing AI notes): everyone gets them again. */
+  | { meetingSettings: true };
 
 /** Allowing AI notes, or not: not allowing them also stops notes in progress. */
 function allowingNotes(

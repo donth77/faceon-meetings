@@ -22,8 +22,9 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { useCalendarProblemToast } from "@/components/google-calendar/outcome";
-import { AutoNotesRow } from "@/components/notes/auto-notes-row";
+import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
 import { Button, LinkButton } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -380,7 +381,7 @@ export function MeetingDetailsView({
                   ) : (
                     <span className="bg-muted size-8 shrink-0 rounded-full" />
                   )}
-                  <div className="flex min-w-0 flex-col">
+                  <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[15px] font-semibold">
                       {person.name ?? person.email}
                     </span>
@@ -390,6 +391,7 @@ export function MeetingDetailsView({
                       </span>
                     ) : null}
                   </div>
+                  {person.cohost ? <Chip>{t("cohost")}</Chip> : null}
                 </li>
               ))}
             </ul>
@@ -462,6 +464,11 @@ export function MeetingDetailsView({
                 allowed={aiNotesAllowed}
                 isSelected={settings.autoNotes}
                 onChange={(value) => void changeSetting("autoNotes", value)}
+              />
+              <ShareNotesRow
+                allowed={aiNotesAllowed}
+                isSelected={settings.shareNotes}
+                onChange={(value) => void changeSetting("shareNotes", value)}
               />
             </div>
           </Card>

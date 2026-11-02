@@ -22,7 +22,7 @@ import {
   CalendarOutcomeNote,
   useCalendarProblemToast,
 } from "@/components/google-calendar/outcome";
-import { AutoNotesRow } from "@/components/notes/auto-notes-row";
+import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -68,7 +68,7 @@ import {
 
 import { DateField } from "./date-field";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
-import { InviteesField } from "./invitees-field";
+import { CohostsField, InviteesField } from "./invitees-field";
 import { RepeatField } from "./repeat-field";
 import { ScopeDialog } from "./scope-dialog";
 import { TimeZoneField } from "./time-zone-field";
@@ -82,6 +82,8 @@ export type ScheduleFormValues = {
   timeZone: string;
   recurrence: Recurrence | null;
   invitees: string[];
+  /** Named co-hosts: they join as co-hosts when signed in with these addresses. */
+  cohosts: string[];
   passcode: boolean;
   waitingRoom: boolean;
   allowGuests: boolean;
@@ -89,6 +91,8 @@ export type ScheduleFormValues = {
   muteOnEntry: boolean;
   /** AI notes start by themselves when you or a co-host joins. */
   autoNotes: boolean;
+  /** AI notes are saved and shared with the participants as soon as they're made. */
+  shareNotes: boolean;
   /** Add it to the host's Google Calendar (Calendar sync). */
   googleCalendar: boolean;
 };
@@ -123,12 +127,14 @@ export function defaultValues(): ScheduleFormValues {
     timeZone,
     recurrence: null,
     invitees: [],
+    cohosts: [],
     passcode: true,
     waitingRoom: true,
     allowGuests: true,
     joinBeforeHost: false,
     muteOnEntry: false,
     autoNotes: false,
+    shareNotes: false,
     googleCalendar: false,
   };
 }
@@ -155,7 +161,9 @@ const toInput = (values: ScheduleFormValues): ScheduleInput => ({
   joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
   muteOnEntry: values.muteOnEntry,
   autoNotes: values.autoNotes,
+  shareNotes: values.shareNotes,
   invitees: values.invitees,
+  cohosts: values.cohosts,
   googleCalendar: values.googleCalendar,
 });
 
@@ -412,7 +420,8 @@ export function ScheduleForm({
     timeZone: values.timeZone,
     startDate: values.date,
     recurrence: values.recurrence,
-    invitees: values.invitees,
+    // Named co-hosts are invited too.
+    invitees: [...values.invitees, ...values.cohosts],
   };
 
   async function save(scope: SeriesScope) {
@@ -556,7 +565,23 @@ export function ScheduleForm({
             label={t("invitePeople")}
             optional={t("optional")}
             value={values.invitees}
-            onChange={(invitees) => set({ invitees })}
+            onChange={(invitees) =>
+              set({
+                invitees: invitees.filter((e) => !values.cohosts.includes(e)),
+              })
+            }
+          />
+          <CohostsField
+            value={values.cohosts}
+            onChange={(cohosts) =>
+              // Each address on one list: a co-host is invited as one.
+              set({
+                cohosts,
+                invitees: values.invitees.filter((e) => !cohosts.includes(e)),
+              })
+            }
+            hostEmail={calendar.email}
+            help={t("cohostsHelp")}
           />
           <GoogleCalendarField
             connection={calendar.connection}
@@ -618,6 +643,11 @@ export function ScheduleForm({
               allowed={aiNotesAllowed}
               isSelected={values.autoNotes}
               onChange={(on) => set({ autoNotes: on })}
+            />
+            <ShareNotesRow
+              allowed={aiNotesAllowed}
+              isSelected={values.shareNotes}
+              onChange={(on) => set({ shareNotes: on })}
             />
           </fieldset>
           <div className="flex gap-2">

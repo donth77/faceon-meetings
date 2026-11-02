@@ -633,6 +633,8 @@
       "shareHosts": "Hosts only",
       "autoNotes": "Start AI notes automatically",
       "autoNotesHelp": "In this meeting, whenever you or a co-host joins",
+      "shareNotes": "Share AI notes automatically",
+      "shareNotesHelp": "With everyone in this meeting who has an account, as soon as they're made",
       "endForAll": "End meeting for all"
     },
     "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}",
@@ -666,9 +668,12 @@
       "chip": "AI notes on",
       "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
       "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
+      "everyoneSeesShared": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed. The notes are shared with the participants as soon as they're made.",
+      "willBeShared": "Once they're made, the notes are shared with everyone here who has an account.",
       "start": "Start AI notes",
       "stop": "Stop AI notes",
       "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
+      "bannerShared": "{name} turned on AI notes. A summary will be made from what's said and shared with the participants, and you can choose not to be transcribed.",
       "stopped": "AI notes are off.",
       "dontTranscribe": "Don't transcribe me",
       "dontTranscribeHelp": "What you say stays out of the notes",
@@ -681,6 +686,7 @@
       "autoCantMake": "AI notes didn't start: this browser can't make notes yet. Set that up in Settings, then select Start AI notes.",
       "autoSettings": "Settings",
       "autoFailed": "Couldn't change Start AI notes automatically. Try again.",
+      "shareFailed": "Couldn't change Share AI notes automatically. Try again.",
       "youTakeNotes": "You're taking notes. What everyone says appears here, transcribed on each person's device.",
       "takingNotes": "{name} is taking notes. The transcript is in their browser.",
       "transcript": "Transcript",
@@ -757,6 +763,9 @@
     "askingMeeting": "{title} · Hosted by {name}",
     "leaveWaitingRoom": "Leave",
     "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed.",
+    "notesOnShared": "AI notes are on in this meeting. A summary is made from what's said and shared with the participants, and you can choose not to be transcribed.",
+    "notesAutoShared": "AI notes start automatically in this meeting. A summary is made from what's said and shared with the participants, and you can choose not to be transcribed.",
+    "youCohost": "You're a co-host of this meeting, so you'll join as one.",
     "notesAuto": "AI notes start automatically in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
   },
   "DeviceProblems": {
@@ -933,6 +942,7 @@
     "allowGuestsHint": "They only need the link and a name",
     "muteOnEntry": "Mute people when they join",
     "muteOnEntryHint": "They can unmute themselves",
+    "cohostsHelp": "They join your personal room as co-hosts when signed in with this address.",
     "saveFailed": "Couldn’t save that change. Try again."
   },
   "Recurrence": {
@@ -973,6 +983,11 @@
     "invitePeople": "Invite people",
     "addEmails": "Add email addresses",
     "removeInvitee": "Remove {email}",
+    "cohosts": "Co-hosts",
+    "cohostsHelp": "They join as co-hosts when signed in with this address, and get the invitation too.",
+    "removeCohost": "Remove co-host {email}",
+    "cohostsFull": "You can name up to {count} co-hosts.",
+    "cohostIsYou": "That's your own address. You're the host.",
     "invalidEmail": "“{email}” isn’t an email address.",
     "security": "Security",
     "requirePasscode": "Require a passcode",
@@ -1056,6 +1071,7 @@
     "sameLink": "The same ID and link work for every meeting in the series.",
     "invited": "Invited ({count})",
     "nobodyInvited": "Nobody yet. Edit the meeting to invite people.",
+    "cohost": "Co-host",
     "nextMeetings": "Next meetings",
     "moved": "moved",
     "settings": "Settings",
@@ -1514,9 +1530,14 @@
     "openSaved": "Open in Previous meetings",
     "onlyYouGuest": "Only you can see these notes, in this tab. Audio is never stored. Copy or Download them to keep them.",
     "audioNeverStored": "Audio is never stored.",
+    "autoShareNeedsAccount": "This meeting shares AI notes with its participants, but saving them needs an account. Copy or Download them to share them yourself.",
     "auto": {
       "label": "Start AI notes automatically",
       "help": "When you or a co-host joins. Everyone sees that AI notes are on, and anyone can choose not to be transcribed."
+    },
+    "autoShare": {
+      "label": "Share AI notes with participants automatically",
+      "help": "As soon as they're made, they're saved with the meeting, and everyone who was in it with an account can see them under Previous meetings."
     }
   },
   "SavedNotes": {

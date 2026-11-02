@@ -31,3 +31,30 @@ export function AutoNotesRow({
     />
   );
 }
+
+/**
+ * "Share AI notes with participants automatically", beside it: notes made in the meeting
+ * are saved to it and shared with everyone who was in it with an account, as soon as
+ * they're made. Hidden in the same places.
+ */
+export function ShareNotesRow({
+  allowed,
+  isSelected,
+  onChange,
+}: {
+  /** Your meetings offer AI notes (Settings → AI notes). */
+  allowed: boolean;
+  isSelected: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const t = useTranslations("Notes.autoShare");
+  if (!aiNotesEnabled || !allowed) return null;
+  return (
+    <SwitchRow
+      label={t("label")}
+      help={t("help")}
+      isSelected={isSelected}
+      onChange={onChange}
+    />
+  );
+}

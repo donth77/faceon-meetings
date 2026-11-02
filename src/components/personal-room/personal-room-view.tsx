@@ -7,13 +7,15 @@ import { ToggleButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useInvitation } from "@/components/meeting/invitation";
-import { AutoNotesRow } from "@/components/notes/auto-notes-row";
+import { AutoNotesRow, ShareNotesRow } from "@/components/notes/auto-notes-row";
+import { CohostsField } from "@/components/schedule/invitees-field";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { copyText } from "@/lib/clipboard";
 import {
   regeneratePersonalRoom,
+  updatePersonalRoomCohosts,
   updatePersonalRoomSettings,
 } from "@/lib/meetings/actions";
 import { formatMeetingCode } from "@/lib/meetings/codes";
@@ -28,7 +30,10 @@ export type PersonalRoom = {
     allowGuests: boolean;
     muteOnEntry: boolean;
     autoNotes: boolean;
+    shareNotes: boolean;
   };
+  /** Named co-hosts: they join as co-hosts when signed in with these addresses. */
+  cohosts: string[];
 };
 
 type Setting = keyof PersonalRoom["settings"];
@@ -71,9 +76,12 @@ function DetailRow({
  */
 export function PersonalRoomView({
   room: initial,
+  hostEmail,
   aiNotesAllowed,
 }: {
   room: PersonalRoom;
+  /** Yours, which can't be a co-host: you host. */
+  hostEmail: string;
   /** The host's meetings offer AI notes (Settings → AI notes). */
   aiNotesAllowed: boolean;
 }) {
@@ -98,6 +106,16 @@ export function PersonalRoomView({
       toast.error(t("saveFailed"));
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function changeCohosts(cohosts: string[]) {
+    const previous = room.cohosts;
+    setRoom((current) => ({ ...current, cohosts }));
+    const saved = await updatePersonalRoomCohosts(cohosts).catch(() => false);
+    if (!saved) {
+      setRoom((current) => ({ ...current, cohosts: previous }));
+      toast.error(t("saveFailed"));
     }
   }
 
@@ -226,6 +244,14 @@ export function PersonalRoomView({
           <h2 id="room-settings" className="text-lg font-bold">
             {t("settings")}
           </h2>
+          <div className="pb-1">
+            <CohostsField
+              value={room.cohosts}
+              onChange={(cohosts) => void changeCohosts(cohosts)}
+              hostEmail={hostEmail}
+              help={t("cohostsHelp")}
+            />
+          </div>
           <div className="divide-y">
             <SwitchRow
               label={t("waitingRoom")}
@@ -249,6 +275,11 @@ export function PersonalRoomView({
               allowed={aiNotesAllowed}
               isSelected={room.settings.autoNotes}
               onChange={(value) => void changeSetting("autoNotes", value)}
+            />
+            <ShareNotesRow
+              allowed={aiNotesAllowed}
+              isSelected={room.settings.shareNotes}
+              onChange={(value) => void changeSetting("shareNotes", value)}
             />
           </div>
         </section>

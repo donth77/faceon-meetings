@@ -1,0 +1,1 @@
+ALTER TABLE "meeting_invitee" ADD COLUMN "cohost" boolean DEFAULT false NOT NULL;

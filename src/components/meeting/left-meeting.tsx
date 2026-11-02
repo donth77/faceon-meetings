@@ -18,6 +18,16 @@ import {
 /** Why the meeting closed for you. Ending it yourself is told apart from the host ending it. */
 export type LeftReason = LeaveReason | "endedByYou" | "alone";
 
+/**
+ * The session you left, for AI notes taken in it: whether you're signed in to save them,
+ * and whether the meeting shares them with its participants as they're made.
+ */
+export type LeftSession = {
+  id: string;
+  signedIn: boolean;
+  shareNotes: boolean;
+};
+
 /** Rejoining makes sense only when the meeting is still going. */
 const CAN_REJOIN: ReadonlySet<LeftReason> = new Set([
   "left",
@@ -41,7 +51,7 @@ export function LeftMeeting({
   title: string;
   code: string;
   /** The session you were in; null if you never got in. */
-  session: { id: string; signedIn: boolean } | null;
+  session: LeftSession | null;
   /** The session's time limit, named when it's what ended the meeting. */
   limit: { minutes: number; demo: boolean } | null;
   onRejoin: () => void;

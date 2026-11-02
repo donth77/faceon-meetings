@@ -17,6 +17,8 @@ export type Principal =
       mediaUserId: string;
       name: string;
       image: string;
+      /** Their address once verified (lowercased), which named co-hosts are matched on. */
+      verifiedEmail: string | null;
     }
   | {
       kind: "guest";
@@ -51,6 +53,7 @@ export async function getPrincipal(
       mediaUserId: userMediaId(user.id),
       name: user.name,
       image: avatarUrl(user),
+      verifiedEmail: user.emailVerified ? user.email.toLowerCase() : null,
     };
   }
   const guest = await currentGuest();

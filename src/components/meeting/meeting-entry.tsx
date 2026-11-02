@@ -20,7 +20,7 @@ import { oneOf } from "@/lib/narrow";
 
 import { meetingApi, MeetingRequestError } from "./api-client";
 import { playSound } from "./chime";
-import { LeftMeeting, type LeftReason } from "./left-meeting";
+import { LeftMeeting, type LeftReason, type LeftSession } from "./left-meeting";
 import {
   readLinkPasscode,
   rememberPasscode,
@@ -59,7 +59,7 @@ type Step =
       name: "left";
       reason: LeftReason;
       /** The session you were in, for AI notes taken in it. */
-      session: { id: string; signedIn: boolean } | null;
+      session: LeftSession | null;
       /** Its time limit, named when that's what ended it. */
       limit: { minutes: number; demo: boolean } | null;
     }
@@ -165,7 +165,7 @@ export default function MeetingEntry({
   const endingForAll = useRef(false);
   const endsAt = useRef<number | null>(null);
   const leftAlone = useRef(false);
-  const lastSession = useRef<{ id: string; signedIn: boolean } | null>(null);
+  const lastSession = useRef<LeftSession | null>(null);
   /** The session's time limit, for the end screen when it's reached. */
   const lastLimit = useRef<{ minutes: number; demo: boolean } | null>(null);
   const inRoom = step.name === "room";
@@ -197,6 +197,7 @@ export default function MeetingEntry({
       lastSession.current = {
         id: admission.session.id,
         signedIn: admission.self.signedIn,
+        shareNotes: admission.meeting.shareNotes,
       };
       lastLimit.current =
         admission.session.maxMinutes === null
@@ -423,6 +424,11 @@ export default function MeetingEntry({
             onEndForAll={() => void endForAll()}
             onAloneTimeout={() => {
               leftAlone.current = true;
+            }}
+            onShareNotesChange={(shareNotes) => {
+              if (lastSession.current) {
+                lastSession.current = { ...lastSession.current, shareNotes };
+              }
             }}
           />
         </MeetingRoom>

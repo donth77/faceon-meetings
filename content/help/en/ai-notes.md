@@ -59,4 +59,6 @@ If you're signed in, you can keep the notes with the meeting:
 - **Save to meeting**: only you and the meeting's host can see them.
 - **Share with participants**: everyone who was in the meeting with an account can see them too.
 
+A host can set a meeting to **Share AI notes with participants automatically**: on the schedule form, the meeting's page, the personal room's page, or in the meeting under **Participants** › **⋯**. Then notes are saved and shared as soon as they're made, without anyone selecting **Save**, and everyone is told when AI notes go on, before they speak. Whoever saved them, or the host, can still **Stop sharing** or delete them. Notes made by a co-host without an account can't be saved, so they say so; copy or download them to share them.
+
 Saved notes are under **Previous**: select the meeting's **View details**, then **View AI notes**. There, **Stop sharing** or **Delete notes** if you saved them or host the meeting. The transcript is saved with them when it fits (up to about 200 KB in all). Saved notes are deleted after 90 days, or with the meeting.

@@ -88,7 +88,26 @@ function settingsFrom(values: ScheduleValues): MeetingSettings {
     joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
     muteOnEntry: values.muteOnEntry,
     autoNotes: values.autoNotes,
+    shareNotes: values.shareNotes,
   });
+}
+
+/**
+ * The invitation rows for a meeting: invitees, and named co-hosts (invited too). An
+ * address on both lists is a co-host.
+ */
+function invitationRows(
+  meetingId: string,
+  invitees: readonly string[],
+  cohosts: readonly string[],
+) {
+  const named = new Set(cohosts);
+  return [
+    ...[...new Set(invitees)]
+      .filter((email) => !named.has(email))
+      .map((email) => ({ meetingId, email, cohost: false })),
+    ...[...named].map((email) => ({ meetingId, email, cohost: true })),
+  ];
 }
 
 function checked(values: ScheduleValues): Date {
@@ -140,16 +159,9 @@ export async function scheduleMeeting(input: {
     if (!row) throw new Error("Could not schedule the meeting.");
     if (rule)
       await tx.insert(meetingRule).values({ meetingId: row.id, ...rule });
-    if (values.invitees.length > 0) {
-      await tx
-        .insert(meetingInvitee)
-        .values(
-          [...new Set(values.invitees)].map((email) => ({
-            meetingId: row.id,
-            email,
-          })),
-        )
-        .onConflictDoNothing();
+    const invited = invitationRows(row.id, values.invitees, values.cohosts);
+    if (invited.length > 0) {
+      await tx.insert(meetingInvitee).values(invited).onConflictDoNothing();
     }
     return readMeeting(row);
   });
@@ -174,13 +186,27 @@ export async function seriesOf(
   return { rules, exceptions };
 }
 
+/** Everyone invited to a meeting, named co-hosts included, in the order they were added. */
 export async function inviteesOf(meetingId: string): Promise<string[]> {
+  return (await invitationsOf(meetingId)).everyone;
+}
+
+/** A meeting's invitees and its named co-hosts, apart, and everyone together. */
+export async function invitationsOf(meetingId: string): Promise<{
+  invitees: string[];
+  cohosts: string[];
+  everyone: string[];
+}> {
   const rows = await db()
-    .select({ email: meetingInvitee.email })
+    .select({ email: meetingInvitee.email, cohost: meetingInvitee.cohost })
     .from(meetingInvitee)
     .where(eq(meetingInvitee.meetingId, meetingId))
     .orderBy(asc(meetingInvitee.addedAt));
-  return rows.map((row) => row.email);
+  return {
+    invitees: rows.filter((row) => !row.cohost).map((row) => row.email),
+    cohosts: rows.filter((row) => row.cohost).map((row) => row.email),
+    everyone: rows.map((row) => row.email),
+  };
 }
 
 /** A scheduled meeting's occurrences between two moments (one for a one-off). */
@@ -200,19 +226,17 @@ export function occurrencesOf(
   return [{ originalStart: start, start, end, title: null, moved: false }];
 }
 
-async function replaceInvitees(
+async function replaceInvitations(
   tx: Transaction,
   meetingId: string,
-  emails: string[],
+  values: Pick<ScheduleValues, "invitees" | "cohosts">,
 ) {
   await tx
     .delete(meetingInvitee)
     .where(eq(meetingInvitee.meetingId, meetingId));
-  if (emails.length > 0) {
-    await tx
-      .insert(meetingInvitee)
-      .values([...new Set(emails)].map((email) => ({ meetingId, email })))
-      .onConflictDoNothing();
+  const invited = invitationRows(meetingId, values.invitees, values.cohosts);
+  if (invited.length > 0) {
+    await tx.insert(meetingInvitee).values(invited).onConflictDoNothing();
   }
 }
 
@@ -269,7 +293,7 @@ export async function updateSchedule(input: {
           },
         });
       await tx.update(meeting).set(common).where(eq(meeting.id, row.id));
-      await replaceInvitees(tx, row.id, values.invitees);
+      await replaceInvitations(tx, row.id, values);
       return;
     }
 
@@ -331,7 +355,7 @@ export async function updateSchedule(input: {
         expiresAt: expiryFor(firstStart, values.durationMin, rules),
       })
       .where(eq(meeting.id, row.id));
-    await replaceInvitees(tx, row.id, values.invitees);
+    await replaceInvitations(tx, row.id, values);
   });
 }
 
@@ -525,7 +549,13 @@ export type MeetingDetails = {
   startTime: string;
   rrule: string | null;
   next: DetailsOccurrence[];
-  invitees: Array<{ email: string; name: string | null; image: string | null }>;
+  /** Everyone invited, named co-hosts marked. */
+  invitees: Array<{
+    email: string;
+    name: string | null;
+    image: string | null;
+    cohost: boolean;
+  }>;
   /** The host keeps it in their Google Calendar (Calendar sync); host only. */
   onGoogleCalendar: boolean;
   settings: Pick<
@@ -535,6 +565,7 @@ export type MeetingDetails = {
     | "muteOnEntry"
     | "joinBeforeHost"
     | "autoNotes"
+    | "shareNotes"
   >;
   cancelled: string[];
   moved: Array<{
@@ -566,7 +597,8 @@ export async function meetingDetails(input: {
   if (!found || found.meeting.status !== "active") return null;
   const row = readMeeting(found.meeting);
   const isHost = row.hostId === input.viewer.id;
-  const invitees = await inviteesOf(row.id);
+  const invitations = await invitationsOf(row.id);
+  const invitees = invitations.everyone;
   const invited =
     input.viewer.emailVerified &&
     invitees.includes(input.viewer.email.toLowerCase());
@@ -636,6 +668,7 @@ export async function meetingDetails(input: {
         email,
         name: person?.name ?? null,
         image: person ? avatarUrl(person) : null,
+        cohost: invitations.cohosts.includes(email),
       };
     }),
     onGoogleCalendar: isHost && row.googleEvents !== null,
@@ -645,6 +678,7 @@ export async function meetingDetails(input: {
       muteOnEntry: row.settings.muteOnEntry,
       joinBeforeHost: row.settings.joinBeforeHost,
       autoNotes: row.settings.autoNotes,
+      shareNotes: row.settings.shareNotes,
     },
     cancelled: series.exceptions
       .filter((e) => e.cancelled)

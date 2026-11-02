@@ -17,6 +17,11 @@ export const MeetingSettings = z.object({
    * allows AI notes (Settings → AI notes).
    */
   autoNotes: z.boolean(),
+  /**
+   * AI notes made in this meeting are saved to it and shared with its participants as
+   * soon as they're made, where the meeting's host allows AI notes.
+   */
+  shareNotes: z.boolean(),
 });
 export type MeetingSettings = z.infer<typeof MeetingSettings>;
 
@@ -31,6 +36,7 @@ const BASE: MeetingSettings = {
   chat: true,
   reactions: true,
   autoNotes: false,
+  shareNotes: false,
 };
 
 /** Defaults by meeting type: personal rooms use the waiting room; scheduled ones wait for the host. */

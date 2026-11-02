@@ -10,6 +10,29 @@ import { latestSeriesEnd, Recurrence } from "./recurrence";
 
 /** Invite up to this many people by email. */
 export const MAX_INVITEES = 50;
+/** Name up to this many co-hosts ahead of time. */
+export const MAX_COHOSTS = 10;
+
+/**
+ * Named co-hosts: they join as co-hosts when signed in with one of these addresses
+ * (verified), and are invited along with everyone else. Lowercased, each once.
+ */
+export const CohostList = z
+  .array(z.email().transform((email) => email.toLowerCase()))
+  .max(MAX_COHOSTS)
+  .refine((emails) => new Set(emails).size === emails.length);
+
+/** Named co-hosts a host may save: a valid list without their own address (they host). */
+export function cohostsAllowed(
+  cohosts: readonly string[],
+  hostEmail: string,
+): boolean {
+  const own = hostEmail.toLowerCase();
+  return (
+    CohostList.safeParse(cohosts).success &&
+    cohosts.every((email) => email.toLowerCase() !== own)
+  );
+}
 /** The longest title and description a meeting can have, in characters. */
 export const MAX_TITLE = 200;
 export const MAX_DESCRIPTION = 2000;
@@ -35,9 +58,12 @@ export const ScheduleInput = z
     muteOnEntry: z.boolean(),
     /** AI notes start by themselves when a host or co-host joins. */
     autoNotes: z.boolean().default(false),
+    /** AI notes are saved and shared with the participants as soon as they're made. */
+    shareNotes: z.boolean().default(false),
     invitees: z
       .array(z.email().transform((email) => email.toLowerCase()))
       .max(MAX_INVITEES),
+    cohosts: CohostList.default([]),
     /** Add it to the host's Google Calendar, so Google invites people (Calendar sync). */
     googleCalendar: z.boolean().default(false),
   })

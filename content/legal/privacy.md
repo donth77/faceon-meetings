@@ -22,7 +22,7 @@ updated: 2026-11-02
 ### Meetings you host
 
 - Each meeting you create: its title, description, times and time zone, how it repeats, its meeting ID and passcode, and its settings, including whether AI notes start automatically.
-- The **email addresses of people you invite** to a scheduled meeting, so you can edit the invitation later. They're deleted with the meeting.
+- The **email addresses of people you invite** to a scheduled meeting, and of the people you name as **co-hosts** of a meeting, so you can edit them later and so they join as co-hosts. You see them, and so do the people invited to a scheduled meeting, on its page. They're deleted with the meeting.
 - While a meeting runs: who's in it and their role, who's asking to join, raised hands, who's spotlighted, whether its host allows AI notes, whether they're on, and whether someone stopped them.
 
 ### Meetings you join
@@ -33,7 +33,7 @@ updated: 2026-11-02
 
 ### AI notes a host saves
 
-AI notes are kept only when a host or co-host chooses to save them: the notes, their transcript when it fits, which tool made them, and whether they're shared. Only whoever saved them and the meeting's host can read them, or, once they're shared, everyone with an account who was in that meeting.
+AI notes are kept only when a host or co-host chooses to save them, or when the meeting's host has set it to share AI notes with its participants automatically, which everyone is told as AI notes go on: the notes, their transcript when it fits, which tool made them, and whether they're shared. Only whoever saved them and the meeting's host can read them, or, once they're shared, everyone with an account who was in that meeting.
 
 ### Google Calendar, if you connect it
 

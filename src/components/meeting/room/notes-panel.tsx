@@ -111,6 +111,7 @@ export function NotesPanel({
   notes,
   demo,
   allowed,
+  shared,
   isOwner,
   hostName,
   isNotetaker,
@@ -133,6 +134,8 @@ export function NotesPanel({
   demo: boolean;
   /** The meeting's host allows AI notes in their meetings (Settings → AI notes). */
   allowed: boolean;
+  /** The meeting shares AI notes with its participants as soon as they're made. */
+  shared: boolean;
   /** You host this meeting, so the choice is yours. */
   isOwner: boolean;
   hostName: string;
@@ -171,6 +174,11 @@ export function NotesPanel({
             ? t("youTakeNotes")
             : t("takingNotes", { name: notes.name })}
         </p>
+        {shared ? (
+          <p className="text-muted-foreground px-5 text-[13px]">
+            {t("willBeShared")}
+          </p>
+        ) : null}
         {isNotetaker && notTranscribed.length > 0 ? (
           <ul
             aria-label={t("notTranscribed")}
@@ -200,6 +208,7 @@ export function NotesPanel({
           lines={lines}
           settings={{ onPress: onOpenSettings }}
           autoStart
+          autoShare={shared}
           onDiscard={onDiscard}
         />
         <section className="flex flex-col gap-3 border-t border-white/10 pt-4">
@@ -209,7 +218,7 @@ export function NotesPanel({
       </div>
     );
   } else {
-    let note = t("everyoneSees");
+    let note = shared ? t("everyoneSeesShared") : t("everyoneSees");
     if (demo) note = t("notInDemo");
     else if (!allowed) {
       note = isOwner ? t("offForYou") : t("offByHost", { name: hostName });

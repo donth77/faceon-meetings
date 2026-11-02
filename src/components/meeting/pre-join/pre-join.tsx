@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import {
+  Crown,
   Info,
   LoaderCircle,
   Mic,
@@ -80,11 +81,15 @@ export type MeetingSummary = {
   notesOn: boolean;
   /** AI notes start by themselves once a host or co-host is in: told in advance too. */
   notesAuto: boolean;
+  /** AI notes are shared with the participants as soon as they're made: said up front. */
+  notesShared: boolean;
   limits: MeetingLimits;
   /** You're the meeting's host. */
   youHost: boolean;
   /** Joining will need the meeting's passcode (it has one, and you aren't let in yet). */
   needsPasscode: boolean;
+  /** You'll join as a co-host (the meeting names you, or a host made you one), so you're told. */
+  youCohost: boolean;
 };
 
 export type JoinInput = {
@@ -594,7 +599,22 @@ export function PreJoin({
                   className="text-primary mt-px size-5 shrink-0"
                   aria-hidden="true"
                 />
-                {meeting.notesOn ? t("notesOn") : t("notesAuto")}
+                {meeting.notesOn
+                  ? t(meeting.notesShared ? "notesOnShared" : "notesOn")
+                  : t(meeting.notesShared ? "notesAutoShared" : "notesAuto")}
+              </p>
+            ) : null}
+
+            {meeting.youCohost ? (
+              <p
+                role="note"
+                className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal"
+              >
+                <Crown
+                  className="text-primary mt-px size-5 shrink-0"
+                  aria-hidden="true"
+                />
+                {t("youCohost")}
               </p>
             ) : null}
 

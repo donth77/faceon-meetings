@@ -15,6 +15,7 @@ import {
 } from "./queries";
 import { DAY_MS } from "./retention";
 import {
+  cohostsAllowed,
   OccurrenceRef,
   ScheduleDraft,
   ScheduleInput,
@@ -59,7 +60,12 @@ export async function scheduleMeetingAction(
   const session = await requireSession(SCHEDULE_ROUTE);
   const parsed = ScheduleInput.safeParse(input);
   const signed = ScheduleDraft.safeParse(draft);
-  if (!parsed.success || !signed.success || !draftIsValid(signed.data)) {
+  if (
+    !parsed.success ||
+    !signed.success ||
+    !draftIsValid(signed.data) ||
+    !cohostsAllowed(parsed.data.cohosts, session.user.email)
+  ) {
     return { ok: false, reason: "invalid" };
   }
   const today = await countMeetingsCreatedSince(
@@ -130,8 +136,13 @@ export async function updateScheduleAction(
   const { row, host } = own;
   const values = ScheduleInput.safeParse(input);
   const which = SeriesScope.safeParse(scope);
-  if (!values.success || !which.success)
+  if (
+    !values.success ||
+    !which.success ||
+    !cohostsAllowed(values.data.cohosts, host.email)
+  ) {
     return { ok: false, reason: "invalid" };
+  }
   const startSync = await wantsGoogleCalendar(
     values.data.googleCalendar && row.googleEvents === null,
     host,
@@ -200,6 +211,7 @@ const DetailsSettings = MeetingSettings.pick({
   allowGuests: true,
   muteOnEntry: true,
   autoNotes: true,
+  shareNotes: true,
 }).partial();
 
 /** The settings switches on a meeting's page. */

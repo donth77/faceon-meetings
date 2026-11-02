@@ -6,7 +6,10 @@ import { PanelLoading } from "@/components/app-shell/loading";
 import { PersonalRoomView } from "@/components/personal-room/personal-room-view";
 import { requireSession } from "@/lib/auth/session";
 import { notesAllowedFor } from "@/lib/meetings/notes";
-import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
+import {
+  getOrCreatePersonalRoom,
+  namedCohostsOf,
+} from "@/lib/meetings/queries";
 import { PERSONAL_ROOM_ROUTE } from "@/lib/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,8 +32,10 @@ async function PersonalRoom() {
     getOrCreatePersonalRoom(session.user.id),
     notesAllowedFor(session.user.id),
   ]);
+  const cohosts = await namedCohostsOf(room.id);
   return (
     <PersonalRoomView
+      hostEmail={session.user.email}
       aiNotesAllowed={aiNotesAllowed}
       room={{
         code: room.code,
@@ -42,7 +47,9 @@ async function PersonalRoom() {
           allowGuests: room.settings.allowGuests,
           muteOnEntry: room.settings.muteOnEntry,
           autoNotes: room.settings.autoNotes,
+          shareNotes: room.settings.shareNotes,
         },
+        cohosts,
       }}
     />
   );

@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   and,
+  asc,
   count,
   eq,
   exists,
@@ -18,6 +19,7 @@ import {
 import { db } from "@/lib/db";
 import {
   meeting,
+  meetingInvitee,
   meetingMember,
   meetingSession,
   participantSession,
@@ -220,7 +222,12 @@ export async function findMeetingByCode(
 export async function getMeetingSummary(
   code: string,
   /** Who's opening the page: their account, or this browser's guest identity. */
-  viewer: { userId: string | null; mediaUserId: string } | null = null,
+  viewer: {
+    userId: string | null;
+    mediaUserId: string;
+    /** Their address once verified (lowercased), which named co-hosts are matched on. */
+    verifiedEmail: string | null;
+  } | null = null,
 ): Promise<{
   code: string;
   title: string | null;
@@ -233,27 +240,36 @@ export async function getMeetingSummary(
   notesOn: boolean;
   /** AI notes start by themselves once a host or co-host is in. */
   notesAuto: boolean;
+  /** AI notes are shared with the participants as soon as they're made. */
+  notesShared: boolean;
   limits: MeetingLimits;
   /** They'll need the passcode to join (never the passcode itself). */
   needsPasscode: boolean;
+  /** They'll join as a co-host: named by the meeting, or made one in this session. */
+  joinsAsCohost: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
   if (!found) return null;
   const open = await findOpenSession(found.meeting.id);
-  // As joining decides it: hosts, co-hosts and people already let into the session
-  // running now don't need it.
+  // As joining decides it: hosts, co-hosts (named by the meeting, or made one in the
+  // session running now) and people already let into it don't need the passcode.
+  const isOwner = viewer?.userId === found.host.id;
   const member =
-    open && viewer && found.meeting.passcode !== null
-      ? await findMember(open.id, viewer.mediaUserId)
-      : null;
+    open && viewer ? await findMember(open.id, viewer.mediaUserId) : null;
+  const role = resolveRole({
+    isOwner,
+    isGuest: viewer?.userId == null,
+    memberRole: member?.role,
+    namedCohost:
+      !isOwner &&
+      !member &&
+      viewer?.verifiedEmail != null &&
+      (await isNamedCohost(found.meeting.id, viewer.verifiedEmail)),
+  });
   const needsPasscode =
     passcodeNeeded({
-      role: resolveRole({
-        isOwner: viewer?.userId === found.host.id,
-        isGuest: viewer?.userId == null,
-        memberRole: member?.role,
-      }),
+      role,
       passcode: found.meeting.passcode,
       isMember: member !== null,
     }) !== null;
@@ -270,7 +286,9 @@ export async function getMeetingSummary(
       demoPerDay: serverEnv().DEMO_MEETINGS_PER_DAY,
     },
     needsPasscode,
+    joinsAsCohost: role === "cohost",
     title: found.meeting.title,
+    notesShared: found.meeting.settings.shareNotes,
     hostId: found.host.id,
     hostName: found.host.name,
     closed: closedReason(found.meeting, new Date()),
@@ -354,6 +372,70 @@ export async function endMeeting(meetingId: string): Promise<void> {
     .update(meeting)
     .set({ status: "ended" })
     .where(and(eq(meeting.id, meetingId), eq(meeting.status, "active")));
+}
+
+/** Whether a meeting names this (verified, lowercased) address as a co-host. */
+export async function isNamedCohost(
+  meetingId: string,
+  email: string,
+): Promise<boolean> {
+  const [row] = await db()
+    .select({ email: meetingInvitee.email })
+    .from(meetingInvitee)
+    .where(
+      and(
+        eq(meetingInvitee.meetingId, meetingId),
+        eq(meetingInvitee.email, email),
+        eq(meetingInvitee.cohost, true),
+      ),
+    )
+    .limit(1);
+  return row !== undefined;
+}
+
+/** A meeting's named co-hosts, in the order they were added. */
+export async function namedCohostsOf(meetingId: string): Promise<string[]> {
+  const rows = await db()
+    .select({ email: meetingInvitee.email })
+    .from(meetingInvitee)
+    .where(
+      and(
+        eq(meetingInvitee.meetingId, meetingId),
+        eq(meetingInvitee.cohost, true),
+      ),
+    )
+    .orderBy(asc(meetingInvitee.addedAt));
+  return rows.map((row) => row.email);
+}
+
+/**
+ * Names a meeting's co-hosts (the personal room's page): replaces the list. Anyone
+ * already in a running session keeps the role they have there; the list applies from
+ * their next session, or to anyone joining now for the first time.
+ */
+export async function setNamedCohosts(
+  meetingId: string,
+  emails: readonly string[],
+): Promise<void> {
+  await db().transaction(async (tx) => {
+    await tx
+      .delete(meetingInvitee)
+      .where(
+        and(
+          eq(meetingInvitee.meetingId, meetingId),
+          eq(meetingInvitee.cohost, true),
+        ),
+      );
+    if (emails.length > 0) {
+      await tx
+        .insert(meetingInvitee)
+        .values(emails.map((email) => ({ meetingId, email, cohost: true })))
+        .onConflictDoUpdate({
+          target: [meetingInvitee.meetingId, meetingInvitee.email],
+          set: { cohost: true },
+        });
+    }
+  });
 }
 
 export async function findOpenSession(

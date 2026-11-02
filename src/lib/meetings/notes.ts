@@ -8,10 +8,15 @@ import { aiNotesEnabled } from "@/lib/env";
 import { loggable } from "@/lib/log";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
-import type { AutoNotesRequest, NotesRequest } from "./api";
+import type { NotesRequest, NotesSettingsRequest } from "./api";
 import { MeetingError } from "./errors";
 import type { Principal } from "./principal";
-import { openSessionsHostedBy, updateMeetingSettings } from "./queries";
+import {
+  findMeetingByCode,
+  findOpenSession,
+  openSessionsHostedBy,
+  updateMeetingSettings,
+} from "./queries";
 import { canSetNotes } from "./rules";
 import { changeSession, storeNotesAllowed } from "./session-state";
 
@@ -64,21 +69,39 @@ export async function setNotes(input: {
 
 /**
  * The meeting's host, in the meeting: whether AI notes start automatically from now on,
- * the same setting as on the schedule form and the personal room's page.
+ * and whether they're shared with its participants as they're made: the same settings as
+ * on the schedule form and the personal room's page. Sharing reaches everyone in the
+ * session at once, so the notes say up front where they'll go.
  */
-export async function setAutoNotes(input: {
+export async function setNotesSettings(input: {
   code: string;
   principal: Principal | null;
-  request: AutoNotesRequest;
+  request: NotesSettingsRequest;
 }): Promise<void> {
   const { meeting } = await requireMeeting(input.code);
   const principal = requirePrincipal(input.principal);
   if (principal.kind !== "user" || principal.userId !== meeting.hostId) {
     throw new MeetingError("NOT_ALLOWED");
   }
+  const { autoNotes, shareNotes } = input.request;
   await updateMeetingSettings(meeting.id, meeting.hostId, {
-    autoNotes: input.request.autoNotes,
+    ...(autoNotes === undefined ? {} : { autoNotes }),
+    ...(shareNotes === undefined ? {} : { shareNotes }),
   });
+  if (shareNotes === undefined || shareNotes === meeting.settings.shareNotes) {
+    return;
+  }
+  const [session, updated] = await Promise.all([
+    findOpenSession(meeting.id),
+    findMeetingByCode(input.code),
+  ]);
+  if (!session || !updated) return;
+  try {
+    await changeSession(updated.meeting, session, { meetingSettings: true });
+  } catch (error) {
+    // Saved; the session's next change publishes it.
+    console.error("Couldn't publish a meeting's settings", loggable(error));
+  }
 }
 
 /** Whether the meetings someone hosts offer AI notes (Settings → AI notes). */

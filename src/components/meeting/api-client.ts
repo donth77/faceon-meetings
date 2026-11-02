@@ -1,7 +1,6 @@
 import {
   MEETING_ERRORS,
   type AdmissionResponse,
-  type AutoNotesRequest,
   type HandRequest,
   type JoinRequest,
   type JoinResponse,
@@ -11,6 +10,7 @@ import {
   type MeetingErrorCode,
   type ModerateRequest,
   type NotesRequest,
+  type NotesSettingsRequest,
   type SaveNotesRequest,
   type TokenResponse,
 } from "@/lib/meetings/api";
@@ -77,7 +77,7 @@ export const meetingApi = {
     post<void>(`/api/meetings/${code}/hand`, request),
   notes: (code: string, request: NotesRequest) =>
     post<void>(`/api/meetings/${code}/notes`, request),
-  autoNotes: (code: string, request: AutoNotesRequest) =>
+  notesSettings: (code: string, request: NotesSettingsRequest) =>
     send<void>("PATCH", `/api/meetings/${code}/notes`, request),
   saveNotes: (code: string, sessionId: string, request: SaveNotesRequest) =>
     send<void>("PUT", `/api/meetings/${code}/notes/${sessionId}`, request),

@@ -15,16 +15,23 @@ import type { MeetingSettings } from "./settings";
 export const SESSION_GRACE_MS = 2 * 60 * 1000;
 
 /**
- * The owner hosts; an in-session promotion to co-host sticks on rejoin; everyone else
- * joins as a participant, or as a guest without an account.
+ * The owner hosts. Someone already in the session keeps the role hosts gave them there
+ * (made a co-host, or no longer one), also on rejoin. Anyone else the meeting names as a
+ * co-host (by a verified address, so never a guest) joins as one. Everyone else joins as
+ * a participant, or as a guest without an account.
  */
 export function resolveRole(input: {
   isOwner: boolean;
   isGuest: boolean;
   memberRole: MeetingRole | undefined;
+  /** Signed in with a verified address the meeting names as a co-host. */
+  namedCohost: boolean;
 }): MeetingRole {
   if (input.isOwner) return "host";
   if (input.memberRole === "cohost") return "cohost";
+  if (input.memberRole === undefined && input.namedCohost && !input.isGuest) {
+    return "cohost";
+  }
   return input.isGuest ? "guest" : "participant";
 }
 
@@ -324,6 +331,20 @@ export function offersNotes(input: {
 }): boolean {
   if (!input.runsNotes) return false;
   return (input.allowed && !input.demo) || input.on || input.transcribed;
+}
+
+/**
+ * Notes just made, in a meeting that shares AI notes automatically: saved and shared at
+ * once where whoever made them can save them (an account), or a word that they can't be
+ * (a guest co-host has no account). Nothing in other meetings, or once they're saved.
+ */
+export function autoSharing(input: {
+  shareNotes: boolean;
+  canSave: boolean;
+  saved: boolean;
+}): "share" | "cantSave" | null {
+  if (!input.shareNotes || input.saved) return null;
+  return input.canSave ? "share" : "cantSave";
 }
 
 /** Saving AI notes to a session: hosts and co-hosts with an account. */

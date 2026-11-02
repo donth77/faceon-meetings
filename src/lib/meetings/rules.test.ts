@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { MeetingRole } from "@/lib/media/types";
 
 import {
+  autoSharing,
   canManageNotes,
   canModerate,
   canReadNotes,
@@ -28,33 +29,94 @@ import { DEFAULT_SETTINGS } from "./settings";
 describe("resolveRole", () => {
   it("makes the owner the host", () => {
     expect(
-      resolveRole({ isOwner: true, isGuest: false, memberRole: undefined }),
+      resolveRole({
+        isOwner: true,
+        isGuest: false,
+        memberRole: undefined,
+        namedCohost: false,
+      }),
     ).toBe("host");
   });
 
   it("keeps an in-session co-host promotion on rejoin", () => {
     expect(
-      resolveRole({ isOwner: false, isGuest: true, memberRole: "cohost" }),
+      resolveRole({
+        isOwner: false,
+        isGuest: true,
+        memberRole: "cohost",
+        namedCohost: false,
+      }),
     ).toBe("cohost");
   });
 
   it("makes people without an account guests", () => {
     expect(
-      resolveRole({ isOwner: false, isGuest: true, memberRole: undefined }),
+      resolveRole({
+        isOwner: false,
+        isGuest: true,
+        memberRole: undefined,
+        namedCohost: false,
+      }),
     ).toBe("guest");
   });
 
   it("makes everyone else a participant", () => {
     expect(
-      resolveRole({ isOwner: false, isGuest: false, memberRole: undefined }),
+      resolveRole({
+        isOwner: false,
+        isGuest: false,
+        memberRole: undefined,
+        namedCohost: false,
+      }),
     ).toBe("participant");
     expect(
       resolveRole({
         isOwner: false,
         isGuest: false,
         memberRole: "participant",
+        namedCohost: false,
       }),
     ).toBe("participant");
+  });
+
+  const named = {
+    isOwner: false,
+    isGuest: false,
+    memberRole: undefined,
+    namedCohost: true,
+  } as const;
+
+  it("makes someone the meeting names a co-host as they join", () => {
+    expect(resolveRole(named)).toBe("cohost");
+  });
+
+  it("keeps the role hosts gave someone in the session, named or not", () => {
+    expect(resolveRole({ ...named, memberRole: "participant" })).toBe(
+      "participant",
+    );
+    expect(resolveRole({ ...named, memberRole: "cohost" })).toBe("cohost");
+  });
+
+  it("never names a guest a co-host, and the owner still hosts", () => {
+    expect(resolveRole({ ...named, isGuest: true })).toBe("guest");
+    expect(resolveRole({ ...named, isOwner: true })).toBe("host");
+  });
+});
+
+describe("autoSharing", () => {
+  const made = { shareNotes: true, canSave: true, saved: false };
+
+  it("shares notes as soon as they're made, in a meeting that shares them", () => {
+    expect(autoSharing(made)).toBe("share");
+  });
+
+  it("says so where they can't be saved (no account)", () => {
+    expect(autoSharing({ ...made, canSave: false })).toBe("cantSave");
+  });
+
+  it("does nothing in other meetings, or once they're saved", () => {
+    expect(autoSharing({ ...made, shareNotes: false })).toBeNull();
+    expect(autoSharing({ ...made, saved: true })).toBeNull();
   });
 });
 

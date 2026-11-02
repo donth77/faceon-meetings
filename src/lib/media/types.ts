@@ -76,6 +76,8 @@ export type SessionState = {
   notesAllowed: boolean;
   /** Someone stopped AI notes in this session, so they don't start again by themselves. */
   notesStopped: boolean;
+  /** The meeting shares AI notes with its participants as soon as they're made. */
+  shareNotes: boolean;
 };
 
 /** What someone may publish; kinds left out of a change stay as they are. */

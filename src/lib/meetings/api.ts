@@ -76,6 +76,8 @@ export type AdmittedMeetingInfo = {
   videoOffOnEntry: boolean;
   /** AI notes start by themselves when a host or co-host joins (where the host allows them). */
   autoNotes: boolean;
+  /** AI notes are shared with the participants as soon as they're made. */
+  shareNotes: boolean;
 };
 
 /** The session's limits; the time left is in seconds when admitted, so no clocks disagree. */
@@ -172,9 +174,15 @@ export const NotesRequest = z.object({
 });
 export type NotesRequest = z.infer<typeof NotesRequest>;
 
-/** The meeting's host: whether AI notes start automatically in this meeting from now on. */
-export const AutoNotesRequest = z.object({ autoNotes: z.boolean() });
-export type AutoNotesRequest = z.infer<typeof AutoNotesRequest>;
+/**
+ * The meeting's host, from the room: whether AI notes start automatically in this meeting
+ * from now on, and whether they're shared with its participants as they're made.
+ */
+export const NotesSettingsRequest = z
+  .object({ autoNotes: z.boolean(), shareNotes: z.boolean() })
+  .partial()
+  .refine((request) => Object.keys(request).length > 0);
+export type NotesSettingsRequest = z.infer<typeof NotesSettingsRequest>;
 
 /** Saving AI notes to a session, replacing any saved before. */
 export const SaveNotesRequest = z.object({

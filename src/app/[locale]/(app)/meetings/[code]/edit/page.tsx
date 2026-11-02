@@ -78,13 +78,17 @@ async function EditMeeting({
           recurrence: details.rrule
             ? fromRRule(details.rrule, details.timeZone)
             : null,
-          invitees: details.invitees.map((i) => i.email),
+          invitees: details.invitees
+            .filter((i) => !i.cohost)
+            .map((i) => i.email),
+          cohosts: details.invitees.filter((i) => i.cohost).map((i) => i.email),
           passcode: details.passcode !== null,
           waitingRoom: details.settings.waitingRoom,
           allowGuests: details.settings.allowGuests,
           joinBeforeHost: details.settings.joinBeforeHost,
           muteOnEntry: details.settings.muteOnEntry,
           autoNotes: details.settings.autoNotes,
+          shareNotes: details.settings.shareNotes,
           // A meeting not on Google Calendar yet goes there only if switched on.
           googleCalendar: false,
         },

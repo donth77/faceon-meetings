@@ -9,7 +9,7 @@ import { calendarConnection } from "@/lib/google-calendar/connection";
 import { notesAllowedFor } from "@/lib/meetings/notes";
 import { findMeetingByCode } from "@/lib/meetings/queries";
 import { newScheduleDraft } from "@/lib/meetings/schedule-draft";
-import { inviteesOf } from "@/lib/meetings/scheduling";
+import { invitationsOf } from "@/lib/meetings/scheduling";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Schedule");
@@ -52,7 +52,10 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
             joinBeforeHost: earlier.meeting.settings.joinBeforeHost,
             muteOnEntry: earlier.meeting.settings.muteOnEntry,
             autoNotes: earlier.meeting.settings.autoNotes,
-            invitees: await inviteesOf(earlier.meeting.id),
+            shareNotes: earlier.meeting.settings.shareNotes,
+            ...(await invitationsOf(earlier.meeting.id).then(
+              ({ invitees, cohosts }) => ({ invitees, cohosts }),
+            )),
           }
         : {}),
     };
