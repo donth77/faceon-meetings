@@ -10,36 +10,56 @@ import { SEGMENT, SEGMENTS } from "@/components/schedule/upcoming-calendar";
 import { Button, LinkButton } from "@/components/ui/button";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
+import { formatDay } from "@/lib/time";
 
 const NEUTRAL_CHIP =
   "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eef1f5] px-2 text-xs font-bold whitespace-nowrap text-[#4f5966] dark:bg-white/10 dark:text-white/70";
+
+/** Someone's avatar, or their initial when there's no picture (a guest before webhooks). */
+function PersonAvatar({
+  person,
+  className,
+}: {
+  person: Attendee;
+  className: string;
+}) {
+  if (person.image) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={person.image}
+        alt=""
+        className={cn("rounded-full", className)}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex items-center justify-center rounded-full bg-[#dbe4ff] text-xs font-bold text-[#1f3d99] dark:bg-[#1f5eff]/25 dark:text-[#c9d6ff]",
+        className,
+      )}
+    >
+      {[...person.name.trim()][0]?.toUpperCase() ?? "?"}
+    </span>
+  );
+}
 
 function Avatars({ people, label }: { people: Attendee[]; label: string }) {
   const shown = people.slice(0, 4);
   return (
     <span role="img" aria-label={label} className="flex items-center">
-      {shown.map((person, index) =>
-        person.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={`${person.name}-${index}`}
-            src={person.image}
-            alt=""
-            className={cn(
-              "size-7 rounded-full ring-2 ring-white dark:ring-[#171a1f]",
-              index > 0 && "-ml-2",
-            )}
-          />
-        ) : (
-          <span
-            key={`${person.name}-${index}`}
-            className={cn(
-              "bg-muted size-7 rounded-full ring-2 ring-white dark:ring-[#171a1f]",
-              index > 0 && "-ml-2",
-            )}
-          />
-        ),
-      )}
+      {shown.map((person, index) => (
+        <PersonAvatar
+          key={`${person.name}-${index}`}
+          person={person}
+          className={cn(
+            "size-7 shrink-0 ring-2 ring-white dark:ring-[#171a1f]",
+            index > 0 && "-ml-2",
+          )}
+        />
+      ))}
       {people.length > 4 ? (
         <span className="-ml-2 flex h-7 items-center rounded-full bg-[#eef1f5] px-2 text-xs font-bold ring-2 ring-white dark:bg-white/10 dark:ring-[#171a1f]">
           +{people.length - 4}
@@ -60,22 +80,22 @@ function useFormats() {
       time.formatRange(new Date(start), new Date(end)),
     time: (at: string) => time.format(new Date(at)),
     day: (at: string) =>
-      new Intl.DateTimeFormat(locale, {
+      formatDay(new Date(at), locale, {
         weekday: "long",
         month: "long",
         day: "numeric",
-      }).format(new Date(at)),
+      }),
     shortDay: (at: string) =>
-      new Intl.DateTimeFormat(locale, {
+      formatDay(new Date(at), locale, {
         weekday: "short",
         month: "short",
         day: "numeric",
-      }).format(new Date(at)),
+      }),
     date: (at: string) =>
-      new Intl.DateTimeFormat(locale, {
+      formatDay(new Date(at), locale, {
         month: "short",
         day: "numeric",
-      }).format(new Date(at)),
+      }),
   };
 }
 
@@ -159,16 +179,10 @@ function Details({
             <tr key={`${person.name}-${index}`} className="border-t">
               <th scope="row" className="py-2.5 text-left font-normal">
                 <span className="flex items-center gap-2.5">
-                  {person.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={person.image}
-                      alt=""
-                      className="size-[26px] rounded-full"
-                    />
-                  ) : (
-                    <span className="bg-muted size-[26px] rounded-full" />
-                  )}
+                  <PersonAvatar
+                    person={person}
+                    className="size-[26px] shrink-0"
+                  />
                   <span className="font-semibold">{person.name}</span>
                   {person.isHost || person.isYou || person.isGuest ? (
                     <span className="text-muted-foreground text-xs font-medium">

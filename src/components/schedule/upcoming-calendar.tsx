@@ -30,7 +30,12 @@ import {
   type OccurrenceRow,
 } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
-import { deviceTimeZone, formatTimeRange, weekStartsOn } from "@/lib/time";
+import {
+  deviceTimeZone,
+  formatDay,
+  formatTimeRange,
+  weekStartsOn,
+} from "@/lib/time";
 
 import { useScheduledInvitation } from "./invitation";
 
@@ -123,11 +128,11 @@ function MeetingPopover({ row }: { row: OccurrenceRow }) {
     invitees: [],
   });
   const isHost = row.role === "host";
-  const day = new Intl.DateTimeFormat(locale, {
+  const day = formatDay(start, locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).format(start);
+  });
   return (
     <Dialog
       aria-label={title}
@@ -243,10 +248,8 @@ function MonthView({
   const t = useTranslations("Upcoming");
   const locale = useIntlLocale();
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" });
-  const label = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    day: "numeric",
-  });
+  const label = (day: Date) =>
+    formatDay(day, locale, { month: "long", day: "numeric" });
   return (
     <div
       role="grid"
@@ -279,7 +282,7 @@ function MonthView({
               <div
                 key={day.toISOString()}
                 role="gridcell"
-                aria-label={label.format(day)}
+                aria-label={label(day)}
                 className={cn(
                   "flex min-h-[118px] flex-col gap-0.5 border-r border-b p-1.5 last:border-r-0",
                   isToday && "bg-[#f3f6ff] dark:bg-[#1f5eff]/10",
@@ -526,10 +529,8 @@ function PhoneCalendar({
     hour: "numeric",
     minute: "2-digit",
   });
-  const label = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    day: "numeric",
-  });
+  const label = (day: Date) =>
+    formatDay(day, locale, { month: "long", day: "numeric" });
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -574,9 +575,7 @@ function PhoneCalendar({
                 key={day.toISOString()}
                 aria-pressed={isSelected}
                 aria-label={
-                  has
-                    ? t("dayWithMeetings", { date: label.format(day) })
-                    : label.format(day)
+                  has ? t("dayWithMeetings", { date: label(day) }) : label(day)
                 }
                 onPress={() => setSelected(day)}
                 className={cn(
@@ -608,11 +607,11 @@ function PhoneCalendar({
         </div>
       </div>
       <h2 className="text-muted-foreground text-[15px] font-bold">
-        {new Intl.DateTimeFormat(locale, {
+        {formatDay(selected, locale, {
           weekday: "long",
           month: "long",
           day: "numeric",
-        }).format(selected)}
+        })}
       </h2>
       {chosen.length > 0 ? (
         <ul className="flex flex-col gap-2.5">

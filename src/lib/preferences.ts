@@ -3,6 +3,8 @@
 import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
 
+import { formattingLocale } from "@/lib/time";
+
 /**
  * Settings kept on this device (localStorage), for signed-in people and guests alike.
  * Unset means the default, so a default can improve later without a migration.
@@ -104,13 +106,28 @@ export function withDefaults(preferences: Preferences) {
   };
 }
 
+function subscribeLanguages(onChange: () => void) {
+  window.addEventListener("languagechange", onChange);
+  return () => window.removeEventListener("languagechange", onChange);
+}
+
+const browserLanguage = () =>
+  navigator.languages?.[0] ?? navigator.language ?? "";
+
 /**
- * The locale for Intl formatting, carrying the 12- or 24-hour choice ("en-u-hc-h23"), so
- * every time FaceOn shows follows it.
+ * The locale for Intl formatting: the browser's region, and the 12- or 24-hour choice
+ * from Settings ("en-GB-u-hc-h12"), so every date and time FaceOn shows follows them.
+ * The server renders with the plain language; the browser's region applies once loaded.
  */
 export function useIntlLocale(): string {
   const locale = useLocale();
+  const browser = useSyncExternalStore(
+    subscribeLanguages,
+    browserLanguage,
+    () => "",
+  );
   const { timeFormat } = usePreferences();
-  if (!timeFormat) return locale;
-  return `${locale}-u-hc-${timeFormat === "24" ? "h23" : "h12"}`;
+  const base = formattingLocale(locale, browser);
+  if (!timeFormat) return base;
+  return `${base}-u-hc-${timeFormat === "24" ? "h23" : "h12"}`;
 }

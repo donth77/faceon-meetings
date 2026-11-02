@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, desc, eq, exists, gt, inArray, or } from "drizzle-orm";
 
+import { avatarUrl } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
 import {
   meeting,
@@ -103,6 +104,32 @@ export async function previousMeetings(viewer: {
       .where(inArray(meetingRule.meetingId, meetingIds)),
   ]);
 
+  // Signed-in people show their avatar as it is now; guests keep the one they had.
+  const userIds = [
+    ...new Set(
+      [...connections, ...members]
+        .map((row) => row.userId)
+        .filter((id): id is string => id !== null),
+    ),
+  ];
+  const avatars = new Map(
+    userIds.length
+      ? (
+          await db()
+            .select({
+              id: user.id,
+              image: user.image,
+              avatarSeed: user.avatarSeed,
+              avatarSource: user.avatarSource,
+            })
+            .from(user)
+            .where(inArray(user.id, userIds))
+        ).map((row) => [row.id, avatarUrl(row)] as const)
+      : [],
+  );
+  const imageOf = (userId: string | null, stored: string | null) =>
+    (userId ? avatars.get(userId) : undefined) ?? stored;
+
   return sessions.map(({ session, meeting: row, hostName }) => {
     const sessionEnd = session.endedAt ?? session.startedAt;
     const people = new Map<string, Attendee & { joined: Date; left: Date }>();
@@ -117,6 +144,9 @@ export async function previousMeetings(viewer: {
       joined: Date,
       left: Date,
     ) => {
+      // Admission times come from the database's clock and ends from the app's; a
+      // few seconds apart can't put the leave before the join.
+      if (left < joined) left = joined;
       const member = roleOf(mediaUserId);
       const current = people.get(mediaUserId);
       const minutes = minutesBetween(joined, left);
@@ -146,14 +176,20 @@ export async function previousMeetings(viewer: {
         add(
           c.mediaUserId,
           c.displayName,
-          c.image,
+          imageOf(c.userId, c.image),
           c.joinedAt,
           c.leftAt ?? sessionEnd,
         );
       }
     } else {
       for (const m of members.filter((m) => m.sessionId === session.id)) {
-        add(m.mediaUserId, m.displayName, null, m.admittedAt, sessionEnd);
+        add(
+          m.mediaUserId,
+          m.displayName,
+          imageOf(m.userId, null),
+          m.admittedAt,
+          sessionEnd,
+        );
       }
     }
 

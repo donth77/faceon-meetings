@@ -110,6 +110,45 @@ export function zoneOffsetLabel(
 export const zoneLabel = (timeZone: string, locale: string, at?: Date) =>
   `${zoneCity(timeZone)} (${zoneOffsetLabel(timeZone, locale, at)})`;
 
+/**
+ * The locale for dates and times: FaceOn's language with the browser's region, so a UK
+ * browser reads "Sunday 1 November" and an American one "Sunday, November 1". A browser
+ * in another language lends just its region ("en-DE").
+ */
+export function formattingLocale(language: string, browser: string): string {
+  if (!browser) return language;
+  try {
+    const tag = new Intl.Locale(browser);
+    if (tag.language === new Intl.Locale(language).language)
+      return tag.baseName;
+    const region = tag.maximize().region;
+    return region ? new Intl.Locale(language, { region }).baseName : language;
+  } catch {
+    return language; // a tag Intl doesn't understand
+  }
+}
+
+/**
+ * A day such as "Sunday, November 1", with the year only when it isn't this year
+ * ("Friday, January 8, 2027"). `options` names the parts, and the zone when it matters.
+ */
+export function formatDay(
+  date: Date,
+  locale: string,
+  options: Intl.DateTimeFormatOptions,
+): string {
+  const yearIn = (instant: Date) =>
+    new Intl.DateTimeFormat("en", {
+      timeZone: options.timeZone,
+      year: "numeric",
+    }).format(instant);
+  const otherYear = yearIn(date) !== yearIn(new Date());
+  return new Intl.DateTimeFormat(
+    locale,
+    otherYear ? { ...options, year: "numeric" } : options,
+  ).format(date);
+}
+
 /** "2:00 – 3:00 PM" in a zone. */
 export function formatTimeRange(
   start: Date,

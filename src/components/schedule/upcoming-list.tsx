@@ -20,6 +20,7 @@ import { deleteScheduleAction } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
 import {
   deviceTimeZone,
+  formatDay,
   formatTimeRange,
   localParts,
   zoneCity,
@@ -211,12 +212,12 @@ export function UpcomingList({ rows }: { rows: UpcomingRow[] }) {
     days.set(day, [...(days.get(day) ?? []), row]);
   }
   const heading = (day: string, first: UpcomingRow) => {
-    const date = new Intl.DateTimeFormat(locale, {
+    const date = formatDay(new Date(first.start), locale, {
       timeZone: zone,
       weekday: "long",
       month: "long",
       day: "numeric",
-    }).format(new Date(first.start));
+    });
     if (day === today) return t("today", { date });
     if (day === tomorrow) return t("tomorrow", { date });
     return date;

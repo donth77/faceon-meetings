@@ -42,7 +42,7 @@ import {
 } from "@/lib/meetings/schedule-actions";
 import type { MeetingDetails } from "@/lib/meetings/scheduling";
 import { useIntlLocale } from "@/lib/preferences";
-import { formatTimeRange, zoneCity, zonedToUtc } from "@/lib/time";
+import { formatDay, formatTimeRange, zoneCity, zonedToUtc } from "@/lib/time";
 
 import { SwitchRow } from "./fields";
 import { useScheduledInvitation } from "./invitation";
@@ -124,19 +124,19 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
   });
   const city = zoneCity(details.timeZone);
   const longDay = (date: Date) =>
-    new Intl.DateTimeFormat(locale, {
+    formatDay(date, locale, {
       timeZone: details.timeZone,
       weekday: "long",
       month: "long",
       day: "numeric",
-    }).format(date);
+    });
   const shortDay = (date: Date) =>
-    new Intl.DateTimeFormat(locale, {
+    formatDay(date, locale, {
       timeZone: details.timeZone,
       weekday: "short",
       month: "short",
       day: "numeric",
-    }).format(date);
+    });
 
   async function copy(value: string, done: string) {
     try {

@@ -15,7 +15,7 @@ import {
   useIntlLocale,
   usePreferences,
 } from "@/lib/preferences";
-import { systemTimeZone } from "@/lib/time";
+import { formattingLocale, systemTimeZone } from "@/lib/time";
 
 import { SettingsCard } from "./settings-nav";
 
@@ -80,11 +80,12 @@ export function GeneralSettings() {
   // This page renders in the browser, so it can read the device's zone and usual clock.
   const deviceZone = systemTimeZone();
   const zone = prefs.timeZone ?? deviceZone;
-  const regionClock =
-    new Intl.DateTimeFormat(locale, { hour: "numeric" }).resolvedOptions()
-      .hourCycle === "h23"
-      ? "24"
-      : "12";
+  // The usual clock where the browser says you are, like the dates FaceOn shows.
+  const regionLocale = formattingLocale(locale, navigator.languages?.[0] ?? "");
+  const cycle = new Intl.DateTimeFormat(regionLocale, {
+    hour: "numeric",
+  }).resolvedOptions().hourCycle;
+  const regionClock = cycle === "h23" || cycle === "h24" ? "24" : "12";
   const timeFormat = prefs.timeFormat ?? regionClock;
   const example = new Intl.DateTimeFormat(intlLocale, {
     timeZone: zone,
