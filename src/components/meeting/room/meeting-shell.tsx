@@ -66,6 +66,7 @@ import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useAutoHideControls, useCompactRoom } from "./use-auto-hide";
 import { useChat } from "./use-chat";
+import { useDesktopMeeting } from "./use-desktop-meeting";
 import { useHands } from "./use-hands";
 import { useHostNotices } from "./use-host-notices";
 import { useLobby } from "./use-lobby";
@@ -255,6 +256,13 @@ export function MeetingShell({
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
   useMutedNudge(media, toggleMic);
+  useDesktopMeeting({
+    muted: !media.mic.enabled,
+    title,
+    unread: chat.unread,
+    onToggleMute: toggleMic,
+    onLeave: () => media.leave(),
+  });
   const pip = usePictureInPicture(title);
   useAutoPictureInPicture(pip, prefs.autoPictureInPicture);
   usePresenceSounds(media.participants);

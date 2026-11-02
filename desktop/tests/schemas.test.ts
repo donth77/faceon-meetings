@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ACCELERATOR,
   AppPath,
   Command,
   parseAppState,
@@ -44,21 +43,21 @@ describe("PreferencesChange", () => {
   });
 
   it("checks the mute shortcut", () => {
-    for (const ok of [
-      "CommandOrControl+Shift+A",
-      "Alt+M",
-      "Ctrl+Alt+F5",
-      "Shift+Space",
-    ]) {
-      expect(ACCELERATOR.test(ok)).toBe(true);
+    const shortcut = (accelerator: string) =>
+      PreferencesChange.safeParse({
+        muteShortcut: { enabled: true, accelerator },
+      }).success;
+    for (const ok of ["CommandOrControl+Shift+A", "Alt+M", "Ctrl+Alt+F5"]) {
+      expect(shortcut(ok)).toBe(true);
     }
     for (const bad of [
       "A",
+      "Shift+A",
       "Ctrl+",
       "Ctrl+Shift+Alt+Super+A",
       "Ctrl+Enter;rm",
     ]) {
-      expect(ACCELERATOR.test(bad)).toBe(false);
+      expect(shortcut(bad)).toBe(false);
     }
   });
 });

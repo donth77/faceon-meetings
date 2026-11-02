@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { SettingsCard } from "@/components/settings/settings-nav";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useDesktop } from "@/lib/desktop/use-desktop";
 import { publicEnv } from "@/lib/env";
 import { useInstall, useInstallCard } from "@/lib/pwa/install";
 
@@ -35,7 +36,7 @@ function useInstallAction() {
 }
 
 /** Settings → General: how to install FaceOn in this browser, or that it is. */
-export function InstallAppCard() {
+function InstallAppCardInBrowser() {
   const t = useTranslations("Pwa.install");
   const { way, installApp } = useInstallAction();
 
@@ -65,7 +66,7 @@ export function InstallAppCard() {
 }
 
 /** The account menu's Install app, where the browser offers its prompt. */
-export function InstallMenuItem() {
+function InstallMenuItemInBrowser() {
   const t = useTranslations("Pwa.install");
   const { way, installApp } = useInstallAction();
   if (way !== "prompt") return null;
@@ -81,7 +82,7 @@ export function InstallMenuItem() {
  * Home, on phones: a one-time card offering the app, where this browser can install it.
  * Not now (or Got it) puts it away for good on this device; Settings still has it.
  */
-export function InstallCard() {
+function InstallCardInBrowser() {
   const t = useTranslations("Pwa.install.card");
   const { way, installApp } = useInstallAction();
   const { dismissed, dismiss } = useInstallCard();
@@ -150,3 +151,11 @@ export function InstallCard() {
     </section>
   );
 }
+
+// Install offers stay out of the desktop app, which is installed already.
+export const InstallAppCard = () =>
+  useDesktop() ? null : <InstallAppCardInBrowser />;
+export const InstallMenuItem = () =>
+  useDesktop() ? null : <InstallMenuItemInBrowser />;
+export const InstallCard = () =>
+  useDesktop() ? null : <InstallCardInBrowser />;

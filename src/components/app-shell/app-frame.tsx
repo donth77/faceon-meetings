@@ -9,6 +9,7 @@ import { avatarUrl } from "@/lib/avatars/seed";
 import { isAdmin } from "@/lib/meetings/hosting";
 
 import { AppSidebar } from "./app-sidebar";
+import { DesktopSync } from "./desktop-sync";
 import { MeetingReminders } from "./meeting-reminders";
 import { MobileTabBar } from "./mobile-tab-bar";
 
@@ -54,6 +55,7 @@ export async function AppFrame({
       </SidebarInset>
       <MobileTabBar />
       <MeetingReminders />
+      <DesktopSync />
       <Toaster position="bottom-center" />
     </SidebarProvider>
   );

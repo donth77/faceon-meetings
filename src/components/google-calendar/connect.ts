@@ -1,6 +1,7 @@
 "use client";
 
 import { linkSocial } from "@/lib/auth/client";
+import { desktopBridge } from "@/lib/desktop/use-desktop";
 import {
   GOOGLE_CALENDAR_CONSENT,
   GOOGLE_CALENDAR_SCOPE,
@@ -9,6 +10,19 @@ import {
 
 /** Settings → Calendar, where Google sends people back after its consent screen. */
 export const CALENDAR_SETTINGS_ROUTE = "/settings/calendar";
+
+/**
+ * Inside the desktop app, Google refuses its consent screen (as it refuses sign-in in
+ * embedded browsers), so Settings → Calendar opens in the browser instead; the connection
+ * belongs to the account, and shows in the app when its window is back in front. True
+ * when that's what happened.
+ */
+export function connectInBrowserInstead(): boolean {
+  const desktop = desktopBridge();
+  if (!desktop) return false;
+  desktop.openInBrowser(CALENDAR_SETTINGS_ROUTE);
+  return true;
+}
 /** How the consent window tells the page that opened it how connecting went. */
 const CHANNEL = "faceon-google-calendar";
 const WINDOW_NAME = "faceon-google-calendar";

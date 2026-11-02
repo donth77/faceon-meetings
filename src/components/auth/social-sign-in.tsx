@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth/client";
+import { desktopBridge } from "@/lib/desktop/use-desktop";
 import { safeRedirectPath } from "@/lib/routes";
 
 import { FormNotice } from "./fields";
@@ -49,8 +50,16 @@ export function SocialSignIn({ mode }: { mode: AuthMode }) {
   const searchParams = useSearchParams();
   const [pending, setPending] = useState<Provider | null>(null);
   const [failed, setFailed] = useState(searchParams.has("error"));
+  // In the desktop app, Google and GitHub sign-in happen in the browser.
+  const [inBrowser, setInBrowser] = useState<Provider | null>(null);
 
   async function continueWith(provider: Provider) {
+    const desktop = desktopBridge();
+    if (desktop) {
+      desktop.signIn(provider);
+      setInBrowser(provider);
+      return;
+    }
     setPending(provider);
     setFailed(false);
     const { error } = await signIn.social({
@@ -67,6 +76,18 @@ export function SocialSignIn({ mode }: { mode: AuthMode }) {
   return (
     <div className="flex flex-col gap-2.5">
       {failed ? <FormNotice icon={Info}>{t("failed")}</FormNotice> : null}
+      {inBrowser ? (
+        <FormNotice icon={Info}>
+          {t("finishInBrowser")}{" "}
+          <button
+            type="button"
+            onClick={() => desktopBridge()?.signIn(inBrowser)}
+            className="text-primary focus-visible:focus-ring rounded font-semibold underline-offset-4 outline-hidden hover:underline"
+          >
+            {t("openBrowserAgain")}
+          </button>
+        </FormNotice>
+      ) : null}
       {PROVIDERS.map(({ id, name, Icon, className }) => (
         <Button
           key={id}

@@ -13,7 +13,7 @@ import {
 } from "@/lib/google-calendar/shared";
 import { syncGoogleCalendarAction } from "@/lib/meetings/schedule-actions";
 
-import { connectInPopup } from "./connect";
+import { connectInBrowserInstead, connectInPopup } from "./connect";
 
 /** Tries Google Calendar again for a meeting; a failed request counts as "failed". */
 const retrySync = (code: string): Promise<CalendarOutcome> =>
@@ -25,6 +25,10 @@ const retrySync = (code: string): Promise<CalendarOutcome> =>
 function useReconnectAndRetry(email: string) {
   const t = useTranslations("GoogleCalendar");
   return async (code: string): Promise<CalendarOutcome | null> => {
+    if (connectInBrowserInstead()) {
+      toast(t("inBrowser"));
+      return null;
+    }
     const report = await connectInPopup({
       back: `${window.location.pathname}${window.location.search}`,
       loginHint: email,

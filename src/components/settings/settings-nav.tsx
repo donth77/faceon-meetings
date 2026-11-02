@@ -6,6 +6,7 @@ import {
   Bell,
   CalendarDays,
   Mic,
+  Monitor,
   Settings,
   ShieldCheck,
   SmilePlus,
@@ -21,6 +22,7 @@ import { usePathname } from "next/navigation";
 import { createContext, use, type ReactNode } from "react";
 
 import { useCapability } from "@/hooks/use-capability";
+import { useDesktop } from "@/lib/desktop/use-desktop";
 import { aiNotesEnabled } from "@/lib/env";
 
 export const SETTINGS_SECTIONS = [
@@ -33,6 +35,8 @@ export const SETTINGS_SECTIONS = [
   { slug: "calendar", key: "calendar", icon: CalendarDays },
   { slug: "ai-notes", key: "aiNotes", icon: Sparkles },
   { slug: "accessibility", key: "accessibility", icon: Accessibility },
+  // Only inside the desktop app.
+  { slug: "desktop", key: "desktop", icon: Monitor },
   { slug: "account", key: "account", icon: User },
   // Only admins (ADMIN_EMAILS) see it.
   { slug: "admin", key: "admin", icon: ShieldCheck },
@@ -54,6 +58,7 @@ export function SettingsNav({ admin = false }: { admin?: boolean }) {
   // Most people have both: the server's page shows them, and the browser drops them.
   const keyboard = useCapability("keyboard", true);
   const effects = useCapability("effects", true);
+  const desktop = useDesktop() !== null;
   const pageOf = (slug: string) =>
     slug === "general" ? "/settings" : `/settings/${slug}`;
   return (
@@ -69,7 +74,8 @@ export function SettingsNav({ admin = false }: { admin?: boolean }) {
           (key !== "accessibility" ||
             keyboard ||
             pathname.endsWith(pageOf(slug))) &&
-          (key !== "effects" || effects || pathname.endsWith(pageOf(slug))),
+          (key !== "effects" || effects || pathname.endsWith(pageOf(slug))) &&
+          (key !== "desktop" || desktop || pathname.endsWith(pageOf(slug))),
       ).map(({ slug, key, icon: Icon }) => {
         // General is Settings' first page.
         const href = pageOf(slug);

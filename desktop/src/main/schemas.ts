@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isAccelerator } from "../../../src/lib/desktop/accelerator";
 import type {
   DesktopCommand,
   DesktopMeetingState,
@@ -7,11 +8,8 @@ import type {
   DesktopReminderMinutes,
 } from "../../../src/lib/desktop/bridge";
 
-/** Modifiers, then one key: what Electron's globalShortcut accepts here. */
-const MODIFIER =
-  "(?:CommandOrControl|CmdOrCtrl|Command|Cmd|Control|Ctrl|Alt|Option|Shift|Super)";
-const KEY = "(?:[A-Z0-9]|F(?:[1-9]|1[0-9]|2[0-4])|Space)";
-export const ACCELERATOR = new RegExp(`^(?:${MODIFIER}\\+){1,3}${KEY}$`);
+/** The mute shortcut: checked as Settings → Desktop app checks it. */
+const Accelerator = z.string().max(64).refine(isAccelerator);
 export const DEFAULT_ACCELERATOR = "CommandOrControl+Shift+A";
 
 export const PreferencesSchema = z.object({
@@ -21,7 +19,7 @@ export const PreferencesSchema = z.object({
   muteShortcut: z
     .object({
       enabled: z.boolean().default(true),
-      accelerator: z.string().regex(ACCELERATOR).default(DEFAULT_ACCELERATOR),
+      accelerator: Accelerator.default(DEFAULT_ACCELERATOR),
     })
     .prefault({}),
   badge: z.boolean().default(true),
@@ -36,7 +34,7 @@ export const PreferencesChange = z
     openLinksInApp: z.boolean(),
     muteShortcut: z.object({
       enabled: z.boolean(),
-      accelerator: z.string().regex(ACCELERATOR),
+      accelerator: Accelerator,
     }),
     badge: z.boolean(),
     channel: z.enum(["latest", "beta"]),

@@ -24,6 +24,7 @@ import { ACCOUNT_EMAIL_ENDPOINTS } from "@/lib/human-check";
 import { humanCheckSecret } from "@/lib/human-check/verify";
 import { siteUrl } from "@/lib/site";
 
+import { desktopHandoff } from "./desktop-handoff";
 import { dropUnverifiedPassword } from "./linking";
 import { authOrigins } from "./origins";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
@@ -205,6 +206,8 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 60, max: 5 },
       "/request-password-reset": { window: 60, max: 3 },
       "/send-verification-email": { window: 60, max: 3 },
+      "/desktop/handoff": { window: 60, max: 10 },
+      "/desktop/session": { window: 60, max: 20 },
     },
   },
   trustedOrigins: authOrigins({
@@ -238,6 +241,7 @@ export const auth = betterAuth({
           }),
         ]
       : []),
+    desktopHandoff(),
     nextCookies(),
   ],
 });

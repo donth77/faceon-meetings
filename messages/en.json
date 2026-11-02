@@ -130,7 +130,9 @@
       "expiredTitle": "This link has expired",
       "expiredBody": "Reset links work for an hour, and only once. Ask for a new one.",
       "requestNew": "Get a new link"
-    }
+    },
+    "finishInBrowser": "Finish signing in in your browser.",
+    "openBrowserAgain": "Open it again"
   },
   "Join": {
     "label": "Meeting ID or link",
@@ -722,6 +724,10 @@
         "unsupported": "This browser can't transcribe on your device, so what you say isn't in the notes. Chrome on a computer can."
       },
       "startAgain": "Start AI notes again"
+    },
+    "desktop": {
+      "openLink": "A meeting link was opened. Leave this meeting to open it?",
+      "leaveAndOpen": "Leave and open"
     }
   },
   "Avatars": {
@@ -1216,7 +1222,8 @@
       "aiNotes": "AI notes",
       "accessibility": "Accessibility",
       "account": "Account",
-      "admin": "Admin"
+      "admin": "Admin",
+      "desktop": "Desktop app"
     },
     "general": {
       "title": "General",
@@ -1463,6 +1470,41 @@
         "allowed": "Reminders also show as notifications from your browser.",
         "homeScreen": "On iPhone and iPad, reminders can show as notifications once {appName} is on your Home Screen. <link>How to add it</link>"
       }
+    },
+    "desktop": {
+      "title": "Desktop app",
+      "intro": "How the {appName} app starts, and what it does while another app is in front.",
+      "notInApp": "These settings are in the {appName} app for Mac and Windows.",
+      "startup": "Opening and closing",
+      "launchAtLogin": "Open {appName} when you sign in to your computer",
+      "keepInTray": "Keep {appName} in the tray when you close its window",
+      "keepInTrayHelp": "Reminders and the tray menu keep working.",
+      "openLinks": "Open meeting links in this app",
+      "openLinksHelp": "Links that start with faceon://, including the join page's Open in the {appName} app.",
+      "meetings": "During meetings",
+      "muteShortcut": "Mute from any app",
+      "muteShortcutHelp": "Press {shortcut} to mute or unmute while another app is in front. Only during meetings.",
+      "shortcut": "Shortcut",
+      "change": "Change…",
+      "pressShortcut": "Press the new shortcut…",
+      "shortcutProblem": "Use Ctrl, Alt or ⌘ with a letter, a number or a function key.",
+      "badgeDock": "Show unread chat on the Dock",
+      "badgeTaskbar": "Show unread chat on the taskbar",
+      "reminders": "Meeting reminders follow <link>Notifications</link>, and arrive even with the window closed.",
+      "updates": "Updates",
+      "version": "{appName} {version}",
+      "checkForUpdates": "Check for updates",
+      "checking": "Checking for updates…",
+      "upToDate": "{appName} is up to date.",
+      "downloading": "Downloading {version}… {percent}%",
+      "ready": "Version {version} is ready. It installs when the app restarts.",
+      "restartNow": "Restart now",
+      "manual": "{appName} {version} is out. Download it to update this copy.",
+      "download": "Download",
+      "failed": "Couldn’t check for updates. Try again later.",
+      "updatesOff": "This copy doesn’t look for updates.",
+      "testBuilds": "Test builds",
+      "testBuildsHelp": "Get new versions before everyone else. They may have rough edges."
     }
   },
   "GoogleCalendar": {
@@ -1495,7 +1537,8 @@
       "denied": "Google Calendar wasn’t connected.",
       "scope": "Google Calendar wasn’t connected: {appName} needs permission to make events in your calendar. Try again and allow it.",
       "generic": "Couldn’t connect Google Calendar. Try again."
-    }
+    },
+    "inBrowser": "Finish connecting in your browser. It shows here once it’s done."
   },
   "Legal": {
     "updated": "Last updated {date}",
@@ -1732,5 +1775,28 @@
       "meetingTitle": "Title (optional)",
       "insert": "Insert"
     }
+  },
+  "DesktopSignIn": {
+    "title": "Sign in to the {appName} app",
+    "confirmTitle": "Sign in to the {appName} app?",
+    "confirmBody": "You’re signed in here as {name} ({email}). Continue to sign the app in with this account.",
+    "continueAs": "Continue as {name}",
+    "notYou": "Use another account",
+    "failed": "Couldn’t sign the app in. Try again.",
+    "doneTitle": "Back to the {appName} app",
+    "doneBody": "You can close this tab. The app finishes signing you in.",
+    "openAgain": "Open the {appName} app again",
+    "signInTitle": "Sign in to continue to the {appName} app",
+    "signInBody": "Sign in here, then come back to finish signing the app in.",
+    "signIn": "Sign in",
+    "signInFailed": "That sign-in didn’t work. Try again.",
+    "incompleteTitle": "This sign-in link isn’t complete",
+    "incompleteBody": "Start again from the {appName} app: select Continue with Google or GitHub there.",
+    "inAppTitle": "Finish signing in in your browser",
+    "inAppBody": "Your browser opened to sign you in. If it didn’t, start again here.",
+    "expiredTitle": "That sign-in didn’t finish",
+    "expiredBody": "It took too long, or the link was used already. Start again.",
+    "continueWith": "Continue with {provider}",
+    "useEmail": "Use email and password instead"
   }
 }

@@ -39,6 +39,10 @@ const AiNotes = dynamic(
   () => import("./ai-notes-settings").then((module) => module.AiNotesSettings),
   { ssr: false, loading },
 );
+const Desktop = dynamic(
+  () => import("./desktop-settings").then((module) => module.DesktopSettings),
+  { ssr: false, loading },
+);
 const Accessibility = dynamic(
   () =>
     import("./accessibility-settings").then(
@@ -59,7 +63,8 @@ export function SettingsLoader({
     | "notifications"
     | "effects"
     | "aiNotes"
-    | "accessibility";
+    | "accessibility"
+    | "desktop";
   /** Settings → AI notes: the account's switch for meetings you host. */
   notesInMeetings?: boolean;
 }) {
@@ -80,5 +85,7 @@ export function SettingsLoader({
       return <AiNotes notesInMeetings={notesInMeetings} />;
     case "accessibility":
       return <Accessibility />;
+    case "desktop":
+      return <Desktop />;
   }
 }

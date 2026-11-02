@@ -32,9 +32,13 @@ export const APP_ROUTES = [
 /** Joining meetings: open to anyone with the link, but never indexed. */
 export const MEETING_ROUTES = ["/j", "/join"] as const;
 
+/** The desktop app's pages in the browser (signing it in). */
+export const DESKTOP_ROUTES = ["/desktop"] as const;
+
 /** Everything that must stay out of search engines and AI crawlers. */
 export const NOINDEX_ROUTES = [
   ...AUTH_ROUTES,
+  ...DESKTOP_ROUTES,
   VERIFY_EMAIL_ROUTE,
   ...APP_ROUTES,
   ...MEETING_ROUTES,
