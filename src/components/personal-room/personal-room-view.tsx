@@ -27,7 +27,11 @@ export type PersonalRoom = {
   passcode: string | null;
   title: string | null;
   hostName: string;
-  settings: { allowGuests: boolean; muteOnEntry: boolean };
+  settings: {
+    waitingRoom: boolean;
+    allowGuests: boolean;
+    muteOnEntry: boolean;
+  };
 };
 
 type Setting = keyof PersonalRoom["settings"];
@@ -260,6 +264,12 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
             {t("settings")}
           </h2>
           <div>
+            <SettingRow
+              label={t("waitingRoom")}
+              hint={t("waitingRoomHint")}
+              isSelected={room.settings.waitingRoom}
+              onChange={(value) => void changeSetting("waitingRoom", value)}
+            />
             <SettingRow
               label={t("allowGuests")}
               hint={t("allowGuestsHint")}

@@ -32,6 +32,7 @@ async function PersonalRoom() {
         title: room.title,
         hostName: session.user.name,
         settings: {
+          waitingRoom: room.settings.waitingRoom,
           allowGuests: room.settings.allowGuests,
           muteOnEntry: room.settings.muteOnEntry,
         },

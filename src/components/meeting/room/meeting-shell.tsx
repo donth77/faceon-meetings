@@ -42,6 +42,7 @@ import { Stage, type LayoutChoice } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
 import { useHostNotices } from "./use-host-notices";
+import { useLobby } from "./use-lobby";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
 import { useReactions, useReactionSender } from "./use-reactions";
 
@@ -124,6 +125,12 @@ export function MeetingShell({
     userId === self.id ? selfRole : roleIn(state, userId);
   const sentByHost = (userId: string) => moderates(roleOf(userId));
   const notices = useHostNotices({ media, selfId: self.id, selfRole });
+  const lobby = useLobby({
+    code: meeting.code,
+    isHost,
+    media,
+    onView: () => openPanel("people"),
+  });
 
   const chat = useChat({
     media,
@@ -307,6 +314,8 @@ export function MeetingShell({
             {panel === "people" ? (
               <ParticipantsPanel
                 meeting={meeting}
+                waiting={lobby.requests}
+                onDecide={(action) => void lobby.decide(action)}
                 hands={hands}
                 onLowerHand={(userId) =>
                   void changeHand({ raised: false, target: userId })
@@ -375,6 +384,7 @@ export function MeetingShell({
             panel={panel}
             onTogglePanel={togglePanel}
             unreadChat={chat.unread}
+            waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}
             share={{
               onBlocked: shareBlocked,

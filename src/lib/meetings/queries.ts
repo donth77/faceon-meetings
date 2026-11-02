@@ -187,9 +187,11 @@ export async function findMeetingByCode(
 export async function getMeetingSummary(code: string): Promise<{
   code: string;
   title: string | null;
+  hostId: string;
   hostName: string;
   joinable: boolean;
   allowGuests: boolean;
+  waitingRoom: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
@@ -197,9 +199,11 @@ export async function getMeetingSummary(code: string): Promise<{
   return {
     code,
     title: found.meeting.title,
+    hostId: found.host.id,
     hostName: found.host.name,
     joinable: isJoinable(found.meeting, new Date()),
     allowGuests: found.meeting.settings.allowGuests,
+    waitingRoom: found.meeting.settings.waitingRoom,
   };
 }
 

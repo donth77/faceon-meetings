@@ -3,12 +3,11 @@ import "server-only";
 import { avatarUrl } from "@/lib/avatars/seed";
 import { guestsEnabled } from "@/lib/guest-session";
 import { mediaProvider } from "@/lib/media";
-import { serverEnv } from "@/lib/server-env";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
+import { admit } from "./admission";
 import type { JoinResponse } from "./api";
 import { MeetingError } from "./errors";
-import { withheldFrom } from "./moderation";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
@@ -16,12 +15,12 @@ import {
   findMember,
   findOpenSession,
   hostMemberIds,
-  upsertMember,
   type MeetingHost,
 } from "./queries";
-import { checkEntry, isHostRole, isJoinable, resolveRole } from "./rules";
+import { checkEntry, isJoinable, resolveRole } from "./rules";
 import { sessionPolicy, sessionState } from "./session-state";
-import { currentSession, secondsLeft, startSession } from "./sessions";
+import { currentSession, startSession } from "./sessions";
+import { askToJoin, timesDenied } from "./waiting-room";
 
 const hostMediaUser = (host: MeetingHost) => ({
   id: userMediaId(host.id),
@@ -32,7 +31,8 @@ const hostMediaUser = (host: MeetingHost) => ({
 /**
  * Decides whether someone may join a meeting now and, if so, admits them: opens a session
  * (and its call) when none is open, records the admission and returns a media token.
- * Throws MeetingError when they can't join.
+ * With the waiting room on, newcomers ask the hosts first. Throws MeetingError when they
+ * can't join.
  */
 export async function joinMeeting(input: {
   code: string;
@@ -68,6 +68,7 @@ export async function joinMeeting(input: {
     memberRole: member?.role,
   });
   const connected = live?.snapshot?.connectedUserIds ?? [];
+  const asksHosts = member === null && meeting.settings.waitingRoom;
 
   const blocked = checkEntry({
     role,
@@ -77,22 +78,35 @@ export async function joinMeeting(input: {
     isMember: member !== null,
     isBanned: member?.bannedAt != null,
     locked: live ? sessionPolicy(meeting, live.row).locked : false,
+    timesDenied:
+      live && asksHosts
+        ? await timesDenied(live.row.id, principal.mediaUserId)
+        : 0,
     hostPresent: connected.some((id) => hostIds.includes(id)),
     connectedCount: connected.length,
     maxParticipants: live?.row.limits.maxParticipants ?? Infinity,
     alreadyConnected: connected.includes(principal.mediaUserId),
   });
   if (blocked === "waiting_for_host") return { state: "waiting_for_host" };
+  if (blocked === "waiting_room") {
+    // Only reached while a host is in the session, so it's open.
+    if (!live) return { state: "waiting_for_host" };
+    const requestId = await askToJoin({
+      session: live.row,
+      principal,
+      name: input.name,
+    });
+    return { state: "waiting", requestId };
+  }
   if (blocked) throw new MeetingError(blocked);
 
   const session = live ?? {
     row: await startSession(meeting, host, now),
     snapshot: null,
   };
-  const provider = mediaProvider(session.row.provider);
   if (!session.snapshot) {
     // Creating the call is idempotent, so a concurrent join creating it too is fine.
-    await provider.createSession({
+    await mediaProvider(session.row.provider).createSession({
       sessionId: session.row.id,
       host: hostMediaUser(host),
       limits: session.row.limits,
@@ -100,54 +114,15 @@ export async function joinMeeting(input: {
     });
   }
 
-  const self = {
-    id: principal.mediaUserId,
+  return admit({
+    meeting,
+    host,
+    session: session.row,
+    principal,
     name: input.name,
-    image: principal.image,
     role,
-  };
-  await upsertMember({
-    sessionId: session.row.id,
-    mediaUserId: self.id,
-    userId: principal.kind === "user" ? principal.userId : null,
-    displayName: self.name,
-    role,
+    now,
   });
-  const connection = await provider.admit({
-    sessionId: session.row.id,
-    user: self,
-    role,
-  });
-  // Before they connect: what the hosts' policies withhold from participants.
-  const withheld = isHostRole(role)
-    ? null
-    : withheldFrom(sessionPolicy(meeting, session.row));
-  if (withheld) {
-    await provider.setPublishPermissions(session.row.id, self.id, withheld);
-  }
-
-  return {
-    state: "admitted",
-    connection,
-    self,
-    meeting: {
-      code: meeting.code,
-      title: meeting.title,
-      passcode: meeting.passcode,
-      hostName: host.name,
-      muteOnEntry: meeting.settings.muteOnEntry,
-      videoOffOnEntry: meeting.settings.videoOffOnEntry,
-    },
-    session: {
-      demo: session.row.limits.demo === true,
-      maxParticipants: session.row.limits.maxParticipants,
-      maxMinutes: session.row.limits.maxDurationSeconds
-        ? Math.round(session.row.limits.maxDurationSeconds / 60)
-        : null,
-      secondsLeft: secondsLeft(session.row, now),
-      aloneTimeoutMinutes: serverEnv().ALONE_TIMEOUT_MINUTES || null,
-    },
-  };
 }
 
 /** A fresh media token for someone still admitted to the meeting's open session. */

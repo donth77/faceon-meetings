@@ -49,6 +49,7 @@ export async function regeneratePersonalRoom(): Promise<{
 
 /** The personal room settings a host can change here. */
 const PersonalRoomChanges = MeetingSettings.pick({
+  waitingRoom: true,
   allowGuests: true,
   muteOnEntry: true,
 }).partial();

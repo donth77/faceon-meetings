@@ -36,10 +36,15 @@ export const RoomEvent = z.discriminatedUnion("type", [
     id: z.string().min(1).max(64),
     text: z.string().trim().min(1).max(MAX_CHAT_LENGTH),
   }),
-  /** A host asks one person to unmute; they decide. */
+  /** A host asks one person to unmute; they decide. Sent by our server. */
   z.object({
     type: z.literal("host.request_unmute"),
     target: z.string().min(1).max(128),
+  }),
+  /** The waiting room changed; hosts fetch the list. Sent by our server, without names. */
+  z.object({
+    type: z.literal("lobby.updated"),
+    count: z.number().int().min(0),
   }),
 ]);
 export type RoomEvent = z.infer<typeof RoomEvent>;

@@ -1,8 +1,11 @@
 import {
   MEETING_ERRORS,
+  type AdmissionResponse,
   type HandRequest,
   type JoinRequest,
   type JoinResponse,
+  type LobbyAction,
+  type LobbyResponse,
   type MeetingErrorCode,
   type ModerateRequest,
   type TokenResponse,
@@ -31,13 +34,20 @@ function errorCodeOf(body: unknown): MeetingErrorCode | undefined {
   return isErrorCode(code) ? code : undefined;
 }
 
-async function post<T>(path: string, body?: unknown): Promise<T> {
+async function send<T>(
+  method: "GET" | "POST" | "DELETE",
+  path: string,
+  body?: unknown,
+  init?: RequestInit,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
+      cache: "no-store",
+      ...init,
     });
   } catch {
     throw new MeetingRequestError("NETWORK");
@@ -50,6 +60,8 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   return data as T;
 }
 
+const post = <T>(path: string, body?: unknown) => send<T>("POST", path, body);
+
 /** The meeting client's calls to our meeting API. */
 export const meetingApi = {
   join: (code: string, request: JoinRequest) =>
@@ -61,4 +73,18 @@ export const meetingApi = {
     post<void>(`/api/meetings/${code}/hand`, request),
   moderate: (code: string, request: ModerateRequest) =>
     post<void>(`/api/meetings/${code}/moderate`, request),
+  pollAdmission: (code: string, requestId: string) =>
+    post<AdmissionResponse>(`/api/meetings/${code}/admission/${requestId}`),
+  /** keepalive lets the request finish while the tab closes. */
+  cancelAdmission: (code: string, requestId: string, keepalive = false) =>
+    send<void>(
+      "DELETE",
+      `/api/meetings/${code}/admission/${requestId}`,
+      undefined,
+      { keepalive },
+    ),
+  lobby: (code: string) =>
+    send<LobbyResponse>("GET", `/api/meetings/${code}/lobby`),
+  decide: (code: string, action: LobbyAction) =>
+    post<void>(`/api/meetings/${code}/lobby`, action),
 };

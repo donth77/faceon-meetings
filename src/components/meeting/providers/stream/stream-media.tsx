@@ -313,6 +313,7 @@ export function StreamMedia({
     }),
     [
       actions,
+      call,
       callingState,
       canSendAudio,
       canSendVideo,

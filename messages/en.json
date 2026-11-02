@@ -421,6 +421,20 @@
       "takeover": "Share instead",
       "cancel": "Cancel",
       "failed": "Couldn’t share your screen. Try again."
+    },
+    "lobby": {
+      "waiting": "Waiting to join ({count})",
+      "admit": "Admit",
+      "deny": "Deny",
+      "admitAll": "Admit all",
+      "admitName": "Admit {name}",
+      "denyName": "Deny {name}",
+      "view": "View",
+      "viewAll": "View all",
+      "wantsToJoin": "{name} wants to join",
+      "manyWantToJoin": "{count} people want to join",
+      "participantsWaiting": "{count, plural, one {# participant} other {# participants}}, {waiting} waiting to join",
+      "failed": "Couldn’t do that. Try again."
     }
   },
   "PreJoin": {
@@ -451,9 +465,16 @@
       "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
       "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow.",
       "BUSY": "Too many meetings are running right now. Try again shortly.",
-      "LOCKED": "The host has locked this meeting. Ask them to unlock it, then try again."
+      "LOCKED": "The host has locked this meeting. Ask them to unlock it, then try again.",
+      "DENIED": "You can’t ask to join this meeting again.",
+      "TURNED_AWAY": "Someone in the meeting didn’t let you in.",
+      "EXPIRED": "Nobody let you in for a while, so your request timed out. Ask again."
     },
-    "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account."
+    "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account.",
+    "askToJoin": "Ask to join",
+    "askingEyebrow": "Asking to join",
+    "askingNote": "You’ll join when someone in the meeting lets you in.",
+    "cancelAsking": "Cancel"
   },
   "DeviceProblems": {
     "microphone": {
@@ -607,6 +628,8 @@
     "cancel": "Cancel",
     "regenerated": "Your personal room has a new ID and passcode.",
     "settings": "Room settings",
+    "waitingRoom": "Waiting room",
+    "waitingRoomHint": "People wait until you or a co-host let them in",
     "allowGuests": "Let guests join without an account",
     "allowGuestsHint": "They only need the link and a name",
     "muteOnEntry": "Mute people when they join",

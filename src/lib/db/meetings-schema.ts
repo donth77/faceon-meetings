@@ -131,3 +131,46 @@ export const meetingMember = pgTable(
   },
   (table) => [primaryKey({ columns: [table.sessionId, table.mediaUserId] })],
 );
+
+export const admissionStatus = pgEnum("admission_status", [
+  "pending",
+  "admitted",
+  "denied",
+  "cancelled",
+  "expired",
+]);
+
+/**
+ * Someone asking to join through the waiting room. Hosts admit or deny; the person's
+ * browser polls until then. A request not polled for a while expires when it's next read.
+ */
+export const admissionRequest = pgTable(
+  "admission_request",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => meetingSession.id, { onDelete: "cascade" }),
+    /** Who is asking: their media identity, as in meeting_member. */
+    mediaUserId: text("media_user_id").notNull(),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    displayName: text("display_name").notNull(),
+    image: text("image"),
+    status: admissionStatus("status").notNull().default("pending"),
+    createdAt: createdAt(),
+    /** The last poll; hosts see only requests whose browser is still asking. */
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("admission_request_session").on(table.sessionId, table.status),
+    // One open request per person per session.
+    uniqueIndex("admission_request_one_pending")
+      .on(table.sessionId, table.mediaUserId)
+      .where(sql`${table.status} = 'pending'`),
+  ],
+);

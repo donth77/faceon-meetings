@@ -265,6 +265,7 @@ export function ControlBar({
   panel,
   onTogglePanel,
   unreadChat,
+  waitingCount,
   onToggleMic,
   share,
   handRaised,
@@ -281,6 +282,8 @@ export function ControlBar({
   panel: PanelName | null;
   onTogglePanel: (panel: PanelName) => void;
   unreadChat: number;
+  /** People in the waiting room (hosts and co-hosts see them). */
+  waitingCount: number;
   onToggleMic: () => void;
   share: {
     /** Says why you can't share right now; null when you can. */
@@ -393,8 +396,13 @@ export function ControlBar({
         <PanelButton
           icon={Users}
           label={t("people.button")}
-          accessibleLabel={t("participantCount", { count })}
-          badge={count}
+          accessibleLabel={
+            waitingCount > 0
+              ? t("lobby.participantsWaiting", { count, waiting: waitingCount })
+              : t("participantCount", { count })
+          }
+          badge={waitingCount > 0 ? waitingCount : count}
+          badgeTone={waitingCount > 0 ? "brand" : "neutral"}
           active={panel === "people"}
           onPress={() => onTogglePanel("people")}
         />

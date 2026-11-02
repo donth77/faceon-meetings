@@ -9,6 +9,7 @@ import {
 } from "./queries";
 import { SESSION_GRACE_MS } from "./rules";
 import { currentSession } from "./sessions";
+import { pruneEndedSessionRequests } from "./waiting-room";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -17,7 +18,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * - closes sessions whose call ended or sat empty past the grace period, ending their
  *   calls, so they don't count as running and old tokens can't rejoin;
  * - deletes instant meetings unused for 30 days (their expiry);
- * - drops admission records a week after their session ended, and old attempt counters.
+ * - drops admission records and waiting-room requests a week after their session ended,
+ *   and old attempt counters.
  */
 export async function sweep(now = new Date()) {
   let closedSessions = 0;
@@ -39,6 +41,9 @@ export async function sweep(now = new Date()) {
     closedSessions,
     deletedMeetings: await deleteExpiredMeetings(now),
     prunedMembers: await pruneEndedSessionMembers(
+      new Date(now.getTime() - 7 * DAY_MS),
+    ),
+    prunedRequests: await pruneEndedSessionRequests(
       new Date(now.getTime() - 7 * DAY_MS),
     ),
     prunedAttemptCounters: await pruneAttempts(

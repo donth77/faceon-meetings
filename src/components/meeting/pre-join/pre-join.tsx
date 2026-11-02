@@ -37,6 +37,8 @@ export type MeetingSummary = {
   code: string;
   title: string | null;
   hostName: string;
+  /** The waiting room is on and you aren't the host: Join now becomes Ask to join. */
+  askToJoin: boolean;
 };
 
 /** Who is about to join: signed in, or a guest (whose name we remember on this device). */
@@ -52,6 +54,12 @@ export type JoinInput = {
 export type JoinErrorKind =
   | "BAD_PASSCODE"
   | "LOCKED"
+  /** Turned away too often to ask again. */
+  | "DENIED"
+  /** A host didn't let you in this time. */
+  | "TURNED_AWAY"
+  /** Nobody answered the request in time. */
+  | "EXPIRED"
   | "FULL"
   | "BUSY"
   | "DEMO_LIMIT"
@@ -195,7 +203,7 @@ export function PreJoin({
   meeting: MeetingSummary;
   viewer: Viewer;
   initialPasscode: string | undefined;
-  status: "idle" | "joining" | "waiting";
+  status: "idle" | "joining" | "waiting" | "asking";
   error: JoinErrorKind | null;
   onJoin: (input: JoinInput) => void;
   onStopWaiting: () => void;
@@ -355,7 +363,11 @@ export function PreJoin({
         >
           <div className="flex flex-col gap-1.5">
             <p className="text-muted-foreground text-[13px] font-bold tracking-[0.06em] uppercase">
-              {status === "waiting" ? t("waitingEyebrow") : t("readyToJoin")}
+              {status === "waiting"
+                ? t("waitingEyebrow")
+                : status === "asking"
+                  ? t("askingEyebrow")
+                  : t("readyToJoin")}
             </p>
             <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
               {title}
@@ -368,7 +380,7 @@ export function PreJoin({
             </p>
           </div>
 
-          {status === "waiting" ? (
+          {status === "waiting" || status === "asking" ? (
             <p
               role="status"
               className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-3.5 py-3 text-sm leading-normal text-amber-950 ring-1 ring-amber-200 ring-inset dark:bg-amber-400/10 dark:text-amber-100 dark:ring-amber-400/30"
@@ -377,7 +389,7 @@ export function PreJoin({
                 aria-hidden="true"
                 className="mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-400"
               />
-              {t("waitingForHost")}
+              {status === "asking" ? t("askingNote") : t("waitingForHost")}
             </p>
           ) : null}
 
@@ -423,13 +435,13 @@ export function PreJoin({
             </p>
           ) : null}
 
-          {status === "waiting" ? (
+          {status === "waiting" || status === "asking" ? (
             <Button
               variant="outline"
               onPress={onStopWaiting}
               className="h-[52px] rounded-xl text-[17px] font-semibold"
             >
-              {t("stopWaiting")}
+              {status === "asking" ? t("cancelAsking") : t("stopWaiting")}
             </Button>
           ) : (
             <>
@@ -445,7 +457,11 @@ export function PreJoin({
                     aria-hidden="true"
                   />
                 ) : null}
-                {status === "joining" ? t("joining") : t("joinNow")}
+                {status === "joining"
+                  ? t("joining")
+                  : meeting.askToJoin
+                    ? t("askToJoin")
+                    : t("joinNow")}
               </Button>
               <Button
                 variant="link"

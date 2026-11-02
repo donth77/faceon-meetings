@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
-import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
+import type { AdmittedMeetingInfo, LobbyEntry } from "@/lib/meetings/api";
 
 import { useInvitation } from "../invitation";
 import { useRoomMedia, type RoomParticipant } from "../media";
@@ -115,12 +115,65 @@ function SectionHeading({
   );
 }
 
+/** Someone in the waiting room, with Deny and Admit. */
+function WaitingRow({
+  entry,
+  onAdmit,
+  onDeny,
+}: {
+  entry: LobbyEntry;
+  onAdmit: () => void;
+  onDeny: () => void;
+}) {
+  const t = useTranslations("Meeting.people");
+  const tl = useTranslations("Meeting.lobby");
+  return (
+    <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
+      {entry.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={entry.image}
+          alt=""
+          className="size-8 shrink-0 rounded-full"
+        />
+      ) : (
+        <span className="size-8 shrink-0 rounded-full bg-white/10" />
+      )}
+      <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
+        <span className="truncate">{entry.name}</span>
+        {entry.guest ? (
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {t("guest")}
+          </span>
+        ) : null}
+      </span>
+      <Button
+        onPress={onDeny}
+        aria-label={tl("denyName", { name: entry.name })}
+        className="focus-visible:ring-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+      >
+        {tl("deny")}
+      </Button>
+      <Button
+        onPress={onAdmit}
+        aria-label={tl("admitName", { name: entry.name })}
+        className="bg-primary text-primary-foreground focus-visible:ring-ring rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none hover:opacity-90 focus-visible:ring-2"
+      >
+        {tl("admit")}
+      </Button>
+    </li>
+  );
+}
+
 /**
- * Participants: everyone in the meeting, searchable, with raised hands on top in the
- * order they went up. Hosts get Mute all and each person's ⋯ menu of host actions.
+ * Participants: the waiting room (for hosts), then everyone in the meeting, searchable,
+ * with raised hands on top in the order they went up. Hosts get Mute all and each
+ * person's ⋯ menu of host actions.
  */
 export function ParticipantsPanel({
   meeting,
+  waiting,
+  onDecide,
   hands,
   onLowerHand,
   onLowerAll,
@@ -128,6 +181,12 @@ export function ParticipantsPanel({
   onClose,
 }: {
   meeting: AdmittedMeetingInfo;
+  /** The waiting room; hosts and co-hosts only. */
+  waiting: LobbyEntry[];
+  onDecide: (
+    action:
+      { action: "admit" | "deny"; ids: string[] } | { action: "admitAll" },
+  ) => void;
   hands: Record<string, string>;
   onLowerHand: (userId: string) => void;
   onLowerAll: () => void;
@@ -136,6 +195,7 @@ export function ParticipantsPanel({
 }) {
   const t = useTranslations("Meeting.people");
   const th = useTranslations("Meeting.hand");
+  const tl = useTranslations("Meeting.lobby");
   const media = useRoomMedia();
   const { selfRole } = useRoomControls();
   const isHost = moderates(selfRole);
@@ -155,6 +215,9 @@ export function ParticipantsPanel({
   const shown = q
     ? everyone.filter((p) => p.name.toLocaleLowerCase().includes(q))
     : everyone;
+  const waitingShown = q
+    ? waiting.filter((w) => w.name.toLocaleLowerCase().includes(q))
+    : waiting;
   const raised = shown
     .filter((p) => handNumber(p) !== null)
     .sort((a, b) => (handNumber(a) ?? 0) - (handNumber(b) ?? 0));
@@ -210,6 +273,32 @@ export function ParticipantsPanel({
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+        {waitingShown.length > 0 ? (
+          <section className="pb-3">
+            <SectionHeading
+              action={
+                <Button
+                  onPress={() => onDecide({ action: "admitAll" })}
+                  className="text-primary focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+                >
+                  {tl("admitAll")}
+                </Button>
+              }
+            >
+              {tl("waiting", { count: waitingShown.length })}
+            </SectionHeading>
+            <ul>
+              {waitingShown.map((entry) => (
+                <WaitingRow
+                  key={entry.id}
+                  entry={entry}
+                  onAdmit={() => onDecide({ action: "admit", ids: [entry.id] })}
+                  onDeny={() => onDecide({ action: "deny", ids: [entry.id] })}
+                />
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {raised.length > 0 ? (
           <section className="pb-3">
             <SectionHeading

@@ -17,6 +17,7 @@ import type { DevicePreferences } from "@/lib/device/preferences";
 import type { JoinResponse, MeetingErrorCode } from "@/lib/meetings/api";
 
 import { meetingApi, MeetingRequestError } from "./api-client";
+import { playChime } from "./chime";
 import { LeftMeeting, type LeftReason } from "./left-meeting";
 import {
   readLinkPasscode,
@@ -42,6 +43,8 @@ type Step =
   | { name: "prejoin"; error: JoinErrorKind | null }
   | { name: "joining" }
   | { name: "waiting" }
+  /** In the waiting room: asked to join, polling until a host decides. */
+  | { name: "asking"; requestId: string }
   | {
       name: "room";
       admission: Admission;
@@ -63,6 +66,7 @@ const NOTICES: Partial<Record<MeetingErrorCode, NoticeKind>> = {
 const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
   "BAD_PASSCODE",
   "LOCKED",
+  "DENIED",
   "FULL",
   "BUSY",
   "DEMO_LIMIT",
@@ -89,6 +93,8 @@ function entryDevices(
 
 /** While waiting for the host, ask again this often. */
 const WAITING_RETRY_MS = 5000;
+/** In the waiting room, check this often, so being let in feels immediate. */
+const ASKING_POLL_MS = 2000;
 
 export type MeetingEntryProps = {
   code: string;
@@ -134,6 +140,36 @@ export default function MeetingEntry({
 
   useEffect(() => scrubLinkPasscode(), []);
 
+  const enter = useCallback(
+    (admission: Admission, input: JoinInput) => {
+      if (input.passcode) rememberPasscode(code, input.passcode);
+      endingForAll.current = false;
+      leftAlone.current = false;
+      const { secondsLeft } = admission.session;
+      endsAt.current =
+        secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
+      setStep({
+        name: "room",
+        admission,
+        devices: entryDevices(input.devices, admission),
+        endsAt: endsAt.current,
+      });
+    },
+    [code],
+  );
+
+  /** A failed request: a notice that ends the visit, or an error on pre-join. */
+  const fail = useCallback((error: unknown) => {
+    const errorCode =
+      error instanceof MeetingRequestError ? error.code : "UNAVAILABLE";
+    const notice = errorCode === "NETWORK" ? undefined : NOTICES[errorCode];
+    setStep(
+      notice
+        ? { name: "notice", kind: notice }
+        : { name: "prejoin", error: toJoinError(errorCode) },
+    );
+  }, []);
+
   const join = useCallback(
     async (input: JoinInput, { quiet = false } = {}) => {
       lastJoin.current = input;
@@ -145,32 +181,16 @@ export default function MeetingEntry({
         });
         if (result.state === "waiting_for_host") {
           setStep({ name: "waiting" });
-          return;
+        } else if (result.state === "waiting") {
+          setStep({ name: "asking", requestId: result.requestId });
+        } else {
+          enter(result, input);
         }
-        if (input.passcode) rememberPasscode(code, input.passcode);
-        endingForAll.current = false;
-        leftAlone.current = false;
-        const { secondsLeft } = result.session;
-        endsAt.current =
-          secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
-        setStep({
-          name: "room",
-          admission: result,
-          devices: entryDevices(input.devices, result),
-          endsAt: endsAt.current,
-        });
       } catch (error) {
-        const errorCode =
-          error instanceof MeetingRequestError ? error.code : "UNAVAILABLE";
-        const notice = errorCode === "NETWORK" ? undefined : NOTICES[errorCode];
-        setStep(
-          notice
-            ? { name: "notice", kind: notice }
-            : { name: "prejoin", error: toJoinError(errorCode) },
-        );
+        fail(error);
       }
     },
-    [code],
+    [code, enter, fail],
   );
 
   const waiting = step.name === "waiting";
@@ -181,6 +201,71 @@ export default function MeetingEntry({
     }, WAITING_RETRY_MS);
     return () => clearInterval(timer);
   }, [waiting, join]);
+
+  // In the waiting room: poll until a host decides, at once when the tab comes back
+  // into view, and give up the place when the tab closes.
+  const askingId = step.name === "asking" ? step.requestId : null;
+  useEffect(() => {
+    if (!askingId) return;
+    let done = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    async function poll(requestId: string) {
+      clearTimeout(timer);
+      try {
+        const result = await meetingApi.pollAdmission(code, requestId);
+        if (done) return;
+        if (result.state === "admitted") {
+          done = true;
+          playChime();
+          navigator.vibrate?.(200);
+          if (lastJoin.current) enter(result, lastJoin.current);
+          return;
+        }
+        if (result.state !== "waiting") {
+          done = true;
+          setStep({
+            name: "prejoin",
+            error: result.state === "denied" ? "TURNED_AWAY" : "EXPIRED",
+          });
+          return;
+        }
+      } catch (error) {
+        if (done) return;
+        // A dropped connection just means trying again; anything else ends the wait.
+        if (!(
+          error instanceof MeetingRequestError && error.code === "NETWORK"
+        )) {
+          done = true;
+          fail(error);
+          return;
+        }
+      }
+      timer = setTimeout(() => void poll(requestId), ASKING_POLL_MS);
+    }
+    const requestId = askingId;
+    timer = setTimeout(() => void poll(requestId), ASKING_POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !done) void poll(requestId);
+    };
+    const onPageHide = () => {
+      void meetingApi.cancelAdmission(code, requestId, true).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      done = true;
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, [askingId, code, enter, fail]);
+
+  function stopWaiting() {
+    if (askingId) {
+      void meetingApi.cancelAdmission(code, askingId).catch(() => {});
+    }
+    setStep({ name: "prejoin", error: null });
+  }
 
   const handleLeft = useCallback((reason: LeaveReason) => {
     // Once this host has asked to end the meeting, however the room closes, they ended it.
@@ -263,7 +348,7 @@ export default function MeetingEntry({
           status={step.name === "prejoin" ? "idle" : step.name}
           error={step.name === "prejoin" ? step.error : null}
           onJoin={(input) => void join(input)}
-          onStopWaiting={() => setStep({ name: "prejoin", error: null })}
+          onStopWaiting={stopWaiting}
         />
       );
   }

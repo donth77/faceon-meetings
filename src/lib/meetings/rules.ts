@@ -81,6 +81,8 @@ export type EntryFacts = {
   isBanned: boolean;
   /** A host locked the session: nobody new gets in. */
   locked: boolean;
+  /** How often hosts turned this person away in this session's waiting room. */
+  timesDenied: number;
   hostPresent: boolean;
   /** Connected now, against the session's limit. */
   connectedCount: number;
@@ -89,10 +91,17 @@ export type EntryFacts = {
   alreadyConnected: boolean;
 };
 
-/** Whether someone may be admitted now. Null means yes. */
+/** Turned away this often, someone can't ask to join that session again. */
+export const MAX_DENIALS = 3;
+
+/**
+ * Whether someone may be admitted now. Null means yes; "waiting_room" means they ask
+ * the hosts first. People already admitted to the session (a refresh, a second device)
+ * skip the passcode and the waiting room.
+ */
 export function checkEntry(
   facts: EntryFacts,
-): MeetingErrorCode | "waiting_for_host" | null {
+): MeetingErrorCode | "waiting_for_host" | "waiting_room" | null {
   if (facts.isBanned) return "REMOVED";
   if (isHostRole(facts.role)) return null;
   if (facts.locked && !facts.isMember) return "LOCKED";
@@ -103,7 +112,10 @@ export function checkEntry(
   ) {
     return "BAD_PASSCODE";
   }
-  if (!facts.hostPresent && !facts.settings.joinBeforeHost) {
+  const asks = facts.settings.waitingRoom && !facts.isMember;
+  if (asks && facts.timesDenied >= MAX_DENIALS) return "DENIED";
+  // Only hosts admit, so with the waiting room on, newcomers wait for one to arrive.
+  if (!facts.hostPresent && (!facts.settings.joinBeforeHost || asks)) {
     return "waiting_for_host";
   }
   if (
@@ -112,7 +124,7 @@ export function checkEntry(
   ) {
     return "FULL";
   }
-  return null;
+  return asks ? "waiting_room" : null;
 }
 
 export type ModerationAction = ModerateRequest["action"];

@@ -14,6 +14,7 @@ export const MEETING_ERRORS = {
   SIGN_IN_REQUIRED: 401,
   BAD_PASSCODE: 403,
   LOCKED: 403,
+  DENIED: 403,
   REMOVED: 403,
   NOT_ALLOWED: 403,
   NOT_FOUND: 404,
@@ -72,15 +73,48 @@ export type SessionInfo = {
   aloneTimeoutMinutes: number | null;
 };
 
+export type Admitted = {
+  state: "admitted";
+  connection: JoinInfo;
+  self: SelfInfo;
+  meeting: AdmittedMeetingInfo;
+  session: SessionInfo;
+};
+
 export type JoinResponse =
-  | {
-      state: "admitted";
-      connection: JoinInfo;
-      self: SelfInfo;
-      meeting: AdmittedMeetingInfo;
-      session: SessionInfo;
-    }
-  | { state: "waiting_for_host" };
+  | Admitted
+  | { state: "waiting_for_host" }
+  /** Asking to join through the waiting room: poll the request until a host decides. */
+  | { state: "waiting"; requestId: string };
+
+/** A waiting-room request, as its owner polls it. */
+export type AdmissionResponse =
+  | Admitted
+  | { state: "waiting" }
+  | { state: "denied" }
+  /** Timed out, or the session it was for has ended: ask again. */
+  | { state: "expired" };
+
+/** Someone in the waiting room, as hosts see them. */
+export type LobbyEntry = {
+  id: string;
+  name: string;
+  image: string | null;
+  guest: boolean;
+  /** When they asked (ISO 8601). */
+  askedAt: string;
+};
+export type LobbyResponse = { requests: LobbyEntry[] };
+
+/** Hosts let people in, or turn them away. */
+export const LobbyAction = z.discriminatedUnion("action", [
+  z.object({
+    action: z.enum(["admit", "deny"]),
+    ids: z.array(z.uuid()).min(1).max(50),
+  }),
+  z.object({ action: z.literal("admitAll") }),
+]);
+export type LobbyAction = z.infer<typeof LobbyAction>;
 
 export const TokenRequest = z.object({ room: z.uuid() });
 export type TokenRequest = z.infer<typeof TokenRequest>;
