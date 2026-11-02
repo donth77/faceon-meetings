@@ -74,6 +74,20 @@ export async function recordAttendance(
   });
 }
 
+/**
+ * Deletes who joined and left once it's older than Previous shows (90 days), as the
+ * privacy policy promises.
+ */
+export async function pruneAttendance(before: Date): Promise<number> {
+  const deleted = await db()
+    .delete(participantSession)
+    .where(
+      sql`coalesce(${participantSession.leftAt}, ${participantSession.joinedAt}) < ${before}`,
+    )
+    .returning({ id: participantSession.id });
+  return deleted.length;
+}
+
 /** Drops webhook delivery IDs after a week; Stream retries only within minutes. */
 export async function pruneWebhookEvents(before: Date): Promise<number> {
   const deleted = await db()

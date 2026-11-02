@@ -1,8 +1,8 @@
 import "server-only";
 
-import { pruneAttempts } from "@/lib/rate-limit";
+import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 
-import { pruneWebhookEvents } from "./attendance";
+import { pruneAttendance, pruneWebhookEvents } from "./attendance";
 import {
   deleteExpiredMeetings,
   openSessionsStartedBefore,
@@ -20,7 +20,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *   calls, so they don't count as running and old tokens can't rejoin;
  * - deletes instant meetings unused for 30 days (their expiry);
  * - drops admission records and waiting-room requests a week after their session ended,
- *   and old attempt counters.
+ *   attendance after 90 days, and attempt counters and sign-in rate limits after a day.
+ *   The privacy policy promises these.
  */
 export async function sweep(now = new Date()) {
   let closedSessions = 0;
@@ -49,6 +50,12 @@ export async function sweep(now = new Date()) {
     ),
     prunedAttemptCounters: await pruneAttempts(
       new Date(now.getTime() - DAY_MS),
+    ),
+    prunedAuthRateLimits: await pruneAuthRateLimits(
+      new Date(now.getTime() - DAY_MS),
+    ),
+    prunedAttendance: await pruneAttendance(
+      new Date(now.getTime() - 90 * DAY_MS),
     ),
     prunedWebhookEvents: await pruneWebhookEvents(
       new Date(now.getTime() - 7 * DAY_MS),

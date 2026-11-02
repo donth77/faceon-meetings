@@ -24,6 +24,12 @@ export async function SiteFooter() {
         <Link href="/help" className="hover:text-foreground">
           {t("help")}
         </Link>
+        <Link href="/privacy" className="hover:text-foreground">
+          {t("privacy")}
+        </Link>
+        <Link href="/terms" className="hover:text-foreground">
+          {t("terms")}
+        </Link>
         <span>
           {t.rich("avatarCredit", {
             link: (chunks) => (

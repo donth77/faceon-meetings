@@ -4,7 +4,7 @@ import { createHmac } from "node:crypto";
 import { and, gte, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { attemptCounter } from "@/lib/db/schema";
+import { attemptCounter, rateLimit } from "@/lib/db/schema";
 import { serverEnv } from "@/lib/server-env";
 
 /** A counter key and how many attempts it allows per window. */
@@ -62,6 +62,18 @@ export async function recordAttempt(limits: AttemptLimit[]): Promise<void> {
 }
 
 /** Deletes counters whose window ended long ago. Returns how many. */
+/**
+ * Better Auth's own sign-in rate limits keep the IP address in each record and never
+ * delete them; these go after a day too.
+ */
+export async function pruneAuthRateLimits(before: Date): Promise<number> {
+  const deleted = await db()
+    .delete(rateLimit)
+    .where(lt(rateLimit.lastRequest, before.getTime()))
+    .returning({ id: rateLimit.id });
+  return deleted.length;
+}
+
 export async function pruneAttempts(before: Date): Promise<number> {
   const deleted = await db()
     .delete(attemptCounter)

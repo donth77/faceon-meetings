@@ -3,6 +3,7 @@ import "server-only";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { parseFrontMatter } from "@/lib/content/front-matter";
 import { publicEnv } from "@/lib/env";
 
 /** Help's categories, in the order the index and the sidebar show them. */
@@ -35,35 +36,22 @@ export type HelpArticle = {
 };
 
 const ROOT = path.join(process.cwd(), "content", "help");
-const FRONT_MATTER = /^---\n([\s\S]*?)\n---\n/;
-
 function parse(slug: string, raw: string): HelpArticle {
   // Articles say {appName}; a self-hosted copy may go by another name.
-  const text = raw
-    .replace(/\r\n/g, "\n")
-    .replaceAll("{appName}", publicEnv.NEXT_PUBLIC_APP_NAME);
-  const match = FRONT_MATTER.exec(text);
-  if (!match?.[1])
-    throw new Error(`Help article "${slug}" has no front matter.`);
-  const fields = new Map(
-    match[1].split("\n").map((line) => {
-      const colon = line.indexOf(":");
-      return [
-        line.slice(0, colon).trim(),
-        line.slice(colon + 1).trim(),
-      ] as const;
-    }),
+  const { fields, body } = parseFrontMatter(
+    raw.replaceAll("{appName}", publicEnv.NEXT_PUBLIC_APP_NAME),
   );
   const category = CATEGORY_IDS[fields.get("category") ?? ""];
-  if (!category)
+  if (!category) {
     throw new Error(`Help article "${slug}" has an unknown category.`);
+  }
   return {
     slug,
     title: fields.get("title") ?? slug,
     summary: fields.get("summary") ?? "",
     category,
     order: Number(fields.get("order")) || 0,
-    body: text.slice(match[0].length),
+    body,
   };
 }
 

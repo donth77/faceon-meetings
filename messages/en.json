@@ -40,6 +40,8 @@
       }
     },
     "footerLabel": "Footer",
+    "privacy": "Privacy",
+    "terms": "Terms",
     "viewSource": "View source on GitHub",
     "avatarCredit": "Avatars: <link>Dylan</link> by Natalia Spivak (CC BY 4.0)",
     "language": "Language",
@@ -967,5 +969,8 @@
     },
     "close": "Close settings",
     "forThisDevice": "For this device"
+  },
+  "Legal": {
+    "updated": "Last updated {date}"
   }
 }

@@ -8,8 +8,8 @@ const NOINDEX = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
-  // Help articles are Markdown files read on the server.
-  outputFileTracingIncludes: { "/**": ["./content/help/**/*.md"] },
+  // Help articles and the legal pages are Markdown files read on the server.
+  outputFileTracingIncludes: { "/**": ["./content/**/*.md"] },
   turbopack: {
     rules: {
       "*.css": {
