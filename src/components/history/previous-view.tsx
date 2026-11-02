@@ -10,12 +10,13 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Segment, Segments } from "@/components/ui/segments";
 import { Sheet, SheetTitle } from "@/components/ui/sheet";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
@@ -61,26 +62,77 @@ function PersonAvatar({
   );
 }
 
-function Avatars({ people, label }: { people: Attendee[]; label: string }) {
-  const shown = people.slice(0, 4);
+/** One avatar (or the "+N" past the first four) with a tooltip naming who it is. */
+function Named({
+  names,
+  className,
+  children,
+}: {
+  names: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <span role="img" aria-label={label} className="flex items-center">
-      {shown.map((person, index) => (
-        <PersonAvatar
-          key={`${person.name}-${index}`}
-          person={person}
-          className={cn(
-            "size-7 shrink-0 ring-2 ring-white dark:ring-[#171a1f]",
-            index > 0 && "-ml-2",
-          )}
-        />
-      ))}
-      {people.length > 4 ? (
-        <span className="-ml-2 flex h-7 items-center rounded-full bg-[#eef1f5] px-2 text-xs font-bold ring-2 ring-white dark:bg-white/10 dark:ring-[#171a1f]">
-          +{people.length - 4}
-        </span>
-      ) : null}
-    </span>
+    <TooltipTrigger>
+      {/* Not a tab stop of its own: the row's names are on the whole group. */}
+      <span
+        role="img"
+        aria-label={names}
+        tabIndex={-1}
+        className={cn("flex shrink-0 rounded-full outline-hidden", className)}
+      >
+        {children}
+      </span>
+      <Tooltip>{names}</Tooltip>
+    </TooltipTrigger>
+  );
+}
+
+/**
+ * Who came: four avatars, then "+N". Pointing at one names it; the group is one tab stop
+ * whose focus lists everyone, and screen readers hear the same list as its name.
+ */
+function Avatars({ people }: { people: Attendee[] }) {
+  const t = useTranslations("Previous");
+  const list = new Intl.ListFormat(useIntlLocale(), { type: "conjunction" });
+  const names = (some: Attendee[]) =>
+    list.format(some.map((person) => person.name));
+  const shown = people.slice(0, 4);
+  const rest = people.slice(4);
+  const everyone = names(people);
+  return (
+    <TooltipTrigger trigger="focus">
+      <span
+        role="img"
+        tabIndex={0}
+        aria-label={t("peopleNamed", {
+          count: people.length,
+          names: everyone,
+        })}
+        className="focus-visible:focus-ring flex items-center rounded-full outline-hidden"
+      >
+        {shown.map((person, index) => (
+          <Named
+            key={`${person.name}-${index}`}
+            names={person.name}
+            className={cn(index > 0 && "-ml-1")}
+          >
+            <PersonAvatar
+              person={person}
+              className="size-7 shrink-0 ring-2 ring-white dark:ring-[#171a1f]"
+            />
+          </Named>
+        ))}
+        {rest.length > 0 ? (
+          <Named names={names(rest)} className="-ml-1">
+            <span className="flex h-7 items-center rounded-full bg-[#eef1f5] px-2 text-xs font-bold ring-2 ring-white dark:bg-white/10 dark:ring-[#171a1f]">
+              +{rest.length}
+            </span>
+          </Named>
+        ) : null}
+      </span>
+      <Tooltip>{everyone}</Tooltip>
+    </TooltipTrigger>
   );
 }
 
@@ -427,12 +479,7 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                       </div>
                       <span className="text-muted-foreground flex items-center gap-3 text-[13px]">
                         {f.duration(meeting.minutes)}
-                        <Avatars
-                          people={meeting.attendees}
-                          label={t("people", {
-                            count: meeting.attendees.length,
-                          })}
-                        />
+                        <Avatars people={meeting.attendees} />
                       </span>
                     </div>
                     <div className="flex gap-2">

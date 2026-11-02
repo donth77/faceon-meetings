@@ -701,6 +701,19 @@
       "startAgain": "Start AI notes again"
     }
   },
+  "Avatars": {
+    "pick": "Pick an avatar",
+    "option": "Avatar option {n}",
+    "shuffle": "Shuffle",
+    "usePhoto": "{provider, select, google {Use my Google photo} github {Use my GitHub photo} other {Use my account photo}}",
+    "change": "Change avatar",
+    "title": "Your avatar",
+    "forGuest": "People see it when your camera is off. It’s kept on this device for next time.",
+    "forAccount": "People see it when your camera is off. It’s saved to your account.",
+    "done": "Done",
+    "close": "Close",
+    "saveFailed": "Couldn’t save your avatar. Try again."
+  },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
     "waitingEyebrow": "Waiting for the host",
@@ -709,6 +722,7 @@
     "waitingForHost": "The host hasn’t started this meeting yet. You’ll join as soon as they do.",
     "yourName": "Your name",
     "passcode": "Passcode",
+    "passcodeHint": "It’s in the meeting invitation.",
     "joinNow": "Join now",
     "joining": "Joining…",
     "joinWithout": "Join without audio and video",
@@ -722,7 +736,6 @@
     "tryAgain": "Try again",
     "errors": {
       "BAD_PASSCODE": "That passcode isn’t right. Check the invite and try again.",
-      "passcodeNeeded": "This meeting has a passcode. Enter it to join.",
       "FULL": "This meeting is full. Try again when someone leaves.",
       "demoFull": "This meeting is full. Demo meetings have up to {count, plural, one {# person} other {# people}}. Try again when someone leaves.",
       "NETWORK": "Can’t reach {appName}. Check your connection, then try again.",
@@ -1110,6 +1123,7 @@
     "all": "All",
     "hostedByMe": "Hosted by me",
     "people": "{count, plural, one {# person} other {# people}}",
+    "peopleNamed": "{count, plural, one {# person} other {# people}}: {names}",
     "endsOn": "Ends {day}",
     "viewDetails": "View details",
     "scheduleAgain": "Schedule again",
@@ -1279,10 +1293,6 @@
       "title": "Account",
       "profile": "Profile",
       "shownWhenOff": "Shown when your camera is off",
-      "pickAvatar": "Pick an avatar",
-      "avatarOption": "Avatar option {n}",
-      "shuffle": "Shuffle",
-      "usePhoto": "{provider, select, google {Use my Google photo} github {Use my GitHub photo} other {Use my account photo}}",
       "displayName": "Display name",
       "nameRequired": "Enter your name.",
       "credit": "Avatars: Dylan by Natalia Spivak (CC BY 4.0), via DiceBear.",

@@ -4,6 +4,7 @@
  */
 import { z } from "zod";
 
+import { AvatarSeed } from "@/lib/avatars/seed";
 import type { JoinInfo, MeetingRole } from "@/lib/media/types";
 import {
   ENGINES,
@@ -48,6 +49,8 @@ export const DisplayName = z
 export const JoinRequest = z.object({
   name: DisplayName,
   passcode: z.string().trim().max(32).optional(),
+  /** A guest's avatar, as the join screen showed it; an account keeps its own. */
+  avatarSeed: AvatarSeed.optional(),
 });
 export type JoinRequest = z.input<typeof JoinRequest>;
 

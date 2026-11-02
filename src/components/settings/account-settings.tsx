@@ -1,19 +1,10 @@
 "use client";
 
 import { cn } from "cn";
-import {
-  Check,
-  Info,
-  KeyRound,
-  Lock,
-  Shuffle,
-  Trash2,
-  User,
-} from "lucide-react";
+import { Info, KeyRound, Lock, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
-import { Radio, RadioGroup, ToggleButton } from "react-aria-components";
 import { toast } from "sonner";
 
 import {
@@ -22,6 +13,7 @@ import {
   PasswordField,
 } from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
+import { AvatarPicker } from "@/components/avatars/avatar-picker";
 import { LEGAL_LINKS } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +34,8 @@ import {
 } from "@/lib/auth/client";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem, linkProblem } from "@/lib/auth/problems";
-import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
+import type { AccountAvatar } from "@/lib/avatars/account";
+import { avatarImage } from "@/lib/avatars/seed";
 import { publicEnv } from "@/lib/env";
 import { signInPath } from "@/lib/routes";
 
@@ -50,19 +43,11 @@ import { SettingsCard } from "./settings-nav";
 
 const ACCOUNT_ROUTE = "/settings/account";
 
-/** Where the account's profile photo came from. */
-export type PhotoProvider = "google" | "github" | "other";
-
 export type AccountInfo = {
   name: string;
   email: string;
   emailVerified: boolean;
-  /** The Google or GitHub profile photo, if the account has one. */
-  photo: string | null;
-  photoProvider: PhotoProvider | null;
-  /** Whether the photo is shown instead of the avatar. */
-  usesPhoto: boolean;
-  avatarSeed: string;
+  avatar: AccountAvatar;
   /** Linked sign-in methods: "google", "github" and "credential" (a password). */
   methods: Array<{ id: string; providerId: string }>;
   /** Whether this deployment offers email-and-password sign-in. */
@@ -74,8 +59,6 @@ export type AccountInfo = {
 const OUTLINE =
   "h-[38px] gap-2 rounded-[10px] border-[#c9cfd8] px-3.5 text-sm font-semibold dark:border-white/15";
 
-const avatarSrc = (seed: string) => `/avatar/${seed}.svg`;
-
 function Profile({
   account,
   avatarChoices,
@@ -86,14 +69,10 @@ function Profile({
   const t = useTranslations("Settings.account");
   const router = useRouter();
   const nameId = useId();
-  const avatarsId = useId();
   const nameErrorId = useId();
-  const [seed, setSeed] = useState(account.avatarSeed);
-  const [usesPhoto, setUsesPhoto] = useState(account.usesPhoto);
-  const [seeds, setSeeds] = useState(() => [
-    account.avatarSeed,
-    ...avatarChoices,
-  ]);
+  const { photo } = account.avatar;
+  const [seed, setSeed] = useState(account.avatar.seed);
+  const [usesPhoto, setUsesPhoto] = useState(account.avatar.usesPhoto);
   const [name, setName] = useState(account.name);
   const [nameError, setNameError] = useState(false);
 
@@ -118,15 +97,6 @@ function Profile({
     );
   }
 
-  function shuffle() {
-    // Keeps the avatar you have, with seven new ones beside it.
-    const look = parseAvatarSeed(seed)?.look ?? "n";
-    setSeeds([
-      seed,
-      ...Array.from({ length: 7 }, () => createAvatarSeed(look)),
-    ]);
-  }
-
   function saveName() {
     const next = name.trim();
     if (!next) {
@@ -137,7 +107,7 @@ function Profile({
     if (next !== account.name) void save({ name: next });
   }
 
-  const shown = usesPhoto && account.photo ? account.photo : avatarSrc(seed);
+  const shown = usesPhoto && photo ? photo.url : avatarImage(seed);
   return (
     <SettingsCard title={t("profile")}>
       <div className="flex flex-wrap items-start gap-7">
@@ -149,52 +119,14 @@ function Profile({
           </span>
         </div>
         <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-3.5">
-          <RadioGroup
-            value={usesPhoto ? null : seed}
-            onChange={pickAvatar}
-            orientation="horizontal"
-            aria-labelledby={avatarsId}
-          >
-            <span id={avatarsId} className="mb-3 block text-sm font-semibold">
-              {t("pickAvatar")}
-            </span>
-            <div className="flex flex-wrap gap-3.5">
-              {seeds.map((option, index) => (
-                <Radio
-                  key={option}
-                  value={option}
-                  aria-label={t("avatarOption", { n: index + 1 })}
-                  className="group data-focus-visible:focus-ring-strong relative size-16 rounded-full outline-hidden"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={avatarSrc(option)}
-                    alt=""
-                    className="size-16 rounded-full shadow-[0_0_0_1px_var(--border)] group-data-selected:shadow-[0_0_0_3px_var(--card),0_0_0_5px_var(--primary)]"
-                  />
-                  <span className="bg-primary text-primary-foreground absolute -right-0.5 -bottom-0.5 hidden size-[22px] items-center justify-center rounded-full shadow-[0_0_0_2px_var(--card)] group-data-selected:flex">
-                    <Check className="size-3.5" aria-hidden="true" />
-                  </span>
-                </Radio>
-              ))}
-            </div>
-          </RadioGroup>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className={OUTLINE} onPress={shuffle}>
-              <Shuffle className="size-[18px]" aria-hidden="true" />
-              {t("shuffle")}
-            </Button>
-            {account.photo && account.photoProvider ? (
-              <ToggleButton
-                isSelected={usesPhoto}
-                onChange={usePhoto}
-                className="bg-background hover:bg-muted border-input data-selected:border-primary data-selected:bg-chip data-selected:text-chip-foreground data-focus-visible:focus-ring flex h-[38px] items-center gap-2 rounded-[10px] border px-3.5 text-sm font-semibold whitespace-nowrap outline-hidden"
-              >
-                <User className="size-[18px]" aria-hidden="true" />
-                {t("usePhoto", { provider: account.photoProvider })}
-              </ToggleButton>
-            ) : null}
-          </div>
+          <AvatarPicker
+            seed={seed}
+            usesPhoto={usesPhoto}
+            photoProvider={photo?.provider ?? null}
+            choices={avatarChoices}
+            onPick={pickAvatar}
+            onUsePhoto={usePhoto}
+          />
           <div className="flex max-w-[420px] flex-col gap-1.5">
             <label htmlFor={nameId} className="text-sm font-semibold">
               {t("displayName")}

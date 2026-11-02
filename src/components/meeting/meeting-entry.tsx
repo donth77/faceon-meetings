@@ -29,12 +29,12 @@ import {
 import type { LeaveReason } from "./media";
 import { MeetingNotice, type NoticeKind } from "./meeting-notice";
 import { useMeetingTitle } from "./meeting-title";
+import { useJoinAvatar, type Viewer } from "./pre-join/join-avatar";
 import {
   PreJoin,
   type JoinErrorKind,
   type JoinInput,
   type MeetingSummary,
-  type Viewer,
 } from "./pre-join/pre-join";
 import { MeetingRoom } from "./room/meeting-room";
 import { MeetingShell } from "./room/meeting-shell";
@@ -158,6 +158,8 @@ export default function MeetingEntry({
   const isMobile = useIsMobile();
   const title = useMeetingTitle(meeting);
   const [initialPasscode] = useState(() => readLinkPasscode(code));
+  const avatar = useJoinAvatar(viewer);
+  const avatarSaving = avatar.saving;
   const [step, setStep] = useState<Step>({ name: "prejoin", error: null });
   const lastJoin = useRef<JoinInput | null>(null);
   const endingForAll = useRef(false);
@@ -233,9 +235,12 @@ export default function MeetingEntry({
       lastJoin.current = input;
       if (!quiet) setStep({ name: "joining", rejoin });
       try {
+        // An avatar just chosen is saved to the account first, so the room shows it.
+        await avatarSaving.current;
         const result = await meetingApi.join(code, {
           name: input.name,
           passcode: input.passcode,
+          avatarSeed: input.avatarSeed,
         });
         if (result.state === "waiting_for_host") {
           setStep({ name: "waiting" });
@@ -248,7 +253,7 @@ export default function MeetingEntry({
         fail(error);
       }
     },
-    [code, enter, fail],
+    [code, enter, fail, avatarSaving],
   );
 
   const waiting = step.name === "waiting";
@@ -433,6 +438,7 @@ export default function MeetingEntry({
           <PreJoin
             meeting={meeting}
             viewer={viewer}
+            avatar={avatar}
             initialPasscode={initialPasscode}
             status={step.name === "prejoin" ? "idle" : step.name}
             error={step.name === "prejoin" ? step.error : null}

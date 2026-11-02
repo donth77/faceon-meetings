@@ -8,14 +8,11 @@ import { MeetingEntryLoader } from "@/components/meeting/entry-loader";
 import { EntryLoading } from "@/components/meeting/entry-loading";
 import { MeetingNotice } from "@/components/meeting/meeting-notice";
 import { getSession } from "@/lib/auth/session";
-import { avatarUrl } from "@/lib/avatars/seed";
-import {
-  currentGuest,
-  guestAvatarUrl,
-  guestsEnabled,
-  NEW_GUEST_AVATAR,
-} from "@/lib/guest-session";
+import { accountAvatar } from "@/lib/avatars/account";
+import { createAvatarSeed } from "@/lib/avatars/seed";
+import { currentGuest, guestsEnabled } from "@/lib/guest-session";
 import { meetingPageAttempts } from "@/lib/meetings/attempts";
+import { guestMediaId, userMediaId } from "@/lib/meetings/principal";
 import { getMeetingSummary } from "@/lib/meetings/queries";
 import { isLimited, recordDistinctAttempt } from "@/lib/rate-limit";
 
@@ -44,10 +41,16 @@ async function MeetingGate({
   // in a prefetch's prerender (connection() waits for that).
   await connection();
   const attempts = meetingPageAttempts(await headers(), code);
-  const [summary, session, guest, limited] = await Promise.all([
-    getMeetingSummary(code),
-    getSession(),
-    currentGuest(),
+  const [session, guest] = await Promise.all([getSession(), currentGuest()]);
+  const [summary, limited] = await Promise.all([
+    getMeetingSummary(
+      code,
+      session
+        ? { userId: session.user.id, mediaUserId: userMediaId(session.user.id) }
+        : guest
+          ? { userId: null, mediaUserId: guestMediaId(guest.id) }
+          : null,
+    ),
     isLimited(attempts.limits),
   ]);
   if (limited) return <MeetingNotice kind="tooManyTries" code={code} />;
@@ -73,19 +76,23 @@ async function MeetingGate({
         notesAuto: summary.notesAuto,
         limits: summary.limits,
         youHost: session?.user.id === summary.hostId,
+        needsPasscode: summary.needsPasscode,
       }}
       viewer={
         session
           ? {
               kind: "user",
               name: session.user.name,
-              image: avatarUrl(session.user),
+              avatar: accountAvatar(session.user),
             }
-          : {
-              kind: "guest",
-              name: "",
-              image: guest ? guestAvatarUrl(guest) : NEW_GUEST_AVATAR,
-            }
+          : guest
+            ? { kind: "guest", avatarSeed: guest.avatarSeed, firstVisit: false }
+            : // Made here, so the join screen shows the avatar they'll join with.
+              {
+                kind: "guest",
+                avatarSeed: createAvatarSeed("n"),
+                firstVisit: true,
+              }
       }
     />
   );

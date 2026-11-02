@@ -4,38 +4,18 @@ import { headers } from "next/headers";
 import { Suspense } from "react";
 
 import { PanelLoading } from "@/components/app-shell/loading";
-import {
-  AccountSettings,
-  type PhotoProvider,
-} from "@/components/settings/account-settings";
+import { AccountSettings } from "@/components/settings/account-settings";
 import { auth } from "@/lib/auth/server";
 import { requireSession } from "@/lib/auth/session";
+import { accountAvatar } from "@/lib/avatars/account";
 import { lookForName } from "@/lib/avatars/name-look";
-import {
-  createAvatarSeed,
-  fallbackAvatarSeed,
-  parseAvatarSeed,
-} from "@/lib/avatars/seed";
+import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
 import { emailPasswordEnabled } from "@/lib/email/send";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Settings");
   return { title: t("section.account") };
-}
-
-/** Where a Google or GitHub profile photo came from, by its host. */
-function photoProvider(image: string | null | undefined): PhotoProvider | null {
-  if (!image) return null;
-  try {
-    const host = new URL(image).hostname;
-    if (host.endsWith(".googleusercontent.com")) return "google";
-    if (host.endsWith(".githubusercontent.com")) return "github";
-  } catch {
-    // Not a URL; no photo to offer.
-    return null;
-  }
-  return "other";
 }
 
 export default function Page({
@@ -59,18 +39,15 @@ async function Account({
     calendarConnection(session.user),
   ]);
   const { user } = session;
-  const seed = user.avatarSeed ?? fallbackAvatarSeed(user.id);
-  const look = parseAvatarSeed(seed)?.look ?? lookForName(user.name);
+  const avatar = accountAvatar(user);
+  const look = parseAvatarSeed(avatar.seed)?.look ?? lookForName(user.name);
   return (
     <AccountSettings
       account={{
         name: user.name,
         email: user.email,
         emailVerified: user.emailVerified,
-        photo: user.image ?? null,
-        photoProvider: photoProvider(user.image),
-        usesPhoto: user.avatarSource === "provider" && Boolean(user.image),
-        avatarSeed: seed,
+        avatar,
         methods: accounts.map(({ id, providerId }) => ({ id, providerId })),
         passwordSignIn: emailPasswordEnabled(),
         onGoogleCalendar: calendar.status === "connected",

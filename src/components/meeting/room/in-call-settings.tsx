@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { createContext, use, useState } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
 import { MicMeter } from "@/components/device/mic-meter";
@@ -45,7 +45,7 @@ import { aiNotesEnabled } from "@/lib/env";
 import { oneOf } from "@/lib/narrow";
 import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
-import { useRoomMedia } from "../media";
+import { useRoomMedia, type InputDevice, type RoomMedia } from "../media";
 
 export type InCallSection =
   | "audio"
@@ -69,13 +69,39 @@ const SECTIONS: Array<{ id: InCallSection; icon: LucideIcon }> = [
   ...(aiNotesEnabled ? [{ id: "aiNotes" as const, icon: Sparkles }] : []),
 ];
 
+/**
+ * The microphone, speaker and camera Settings shows and changes: the room's during a
+ * meeting, or the join screen's preview before it (where choices apply as you join).
+ */
+export type SettingsDevices = {
+  mic: Pick<InputDevice, "track" | "devices" | "selectedId"> & {
+    select: (deviceId: string) => void | Promise<void>;
+  };
+  camera: Pick<
+    InputDevice,
+    "track" | "enabled" | "allowed" | "devices" | "selectedId"
+  > & {
+    select: (deviceId: string) => void | Promise<void>;
+    toggle: () => void | Promise<void>;
+  };
+  speaker: RoomMedia["speaker"];
+};
+
+const DevicesContext = createContext<SettingsDevices | null>(null);
+
+function useDevices(): SettingsDevices {
+  const devices = use(DevicesContext);
+  if (!devices) throw new Error("Settings' devices are missing.");
+  return devices;
+}
+
 /** The device the next meeting starts with follows what you pick here. */
 const remember = (patch: Partial<DevicePreferences>) =>
   saveDevicePreferences({ ...loadDevicePreferences(), ...patch });
 
 function AudioSection() {
   const t = useTranslations("Settings.audio");
-  const { mic, speaker } = useRoomMedia();
+  const { mic, speaker } = useDevices();
   return (
     <div className="flex flex-col gap-5">
       <div className="flex max-w-[480px] flex-col gap-3">
@@ -129,7 +155,7 @@ function VideoSection() {
   const t = useTranslations("Settings.video");
   const tm = useTranslations("Meeting");
   const tp = useTranslations("PreJoin");
-  const { camera } = useRoomMedia();
+  const { camera } = useDevices();
   const { mirrorVideo } = withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
@@ -184,7 +210,7 @@ function VideoSection() {
 /** The same choices as the meeting's panel, applied to the call at once. */
 function EffectsSection() {
   const t = useTranslations("Effects");
-  const { camera } = useRoomMedia();
+  const { camera } = useDevices();
   const { mirrorVideo, effect } = withDefaults(usePreferences());
   const [supported] = useState(effectsSupported);
   if (!supported) {
@@ -249,17 +275,7 @@ function SectionContent({
   }
 }
 
-/**
- * Settings during a meeting, as in the mockup: sections down the side (across the top
- * on a phone) and the chosen one beside them. Changes apply at once and are kept on
- * this device.
- */
-export function InCallSettings({
-  section,
-  notesInMeetings,
-  onSectionChange,
-  onClose,
-}: {
+type SettingsDialogProps = {
   /** The open section; null when Settings is closed. */
   section: InCallSection | null;
   /**
@@ -269,7 +285,26 @@ export function InCallSettings({
   notesInMeetings?: boolean | undefined;
   onSectionChange: (section: InCallSection) => void;
   onClose: () => void;
-}) {
+};
+
+/** Settings during a meeting, for the room's own microphone, speaker and camera. */
+export function InCallSettings(props: SettingsDialogProps) {
+  const media = useRoomMedia();
+  return <SettingsDialog {...props} devices={media} />;
+}
+
+/**
+ * The meeting's Settings, as in the mockup: sections down the side (across the top on a
+ * phone) and the chosen one beside them. Changes apply at once and are kept on this
+ * device. The room opens it, and so does the join screen, before the room exists.
+ */
+export function SettingsDialog({
+  section,
+  notesInMeetings,
+  onSectionChange,
+  onClose,
+  devices,
+}: SettingsDialogProps & { devices: SettingsDevices }) {
   const t = useTranslations("Settings");
   const phone = useIsMobile();
 
@@ -280,57 +315,65 @@ export function InCallSettings({
         if (!open) onClose();
       }}
       closeLabel={t("close")}
-      className="h-[min(820px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden bg-[#1c2026] p-0 max-md:h-dvh max-md:w-screen max-md:max-w-none max-md:rounded-none sm:max-w-none"
-      bodyClassName="flex size-full min-h-0"
+      className="h-[min(820px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden bg-[#1c2026] p-0 max-md:h-dvh max-md:w-full max-md:max-w-none max-md:rounded-none sm:max-w-none"
+      // A grid item, so it would otherwise widen to fit every tab in a row on a phone.
+      bodyClassName="flex size-full min-h-0 min-w-0"
     >
-      <SettingsChrome value="dialog">
-        <Tabs
-          orientation={phone ? "horizontal" : "vertical"}
-          selectedKey={section ?? "audio"}
-          onSelectionChange={(key) => {
-            const next = oneOf(
-              SECTIONS.map(({ id }) => id),
-              key,
-            );
-            if (next) onSectionChange(next);
-          }}
-          className="flex size-full min-h-0 max-md:flex-col"
-        >
-          <div className="flex shrink-0 flex-col bg-[#171a1f] px-3 py-5 max-md:pb-2 md:w-[260px]">
-            <DialogTitle className="mx-2.5 text-xl font-bold">
-              {t("title")}
-            </DialogTitle>
-            <span className="text-muted-foreground mx-2.5 mt-1 mb-3.5 text-[13px]">
-              {t("forThisDevice")}
-            </span>
-            <TabList
-              aria-label={t("sections")}
-              className="flex gap-1 max-md:-mx-3 max-md:overflow-x-auto max-md:px-3 md:flex-col"
-            >
-              {SECTIONS.map(({ id, icon: Icon }) => (
-                <Tab
-                  key={id}
-                  id={id}
-                  className="data-focus-visible:focus-ring flex min-h-[42px] shrink-0 items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-hidden hover:bg-white/5 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7] data-selected:shadow-[inset_3px_0_0_var(--color-ring)] max-md:data-selected:shadow-[inset_0_-3px_0_var(--color-ring)]"
-                >
-                  <Icon className="size-[18px]" aria-hidden="true" />
+      <DevicesContext value={devices}>
+        <SettingsChrome value="dialog">
+          <Tabs
+            orientation={phone ? "horizontal" : "vertical"}
+            selectedKey={section ?? "audio"}
+            onSelectionChange={(key) => {
+              const next = oneOf(
+                SECTIONS.map(({ id }) => id),
+                key,
+              );
+              if (next) onSectionChange(next);
+            }}
+            className="flex size-full min-h-0 max-md:flex-col"
+          >
+            <div className="flex shrink-0 flex-col bg-[#171a1f] px-3 py-5 max-md:pb-2 md:w-[260px]">
+              <DialogTitle className="mx-2.5 text-xl font-bold">
+                {t("title")}
+              </DialogTitle>
+              <span className="text-muted-foreground mx-2.5 mt-1 mb-3.5 text-[13px]">
+                {t("forThisDevice")}
+              </span>
+              <TabList
+                aria-label={t("sections")}
+                className="flex gap-1 max-md:-mx-3 max-md:overflow-x-auto max-md:px-3 md:flex-col"
+              >
+                {SECTIONS.map(({ id, icon: Icon }) => (
+                  <Tab
+                    key={id}
+                    id={id}
+                    className="data-focus-visible:focus-ring flex min-h-[42px] shrink-0 items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-hidden hover:bg-white/5 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7] data-selected:shadow-[inset_3px_0_0_var(--color-ring)] max-md:data-selected:shadow-[inset_0_-3px_0_var(--color-ring)]"
+                  >
+                    <Icon className="size-[18px]" aria-hidden="true" />
+                    {t(`section.${id}`)}
+                  </Tab>
+                ))}
+              </TabList>
+            </div>
+            {SECTIONS.map(({ id }) => (
+              <TabPanel
+                key={id}
+                id={id}
+                className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pt-5 pb-6 outline-none max-md:px-5"
+              >
+                <h3 className="pr-10 text-lg font-bold">
                   {t(`section.${id}`)}
-                </Tab>
-              ))}
-            </TabList>
-          </div>
-          {SECTIONS.map(({ id }) => (
-            <TabPanel
-              key={id}
-              id={id}
-              className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pt-5 pb-6 outline-none max-md:px-5"
-            >
-              <h3 className="pr-10 text-lg font-bold">{t(`section.${id}`)}</h3>
-              <SectionContent section={id} notesInMeetings={notesInMeetings} />
-            </TabPanel>
-          ))}
-        </Tabs>
-      </SettingsChrome>
+                </h3>
+                <SectionContent
+                  section={id}
+                  notesInMeetings={notesInMeetings}
+                />
+              </TabPanel>
+            ))}
+          </Tabs>
+        </SettingsChrome>
+      </DevicesContext>
     </Dialog>
   );
 }

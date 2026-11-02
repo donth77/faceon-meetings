@@ -40,6 +40,8 @@ import { daysBefore, KEEP_DAYS } from "./retention";
 import {
   closedReason,
   notesStartAutomatically,
+  passcodeNeeded,
+  resolveRole,
   type ClosedReason,
 } from "./rules";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
@@ -215,7 +217,11 @@ export async function findMeetingByCode(
  * What the meeting page shows before joining: the title and host, and why the link no
  * longer works, if it doesn't. Null for an unknown meeting ID.
  */
-export async function getMeetingSummary(code: string): Promise<{
+export async function getMeetingSummary(
+  code: string,
+  /** Who's opening the page: their account, or this browser's guest identity. */
+  viewer: { userId: string | null; mediaUserId: string } | null = null,
+): Promise<{
   code: string;
   title: string | null;
   hostId: string;
@@ -228,11 +234,29 @@ export async function getMeetingSummary(code: string): Promise<{
   /** AI notes start by themselves once a host or co-host is in. */
   notesAuto: boolean;
   limits: MeetingLimits;
+  /** They'll need the passcode to join (never the passcode itself). */
+  needsPasscode: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
   if (!found) return null;
   const open = await findOpenSession(found.meeting.id);
+  // As joining decides it: hosts, co-hosts and people already let into the session
+  // running now don't need it.
+  const member =
+    open && viewer && found.meeting.passcode !== null
+      ? await findMember(open.id, viewer.mediaUserId)
+      : null;
+  const needsPasscode =
+    passcodeNeeded({
+      role: resolveRole({
+        isOwner: viewer?.userId === found.host.id,
+        isGuest: viewer?.userId == null,
+        memberRole: member?.role,
+      }),
+      passcode: found.meeting.passcode,
+      isMember: member !== null,
+    }) !== null;
   // As the session running now has them; before one opens, as its host's plan would.
   const limits = open?.limits ?? limitsFor(await hostingPlanOf(found.host));
   return {
@@ -245,6 +269,7 @@ export async function getMeetingSummary(code: string): Promise<{
         : null,
       demoPerDay: serverEnv().DEMO_MEETINGS_PER_DAY,
     },
+    needsPasscode,
     title: found.meeting.title,
     hostId: found.host.id,
     hostName: found.host.name,

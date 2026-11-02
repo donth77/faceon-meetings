@@ -1,4 +1,4 @@
-import { guestsEnabled, newGuest, saveGuest } from "@/lib/guest-session";
+import { guestForJoin, guestsEnabled, saveGuest } from "@/lib/guest-session";
 import { JoinRequest } from "@/lib/meetings/api";
 import {
   FAILED_JOIN,
@@ -14,7 +14,8 @@ import { isLimited, recordAttempt } from "@/lib/rate-limit";
 /**
  * POST /api/meetings/{code}/join: admits the caller (200 with a media token), or says to
  * wait for the host (202). The passcode comes in the body, never in a URL. Someone
- * without an account joins as a guest; this browser keeps its guest ID in a cookie.
+ * without an account joins as a guest, with the avatar the join screen showed; this
+ * browser keeps its guest ID and that avatar in a cookie.
  */
 export async function POST(
   request: Request,
@@ -22,7 +23,7 @@ export async function POST(
 ) {
   return handleMeetingRequest(request, async () => {
     const { code } = await params;
-    const { name, passcode } = await readJson(request, JoinRequest);
+    const { name, passcode, avatarSeed } = await readJson(request, JoinRequest);
     const limits = joinAttemptLimits(request, code);
     const lobbyLimits = waitingRoomLimits(request);
     const [limited, lobbyFull] = await Promise.all([
@@ -31,9 +32,15 @@ export async function POST(
     ]);
     if (limited) throw new MeetingError("RATE_LIMITED");
 
+    const caller = await getPrincipal(request);
     const principal =
-      (await getPrincipal(request)) ??
-      (guestsEnabled() ? guestPrincipal(newGuest(name)) : null);
+      caller?.kind === "user"
+        ? caller
+        : guestsEnabled()
+          ? guestPrincipal(
+              guestForJoin(caller?.guest ?? null, { name, avatarSeed }),
+            )
+          : null;
     let result;
     try {
       result = await joinMeeting({

@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type Page } from "@playwright/test";
 
+import { createMeeting, createPastMeeting } from "./support/db";
 import { expect, expectNoErrors, test } from "./support/fixtures";
 
 /** Serious and critical WCAG 2.x A and AA problems axe finds on the page. */
@@ -94,5 +95,42 @@ test.describe("accessibility", () => {
       expect(await cursorProblems(page), path).toEqual([]);
     }
     expectNoErrors(host);
+  });
+
+  test("the join screen, its avatar and Settings dialogs, and Previous with people pass axe", async ({
+    people,
+  }) => {
+    const host = await people.signedIn({ name: "Maya Host" });
+    const meeting = await createMeeting(host.user.id);
+    await createPastMeeting(host.user, {
+      minutes: 30,
+      guestName: "Jordan Lee",
+    });
+
+    const guest = await people.guest();
+    const { page } = guest;
+    // Without the passcode in the link, so the field shows from the start.
+    await page.goto(`/j/${meeting.code}`);
+    await expect(page.getByLabel("Passcode")).toBeVisible();
+    expect(await axeProblems(page), "join screen").toEqual([]);
+    expect(await cursorProblems(page), "join screen").toEqual([]);
+    await page.getByRole("button", { name: "Change avatar" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Your avatar" }),
+    ).toBeVisible();
+    expect(await axeProblems(page), "avatar dialog").toEqual([]);
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Settings" }).click();
+    await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+    expect(await axeProblems(page), "Settings dialog").toEqual([]);
+    await page.keyboard.press("Escape");
+
+    await host.page.goto("/previous");
+    await expect(
+      host.page.getByRole("img", { name: /^2 people/ }),
+    ).toBeVisible();
+    expect(await axeProblems(host.page), "Previous").toEqual([]);
+    expect(await cursorProblems(host.page), "Previous").toEqual([]);
+    expectNoErrors(guest, host);
   });
 });

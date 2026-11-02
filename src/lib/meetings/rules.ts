@@ -129,6 +129,17 @@ export type EntryFacts = {
   alreadyConnected: boolean;
 };
 
+/**
+ * The passcode someone must give to join: the meeting's, unless they're one of its hosts
+ * or already admitted to the session running now. The meeting page asks for it up front
+ * from the same facts, without ever sending it to the browser.
+ */
+export function passcodeNeeded(
+  facts: Pick<EntryFacts, "role" | "passcode" | "isMember">,
+): string | null {
+  return isHostRole(facts.role) || facts.isMember ? null : facts.passcode;
+}
+
 /** Turned away this often, someone can't ask to join that session again. */
 export const MAX_DENIALS = 3;
 
@@ -146,11 +157,8 @@ export function checkEntry(
   if (facts.role === "host") return null;
   if (isHostRole(facts.role)) return isFull(facts) ? "FULL" : null;
   if (facts.locked && !facts.isMember) return "LOCKED";
-  if (
-    !facts.isMember &&
-    facts.passcode !== null &&
-    !passcodeMatches(facts.passcode, facts.givenPasscode)
-  ) {
+  const passcode = passcodeNeeded(facts);
+  if (passcode !== null && !passcodeMatches(passcode, facts.givenPasscode)) {
     return "BAD_PASSCODE";
   }
   const asks = facts.waitingRoom && !facts.isMember;

@@ -9,8 +9,9 @@ import { avatarUrl, createAvatarSeed } from "@/lib/avatars/seed";
 import { serverEnv } from "@/lib/server-env";
 
 /**
- * A browser's guest identity: a random ID and a default avatar. No name, email or other
- * personal data; guests type their name each time they join.
+ * A browser's guest identity: a random ID and an avatar (a default, or the one they chose
+ * on the join screen). No name, email or other personal data; guests type their name
+ * each time they join.
  */
 export type GuestIdentity = { id: string; avatarSeed: string };
 
@@ -63,11 +64,24 @@ export function decodeGuest(value: string | undefined): GuestIdentity | null {
   return { id: parsed.data.id, avatarSeed: parsed.data.avatarSeed };
 }
 
-/** A new guest, with a default avatar that suits the name they typed. */
-export function newGuest(name: string): GuestIdentity {
+/**
+ * Who joins as a guest from this browser: its guest identity, with the avatar the join
+ * screen showed when it sends one. On a first visit, a new guest, with that avatar, or
+ * (from an older page) a default one that suits the name they typed.
+ */
+export function guestForJoin(
+  current: GuestIdentity | null,
+  joining: { name: string; avatarSeed?: string | undefined },
+): GuestIdentity {
+  if (current) {
+    return joining.avatarSeed
+      ? { ...current, avatarSeed: joining.avatarSeed }
+      : current;
+  }
   return {
     id: randomBytes(10).toString("hex"),
-    avatarSeed: createAvatarSeed(lookForName(name)),
+    avatarSeed:
+      joining.avatarSeed ?? createAvatarSeed(lookForName(joining.name)),
   };
 }
 
@@ -96,6 +110,3 @@ export async function saveGuest(guest: GuestIdentity): Promise<void> {
 
 export const guestAvatarUrl = (guest: GuestIdentity) =>
   avatarUrl({ id: guest.id, avatarSeed: guest.avatarSeed });
-
-/** The avatar a first-time guest sees in the preview, before they have one of their own. */
-export const NEW_GUEST_AVATAR = "/avatar/0000000000000000-n.svg";

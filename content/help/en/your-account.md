@@ -11,7 +11,7 @@ Go to **Settings**, then **Account**.
 
 People see your picture when your camera is off.
 
-- Pick one of the avatars, or select **Shuffle** for new ones.
+- Pick one of the avatars, or select **Shuffle** for new ones. You can also change it as you join a meeting: select your avatar beside your name.
 - If you signed in with Google or GitHub, you can use that photo instead.
 - Change your **Display name**. It's the name people see in meetings.
 

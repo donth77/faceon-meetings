@@ -1,6 +1,8 @@
+import { z } from "zod";
+
 /**
  * Default avatars (DiceBear "Dylan"): seeds and URLs. Safe in the browser; the look a
- * name suggests comes from name-look.ts, on the server.
+ * name suggests comes from name-look.ts.
  */
 
 /** A default avatar's look: feminine-leaning, masculine-leaning or the full mix. */
@@ -22,6 +24,23 @@ export function parseAvatarSeed(
   return { seed: match[1] as string, look: match[2] as Look };
 }
 
+/** A seed as requests carry it: a guest's choice on the join screen, or Settings → Account's. */
+export const AvatarSeed = z
+  .string()
+  .refine((value) => parseAvatarSeed(value) !== null);
+
+/**
+ * The same avatar with another look: a first-time guest's default follows the name they
+ * type. Something that isn't a seed gets a new one.
+ */
+export function withLook(value: string, look: Look): string {
+  const parsed = parseAvatarSeed(value);
+  return parsed ? `${parsed.seed}-${look}` : createAvatarSeed(look);
+}
+
+/** A default avatar's picture. */
+export const avatarImage = (seed: string) => `/avatar/${seed}.svg`;
+
 /** A stable fallback seed for accounts created before avatars existed. */
 export function fallbackAvatarSeed(userId: string): string {
   let hash = 0x811c9dc5;
@@ -41,5 +60,5 @@ export type AvatarUser = {
 /** The avatar to show: the sign-in provider's photo if chosen, otherwise our Dylan avatar. */
 export function avatarUrl(user: AvatarUser): string {
   if (user.avatarSource === "provider" && user.image) return user.image;
-  return `/avatar/${user.avatarSeed ?? fallbackAvatarSeed(user.id)}.svg`;
+  return avatarImage(user.avatarSeed ?? fallbackAvatarSeed(user.id));
 }

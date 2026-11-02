@@ -6,6 +6,7 @@ import {
   createAvatarSeed,
   fallbackAvatarSeed,
   parseAvatarSeed,
+  withLook,
 } from "./seed";
 
 describe("lookForName", () => {
@@ -36,6 +37,12 @@ describe("avatar seeds", () => {
     expect(parseAvatarSeed("../etc/passwd")).toBeNull();
     expect(parseAvatarSeed("abc-f")).toBeNull();
     expect(parseAvatarSeed("0123456789abcdef-x")).toBeNull();
+  });
+
+  it("changes only the look as a default follows the name typed", () => {
+    expect(withLook("k3x9m2p7q1w8e4r6-n", "f")).toBe("k3x9m2p7q1w8e4r6-f");
+    expect(withLook("k3x9m2p7q1w8e4r6-f", "f")).toBe("k3x9m2p7q1w8e4r6-f");
+    expect(parseAvatarSeed(withLook("not a seed", "m"))?.look).toBe("m");
   });
 
   it("gives older accounts a stable, valid fallback", () => {

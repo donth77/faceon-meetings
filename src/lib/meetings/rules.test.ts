@@ -15,6 +15,7 @@ import {
   notesStartAutomatically,
   offersNotes,
   passcodeMatches,
+  passcodeNeeded,
   providerParticipantCap,
   resolveRole,
   seatsLeft,
@@ -232,6 +233,25 @@ describe("checkEntry", () => {
   it("lets hosts in without a passcode", () => {
     expect(
       checkEntry({ ...facts, role: "host", givenPasscode: undefined }),
+    ).toBeNull();
+  });
+
+  it("needs the passcode from the people joining asks it of, and only them", () => {
+    // The join screen asks up front from these same facts.
+    expect(passcodeNeeded(facts)).toBe("K7XQ2M");
+    expect(passcodeNeeded({ ...facts, role: "guest" })).toBe("K7XQ2M");
+    expect(passcodeNeeded({ ...facts, role: "host" })).toBeNull();
+    expect(passcodeNeeded({ ...facts, role: "cohost" })).toBeNull();
+    expect(passcodeNeeded({ ...facts, isMember: true })).toBeNull();
+    expect(passcodeNeeded({ ...facts, passcode: null })).toBeNull();
+    // Whenever it says none is needed, joining without one works.
+    for (const role of ["host", "cohost"] as const) {
+      expect(
+        checkEntry({ ...facts, role, givenPasscode: undefined }),
+      ).toBeNull();
+    }
+    expect(
+      checkEntry({ ...facts, passcode: null, givenPasscode: undefined }),
     ).toBeNull();
   });
 
