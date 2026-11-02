@@ -13,7 +13,11 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import type { MediaProviderId, SessionLimits } from "@/lib/media/types";
+import type {
+  MediaProviderId,
+  NotesState,
+  SessionLimits,
+} from "@/lib/media/types";
 import type { SessionPolicy } from "@/lib/meetings/policy";
 import type { MeetingSettings } from "@/lib/meetings/settings";
 
@@ -102,6 +106,8 @@ export const meetingSession = pgTable(
       .default(sql`'{}'::jsonb`),
     /** Shown large for everyone: a media user ID. */
     spotlight: text("spotlight"),
+    /** AI notes, while a host has them on. */
+    notes: jsonb("notes").$type<NotesState>(),
     /** Bumped on every change to the session's shared state; clients ignore older ones. */
     rev: integer("rev").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true })

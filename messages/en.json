@@ -478,7 +478,24 @@
     "hideNoVideo": "Hide tiles without video",
     "selfHidden": "Your tile is hidden from you. Others still see you.",
     "nothingToShow": "Nobody to show with these choices. Change them in Layout, at the top right.",
-    "openPictureInPicture": "Open picture-in-picture"
+    "openPictureInPicture": "Open picture-in-picture",
+    "notes": {
+      "title": "AI notes",
+      "close": "Close AI notes",
+      "chip": "AI notes on",
+      "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
+      "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
+      "start": "Start AI notes",
+      "stop": "Stop AI notes",
+      "onBy": "{name} turned on AI notes. Everyone sees that they're on.",
+      "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
+      "stopped": "AI notes are off.",
+      "dontTranscribe": "Don't transcribe me",
+      "dontTranscribeHelp": "What you say stays out of the notes",
+      "open": "Open AI notes",
+      "notInDemo": "AI notes aren't available in demo meetings.",
+      "failed": "Couldn't change AI notes. Try again."
+    }
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -518,7 +535,8 @@
     "askingNote": "Keep this screen open. You’ll join as soon as someone lets you in, and we’ll play a sound.",
     "askingTitle": "Waiting for the host to let you in",
     "askingMeeting": "{title} · Hosted by {name}",
-    "leaveWaitingRoom": "Leave"
+    "leaveWaitingRoom": "Leave",
+    "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
   },
   "DeviceProblems": {
     "microphone": {

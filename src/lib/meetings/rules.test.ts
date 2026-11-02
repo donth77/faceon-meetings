@@ -4,6 +4,7 @@ import type { MeetingRole } from "@/lib/media/types";
 
 import {
   canModerate,
+  canSetNotes,
   checkEntry,
   isSessionStale,
   passcodeMatches,
@@ -304,5 +305,26 @@ describe("canModerate", () => {
     expect(canModerate({ actor: "host", action: "remove", target: null })).toBe(
       false,
     );
+  });
+});
+
+describe("canSetNotes", () => {
+  it("lets hosts and co-hosts turn AI notes on and off", () => {
+    for (const actor of ["host", "cohost"] as const) {
+      expect(canSetNotes({ actor, on: true, demo: false })).toBe(true);
+      expect(canSetNotes({ actor, on: false, demo: false })).toBe(true);
+    }
+  });
+
+  it("doesn't let participants or guests", () => {
+    for (const actor of ["participant", "guest"] as const) {
+      expect(canSetNotes({ actor, on: true, demo: false })).toBe(false);
+      expect(canSetNotes({ actor, on: false, demo: false })).toBe(false);
+    }
+  });
+
+  it("keeps them off in demo meetings", () => {
+    expect(canSetNotes({ actor: "host", on: true, demo: true })).toBe(false);
+    expect(canSetNotes({ actor: "host", on: false, demo: true })).toBe(true);
   });
 });

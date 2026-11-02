@@ -16,6 +16,11 @@ describe("SharedSessionState", () => {
     cohosts: ["g_helper"],
     spotlight: "g_helper",
     hands: { u_someone: "2026-11-01T12:00:00.000Z" },
+    notes: {
+      by: "u_owner",
+      name: "Ana",
+      startedAt: "2026-11-01T12:05:00.000Z",
+    },
   };
 
   it("reads the state our server publishes", () => {
@@ -28,13 +33,15 @@ describe("SharedSessionState", () => {
       cohosts: null,
       spotlight: null,
       hands: null,
+      notes: null,
     });
     expect(parsed.cohosts).toEqual([]);
     expect(parsed.spotlight).toBeNull();
     expect(parsed.hands).toEqual({});
+    expect(parsed.notes).toBeNull();
   });
 
-  it("reads sessions that started before roles and the spotlight existed", () => {
+  it("reads sessions that started before roles, the spotlight and AI notes existed", () => {
     const older = SharedSessionState.parse({
       v: 1,
       rev: 0,
@@ -50,6 +57,7 @@ describe("SharedSessionState", () => {
       host: "",
       cohosts: [],
       spotlight: null,
+      notes: null,
     });
   });
 });

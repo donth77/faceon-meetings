@@ -168,3 +168,15 @@ export function canModerate(input: {
       return actor === "host" && target?.role === "cohost";
   }
 }
+
+/**
+ * AI notes: hosts and co-hosts turn them on or off for everyone. Demo meetings can't turn
+ * them on, but a host can still turn them off.
+ */
+export function canSetNotes(input: {
+  actor: MeetingRole;
+  on: boolean;
+  demo: boolean;
+}): boolean {
+  return isHostRole(input.actor) && !(input.on && input.demo);
+}

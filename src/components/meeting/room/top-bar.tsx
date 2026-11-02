@@ -11,6 +11,7 @@ import {
   SwitchCamera,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Button, Dialog, type Selection } from "react-aria-components";
 
 import {
@@ -280,6 +281,7 @@ export function TopBar({
   endsAt,
   view,
   onViewChange,
+  notes,
 }: {
   title: string;
   meeting: AdmittedMeetingInfo;
@@ -287,6 +289,8 @@ export function TopBar({
   endsAt: number | null;
   view: StageView;
   onViewChange: (view: StageView) => void;
+  /** "AI notes on", while they are. */
+  notes?: ReactNode;
 }) {
   return (
     <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:px-5">
@@ -299,6 +303,7 @@ export function TopBar({
         <LockedMark />
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
+        {notes}
         <FlipCamera />
         <TimeLimit session={session} endsAt={endsAt} />
         <Elapsed />

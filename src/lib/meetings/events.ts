@@ -84,5 +84,10 @@ export const SharedSessionState = SessionPolicy.extend({
     .record(z.string(), z.string())
     .nullish()
     .transform((hands) => hands ?? {}),
+  /** AI notes, while a host has them on. */
+  notes: z
+    .object({ by: z.string(), name: z.string(), startedAt: z.string() })
+    .nullish()
+    .transform((notes) => notes ?? null),
 });
 export type SharedSessionState = z.infer<typeof SharedSessionState>;

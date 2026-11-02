@@ -64,6 +64,13 @@
       "when": 1793595918464,
       "tag": "0008_member_image",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793599451306,
+      "tag": "0009_session_notes",
+      "breakpoints": true
     }
   ]
 }

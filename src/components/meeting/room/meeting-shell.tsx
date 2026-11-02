@@ -43,6 +43,7 @@ import {
 } from "./host-dialogs";
 import { InCallSettings, type InCallSection } from "./in-call-settings";
 import { useRoomTransition } from "./motion";
+import { NotesChip, NotesPanel } from "./notes-panel";
 import { ParticipantsPanel } from "./participants-panel";
 import { PictureInPicture, usePictureInPicture } from "./picture-in-picture";
 import { FloatingReactions } from "./reactions";
@@ -233,6 +234,38 @@ export function MeetingShell({
   const nameOf = (userId: string) =>
     media.participants.find((p) => p.userId === userId)?.name ?? "";
 
+  // AI notes: everyone hears when they go on; anyone can stay out of the transcript.
+  const notes = state?.notes ?? null;
+  const [notesOptOut, setNotesOptOut] = useState(false);
+  const announcedNotes = useRef<string | null>(null);
+  useEffect(() => {
+    const key = notes ? `${notes.by}@${notes.startedAt}` : null;
+    if (key === announcedNotes.current) return;
+    const wasOn = announcedNotes.current !== null;
+    announcedNotes.current = key;
+    if (!notes) {
+      if (wasOn) toast(t("notes.stopped"), { id: "notes-banner" });
+      return;
+    }
+    if (notes.by === self.id) return;
+    toast(t("notes.banner", { name: notes.name }), {
+      id: "notes-banner",
+      duration: 15_000,
+      action: {
+        label: t("notes.dontTranscribe"),
+        onClick: () => setNotesOptOut(true),
+      },
+    });
+  }, [notes, self.id, t]);
+
+  async function setNotesOn(on: boolean) {
+    try {
+      await meetingApi.notes(meeting.code, { on });
+    } catch {
+      toast.error(t("notes.failed"));
+    }
+  }
+
   // Raised hands and reactions.
   const hands = useMemo(() => state?.hands ?? {}, [state]);
   const reactionsAllowed = (state?.reactions ?? true) || isHost;
@@ -404,10 +437,14 @@ export function MeetingShell({
     else openPanel(next);
   }
 
-  // Desktop keeps Participants above Chat; a phone shows the one opened last.
-  const shownPanels = phone
-    ? panels.slice(-1)
-    : (["people", "chat"] as const).filter((name) => panels.includes(name));
+  // Desktop keeps Participants above Chat, then AI notes; a phone shows the one opened last.
+  const shownPanels = (
+    phone
+      ? panels.slice(-1)
+      : (["people", "chat", "notes"] as const).filter((name) =>
+          panels.includes(name),
+        )
+  ).filter((name) => name !== "notes" || isHost);
   useMeetingShortcuts({
     toggleMic,
     toggleCamera: () => void media.camera.toggle(),
@@ -445,6 +482,17 @@ export function MeetingShell({
   usePresenceSounds(media.participants);
 
   function renderPanel(name: PanelName) {
+    if (name === "notes") {
+      return (
+        <NotesPanel
+          key="notes"
+          notes={notes}
+          demo={session.demo}
+          onChange={setNotesOn}
+          onClose={() => closePanel("notes")}
+        />
+      );
+    }
     return name === "people" ? (
       <ParticipantsPanel
         key="people"
@@ -491,6 +539,16 @@ export function MeetingShell({
             endsAt={endsAt}
             view={view}
             onViewChange={changeView}
+            notes={
+              notes ? (
+                <NotesChip
+                  notes={notes}
+                  optedOut={notesOptOut}
+                  onOptOutChange={setNotesOptOut}
+                  onOpenNotes={isHost ? () => openPanel("notes") : undefined}
+                />
+              ) : null
+            }
           />
           <ConnectionBanner status={media.status} />
           <div className="flex min-h-0 flex-1 px-3">
@@ -593,6 +651,7 @@ export function MeetingShell({
             onOpenPictureInPicture={
               pip.supported ? () => void pip.open() : undefined
             }
+            onOpenNotes={isHost ? () => openPanel("notes") : undefined}
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}
