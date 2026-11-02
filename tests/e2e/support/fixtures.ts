@@ -2,6 +2,7 @@ import {
   test as base,
   expect,
   type BrowserContext,
+  type Locator,
   type Page,
   type ViewportSize,
 } from "@playwright/test";
@@ -10,6 +11,24 @@ import { createUser, deleteUsers, type TestUser } from "./db";
 import { hasStream } from "./env";
 
 export { expect };
+
+/**
+ * Waits until React has hydrated this element, so it acts on clicks and keys. Before that
+ * a form submits the browser's own way and reloads the page, which a busy test runner can
+ * catch (a Join pressed straight after the landing page loads). React marks the elements
+ * it has taken over with its own properties.
+ */
+export async function hydrated(locator: Locator): Promise<void> {
+  const element = await locator.elementHandle();
+  await locator
+    .page()
+    .waitForFunction(
+      (node) =>
+        node !== null &&
+        Object.keys(node).some((key) => key.startsWith("__reactProps$")),
+      element,
+    );
+}
 
 /** Someone in the test: a browser of their own, and their account if they have one. */
 export type Person = {

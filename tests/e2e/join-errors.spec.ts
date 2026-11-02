@@ -7,7 +7,7 @@ import {
   deleteUsers,
   resetAttempts,
 } from "./support/db";
-import { expect, expectNoErrors, test } from "./support/fixtures";
+import { expect, expectNoErrors, hydrated, test } from "./support/fixtures";
 
 test.describe("joining from the meeting ID field", () => {
   test.beforeEach(async () => {
@@ -21,6 +21,7 @@ test.describe("joining from the meeting ID field", () => {
     const visitor = await people.guest();
     const { page } = visitor;
     await page.goto("/");
+    await hydrated(page.getByRole("button", { name: "Join" }));
     const field = page.getByLabel("Enter a meeting ID or link");
     const join = page.getByRole("button", { name: "Join" });
     const cases: Array<[string, RegExp]> = [
@@ -57,6 +58,7 @@ test.describe("joining from the meeting ID field", () => {
       const visitor = await people.guest();
       const { page } = visitor;
       await page.goto("/");
+      await hydrated(page.getByRole("button", { name: "Join" }));
       const field = page.getByLabel("Enter a meeting ID or link");
       const join = page.getByRole("button", { name: "Join" });
 
@@ -88,6 +90,7 @@ test.describe("joining from the meeting ID field", () => {
       const visitor = await people.guest();
       const { page } = visitor;
       await page.goto("/");
+      await hydrated(page.getByRole("button", { name: "Join" }));
       await page
         .getByLabel("Enter a meeting ID or link")
         .fill(`${baseURL}/j/${meeting.code}#pwd=${meeting.passcode}`);
