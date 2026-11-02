@@ -27,6 +27,11 @@ import {
 import type { DeviceProblem } from "@/lib/device/problems";
 import { playTestSound } from "@/lib/device/test-sound";
 import { formatMeetingCode } from "@/lib/meetings/codes";
+import {
+  loadPreferences,
+  usePreferences,
+  withDefaults,
+} from "@/lib/preferences";
 
 import { loadGuestName, saveGuestName } from "../guest-name";
 import { useMeetingTitle } from "../meeting-title";
@@ -73,7 +78,13 @@ const canChooseSpeaker = () =>
   typeof HTMLMediaElement !== "undefined" &&
   "setSinkId" in HTMLMediaElement.prototype;
 
-function PreviewVideo({ track }: { track: MediaStreamTrack }) {
+function PreviewVideo({
+  track,
+  mirror,
+}: {
+  track: MediaStreamTrack;
+  mirror: boolean;
+}) {
   const attach = useCallback(
     (node: HTMLVideoElement | null) => {
       if (node) node.srcObject = new MediaStream([track]);
@@ -86,7 +97,10 @@ function PreviewVideo({ track }: { track: MediaStreamTrack }) {
       autoPlay
       playsInline
       muted
-      className="absolute inset-0 size-full -scale-x-100 object-cover"
+      className={cn(
+        "absolute inset-0 size-full object-cover",
+        mirror && "-scale-x-100",
+      )}
     />
   );
 }
@@ -216,13 +230,25 @@ export function PreJoin({
   const passcodeId = useId();
   const errorId = useId();
 
-  const [devices, setDevices] = useState(loadDevicePreferences);
+  const settings = withDefaults(usePreferences());
+  // Settings → Video can start every meeting with the camera off.
+  const [devices, setDevices] = useState(() => {
+    const remembered = loadDevicePreferences();
+    return withDefaults(loadPreferences()).cameraOffOnJoin
+      ? { ...remembered, cameraOn: false }
+      : remembered;
+  });
   const [name, setName] = useState(() =>
     viewer.kind === "guest" ? loadGuestName() : viewer.name,
   );
   const [passcode, setPasscode] = useState(initialPasscode ?? "");
   const video = useLocalTrack("video", devices.cameraOn, devices.cameraId);
-  const audio = useLocalTrack("audio", devices.micOn, devices.micId);
+  const audio = useLocalTrack(
+    "audio",
+    devices.micOn,
+    devices.micId,
+    settings.noiseSuppression,
+  );
   const lists = useMediaDevices(`${video.track?.id}|${audio.track?.id}`);
 
   useEffect(() => saveDevicePreferences(devices), [devices]);
@@ -262,7 +288,7 @@ export function PreJoin({
         <div className="flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1">
           <div className="relative aspect-video w-full overflow-hidden rounded-[20px] bg-[#0e1013] text-[#f2f4f7]">
             {video.track ? (
-              <PreviewVideo track={video.track} />
+              <PreviewVideo track={video.track} mirror={settings.mirrorVideo} />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
                 {video.pending ? (

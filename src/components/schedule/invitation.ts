@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useOrigin } from "@/hooks/use-origin";
@@ -18,6 +18,7 @@ import {
   toRRule,
   type Recurrence,
 } from "@/lib/meetings/recurrence";
+import { useIntlLocale } from "@/lib/preferences";
 import { formatWhen, untilStamp, zoneCity } from "@/lib/time";
 
 import { inviteLink } from "../meeting/invitation";
@@ -46,7 +47,7 @@ export type ScheduledMeeting = {
 export function useScheduledInvitation(meeting: ScheduledMeeting) {
   const t = useTranslations("Meeting");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const link = inviteLink(useOrigin(), meeting);
   const when = `${formatWhen(meeting.start, meeting.end, meeting.timeZone, locale)} (${zoneCity(meeting.timeZone)})`;
   const repeats = meeting.recurrence

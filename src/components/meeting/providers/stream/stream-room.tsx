@@ -9,6 +9,7 @@ import {
 import { useEffect, useEffectEvent, useState } from "react";
 
 import type { DevicePreferences } from "@/lib/device/preferences";
+import { loadPreferences, withDefaults } from "@/lib/preferences";
 import { CALL_TYPE } from "@/lib/stream/constants";
 
 import type { RoomAdapterProps } from "../../media";
@@ -16,8 +17,23 @@ import { StreamMedia } from "./stream-media";
 
 type Room = { client: StreamVideoClient; call: Call; joinedAt: number };
 
-/** Remembered devices first (a missing one falls back to the default), then on or off. */
+const HD = { width: 1280, height: 720 };
+const SD = { width: 640, height: 360 };
+
+/**
+ * Settings → Audio and Video first, then the remembered devices (a missing one falls
+ * back to the default), then each on or off.
+ */
 async function applyDevices(call: Call, devices: DevicePreferences) {
+  const settings = withDefaults(loadPreferences());
+  call.microphone.setDefaultConstraints({
+    autoGainControl: true,
+    echoCancellation: true,
+    noiseSuppression: settings.noiseSuppression,
+  });
+  await Promise.allSettled([
+    call.camera.selectTargetResolution(settings.hdVideo ? HD : SD),
+  ]);
   await Promise.allSettled([
     devices.cameraId ? call.camera.select(devices.cameraId) : null,
     devices.micId ? call.microphone.select(devices.micId) : null,

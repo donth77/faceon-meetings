@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, Copy, DoorOpen } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { useScheduledInvitation } from "@/components/schedule/invitation";
@@ -10,6 +10,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { useNow } from "@/hooks/use-now";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
+import { useIntlLocale } from "@/lib/preferences";
 import { deviceTimeZone, localParts } from "@/lib/time";
 
 import { useInvitation } from "../meeting/invitation";
@@ -88,7 +89,7 @@ export function ScheduleCard() {
 function TodayRow({ row }: { row: UpcomingRow }) {
   const t = useTranslations("Home");
   const tu = useTranslations("Upcoming");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const title = row.title ?? tu("untitled", { name: row.hostName });
   const start = new Date(row.start);
   const end = new Date(row.end);

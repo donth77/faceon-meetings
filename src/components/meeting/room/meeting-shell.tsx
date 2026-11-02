@@ -13,6 +13,7 @@ import type {
   SelfInfo,
   SessionInfo,
 } from "@/lib/meetings/api";
+import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
 import {
@@ -43,7 +44,11 @@ import { useChat } from "./use-chat";
 import { useHostNotices } from "./use-host-notices";
 import { useLobby } from "./use-lobby";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
-import { useReactions, useReactionSender } from "./use-reactions";
+import {
+  useReactionAnnouncement,
+  useReactions,
+  useReactionSender,
+} from "./use-reactions";
 
 /** Says when the connection drops and while it comes back. */
 function ConnectionBanner({ status }: { status: RoomStatus }) {
@@ -152,6 +157,13 @@ export function MeetingShell({
     (userId) => (state?.reactions ?? true) || sentByHost(userId),
   );
   const sendReaction = useReactionSender(media.sendReaction);
+  const { announceReactions } = withDefaults(usePreferences());
+  const reactionNews = useReactionAnnouncement(
+    reactions,
+    self.id,
+    announceReactions,
+    (count) => t("reactionsSummary", { count }),
+  );
   const badges = useMemo(
     () => ({
       hands,
@@ -280,6 +292,7 @@ export function MeetingShell({
     toggleMic,
     toggleCamera: () => void media.camera.toggle(),
     toggleScreenShare,
+    mic: () => ({ on: media.mic.enabled, allowed: media.mic.allowed }),
   });
   const alone = media.participants.length === 1;
   const aloneCheck = useAloneCheck(alone, session.aloneTimeoutMinutes);
@@ -310,6 +323,9 @@ export function MeetingShell({
                 <Stage layout={layout} />
               </RoomBadgesProvider>
               <FloatingReactions reactions={reactions} nameOf={nameOf} />
+              <div role="status" className="sr-only">
+                {reactionNews}
+              </div>
               {alone ? <AloneCard meeting={meeting} /> : null}
             </main>
             {panel === "people" ? (

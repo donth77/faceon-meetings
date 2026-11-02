@@ -136,4 +136,7 @@ export interface MediaProvider {
 
   setSessionState(sessionId: string, state: SessionState): Promise<void>;
   sendServerEvent(sessionId: string, event: ServerEvent): Promise<void>;
+
+  /** Deletes what the provider keeps about a person (their profile), for account deletion. */
+  forgetUser(userId: string): Promise<void>;
 }

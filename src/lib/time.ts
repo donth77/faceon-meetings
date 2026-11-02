@@ -149,9 +149,30 @@ export function timeZones(): string[] {
   return supported?.length ? supported : ["UTC"];
 }
 
-/** This device's time zone. */
-export const deviceTimeZone = () =>
-  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+/** The device's own time zone, whatever Settings says. Browser only. */
+export function systemTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}
+
+/**
+ * The viewer's time zone: the one chosen in Settings → General on this device, or else
+ * the device's own. Browser only.
+ */
+export function deviceTimeZone(): string {
+  try {
+    const raw = localStorage.getItem("faceon.prefs");
+    const zone = raw
+      ? (JSON.parse(raw) as { timeZone?: unknown }).timeZone
+      : null;
+    if (typeof zone === "string") {
+      new Intl.DateTimeFormat("en", { timeZone: zone });
+      return zone;
+    }
+  } catch {
+    // No storage, or a zone this browser doesn't know: use the device's.
+  }
+  return systemTimeZone();
+}
 
 /** The first day of the week where the reader lives: 0 for Sunday, 1 for Monday… */
 export function weekStartsOn(locale: string): number {

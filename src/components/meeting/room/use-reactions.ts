@@ -80,3 +80,59 @@ export function useReactionSender(send: RoomMedia["sendReaction"]) {
     return true;
   };
 }
+
+/** Screen readers hear about reactions at most this often. */
+const ANNOUNCE_EVERY_MS = 10_000;
+
+/**
+ * A short summary of other people's reactions for screen readers ("3 reactions"), at most
+ * every 10 seconds. Empty when announcements are off (Settings → Accessibility).
+ */
+export function useReactionAnnouncement(
+  reactions: LiveReaction[],
+  selfId: string,
+  enabled: boolean,
+  summarize: (count: number) => string,
+): string {
+  const [message, setMessage] = useState("");
+  const counted = useRef(-1);
+  const waiting = useRef(0);
+  const lastAt = useRef(0);
+  const timers = useRef<{ announce?: Timer; clear?: Timer }>({});
+  const summary = useEffectEvent(summarize);
+
+  useEffect(() => {
+    let fresh = 0;
+    for (const reaction of reactions) {
+      if (reaction.id > counted.current) {
+        counted.current = reaction.id;
+        if (reaction.userId !== selfId) fresh++;
+      }
+    }
+    if (!enabled || fresh === 0) return;
+    waiting.current += fresh;
+    if (timers.current.announce) return; // a summary is on its way
+    const delay = Math.max(0, lastAt.current + ANNOUNCE_EVERY_MS - Date.now());
+    timers.current.announce = setTimeout(() => {
+      timers.current.announce = undefined;
+      lastAt.current = Date.now();
+      setMessage(summary(waiting.current));
+      waiting.current = 0;
+      // Cleared again, so the same words next time still count as news.
+      clearTimeout(timers.current.clear);
+      timers.current.clear = setTimeout(() => setMessage(""), 3000);
+    }, delay);
+  }, [reactions, selfId, enabled]);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      clearTimeout(pending.announce);
+      clearTimeout(pending.clear);
+    };
+  }, []);
+
+  return enabled ? message : "";
+}
+
+type Timer = ReturnType<typeof setTimeout>;

@@ -3,6 +3,8 @@
 import { useCallStateHooks, Video } from "@stream-io/video-react-sdk";
 import { cn } from "cn";
 
+import { usePreferences, withDefaults } from "@/lib/preferences";
+
 import type { TrackViewProps } from "../../media";
 
 /**
@@ -15,6 +17,7 @@ export function StreamTrackView({
   className,
 }: TrackViewProps) {
   const { useParticipants } = useCallStateHooks();
+  const { mirrorVideo } = withDefaults(usePreferences());
   const streamParticipant = useParticipants().find(
     (p) => p.sessionId === participant.key,
   );
@@ -24,6 +27,8 @@ export function StreamTrackView({
     <Video
       participant={streamParticipant}
       trackType={kind === "screen" ? "screenShareTrack" : "videoTrack"}
+      // Stream mirrors your front camera; Settings → Video can turn that off.
+      mirror={kind === "video" && !mirrorVideo ? false : undefined}
       VideoPlaceholder={null}
       PictureInPicturePlaceholder={null}
       className={cn(

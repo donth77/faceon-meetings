@@ -1,7 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { createContext, use, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useEffectEvent,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   Dialog,
@@ -10,8 +17,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isAppleDevice, isTypingTarget } from "@/lib/platform";
+import { loadPreferences, withDefaults } from "@/lib/preferences";
 
-type ShortcutId = "mute" | "video" | "share" | "sidebar" | "shortcuts";
+type ShortcutId = "mute" | "talk" | "video" | "share" | "sidebar" | "shortcuts";
 
 /** Keys per platform; each inner list is one combination ("Ctrl" + "D"). */
 type Combos = { other: string[][]; apple: string[][] };
@@ -37,6 +45,7 @@ const GROUPS: Array<{
           ],
         },
       },
+      { id: "talk", keys: { other: [["Space"]], apple: [["Space"]] } },
       {
         id: "video",
         keys: {
@@ -90,6 +99,21 @@ function Keys({ combos }: { combos: string[][] }) {
   );
 }
 
+/** Without single-key shortcuts (Settings → Accessibility), only combinations are listed. */
+function shortcutsFor(apple: boolean, singleKeys: boolean) {
+  return GROUPS.map((group) => ({
+    id: group.id,
+    shortcuts: group.shortcuts
+      .map((shortcut) => ({
+        id: shortcut.id,
+        combos: (apple ? shortcut.keys.apple : shortcut.keys.other).filter(
+          (combo) => singleKeys || combo.length > 1,
+        ),
+      }))
+      .filter((shortcut) => shortcut.combos.length > 0),
+  }));
+}
+
 const OpenShortcutsContext = createContext<() => void>(() => {});
 
 /** Opens the Keyboard shortcuts dialog (from Help, the account menu, a meeting's menus). */
@@ -102,27 +126,32 @@ export const useOpenShortcuts = () => use(OpenShortcutsContext);
 export function ShortcutsProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("Shortcuts");
   const [open, setOpen] = useState(false);
-  const [apple, setApple] = useState(false);
+  const [groups, setGroups] = useState(() => shortcutsFor(false, true));
+
+  function show() {
+    const { singleKeyShortcuts } = withDefaults(loadPreferences());
+    setGroups(shortcutsFor(isAppleDevice(), singleKeyShortcuts));
+    setOpen(true);
+  }
+  const showOnKey = useEffectEvent(show);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.repeat || isTypingTarget(event.target)) return;
       const primary = isAppleDevice() ? event.metaKey : event.ctrlKey;
-      const question = event.key === "?" && !primary && !event.altKey;
+      const question =
+        event.key === "?" &&
+        !primary &&
+        !event.altKey &&
+        withDefaults(loadPreferences()).singleKeyShortcuts;
       if (question || (primary && event.key === "/")) {
         event.preventDefault();
-        setApple(isAppleDevice());
-        setOpen(true);
+        showOnKey();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  function show() {
-    setApple(isAppleDevice());
-    setOpen(true);
-  }
 
   return (
     <OpenShortcutsContext value={show}>
@@ -139,7 +168,7 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
           </DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
-        {GROUPS.map((group) => (
+        {groups.map((group) => (
           <section key={group.id} aria-labelledby={`shortcuts-${group.id}`}>
             <h3
               id={`shortcuts-${group.id}`}
@@ -155,9 +184,7 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
                 >
                   <dt className="text-sm">{t(`actions.${shortcut.id}`)}</dt>
                   <dd>
-                    <Keys
-                      combos={apple ? shortcut.keys.apple : shortcut.keys.other}
-                    />
+                    <Keys combos={shortcut.combos} />
                   </dd>
                 </div>
               ))}

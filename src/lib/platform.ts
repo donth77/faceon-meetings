@@ -14,6 +14,13 @@ export const isTypingTarget = (target: EventTarget | null) =>
   (target.isContentEditable ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
+/** Space and Enter already mean something on these: press the button, tick the box. */
+export const isInteractiveTarget = (target: EventTarget | null) =>
+  target instanceof Element &&
+  target.closest(
+    "button, a[href], input, textarea, select, summary, [contenteditable=true], [role=button], [role=switch], [role=checkbox], [role=radio], [role=menuitem], [role=option], [role=tab], [role=slider], [role=link]",
+  ) !== null;
+
 type UserAgentData = { brands: Array<{ brand: string }> };
 
 /**

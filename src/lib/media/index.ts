@@ -28,3 +28,8 @@ export function pickProvider(): MediaProvider {
   }
   throw new Error("No available media provider is listed in MEDIA_PROVIDERS.");
 }
+
+/** Every adapter in this deployment, e.g. to forget a deleted account everywhere. */
+export function allProviders(): MediaProvider[] {
+  return Object.values(ADAPTERS).filter((adapter) => adapter !== undefined);
+}

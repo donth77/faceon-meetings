@@ -1,7 +1,7 @@
 "use client";
 
 import { Download, SendHorizontal } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import {
   useCallback,
   useId,
@@ -12,6 +12,7 @@ import {
 import { Button } from "react-aria-components";
 
 import { MAX_CHAT_LENGTH } from "@/lib/meetings/events";
+import { useIntlLocale } from "@/lib/preferences";
 
 import { SidePanel } from "./side-panel";
 import type { ChatMessage } from "./use-chat";
@@ -43,7 +44,7 @@ function MessageText({ text }: { text: string }) {
 
 function Message({ message }: { message: ChatMessage }) {
   const t = useTranslations("Meeting.chat");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   return (
     <li className="flex items-start gap-2.5">
       {message.senderImage ? (
@@ -114,7 +115,7 @@ export function ChatPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("Meeting.chat");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const inputId = useId();
   const [draft, setDraft] = useState("");
 

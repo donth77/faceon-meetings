@@ -10,7 +10,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
   Button as AriaButton,
@@ -29,6 +29,7 @@ import {
   occurrencesAction,
   type OccurrenceRow,
 } from "@/lib/meetings/schedule-actions";
+import { useIntlLocale } from "@/lib/preferences";
 import { deviceTimeZone, formatTimeRange, weekStartsOn } from "@/lib/time";
 
 import { useScheduledInvitation } from "./invitation";
@@ -104,7 +105,7 @@ function useOccurrences(from: Date, to: Date) {
 function MeetingPopover({ row }: { row: OccurrenceRow }) {
   const t = useTranslations("Upcoming");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const title = row.title ?? t("untitled", { name: row.hostName });
   const start = new Date(row.start);
   const end = new Date(row.end);
@@ -202,7 +203,7 @@ const POPOVER =
 
 /** A meeting in the month grid: a dot, the short time and the title. */
 function MonthEntry({ row }: { row: OccurrenceRow }) {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const start = new Date(row.start);
   const time = new Intl.DateTimeFormat(locale, {
     hour: "numeric",
@@ -240,7 +241,7 @@ function MonthView({
   today: Date;
 }) {
   const t = useTranslations("Upcoming");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" });
   const label = new Intl.DateTimeFormat(locale, {
     month: "long",
@@ -357,7 +358,7 @@ function WeekView({
   now: number;
 }) {
   const t = useTranslations("Upcoming");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = 8 * HOUR_PX;
@@ -514,7 +515,7 @@ function PhoneCalendar({
 }) {
   const t = useTranslations("Upcoming");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const [selected, setSelected] = useState(today);
   const busy = (day: Date) =>
     rows.some((row) => sameDay(new Date(row.start), day));
@@ -669,7 +670,7 @@ export { SEGMENT };
 /** Upcoming's calendar: Month or Week, Today and ‹ ›, on phones a compact month. */
 export function UpcomingCalendar() {
   const t = useTranslations("Upcoming");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const isMobile = useIsMobile();
   const now = useNow(60_000);
   const [mode, setMode] = useState<Mode>("month");

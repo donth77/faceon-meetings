@@ -2,13 +2,14 @@
 
 import { cn } from "cn";
 import { CalendarPlus, Clock3, Repeat, Search, Users, X } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 import { Button as AriaButton, Radio, RadioGroup } from "react-aria-components";
 
 import { SEGMENT, SEGMENTS } from "@/components/schedule/upcoming-calendar";
 import { Button, LinkButton } from "@/components/ui/button";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
+import { useIntlLocale } from "@/lib/preferences";
 
 const NEUTRAL_CHIP =
   "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eef1f5] px-2 text-xs font-bold whitespace-nowrap text-[#4f5966] dark:bg-white/10 dark:text-white/70";
@@ -49,7 +50,7 @@ function Avatars({ people, label }: { people: Attendee[]; label: string }) {
 }
 
 function useFormats() {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const time = new Intl.DateTimeFormat(locale, {
     hour: "numeric",
     minute: "2-digit",

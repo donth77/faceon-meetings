@@ -14,7 +14,7 @@ import {
   Trash2,
   Video,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -41,6 +41,7 @@ import {
   updateScheduledSettingsAction,
 } from "@/lib/meetings/schedule-actions";
 import type { MeetingDetails } from "@/lib/meetings/scheduling";
+import { useIntlLocale } from "@/lib/preferences";
 import { formatTimeRange, zoneCity, zonedToUtc } from "@/lib/time";
 
 import { SwitchRow } from "./fields";
@@ -85,7 +86,7 @@ function DetailRow({
 export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
   const t = useTranslations("MeetingDetails");
   const ts = useTranslations("Schedule");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const router = useRouter();
   const [showPasscode, setShowPasscode] = useState(false);
   const [deleting, setDeleting] = useState(false);

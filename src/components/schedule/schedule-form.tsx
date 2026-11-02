@@ -11,7 +11,7 @@ import {
   LoaderCircle,
   Repeat,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
@@ -36,6 +36,7 @@ import {
   updateScheduleAction,
   type ScheduleDraft,
 } from "@/lib/meetings/schedule-actions";
+import { useIntlLocale } from "@/lib/preferences";
 import { deviceTimeZone, zonedToUtc } from "@/lib/time";
 
 import { DateField } from "./date-field";
@@ -343,7 +344,7 @@ export function ScheduleForm({
   };
 }) {
   const t = useTranslations("Schedule");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const router = useRouter();
   const ids = { title: useId(), date: useId(), description: useId() };
   const [values, setValues] = useState<ScheduleFormValues>(

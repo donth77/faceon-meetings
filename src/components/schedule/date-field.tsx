@@ -3,7 +3,6 @@
 import { parseDate, type CalendarDate } from "@internationalized/date";
 import { cn } from "cn";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useLocale } from "next-intl";
 import {
   Button,
   Calendar,
@@ -17,6 +16,8 @@ import {
   Heading,
   Popover,
 } from "react-aria-components";
+
+import { useIntlLocale } from "@/lib/preferences";
 
 import { INPUT } from "./fields";
 
@@ -53,7 +54,7 @@ export function DateField({
   previousLabel: string;
   nextLabel: string;
 }) {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   return (
     <DialogTrigger>
       <Button

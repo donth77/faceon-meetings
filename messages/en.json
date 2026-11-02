@@ -450,7 +450,8 @@
       "shareEveryone": "Everyone",
       "shareHosts": "Hosts only",
       "endForAll": "End meeting for all"
-    }
+    },
+    "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}"
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -617,7 +618,8 @@
       "video": "Start or stop video",
       "share": "Share screen or stop sharing",
       "sidebar": "Show or hide the sidebar",
-      "shortcuts": "Show keyboard shortcuts"
+      "shortcuts": "Show keyboard shortcuts",
+      "talk": "Talk while muted (hold)"
     }
   },
   "PersonalRoom": {
@@ -851,5 +853,144 @@
     "untitled": "{name}’s meeting",
     "empty": "Meetings you host or join show up here afterwards.",
     "noMatch": "No meetings match that."
+  },
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "Changes save automatically and apply on this device right away.",
+    "sections": "Settings sections",
+    "section": {
+      "general": "General",
+      "audio": "Audio",
+      "video": "Video",
+      "effects": "Backgrounds and effects",
+      "calendar": "Calendar",
+      "aiNotes": "AI notes",
+      "accessibility": "Accessibility",
+      "account": "Account"
+    },
+    "general": {
+      "title": "General",
+      "region": "Language and region",
+      "language": "Language",
+      "languageHelp": "Picked from your browser the first time. Languages FaceOn doesn’t have yet use English.",
+      "timeFormat": "Time format",
+      "hours12": "12-hour (2:00 PM)",
+      "hours24": "24-hour (14:00)",
+      "timeFormatHelp": "Starts on your region’s usual format.",
+      "timeZone": "Time zone",
+      "timeZoneHelp": "Detected from your device. Example: {example}",
+      "timeZoneChosen": "Chosen by you. Example: {example}",
+      "useDeviceZone": "Use my device’s time zone",
+      "theme": "Theme",
+      "themes": {
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "themeHelp": {
+        "system": "Matches your device. The default.",
+        "light": "Always light",
+        "dark": "Always dark"
+      },
+      "themeNote": "Meetings always use the dark room, so video stands out."
+    },
+    "audio": {
+      "title": "Audio",
+      "devices": "Microphone and speaker",
+      "microphone": "Microphone",
+      "speaker": "Speaker",
+      "testSpeaker": "Test speaker",
+      "speakerFixed": "Your browser plays sound through your device’s current speaker.",
+      "noiseSuppression": "Noise suppression",
+      "noiseSuppressionHelp": "Filters out typing, fans and traffic",
+      "micLevel": "Microphone level"
+    },
+    "video": {
+      "title": "Video",
+      "camera": "Camera",
+      "mirroredForYou": "Mirrored for you",
+      "othersSee": "Others always see you the right way round, so text behind you reads normally for them.",
+      "mirror": "Mirror my video",
+      "mirrorHelp": "Only you see it mirrored",
+      "hd": "Send HD video",
+      "hdHelp": "Uses more data. Turns off by itself when your connection is slow.",
+      "offOnJoin": "Turn off my camera when I join",
+      "preview": "Your camera preview"
+    },
+    "accessibility": {
+      "title": "Accessibility",
+      "intro": "FaceOn follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
+      "keyboard": "Keyboard and announcements",
+      "singleKeys": "Single-key shortcuts (Space to talk, ? for shortcuts)",
+      "singleKeysHelp": "Turn this off if you use speech input or a switch device, so a single key never triggers an action by accident.",
+      "announceReactions": "Announce reactions",
+      "announceReactionsHelp": "Screen readers hear a short summary at most every 10 seconds, such as “3 reactions”.",
+      "shortcuts": "Keyboard shortcuts",
+      "orPress": "Or press <kbd>{key}</kbd> anywhere."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "google": "Google Calendar",
+      "comingSoon": "Connecting Google Calendar is on its way. Until then, each meeting’s page has buttons to add it to Google Calendar, Outlook or any calendar app."
+    },
+    "effects": {
+      "title": "Backgrounds and effects",
+      "comingSoon": "Blurred and custom backgrounds are on their way."
+    },
+    "aiNotes": {
+      "title": "AI notes",
+      "comingSoon": "AI notes are on their way: a summary and action items after each meeting, made in your browser or with your own AI key."
+    },
+    "account": {
+      "title": "Account",
+      "profile": "Profile",
+      "shownWhenOff": "Shown when your camera is off",
+      "pickAvatar": "Pick an avatar",
+      "avatarOption": "Avatar option {n}",
+      "shuffle": "Shuffle",
+      "usePhoto": "{provider, select, google {Use my Google photo} github {Use my GitHub photo} other {Use my account photo}}",
+      "displayName": "Display name",
+      "nameRequired": "Enter your name.",
+      "credit": "Avatars: Dylan by Natalia Spivak (CC BY 4.0), via DiceBear.",
+      "saveFailed": "Couldn’t save that. Try again.",
+      "emailAndSignIn": "Email and sign-in",
+      "email": "Email",
+      "verified": "Verified. Password reset emails go here.",
+      "notVerified": "Not verified yet. Use the link we emailed you.",
+      "methods": "Sign-in methods",
+      "withEmail": "{method} · {email}",
+      "onlyMethod": "Connected. Add another method before removing it.",
+      "connected": "Connected",
+      "connect": "Connect {provider}",
+      "remove": "Remove",
+      "removeLabel": "Remove {provider}",
+      "removeFailed": "Couldn’t remove that sign-in method. Try again.",
+      "removeSignInFirst": "For your security, sign in again, then remove it.",
+      "linkErrors": {
+        "emailMismatch": "That account uses a different email. Connect one that uses {email}.",
+        "alreadyLinked": "That account is already connected to a different FaceOn account.",
+        "generic": "Couldn’t connect that account. Try again."
+      },
+      "emailPassword": "Email and password",
+      "passwordNotSet": "Sign in with your email and a password, too.",
+      "passwordSet": "Password set. Changing it signs you out on your other devices.",
+      "setPassword": "Set a password",
+      "setPasswordHelp": "Then you can also sign in with {email} and this password.",
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "password": "Password",
+      "wrongPassword": "That password isn’t right.",
+      "passwordAdded": "Password set",
+      "passwordChanged": "Password changed",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete account",
+      "deleteBody": "Deleting your account removes your meetings, notes and avatar for good. People you invited can no longer join your meetings.",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteConfirmBody": "This can’t be undone. Your meetings, notes and avatar are removed for good, and people you invited can no longer join your meetings.",
+      "deleteForGood": "Delete account",
+      "signInFirst": "For your security, sign in again, then delete your account.",
+      "signInAgain": "Sign in again"
+    }
   }
 }

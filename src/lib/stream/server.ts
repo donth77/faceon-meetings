@@ -202,6 +202,16 @@ export const streamProvider: MediaProvider = {
       custom: event,
     });
   },
+
+  async forgetUser(userId) {
+    // Stream deletes in the background; "hard" needs messages and conversations "hard" too.
+    await stream().deleteUsers({
+      user_ids: [userId],
+      user: "hard",
+      messages: "hard",
+      conversations: "hard",
+    });
+  },
 };
 
 /** Whether a webhook really came from Stream: its body signed with our API secret. */

@@ -15,6 +15,7 @@ export type LocalTrack = {
 function constraintsFor(
   kind: "audio" | "video",
   deviceId: string | undefined,
+  noiseSuppression: boolean,
 ): MediaStreamConstraints {
   // `ideal` falls back to another device if the remembered one is gone.
   const device = deviceId ? { deviceId: { ideal: deviceId } } : {};
@@ -24,7 +25,7 @@ function constraintsFor(
         audio: {
           ...device,
           echoCancellation: true,
-          noiseSuppression: true,
+          noiseSuppression,
           autoGainControl: true,
         },
       };
@@ -39,9 +40,11 @@ export function useLocalTrack(
   kind: "audio" | "video",
   enabled: boolean,
   deviceId: string | undefined,
+  /** For a microphone: the browser's noise suppression (Settings → Audio). */
+  noiseSuppression = true,
 ): LocalTrack {
   const [attempt, setAttempt] = useState(0);
-  const request = `${kind}|${deviceId ?? ""}|${attempt}`;
+  const request = `${kind}|${deviceId ?? ""}|${noiseSuppression}|${attempt}`;
   const [result, setResult] = useState<{
     request: string;
     track: MediaStreamTrack | null;
@@ -55,7 +58,9 @@ export function useLocalTrack(
     // Through a promise, so a missing mediaDevices (an insecure page) becomes a rejection.
     Promise.resolve()
       .then(() =>
-        navigator.mediaDevices.getUserMedia(constraintsFor(kind, deviceId)),
+        navigator.mediaDevices.getUserMedia(
+          constraintsFor(kind, deviceId, noiseSuppression),
+        ),
       )
       .then(
         (stream) => {
@@ -73,7 +78,7 @@ export function useLocalTrack(
       cancelled = true;
       acquired?.stop();
     };
-  }, [kind, enabled, deviceId, request]);
+  }, [kind, enabled, deviceId, noiseSuppression, request]);
 
   // A track from an earlier time it was on was stopped when it went off; wait for the new one.
   const current =

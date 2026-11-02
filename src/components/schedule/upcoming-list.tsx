@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarPlus, Copy, Ellipsis, Repeat } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule, recurrenceChip } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
 import { deleteScheduleAction } from "@/lib/meetings/schedule-actions";
+import { useIntlLocale } from "@/lib/preferences";
 import {
   deviceTimeZone,
   formatTimeRange,
@@ -54,7 +55,7 @@ const NEUTRAL_CHIP = `${CHIP} bg-[#eef1f5] text-[#4f5966] dark:bg-white/10 dark:
 function Row({ row }: { row: UpcomingRow }) {
   const t = useTranslations("Upcoming");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const recurrence = row.rrule ? fromRRule(row.rrule, row.timeZone) : null;
@@ -196,7 +197,7 @@ function Row({ row }: { row: UpcomingRow }) {
  */
 export function UpcomingList({ rows }: { rows: UpcomingRow[] }) {
   const t = useTranslations("Upcoming");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const zone = deviceTimeZone();
   const now = useNow(60_000);
   if (now === null) return null;

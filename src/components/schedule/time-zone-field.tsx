@@ -2,7 +2,6 @@
 
 import { cn } from "cn";
 import { ChevronDown } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useMemo } from "react";
 import {
   Button,
@@ -15,6 +14,7 @@ import {
   type Key,
 } from "react-aria-components";
 
+import { useIntlLocale } from "@/lib/preferences";
 import { timeZones, zoneLabel } from "@/lib/time";
 
 import { INPUT } from "./fields";
@@ -29,7 +29,7 @@ export function TimeZoneField({
   value: string;
   onChange: (timeZone: string) => void;
 }) {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const options = useMemo(() => {
     const now = new Date();
     const zones = timeZones();

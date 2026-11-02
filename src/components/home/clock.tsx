@@ -1,7 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
+
+import { useIntlLocale } from "@/lib/preferences";
 
 const MINUTE = 60_000;
 
@@ -18,7 +20,7 @@ const getMinute = () => Math.floor(Date.now() / MINUTE) * MINUTE;
  * browser (the server can't know the viewer's time zone).
  */
 export function Clock() {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const t = useTranslations("Home");
   const minute = useSyncExternalStore(subscribe, getMinute, () => null);
 

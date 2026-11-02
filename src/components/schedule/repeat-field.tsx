@@ -2,7 +2,7 @@
 
 import { cn } from "cn";
 import { Check, ChevronDown, Repeat } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import {
   Button,
@@ -36,6 +36,7 @@ import {
   type RepeatPreset,
   type Weekday,
 } from "@/lib/meetings/recurrence";
+import { useIntlLocale } from "@/lib/preferences";
 
 import { DateField } from "./date-field";
 import { INPUT } from "./fields";
@@ -87,7 +88,7 @@ function CustomDialog({
 }) {
   const t = useTranslations("Schedule");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const facts = startFacts(startDate);
   const [draft, setDraft] = useState<Recurrence>(initial);
   const everyId = useId();
@@ -353,7 +354,7 @@ export function RepeatField({
 }) {
   const t = useTranslations("Schedule");
   const tr = useTranslations("Recurrence");
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const facts = startFacts(startDate);
   const current = presetOf(value, facts);
   const [customOpen, setCustomOpen] = useState(false);

@@ -14,7 +14,7 @@ import {
   VideoOff,
   type LucideIcon,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Button } from "react-aria-components";
 
@@ -28,6 +28,7 @@ import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNow } from "@/hooks/use-now";
 import { REACTIONS, type ReactionCode } from "@/lib/meetings/events";
 import { canShareScreen } from "@/lib/platform";
+import { useIntlLocale } from "@/lib/preferences";
 
 import { useRoomMedia, type ShareOptions } from "../media";
 import { ControlButton } from "./control-button";
@@ -63,7 +64,7 @@ function Control({
 }
 
 function TimeOfDay() {
-  const locale = useLocale();
+  const locale = useIntlLocale();
   const now = useNow(60_000);
   if (now === null) return null;
   return (

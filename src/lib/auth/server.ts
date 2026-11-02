@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { haveIBeenPwned, oAuthProxy } from "better-auth/plugins";
 
+import { endHostedCalls, forgetMediaUser } from "@/lib/account/deletion";
 import { createAvatarSeed } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
@@ -100,6 +101,13 @@ export const auth = betterAuth({
       emailUser("verify", user, url),
   },
   user: {
+    // Settings → Account → Delete account; a recent sign-in (or the password) confirms it.
+    // Meetings go with the user (foreign keys); calls in progress end first.
+    deleteUser: {
+      enabled: true,
+      beforeDelete: async (deleted) => endHostedCalls(deleted.id),
+      afterDelete: async (deleted) => forgetMediaUser(deleted.id),
+    },
     additionalFields: {
       locale: { type: "string", required: false, input: false },
       avatarSeed: { type: "string", required: false, input: false },
@@ -148,7 +156,15 @@ export const auth = betterAuth({
   plugins: [
     oAuthProxy({ productionURL: productionUrl }),
     // Refuses passwords known from data breaches (only a hash prefix leaves the server).
-    haveIBeenPwned(),
+    // Rejects passwords known from breaches, including one set in Settings → Account.
+    haveIBeenPwned({
+      paths: [
+        "/sign-up/email",
+        "/change-password",
+        "/reset-password",
+        "/set-password",
+      ],
+    }),
     nextCookies(),
   ],
 });
