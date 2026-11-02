@@ -118,11 +118,24 @@ if (!checkOnly) {
 
 const webhookUrl = process.env.STREAM_WEBHOOK_URL;
 if (webhookUrl && !checkOnly) {
+  // Stream's event hooks: keep any others, and (re)place ours.
+  const { app } = await client.getApp();
+  const others = (app.event_hooks ?? []).filter(
+    (hook) => hook.webhook_url !== webhookUrl,
+  );
   await client.updateApp({
-    webhook_url: webhookUrl,
-    webhook_events: [
-      "call.session_participant_joined",
-      "call.session_participant_left",
+    event_hooks: [
+      ...others,
+      {
+        hook_type: "webhook",
+        enabled: true,
+        product: "video",
+        webhook_url: webhookUrl,
+        event_types: [
+          "call.session_participant_joined",
+          "call.session_participant_left",
+        ],
+      },
     ],
   });
   console.log(`ok       webhook → ${webhookUrl}`);
