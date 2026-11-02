@@ -162,7 +162,7 @@ export function Tile({
       )}
 
       {handUp || reaction ? (
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+        <div className="absolute top-[calc(0.625rem+var(--tile-inset-top,0px))] left-2.5 flex items-center gap-1.5 transition-[top] duration-200 ease-out motion-reduce:transition-none">
           {handUp ? (
             <span className="animate-in zoom-in-50 fade-in bg-hand text-hand-foreground flex size-[30px] items-center justify-center rounded-full duration-200 motion-reduce:animate-none">
               <Hand className="size-[18px]" aria-label={t("hand.raised")} />
@@ -179,7 +179,7 @@ export function Tile({
         </div>
       ) : null}
 
-      <div className="absolute bottom-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] items-center gap-1.5 rounded-lg bg-black/65 px-2 py-1 text-[13px] leading-[18px] font-medium text-white">
+      <div className="absolute bottom-[calc(0.625rem+var(--tile-inset-bottom,0px))] left-2.5 flex max-w-[calc(100%-1.25rem)] items-center gap-1.5 rounded-lg bg-black/65 px-2 py-1 text-[13px] leading-[18px] font-medium text-white transition-[bottom] duration-200 ease-out motion-reduce:transition-none">
         {spotlighted ? (
           <Star
             className="text-hand size-3.5 shrink-0 fill-current"
@@ -192,7 +192,7 @@ export function Tile({
         <span className="truncate">{name}</span>
       </div>
 
-      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+      <div className="absolute top-[calc(0.625rem+var(--tile-inset-top,0px))] right-2.5 flex items-center gap-1.5 transition-[top] duration-200 ease-out motion-reduce:transition-none">
         {!isScreen && participant.connection === "poor" ? (
           <span
             className="flex size-7 items-center justify-center rounded-full bg-black/65 text-amber-300"

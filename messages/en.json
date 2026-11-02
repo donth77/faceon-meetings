@@ -408,6 +408,8 @@
       "spotlight": "Spotlight"
     },
     "flipCamera": "Switch camera",
+    "showControls": "Show meeting controls",
+    "tapToShowControls": "Tap to show controls",
     "reconnecting": "Reconnecting…",
     "offline": "You’re offline. FaceOn will reconnect when your connection is back.",
     "joining": "Joining…",

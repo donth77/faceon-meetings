@@ -35,3 +35,11 @@ Chrome can also open it by itself when you switch to another tab or app during a
 ## Full screen
 
 Select **More**, then **Full screen**. Press `Esc` to leave full screen.
+
+## On a phone
+
+The video fills the screen, and the controls step aside a few seconds after you last touch them. Tap the video to bring them back, and tap it again to send them away.
+
+They stay while a menu or panel is open, while you share your screen, and while you're the only one here. While they're away, a small strip at the top shows if your mic is off, your hand is up, AI notes are on or time is running out.
+
+With a keyboard, any key brings them back. With a screen reader, select **Show meeting controls**: they then stay until you tap the video.

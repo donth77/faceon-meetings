@@ -1,11 +1,13 @@
 "use client";
 
+import { cn } from "cn";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
 import { toast } from "sonner";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { effectsSupported } from "@/lib/effects/support";
 import type {
@@ -25,6 +27,12 @@ import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ChatPanel } from "./chat-panel";
 import { ConnectionBanner } from "./connection-banner";
 import { ControlBar, type PanelName } from "./control-bar";
+import {
+  ControlsLayer,
+  HiddenStatus,
+  ShowControlsButton,
+  TapHint,
+} from "./controls-layer";
 import { EffectsPanel } from "./effects-panel";
 import {
   MuteAllDialog,
@@ -49,6 +57,7 @@ import { useRoomEffects } from "./room-effects";
 import { useRoomNoise } from "./room-noise";
 import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
+import { useAutoHideControls, useCompactRoom } from "./use-auto-hide";
 import { useChat } from "./use-chat";
 import { useHands } from "./use-hands";
 import { useHostNotices } from "./use-host-notices";
@@ -245,6 +254,28 @@ export function MeetingShell({
   // menus close.
   const sheetOpen = phone && panels.shown.length > 0;
 
+  // On a phone the controls float over the video and step aside after a few seconds;
+  // a tap on the video brings them back (use-auto-hide.ts).
+  const compact = useCompactRoom();
+  const autoHide = useAutoHideControls({
+    compact,
+    status: media.status,
+    presenting: media.screenShare.enabled,
+    alone,
+    panelOpen: panels.shown.length > 0,
+  });
+  const hidden = !autoHide.shown;
+  const bottomControls = useRef<HTMLDivElement>(null);
+  const [topSize, measureTop] = useElementSize<HTMLDivElement>();
+  const [bottomSize, measureBottom] = useElementSize<HTMLDivElement>();
+  function showControlsForScreenReader() {
+    autoHide.keep();
+    // The button goes once the controls are back: focus moves to the first of them.
+    bottomControls.current
+      ?.querySelector<HTMLElement>("button:not([disabled])")
+      ?.focus();
+  }
+
   function renderPanel(name: PanelName) {
     const close = () => panels.closePanel(name);
     if (name === "effects") {
@@ -318,15 +349,31 @@ export function MeetingShell({
     <div
       ref={shellRef}
       data-fullscreen
-      className="dark bg-background text-foreground flex h-dvh flex-col overflow-hidden pr-[env(safe-area-inset-right,0px)] pl-[env(safe-area-inset-left,0px)]"
+      className={cn(
+        "dark bg-background text-foreground flex h-dvh flex-col overflow-hidden pr-[env(safe-area-inset-right,0px)] pl-[env(safe-area-inset-left,0px)]",
+        compact && "relative",
+      )}
+      // How far the controls reach into the video, for what should clear them (stage.tsx).
+      style={
+        compact
+          ? ({
+              "--room-controls-top": `${hidden ? 0 : topSize.height}px`,
+              "--room-controls-bottom": `${hidden ? 0 : bottomSize.height}px`,
+            } as CSSProperties)
+          : undefined
+      }
     >
       {/* Menus and dialogs open inside the room, so they're dark like it. */}
       <UNSAFE_PortalProvider getContainer={() => shellRef.current}>
         <RoomControlsProvider value={controls}>
-          {/* Not the room's direct children: React Aria resets those as menus close. */}
-          <div className="contents">
+          <ControlsLayer
+            edge="top"
+            compact={compact}
+            hidden={hidden}
+            ref={measureTop}
+          >
             <TopBar
-              inert={sheetOpen}
+              inert={sheetOpen || hidden}
               title={title}
               meeting={meeting}
               session={session}
@@ -347,10 +394,25 @@ export function MeetingShell({
                 ) : null
               }
             />
-          </div>
-          <ConnectionBanner status={media.status} />
+          </ControlsLayer>
+          {compact ? (
+            // Under the floating top bar, and outside it: the banner is a top layer, which
+            // React Aria walks around, so inside it React Aria would reset the bar's inert.
+            <div className="pointer-events-none absolute inset-x-0 top-[calc(max(0.5rem,env(safe-area-inset-top))+3.5rem)] z-20">
+              <ConnectionBanner status={media.status} />
+            </div>
+          ) : (
+            <ConnectionBanner status={media.status} />
+          )}
           <div className="flex min-h-0 flex-1 px-3">
-            <main inert={sheetOpen} className="relative min-h-0 min-w-0 flex-1">
+            <main
+              inert={sheetOpen}
+              onClick={autoHide.onStageClick}
+              className="relative min-h-0 min-w-0 flex-1"
+            >
+              {hidden ? (
+                <ShowControlsButton onPress={showControlsForScreenReader} />
+              ) : null}
               <RoomBadgesProvider value={badges}>
                 <Stage view={view} />
               </RoomBadgesProvider>
@@ -371,6 +433,16 @@ export function MeetingShell({
               <AnimatePresence>
                 {alone ? <AloneCard key="alone" meeting={meeting} /> : null}
               </AnimatePresence>
+              {hidden ? (
+                <HiddenStatus
+                  muted={!media.mic.enabled}
+                  handRaised={self.id in hands}
+                  notesOn={Boolean(notes.notes)}
+                  session={session}
+                  endsAt={endsAt}
+                />
+              ) : null}
+              {autoHide.hint ? <TapHint /> : null}
             </main>
             {phone ? (
               <AnimatePresence>{panels.shown.map(renderPanel)}</AnimatePresence>
@@ -447,9 +519,17 @@ export function MeetingShell({
             onSectionChange={setSettings}
             onClose={() => setSettings(null)}
           />
-          <div className="contents">
+          <ControlsLayer
+            edge="bottom"
+            compact={compact}
+            hidden={hidden}
+            ref={(node) => {
+              bottomControls.current = node;
+              return measureBottom(node);
+            }}
+          >
             <ControlBar
-              inert={sheetOpen}
+              inert={sheetOpen || hidden}
               title={title}
               isOwner={selfRole === "host"}
               onEndForAll={onEndForAll}
@@ -479,7 +559,7 @@ export function MeetingShell({
               }
               onReaction={reactions.send}
             />
-          </div>
+          </ControlsLayer>
         </RoomControlsProvider>
       </UNSAFE_PortalProvider>
     </div>

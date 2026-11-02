@@ -230,7 +230,15 @@ function OneOnOne({
 }) {
   const fill = useIsMobile();
   return (
-    <div className="relative size-full">
+    // Filling a phone, the tile keeps its name and menu clear of the room's controls
+    // while they show (meeting-shell.tsx); your floating tile doesn't need to.
+    <div
+      className={cn(
+        "relative size-full",
+        fill &&
+          "[--tile-inset-bottom:var(--room-controls-bottom,0px)] [--tile-inset-top:var(--room-controls-top,0px)]",
+      )}
+    >
       {fill ? (
         <Tile participant={other} />
       ) : (
@@ -239,7 +247,8 @@ function OneOnOne({
         </Fitted>
       )}
       {self ? (
-        <div className="absolute right-3 bottom-3 aspect-video w-32 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 sm:w-56">
+        // On a phone it clears the controls while they show (meeting-shell.tsx).
+        <div className="absolute right-3 bottom-[calc(0.75rem+var(--room-controls-bottom,0px))] aspect-video w-32 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 transition-[bottom] duration-200 ease-out [--tile-inset-bottom:0px] [--tile-inset-top:0px] motion-reduce:transition-none sm:w-56">
           <Tile participant={self} />
         </div>
       ) : null}

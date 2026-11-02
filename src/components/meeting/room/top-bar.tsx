@@ -90,14 +90,15 @@ function MeetingInfo({ meeting }: { meeting: AdmittedMeetingInfo }) {
 }
 
 const twoDigits = (n: number) => String(n).padStart(2, "0");
-const clock = (seconds: number) =>
+/** Seconds as mm:ss, for countdowns. */
+export const clock = (seconds: number) =>
   `${twoDigits(Math.floor(seconds / 60))}:${twoDigits(seconds % 60)}`;
 
 /** Shows a time limit only in its last five minutes, unless it's a demo. */
 const WARN_SECONDS = 5 * 60;
 
 /** Whether the time-limit chip is showing (see TimeLimit). */
-const limitShown = (
+export const limitShown = (
   session: SessionInfo,
   endsAt: number | null,
   now: number | null,
