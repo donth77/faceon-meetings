@@ -22,6 +22,7 @@ import {
 } from "react";
 
 import { deviceProblem } from "@/lib/device/problems";
+import { createVoiceMeter } from "@/lib/media/voice-meter";
 import {
   isReactionCode,
   RoomEvent,
@@ -98,18 +99,20 @@ async function startScreenShare(call: Call, options: ShareOptions) {
   const manager = call.screenShare;
   if (options.audio) manager.enableScreenShareAudio();
   else await manager.disableScreenShareAudio();
-  manager.setSettings({
-    contentHint: options.motion ? "motion" : "detail",
-    maxFramerate: options.motion ? 30 : 15,
-  });
+  manager.setSettings({ contentHint: options.motion ? "motion" : "detail" });
   const current = manager.state.defaultConstraints ?? {};
   const video = typeof current.video === "object" ? { ...current.video } : {};
   delete video.displaySurface;
   const constraints: DisplayMediaHints = {
     ...current,
-    video: options.surface
-      ? { ...video, displaySurface: options.surface }
-      : video,
+    video: {
+      ...video,
+      ...(options.surface ? { displaySurface: options.surface } : {}),
+      // The frame rate is set where the frames are captured: Stream fixes the encoder's
+      // when the call is joined. Text at 15 a second gives each frame twice the bitrate
+      // it gets at 30, so it stays sharp while it scrolls; video clips get 30.
+      frameRate: { max: options.motion ? 30 : 15 },
+    },
     // Leave FaceOn's own tab out of the picker (no hall of mirrors), and offer Chrome's
     // "Share this tab instead".
     selfBrowserSurface: "exclude",
@@ -255,6 +258,12 @@ export function StreamMedia({
   const clockSkew =
     local && joinTimeOf(local) > 0 ? joinTimeOf(local) - joinedAt : 0;
 
+  // Everyone's voice, measured in this browser so their speaking ring follows it at once:
+  // Stream's speaking events come up to a second after the voice. Stream's word stands
+  // for anyone not measured yet.
+  const [voices] = useState(createVoiceMeter);
+  useEffect(() => () => voices.close(), [voices]);
+
   // Stable for the life of the call, so subscribers don't resubscribe on every render.
   const actions = useMemo<
     Pick<
@@ -310,9 +319,11 @@ export function StreamMedia({
           }
         }),
       speakingOf: (key) =>
+        voices.speaking(key) ??
         call.state.participants.find((p) => p.sessionId === key)?.isSpeaking ??
         false,
       audioLevelOf: (key) =>
+        voices.level(key) ??
         call.state.participants.find((p) => p.sessionId === key)?.audioLevel ??
         0,
       dominantSpeakerOf: () => call.state.dominantSpeaker?.sessionId,
@@ -321,7 +332,11 @@ export function StreamMedia({
         const subscription = call.state.participants$.subscribe(() =>
           onChange(),
         );
-        return () => subscription.unsubscribe();
+        const unsubscribe = voices.subscribe(onChange);
+        return () => {
+          subscription.unsubscribe();
+          unsubscribe();
+        };
       },
       subscribeHostMutes: (handler) =>
         call.on("trackUnpublished", (event) => {
@@ -339,7 +354,7 @@ export function StreamMedia({
           else if (event.type === TrackType.SCREEN_SHARE) handler("screen");
         }),
     }),
-    [call],
+    [call, voices],
   );
 
   // The same participant objects, and list, until something shown about them changes.
@@ -360,6 +375,20 @@ export function StreamMedia({
     () => reuseRemote(participants.filter((p) => !p.isLocalParticipant)),
     [participants, reuseRemote],
   );
+  // Someone who mutes stops speaking at once, without waiting for their audio to fall
+  // silent.
+  const localVoice = micMuted ? null : micStream;
+  useEffect(() => {
+    const streams = new Map(remote.map((p) => [p.sessionId, p.audioStream]));
+    voices.measure(
+      new Map(
+        roomParticipants.map((p) => [
+          p.key,
+          !p.audio ? null : p.isLocal ? localVoice : streams.get(p.key),
+        ]),
+      ),
+    );
+  }, [voices, remote, roomParticipants, localVoice]);
 
   const mic = useMemo<RoomMedia["mic"]>(
     () => ({
