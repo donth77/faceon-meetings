@@ -199,6 +199,12 @@
     "lengthReached": "That’s the limit: {max, number} characters.",
     "newTab": "(opens in a new tab)"
   },
+  "Pager": {
+    "range": "{first, number}–{last, number} of {total, number}",
+    "single": "{position, number} of {total, number}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
   "Account": {
     "menuLabel": "Account menu",
     "profile": "Profile",
@@ -238,8 +244,11 @@
     "notAllowed": "Only admins can do that.",
     "tooManyTries": "Too many changes at once. Wait a minute, then try again.",
     "failed": "That didn’t work. Try again.",
+    "account": "Has an account",
+    "noAccount": "No account yet",
     "requests": {
       "title": "Requests",
+      "pages": "Pages of requests",
       "none": "No requests right now.",
       "note": "Their note",
       "asked": "Asked {date}",
@@ -254,12 +263,14 @@
       "declinedDone": "{name}’s request was declined. They’ll get an email.",
       "answered": "That request was already answered.",
       "recent": "Recent answers",
+      "recentPages": "Pages of recent answers",
       "wasApproved": "approved by {by}, {date}",
       "wasDeclined": "declined by {by}, {date}",
       "formerAdmin": "a former admin"
     },
     "hosts": {
       "title": "Approved hosts",
+      "pages": "Pages of approved hosts",
       "help": "They host full meetings: up to {people} people{minutes, plural, =0 {, with no time limit} other {, for up to # minutes}}. Everyone else hosts demo meetings.",
       "none": "No one yet, apart from admins.",
       "addLabel": "Email address",
@@ -271,8 +282,6 @@
       "exists": "{email} is already approved.",
       "settingsAlready": "{email} is already approved in your settings.",
       "invalidEmail": "Enter an email address, like name@example.com.",
-      "account": "Has an account",
-      "noAccount": "No account yet",
       "fromSettings": "From settings",
       "addedBy": "Added by {name}, {date}",
       "addedOn": "Added {date}",
@@ -287,7 +296,8 @@
     },
     "admins": {
       "title": "Admins",
-      "body": "Admins come from ADMIN_EMAILS where {appName} is hosted: {emails}. They decide who hosts full meetings, and can’t see or change anyone’s account, meetings or notes."
+      "pages": "Pages of admins",
+      "body": "Admins come from ADMIN_EMAILS where {appName} is hosted. They decide who hosts full meetings, and can’t see or change anyone’s account, meetings or notes."
     }
   },
   "Home": {

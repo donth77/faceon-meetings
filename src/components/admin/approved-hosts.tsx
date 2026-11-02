@@ -9,14 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, INPUT } from "@/components/ui/form-fields";
+import { Pager } from "@/components/ui/pager";
 import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
 import {
   addApprovedHostAction,
   removeApprovedHostAction,
 } from "@/lib/hosting/admin-actions";
+import type { ListPage } from "@/lib/pagination";
 
 import { AdminCard } from "./admin-card";
+import { useFocusAfterRemoval } from "./use-focus-after-removal";
 import { useWhen } from "./use-when";
 
 type Host = {
@@ -30,13 +33,16 @@ type Host = {
 
 /**
  * Settings → Admin → Approved hosts: add an address (before or after its owner signs up), or move
- * one back to demo meetings. Addresses from the operator's settings are only listed.
+ * one back to demo meetings. Addresses from the operator's settings are only listed. The list is
+ * paged (`?hosts=`), and `hosts` is the page shown.
  */
 export function ApprovedHosts({
   hosts,
+  page,
   full,
 }: {
   hosts: Host[];
+  page: ListPage;
   full: { people: number; minutes: number };
 }) {
   const t = useTranslations("Admin.hosts");
@@ -46,6 +52,7 @@ export function ApprovedHosts({
   const heading = useRef<HTMLHeadingElement>(null);
   const [demoting, setDemoting] = useState<Host | null>(null);
   const [removing, startRemoving] = useTransition();
+  const rowGoing = useFocusAfterRemoval(heading, hosts);
 
   function refused(result: string) {
     toast.error(
@@ -74,6 +81,7 @@ export function ApprovedHosts({
       }
       // The row goes: keep focus in the section.
       heading.current?.focus();
+      rowGoing();
       router.refresh();
     });
   }
@@ -87,49 +95,53 @@ export function ApprovedHosts({
       description={t("help", full)}
     >
       <AddHost onAdded={() => router.refresh()} onRefused={refused} />
-      {hosts.length === 0 ? (
-        <p className="text-muted-foreground text-[15px]">{t("none")}</p>
-      ) : (
-        <ul className="flex flex-col divide-y border-t">
-          {hosts.map((host) => (
-            <li
-              key={host.email}
-              className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3.5 last:pb-0"
-            >
-              <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-1">
-                <span className="font-medium break-all">{host.email}</span>
-                <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
-                  <Chip>{host.hasAccount ? t("account") : t("noAccount")}</Chip>
-                  {host.source === "settings"
-                    ? t("fromSettings")
-                    : host.createdAt
-                      ? host.addedBy
-                        ? t("addedBy", {
-                            name: host.addedBy,
-                            date: when(host.createdAt),
-                          })
-                        : t("addedOn", { date: when(host.createdAt) })
-                      : null}
-                </span>
-                {host.note ? (
-                  <span className="text-muted-foreground text-sm whitespace-pre-wrap">
-                    {host.note}
+      <Pager label={t("pages")} param="hosts" page={page}>
+        {hosts.length === 0 ? (
+          <p className="text-muted-foreground text-[15px]">{t("none")}</p>
+        ) : (
+          <ul className="flex flex-col divide-y border-t">
+            {hosts.map((host) => (
+              <li
+                key={host.email}
+                className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3.5 last:pb-0"
+              >
+                <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-1">
+                  <span className="font-medium break-all">{host.email}</span>
+                  <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+                    <Chip>
+                      {host.hasAccount ? admin("account") : admin("noAccount")}
+                    </Chip>
+                    {host.source === "settings"
+                      ? t("fromSettings")
+                      : host.createdAt
+                        ? host.addedBy
+                          ? t("addedBy", {
+                              name: host.addedBy,
+                              date: when(host.createdAt),
+                            })
+                          : t("addedOn", { date: when(host.createdAt) })
+                        : null}
                   </span>
+                  {host.note ? (
+                    <span className="text-muted-foreground text-sm whitespace-pre-wrap">
+                      {host.note}
+                    </span>
+                  ) : null}
+                </div>
+                {host.source === "admin" ? (
+                  <Button
+                    variant="outline"
+                    onPress={() => setDemoting(host)}
+                    aria-label={t("removeLabel", { email: host.email })}
+                  >
+                    {t("remove")}
+                  </Button>
                 ) : null}
-              </div>
-              {host.source === "admin" ? (
-                <Button
-                  variant="outline"
-                  onPress={() => setDemoting(host)}
-                  aria-label={t("removeLabel", { email: host.email })}
-                >
-                  {t("remove")}
-                </Button>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Pager>
       {fromSettings ? (
         <p className="text-muted-foreground text-[13px] leading-normal">
           {t("settingsHelp", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}

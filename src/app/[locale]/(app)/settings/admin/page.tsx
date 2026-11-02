@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
-import { AdminCard } from "@/components/admin/admin-card";
+import { AdminList } from "@/components/admin/admin-list";
 import { AdminRequests } from "@/components/admin/admin-requests";
 import { ApprovedHosts } from "@/components/admin/approved-hosts";
-import { CardsLoading } from "@/components/app-shell/loading";
 import { getSession } from "@/lib/auth/session";
-import { publicEnv } from "@/lib/env";
-import { approvedHosts } from "@/lib/hosting/allowlist";
-import { openRequests, recentDecisions } from "@/lib/hosting/requests";
+import { adminAddresses, approvedHosts } from "@/lib/hosting/allowlist";
+import { answeredRequests, openRequests } from "@/lib/hosting/requests";
 import { ASK_AGAIN_AFTER_DAYS } from "@/lib/hosting/rules";
 import { fullTerms, isAdmin } from "@/lib/meetings/hosting";
-import { serverEnv } from "@/lib/server-env";
+import { requestedPage } from "@/lib/pagination";
+
+/**
+ * Moving between a list's pages may wait for the next page: the current one stays on screen
+ * (dimmed) until it's ready, rather than every list flashing back to loading.
+ */
+export const instant = false;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Admin");
@@ -24,24 +27,22 @@ export async function generateMetadata(): Promise<Metadata> {
  * Settings → Admin: who hosts full meetings. Requests to answer, the approved hosts
  * (add an address, or move one back to demos) and who the admins are. Only for admins
  * (ADMIN_EMAILS); for anyone else there's no such page, and Settings doesn't list it.
- * Later sections (limits, usage against the free credit) go in as more AdminCards.
+ * Each list is paged, its page in the address (`?requests=`, `?answers=`, `?hosts=`,
+ * `?admins=`); the loading state is in the layout above. Later sections (limits, usage
+ * against the free credit) go in as more AdminCards.
  */
-export default function AdminPage() {
-  return (
-    <Suspense fallback={<CardsLoading rows={3} />}>
-      <Admin />
-    </Suspense>
-  );
-}
-
-async function Admin() {
+export default async function AdminPage({
+  searchParams,
+}: PageProps<"/[locale]/settings/admin">) {
   const session = await getSession();
   if (!session || !isAdmin(session.user)) notFound();
   const t = await getTranslations("Admin");
-  const [requests, decisions, hosts] = await Promise.all([
-    openRequests(),
-    recentDecisions(),
-    approvedHosts(),
+  const query = await searchParams;
+  const [requests, answers, hosts, admins] = await Promise.all([
+    openRequests(requestedPage(query.requests)),
+    answeredRequests(requestedPage(query.answers)),
+    approvedHosts(requestedPage(query.hosts)),
+    adminAddresses(requestedPage(query.admins)),
   ]);
   const iso = (date: Date | null) => date?.toISOString() ?? null;
 
@@ -52,31 +53,27 @@ async function Admin() {
         <p className="text-muted-foreground text-[15px]">{t("subtitle")}</p>
       </div>
       <AdminRequests
-        requests={requests.map((request) => ({
+        requests={requests.rows.map((request) => ({
           ...request,
           createdAt: request.createdAt.toISOString(),
         }))}
-        decisions={decisions.map((decision) => ({
+        requestsPage={requests.page}
+        decisions={answers.rows.map((decision) => ({
           ...decision,
           decidedAt: iso(decision.decidedAt),
         }))}
+        decisionsPage={answers.page}
         askAgainDays={ASK_AGAIN_AFTER_DAYS}
       />
       <ApprovedHosts
-        hosts={hosts.map((host) => ({
+        hosts={hosts.rows.map((host) => ({
           ...host,
           createdAt: iso(host.createdAt),
         }))}
+        page={hosts.page}
         full={fullTerms()}
       />
-      <AdminCard title={t("admins.title")}>
-        <p className="text-muted-foreground text-[15px] leading-normal">
-          {t("admins.body", {
-            appName: publicEnv.NEXT_PUBLIC_APP_NAME,
-            emails: serverEnv().ADMIN_EMAILS.join(", "),
-          })}
-        </p>
-      </AdminCard>
+      <AdminList admins={admins.rows} page={admins.page} />
     </>
   );
 }

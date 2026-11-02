@@ -1,10 +1,11 @@
 import "server-only";
 
-import { eq, inArray, sql } from "drizzle-orm";
+import { asc, count, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { hostAllowlist, user } from "@/lib/db/schema";
 import { approvedBySettings } from "@/lib/meetings/hosting";
+import { fetchPage, pageOf, splitRows } from "@/lib/pagination";
 import { serverEnv } from "@/lib/server-env";
 
 /** An approved host, as Settings → Admin lists them. */
@@ -21,48 +22,94 @@ export type ApprovedHost = {
 };
 
 /**
- * Everyone approved to host full meetings: the operator's HOST_ALLOWLIST, then the
- * addresses admins added, newest first. Admins (ADMIN_EMAILS) are listed apart.
+ * A page of everyone approved to host full meetings: the operator's HOST_ALLOWLIST, then
+ * the addresses admins added, newest first, as one list. Admins (ADMIN_EMAILS) are listed
+ * apart, and an address the settings already approve isn't listed again from the table.
  */
-export async function approvedHosts(): Promise<ApprovedHost[]> {
-  const settings = serverEnv().HOST_ALLOWLIST.filter(
-    (email) => !serverEnv().ADMIN_EMAILS.includes(email),
+export async function approvedHosts(requested: number) {
+  const env = serverEnv();
+  const settings = unique(
+    env.HOST_ALLOWLIST.filter((email) => !env.ADMIN_EMAILS.includes(email)),
   );
-  const added = await db()
-    .select({
-      email: hostAllowlist.email,
-      createdAt: hostAllowlist.createdAt,
-      note: hostAllowlist.note,
-      addedBy: user.name,
-    })
-    .from(hostAllowlist)
-    .leftJoin(user, eq(user.id, hostAllowlist.addedBy))
-    .orderBy(sql`${hostAllowlist.createdAt} desc`);
-  const listed = [
-    ...settings.map((email) => ({
-      email,
-      source: "settings" as const,
-      addedBy: null,
-      createdAt: null,
-      note: null,
+  const inSettings = [...env.HOST_ALLOWLIST, ...env.ADMIN_EMAILS];
+  const notInSettings =
+    inSettings.length > 0
+      ? notInArray(hostAllowlist.email, inSettings)
+      : undefined;
+  const { rows, page } = await fetchPage(
+    requested,
+    async () => {
+      const [row] = await db()
+        .select({ total: count() })
+        .from(hostAllowlist)
+        .where(notInSettings);
+      return settings.length + (row?.total ?? 0);
+    },
+    async (offset, limit) => {
+      const { head, tail } = splitRows(offset, limit, settings.length);
+      const fromTable =
+        tail.limit > 0
+          ? await db()
+              .select({
+                email: hostAllowlist.email,
+                createdAt: hostAllowlist.createdAt,
+                note: hostAllowlist.note,
+                addedBy: user.name,
+              })
+              .from(hostAllowlist)
+              .leftJoin(user, eq(user.id, hostAllowlist.addedBy))
+              .where(notInSettings)
+              .orderBy(desc(hostAllowlist.createdAt), asc(hostAllowlist.email))
+              .limit(tail.limit)
+              .offset(tail.offset)
+          : [];
+      return [
+        ...settings.slice(head.start, head.end).map((email) => ({
+          email,
+          source: "settings" as const,
+          addedBy: null,
+          createdAt: null,
+          note: null,
+        })),
+        ...fromTable.map((row) => ({ ...row, source: "admin" as const })),
+      ];
+    },
+  );
+  const accounts = await signedUp(rows.map((host) => host.email));
+  return {
+    rows: rows.map((host): ApprovedHost => ({
+      ...host,
+      hasAccount: accounts.has(host.email),
     })),
-    ...added
-      .filter((row) => !approvedBySettings(row.email))
-      .map((row) => ({ ...row, source: "admin" as const })),
-  ];
-  const emails = listed.map((host) => host.email);
-  const accounts =
-    emails.length === 0
-      ? []
-      : await db()
-          .select({ email: sql<string>`lower(${user.email})` })
-          .from(user)
-          .where(inArray(sql<string>`lower(${user.email})`, emails));
-  const signedUp = new Set(accounts.map((account) => account.email));
-  return listed.map((host) => ({
-    ...host,
-    hasAccount: signedUp.has(host.email),
-  }));
+    page,
+  };
+}
+
+/** A page of the admins (ADMIN_EMAILS, set where the app is hosted), in their order. */
+export async function adminAddresses(requested: number) {
+  const admins = unique(serverEnv().ADMIN_EMAILS);
+  const page = pageOf(requested, admins.length);
+  const emails = admins.slice(page.offset, page.offset + page.perPage);
+  const accounts = await signedUp(emails);
+  return {
+    rows: emails.map((email) => ({ email, hasAccount: accounts.has(email) })),
+    page,
+  };
+}
+
+/** Which of these (lowercased) addresses someone has signed up with. */
+async function signedUp(emails: string[]): Promise<Set<string>> {
+  if (emails.length === 0) return new Set();
+  const lowered = sql<string>`lower(${user.email})`;
+  const accounts = await db()
+    .select({ email: lowered })
+    .from(user)
+    .where(inArray(lowered, emails));
+  return new Set(accounts.map((account) => account.email));
+}
+
+function unique(emails: string[]): string[] {
+  return [...new Set(emails)];
 }
 
 /** An admin approves an address, before or after its owner signs up. */

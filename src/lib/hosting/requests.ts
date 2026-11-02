@@ -1,9 +1,10 @@
 import "server-only";
 
-import { and, asc, eq, lt, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, lt, ne, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { hostAllowlist, hostingRequest, user } from "@/lib/db/schema";
+import { fetchPage } from "@/lib/pagination";
 
 import { hostingAccessOf } from "./access";
 import {
@@ -43,43 +44,76 @@ export async function askForFullMeetings(
   return "sent";
 }
 
-/** The open requests, oldest first, with what the admins need to decide. */
-export async function openRequests() {
-  return db()
-    .select({
-      id: hostingRequest.id,
-      name: user.name,
-      email: user.email,
-      note: hostingRequest.note,
-      createdAt: hostingRequest.createdAt,
-    })
-    .from(hostingRequest)
-    .innerJoin(user, eq(user.id, hostingRequest.userId))
-    .where(eq(hostingRequest.status, "pending"))
-    .orderBy(asc(hostingRequest.createdAt));
+/** A page of the open requests, oldest first, with what the admins need to decide. */
+export async function openRequests(requested: number) {
+  const open = eq(hostingRequest.status, "pending");
+  return fetchPage(
+    requested,
+    async () => {
+      const [row] = await db()
+        .select({ total: count() })
+        .from(hostingRequest)
+        .where(open);
+      return row?.total ?? 0;
+    },
+    (offset, limit) =>
+      db()
+        .select({
+          id: hostingRequest.id,
+          name: user.name,
+          email: user.email,
+          note: hostingRequest.note,
+          createdAt: hostingRequest.createdAt,
+        })
+        .from(hostingRequest)
+        .innerJoin(user, eq(user.id, hostingRequest.userId))
+        .where(open)
+        .orderBy(asc(hostingRequest.createdAt), asc(hostingRequest.id))
+        .limit(limit)
+        .offset(offset),
+  );
 }
 
-/** Recent answers, newest first, so admins can see what was decided and by whom. */
-export async function recentDecisions(limit = 20) {
+/**
+ * A page of the answers, newest first, so admins can see what was decided and by whom:
+ * every answer still kept (they go 90 days after, in the daily sweep).
+ */
+export async function answeredRequests(requested: number) {
+  const answered = ne(hostingRequest.status, "pending");
   const decider = db()
     .select({ id: user.id, name: user.name })
     .from(user)
     .as("decider");
-  return db()
-    .select({
-      id: hostingRequest.id,
-      name: user.name,
-      email: user.email,
-      status: hostingRequest.status,
-      decidedAt: hostingRequest.decidedAt,
-      decidedBy: decider.name,
-    })
-    .from(hostingRequest)
-    .innerJoin(user, eq(user.id, hostingRequest.userId))
-    .leftJoin(decider, eq(decider.id, hostingRequest.decidedBy))
-    .where(sql`${hostingRequest.status} <> 'pending'`)
-    .orderBy(sql`${hostingRequest.decidedAt} desc`)
-    .limit(limit);
+  return fetchPage(
+    requested,
+    async () => {
+      const [row] = await db()
+        .select({ total: count() })
+        .from(hostingRequest)
+        .where(answered);
+      return row?.total ?? 0;
+    },
+    (offset, limit) =>
+      db()
+        .select({
+          id: hostingRequest.id,
+          name: user.name,
+          email: user.email,
+          status: hostingRequest.status,
+          decidedAt: hostingRequest.decidedAt,
+          decidedBy: decider.name,
+        })
+        .from(hostingRequest)
+        .innerJoin(user, eq(user.id, hostingRequest.userId))
+        .leftJoin(decider, eq(decider.id, hostingRequest.decidedBy))
+        .where(answered)
+        .orderBy(
+          sql`${hostingRequest.decidedAt} desc nulls last`,
+          desc(hostingRequest.id),
+        )
+        .limit(limit)
+        .offset(offset),
+  );
 }
 
 /**

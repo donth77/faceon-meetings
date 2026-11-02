@@ -18,13 +18,13 @@ export function AdminCard({
   return (
     <section className="bg-card ring-border flex flex-col gap-4 rounded-2xl px-5 py-5 ring-1 sm:px-6 sm:py-5.5">
       <div className="flex flex-col gap-1">
-        <h2
+        <h3
           ref={headingRef}
           tabIndex={headingRef ? -1 : undefined}
           className="text-lg font-bold outline-none"
         >
           {title}
-        </h2>
+        </h3>
         {description ? (
           <div className="text-muted-foreground text-sm leading-normal">
             {description}
