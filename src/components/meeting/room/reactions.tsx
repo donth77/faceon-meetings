@@ -34,7 +34,7 @@ export function ReactionPicker({
           <Button
             aria-label={t(`names.${reaction.name}`)}
             onPress={() => onSend(reaction.code)}
-            className={`${EMOJI_FONT} focus-visible:ring-ring flex size-[54px] items-center justify-center rounded-full text-[30px] leading-none outline-none hover:bg-white/10 focus-visible:ring-2 data-[pressed]:scale-90`}
+            className={`${EMOJI_FONT} focus-visible:focus-ring flex size-[54px] items-center justify-center rounded-full text-[30px] leading-none outline-hidden hover:bg-white/10 data-[pressed]:scale-90`}
           >
             {reaction.emoji}
           </Button>
@@ -132,8 +132,8 @@ export function FloatingReactions({
             }
             className={
               animate
-                ? "animate-reaction-rise absolute bottom-0 motion-reduce:animate-[reaction-fade_3.5s_ease-out_forwards]"
-                : "absolute bottom-0 animate-[reaction-fade_3.5s_ease-out_forwards]"
+                ? "animate-reaction-rise motion-reduce:animate-reaction-fade absolute bottom-0"
+                : "animate-reaction-fade absolute bottom-0"
             }
           >
             <div

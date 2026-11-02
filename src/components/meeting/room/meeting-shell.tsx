@@ -1,41 +1,29 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
 import { toast } from "sonner";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { DeviceProblem } from "@/lib/device/problems";
 import { effectsSupported } from "@/lib/effects/support";
-import { aiNotesEnabled } from "@/lib/env";
 import type {
   AdmittedMeetingInfo,
   ModerateRequest,
   SelfInfo,
   SessionInfo,
 } from "@/lib/meetings/api";
-import { reactionName } from "@/lib/meetings/events";
-import {
-  loadPreferences,
-  usePreferences,
-  withDefaults,
-} from "@/lib/preferences";
+import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
 import { playSound } from "../chime";
-import {
-  useRoomMedia,
-  type RoomParticipant,
-  type RoomStatus,
-  type ShareOptions,
-} from "../media";
+import { useRoomMedia, type RoomParticipant } from "../media";
 import { useMeetingTitle } from "../meeting-title";
 import { AloneCard } from "./alone-card";
 import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ChatPanel } from "./chat-panel";
+import { ConnectionBanner } from "./connection-banner";
 import { ControlBar, type PanelName } from "./control-bar";
 import { EffectsPanel } from "./effects-panel";
 import {
@@ -46,9 +34,13 @@ import {
 } from "./host-dialogs";
 import { InCallSettings, type InCallSection } from "./in-call-settings";
 import { useRoomTransition } from "./motion";
-import { NotesChip, NotesPanel, type NotTranscribed } from "./notes-panel";
+import { NotesChip, NotesPanel } from "./notes-panel";
 import { ParticipantsPanel } from "./participants-panel";
-import { PictureInPicture, usePictureInPicture } from "./picture-in-picture";
+import {
+  PictureInPicture,
+  useAutoPictureInPicture,
+  usePictureInPicture,
+} from "./picture-in-picture";
 import { FloatingReactions } from "./reactions";
 import { moderates, roleIn, roomRoleOf } from "./roles";
 import { RoomBadgesProvider } from "./room-badges";
@@ -57,104 +49,19 @@ import { useRoomEffects } from "./room-effects";
 import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
+import { useHands } from "./use-hands";
 import { useHostNotices } from "./use-host-notices";
 import { useLobby } from "./use-lobby";
+import { useMeetingNotes } from "./use-meeting-notes";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
-import { useTranscript, useTranscription } from "./use-notes";
+import { usePanels } from "./use-panels";
+import { useRoomReactions } from "./use-reactions";
 import {
-  useReactionAnnouncement,
-  useReactions,
-  useReactionSender,
-} from "./use-reactions";
-
-/** Says when the connection drops and while it comes back. */
-function ConnectionBanner({ status }: { status: RoomStatus }) {
-  const t = useTranslations("Meeting");
-  const transition = useRoomTransition();
-  return (
-    <div role="status" className="flex justify-center px-3">
-      <AnimatePresence initial={false}>
-        {status === "joined" ? null : (
-          <motion.p
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: "auto", marginBottom: 8 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={transition}
-            className="flex items-center gap-2 overflow-hidden rounded-lg bg-amber-400/15 px-3 text-sm text-amber-100"
-          >
-            <span className="flex items-center gap-2 py-2">
-              <LoaderCircle
-                className="size-4 animate-spin motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-              {t(status === "offline" ? "offline" : "reconnecting")}
-            </span>
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/** Past this many people, joins and leaves make no sound, as in Meet: it would never stop. */
-const SOUNDS_UP_TO = 8;
-
-/**
- * A sound as you join, then as others join and leave. The people already here when you
- * arrive (who show up over the first moments) don't each get a sound.
- */
-function usePresenceSounds(participants: RoomParticipant[]) {
-  const known = useRef<Set<string> | null>(null);
-  const settledAt = useRef(0);
-  useEffect(() => {
-    playSound("youJoined");
-    settledAt.current = performance.now() + 2500;
-  }, []);
-  useEffect(() => {
-    const others = new Set(
-      participants.filter((p) => !p.isLocal).map((p) => p.key),
-    );
-    const before = known.current;
-    known.current = others;
-    if (!before || performance.now() < settledAt.current) return;
-    if (participants.length > SOUNDS_UP_TO) return;
-    if ([...others].some((key) => !before.has(key))) playSound("someoneJoined");
-    else if ([...before].some((key) => !others.has(key)))
-      playSound("someoneLeft");
-  }, [participants]);
-}
-
-/** "You're muted" when you seem to be talking with the mic off, at most once a minute. */
-function useMutedNudge(speakingWhileMuted: boolean, onUnmute: () => void) {
-  const t = useTranslations("Meeting");
-  const lastAt = useRef(0);
-  const unmute = useEffectEvent(onUnmute);
-  useEffect(() => {
-    if (!speakingWhileMuted || Date.now() - lastAt.current < 60_000) return;
-    lastAt.current = Date.now();
-    toast(t("mutedNudge"), {
-      id: "muted-nudge",
-      action: { label: t("unmute"), onClick: () => unmute() },
-    });
-  }, [speakingWhileMuted, t]);
-}
-
-/** A toast when the mic or camera fails to start, saying what to do, with Try again. */
-function useDeviceProblemToast(
-  device: "microphone" | "camera",
-  problem: DeviceProblem | null,
-  retry: () => Promise<void>,
-) {
-  const t = useTranslations("DeviceProblems");
-  const tp = useTranslations("PreJoin");
-  const onRetry = useEffectEvent(() => void retry());
-  useEffect(() => {
-    if (!problem) return;
-    toast.error(t(`${device}.${problem}`), {
-      action: { label: tp("tryAgain"), onClick: () => onRetry() },
-    });
-  }, [device, problem, t, tp]);
-}
+  useDeviceProblemToast,
+  useMutedNudge,
+  usePresenceSounds,
+} from "./use-room-alerts";
+import { useScreenShare } from "./use-screen-share";
 
 /**
  * The meeting room's layout: top bar, the stage, and the control bar. Always dark, as in
@@ -181,6 +88,8 @@ export function MeetingShell({
   const media = useRoomMedia();
   const title = useMeetingTitle(meeting);
   const shellRef = useRef<HTMLDivElement>(null);
+  // Settings, read once for the whole room.
+  const prefs = withDefaults(usePreferences());
   const [view, setView] = useState<StageView>({
     layout: "auto",
     hideSelf: false,
@@ -191,18 +100,13 @@ export function MeetingShell({
     if (next.hideSelf && !view.hideSelf) toast(t("selfHidden"));
     setView(next);
   }
-  // Participants and Chat can both be open on desktop; a phone shows the latest one.
-  const [panels, setPanels] = useState<PanelName[]>([]);
   const [settings, setSettings] = useState<InCallSection | null>(null);
   const phone = useIsMobile();
   const panelTransition = useRoomTransition();
   const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RoomParticipant | null>(null);
   const [mutingAll, setMutingAll] = useState(false);
-  const [takeover, setTakeover] = useState<{
-    presenter: RoomParticipant;
-    options: ShareOptions;
-  } | null>(null);
+  const [canUseEffects] = useState(effectsSupported);
 
   // Roles and policies come from the shared state our server publishes; until it
   // arrives, you have the role you were admitted with.
@@ -212,6 +116,19 @@ export function MeetingShell({
   const roleOf = (userId: string) =>
     userId === self.id ? selfRole : roleIn(state, userId);
   const sentByHost = (userId: string) => moderates(roleOf(userId));
+  const nameOf = (userId: string) =>
+    media.participants.find((p) => p.userId === userId)?.name ?? "";
+
+  const panels = usePanels({ phone, isHost });
+  function openPanel(name: PanelName) {
+    panels.openPanel(name);
+    if (name === "chat") chat.markRead();
+  }
+  function togglePanel(name: PanelName) {
+    if (panels.open.includes(name)) panels.closePanel(name);
+    else openPanel(name);
+  }
+
   const notices = useHostNotices({ media, selfId: self.id, selfRole });
   const lobby = useLobby({
     code: meeting.code,
@@ -219,177 +136,55 @@ export function MeetingShell({
     media,
     onView: () => openPanel("people"),
   });
-
   const chat = useChat({
     media,
     self,
-    isOpen: panels.includes("chat"),
+    isOpen: panels.open.includes("chat"),
     accepts: (senderId) => (state?.chat ?? true) || sentByHost(senderId),
     // A preview of each new message while the chat panel is closed, as in both apps.
     onPreview: (message) => {
       playSound("message");
-      if (!withDefaults(loadPreferences()).popupChat) return;
+      if (!prefs.popupChat) return;
       toast(message.senderName, {
         description: message.text,
         action: { label: t("chat.open"), onClick: () => openPanel("chat") },
       });
     },
   });
-
-  const nameOf = (userId: string) =>
-    media.participants.find((p) => p.userId === userId)?.name ?? "";
-
-  // AI notes: everyone hears when they go on, and each device transcribes its own
-  // person unless they'd rather not. The notetaker's device collects the transcript.
-  const notes = state?.notes ?? null;
-  const isNotetaker = notes?.by === self.id;
-  /** Hosts and co-hosts run AI notes, where this copy offers them. */
-  const canRunNotes = isHost && aiNotesEnabled;
-  const transcript = useTranscript({
+  const notes = useMeetingNotes({
     media,
-    sessionId: session.id,
-    collecting: isNotetaker,
+    code: meeting.code,
+    session,
     self,
+    isHost,
   });
-  const transcription = useTranscription({
+  const reactions = useRoomReactions({
     media,
-    notes,
-    onLine: transcript.addOwn,
+    selfId: self.id,
+    isHost,
+    sentByHost,
+    nameOf,
+    showOthers: prefs.showOthersReactions,
+    announcements: prefs.reactionAnnouncements,
   });
-  const { setOptedOut, download } = transcription;
-  const announcedNotes = useRef<string | null>(null);
-  useEffect(() => {
-    const key = notes ? `${notes.by}@${notes.startedAt}` : null;
-    if (key === announcedNotes.current) return;
-    const wasOn = announcedNotes.current !== null;
-    announcedNotes.current = key;
-    if (!notes) {
-      if (wasOn) toast(t("notes.stopped"), { id: "notes-banner" });
-      return;
-    }
-    if (notes.by === self.id) return;
-    toast(t("notes.banner", { name: notes.name }), {
-      id: "notes-banner",
-      duration: 15_000,
-      action: {
-        label: t("notes.dontTranscribe"),
-        onClick: () => setOptedOut(true),
-      },
-    });
-  }, [notes, self.id, t, setOptedOut]);
-  // Where this browser needs its one-time speech download, offer it once.
-  const offeredDownload = useRef(false);
-  useEffect(() => {
-    if (transcription.state !== "download" || offeredDownload.current) return;
-    offeredDownload.current = true;
-    toast(t("notes.downloadOffer"), {
-      id: "notes-download",
-      duration: 20_000,
-      action: { label: t("notes.download"), onClick: () => void download() },
-    });
-  }, [transcription.state, t, download]);
-  // Who isn't in the notes, for the notetaker; you see your own state in the chip.
-  const notTranscribed: NotTranscribed[] = [];
-  for (const person of media.participants) {
-    const status = transcript.statuses[person.userId];
-    if (
-      person.userId === self.id ||
-      notTranscribed.some((p) => p.userId === person.userId) ||
-      (status !== "optedOut" && status !== "unsupported")
-    ) {
-      continue;
-    }
-    notTranscribed.push({
-      userId: person.userId,
-      name: person.name,
-      reason: status,
-    });
-  }
-
-  async function setNotesOn(on: boolean) {
-    try {
-      await meetingApi.notes(meeting.code, { on });
-    } catch {
-      toast.error(t("notes.failed"));
-    }
-  }
-
-  // Raised hands and reactions.
-  const hands = useMemo(() => state?.hands ?? {}, [state]);
-  const reactionsAllowed = (state?.reactions ?? true) || isHost;
-  const reactions = useReactions(
-    media.subscribeReactions,
-    (userId) => (state?.reactions ?? true) || sentByHost(userId),
-  );
-  const sendReaction = useReactionSender(media.sendReaction);
-  const { showOthersReactions, reactionAnimation, reactionAnnouncements } =
-    withDefaults(usePreferences());
-  // Settings → Reactions: others' can be hidden; yours always show.
-  const shownReactions = useMemo(
-    () =>
-      showOthersReactions
-        ? reactions
-        : reactions.filter((reaction) => reaction.userId === self.id),
-    [reactions, showOthersReactions, self.id],
-  );
-  const reactionNews = useReactionAnnouncement(
-    shownReactions,
-    self.id,
-    reactionAnnouncements,
-    {
-      summary: (count) => t("reactionsSummary", { count }),
-      each: (reaction) =>
-        t("reactionFrom", {
-          name: nameOf(reaction.userId),
-          reaction: t(`reactions.names.${reactionName(reaction.code)}`),
-        }),
-    },
-  );
-  const lastSounded = useRef(-1);
-  useEffect(() => {
-    const newest = shownReactions.at(-1);
-    if (!newest || newest.id <= lastSounded.current) return;
-    lastSounded.current = newest.id;
-    playSound("reaction");
-  }, [shownReactions]);
+  const { hands, changeHand } = useHands({
+    media,
+    code: meeting.code,
+    selfId: self.id,
+    isHost,
+    popupHands: prefs.popupHands,
+    nameOf,
+    onView: () => openPanel("people"),
+  });
   const badges = useMemo(
     () => ({
       hands,
       reactions: new Map(
-        shownReactions.map((r) => [r.userId, r.code] as const),
+        reactions.shown.map((r) => [r.userId, r.code] as const),
       ),
     }),
-    [hands, shownReactions],
+    [hands, reactions.shown],
   );
-
-  async function changeHand(
-    request: Parameters<typeof meetingApi.hand>[1],
-  ): Promise<void> {
-    try {
-      await meetingApi.hand(meeting.code, request);
-    } catch {
-      toast.error(t("hand.failed"));
-    }
-  }
-
-  // Hosts hear about each hand that goes up.
-  const previousHands = useRef(hands);
-  const announceHand = useEffectEvent((userId: string) => {
-    if (isHost && userId !== self.id) {
-      playSound("handRaised");
-      if (!withDefaults(loadPreferences()).popupHands) return;
-      toast(t("hand.someoneRaised", { name: nameOf(userId) }), {
-        action: { label: t("hand.view"), onClick: () => openPanel("people") },
-      });
-    }
-  });
-  useEffect(() => {
-    const before = previousHands.current;
-    previousHands.current = hands;
-    for (const userId of Object.keys(hands)) {
-      if (!(userId in before)) announceHand(userId);
-    }
-  }, [hands]);
 
   async function moderate(request: ModerateRequest): Promise<void> {
     try {
@@ -414,7 +209,7 @@ export function MeetingShell({
     confirmRemove: setRemoving,
   };
 
-  // A host's policy can take the mic or screen sharing away; say so instead of failing.
+  // A host's policy can take the mic away; say so instead of failing.
   function toggleMic() {
     if (!media.mic.enabled && !media.mic.allowed) {
       toast(t("hostActions.micLocked"));
@@ -422,87 +217,12 @@ export function MeetingShell({
     }
     void media.mic.toggle();
   }
+  const share = useScreenShare({ media, isHost, moderate });
 
-  // One person shares at a time. Hosts and co-hosts can take over; others wait.
-  const presenter = media.participants.find((p) => p.screen && !p.isLocal);
-  const shareBlocked = !media.screenShare.allowed
-    ? () => void toast(t("hostActions.shareLocked"))
-    : presenter && !isHost
-      ? () => void toast(t("share.someoneSharing", { name: presenter.name }))
-      : null;
-
-  /** Shares the screen; false when it didn't start (say, the picker was cancelled). */
-  async function share(options: ShareOptions): Promise<boolean> {
-    try {
-      await media.screenShare.start(options);
-      return true;
-    } catch (error) {
-      const cancelled =
-        error instanceof DOMException &&
-        (error.name === "NotAllowedError" || error.name === "AbortError");
-      if (!cancelled) toast.error(t("share.failed"));
-      return false;
-    }
-  }
-
-  function startShare(options: ShareOptions) {
-    if (shareBlocked) shareBlocked();
-    else if (presenter) setTakeover({ presenter, options });
-    else void share(options);
-  }
-
-  async function takeOver() {
-    if (!takeover) return;
-    setTakeover(null);
-    // The picker first, while the click still counts; their share stops once yours starts.
-    if (await share(takeover.options)) {
-      await moderate({
-        action: "mute",
-        target: takeover.presenter.userId,
-        kind: "screenshare",
-      });
-    }
-  }
-
-  function toggleScreenShare() {
-    if (media.screenShare.enabled) void media.screenShare.stop();
-    else startShare({ audio: true, motion: false });
-  }
-
-  function openPanel(next: PanelName) {
-    // Backgrounds and effects takes the whole column, as in Meet.
-    setPanels((open) =>
-      open.includes(next)
-        ? open
-        : phone || next === "effects"
-          ? [next]
-          : [...open.filter((panel) => panel !== "effects"), next],
-    );
-    if (next === "chat") chat.markRead();
-  }
-
-  function closePanel(name: PanelName) {
-    setPanels((open) => open.filter((panel) => panel !== name));
-  }
-
-  function togglePanel(next: PanelName) {
-    if (panels.includes(next)) closePanel(next);
-    else openPanel(next);
-  }
-
-  // Desktop keeps Participants above Chat, then AI notes (Backgrounds and effects takes
-  // the column alone); a phone shows the one opened last.
-  const shownPanels = (
-    phone
-      ? panels.slice(-1)
-      : (["people", "chat", "notes", "effects"] as const).filter((name) =>
-          panels.includes(name),
-        )
-  ).filter((name) => name !== "notes" || isHost);
   useMeetingShortcuts({
     toggleMic,
     toggleCamera: () => void media.camera.toggle(),
-    toggleScreenShare,
+    toggleScreenShare: share.toggle,
     mic: () => ({ on: media.mic.enabled, allowed: media.mic.allowed }),
   });
   const alone = media.participants.length === 1;
@@ -510,38 +230,21 @@ export function MeetingShell({
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
   useMutedNudge(media.mic.speakingWhileMuted, toggleMic);
-  const pip = usePictureInPicture();
-  const { autoPictureInPicture } = withDefaults(usePreferences());
-  const openPip = useEffectEvent(() => void pip.open());
-  // Chrome opens the small window by itself when you switch away from a call, if the
-  // page asks it to (it asks you once, as for Meet).
-  useEffect(() => {
-    if (!autoPictureInPicture || !pip.supported) return;
-    const session = navigator.mediaSession as MediaSession & {
-      setActionHandler(action: string, handler: (() => void) | null): void;
-    };
-    try {
-      session.setActionHandler("enterpictureinpicture", () => openPip());
-    } catch {
-      return; // this Chrome doesn't offer it
-    }
-    return () => {
-      try {
-        session.setActionHandler("enterpictureinpicture", null);
-      } catch {
-        // Already gone.
-      }
-    };
-  }, [autoPictureInPicture, pip.supported]);
+  const pip = usePictureInPicture(title);
+  useAutoPictureInPicture(pip, prefs.autoPictureInPicture);
   usePresenceSounds(media.participants);
   useRoomEffects();
-  const [canUseEffects] = useState(effectsSupported);
+
+  // On a phone a panel is a sheet over the room: the room behind it is left alone by
+  // the keyboard and screen readers until it closes (2.4.11). It's set on the header,
+  // main and footer themselves: React Aria resets the room's top-level children as its
+  // menus close.
+  const sheetOpen = phone && panels.shown.length > 0;
 
   function renderPanel(name: PanelName) {
+    const close = () => panels.closePanel(name);
     if (name === "effects") {
-      return (
-        <EffectsPanel key="effects" onClose={() => closePanel("effects")} />
-      );
+      return <EffectsPanel key="effects" onClose={close} />;
     }
     if (name === "notes") {
       return (
@@ -551,15 +254,15 @@ export function MeetingShell({
           sessionId={session.id}
           canSave={self.signedIn}
           title={title}
-          notes={notes}
+          notes={notes.notes}
           demo={session.demo}
-          isNotetaker={isNotetaker}
-          lines={transcript.lines}
-          notTranscribed={notTranscribed}
-          onChange={setNotesOn}
+          isNotetaker={notes.isNotetaker}
+          lines={notes.transcript.lines}
+          notTranscribed={notes.notTranscribed}
+          onChange={notes.setNotesOn}
           onOpenSettings={() => setSettings("aiNotes")}
-          onDiscard={transcript.clear}
-          onClose={() => closePanel("notes")}
+          onDiscard={notes.transcript.clear}
+          onClose={close}
         />
       );
     }
@@ -579,7 +282,7 @@ export function MeetingShell({
           void moderate({ action: "setPolicy", policy })
         }
         onEndForAll={onEndForAll}
-        onClose={() => closePanel("people")}
+        onClose={close}
       />
     ) : (
       <ChatPanel
@@ -588,7 +291,7 @@ export function MeetingShell({
         messages={chat.messages}
         canSend={(state?.chat ?? true) || isHost}
         onSend={chat.send}
-        onClose={() => closePanel("chat")}
+        onClose={close}
       />
     );
   }
@@ -602,51 +305,60 @@ export function MeetingShell({
       {/* Menus and dialogs open inside the room, so they're dark like it. */}
       <UNSAFE_PortalProvider getContainer={() => shellRef.current}>
         <RoomControlsProvider value={controls}>
-          <TopBar
-            title={title}
-            meeting={meeting}
-            session={session}
-            endsAt={endsAt}
-            view={view}
-            onViewChange={changeView}
-            notes={
-              notes ? (
-                <NotesChip
-                  notes={notes}
-                  self={transcription.state}
-                  onOptOutChange={setOptedOut}
-                  onDownload={() => void download()}
-                  onOpenNotes={
-                    canRunNotes ? () => openPanel("notes") : undefined
-                  }
-                />
-              ) : null
-            }
-          />
+          {/* Not the room's direct children: React Aria resets those as menus close. */}
+          <div className="contents">
+            <TopBar
+              inert={sheetOpen}
+              title={title}
+              meeting={meeting}
+              session={session}
+              endsAt={endsAt}
+              view={view}
+              onViewChange={changeView}
+              notes={
+                notes.notes ? (
+                  <NotesChip
+                    notes={notes.notes}
+                    self={notes.transcription.state}
+                    onOptOutChange={notes.transcription.setOptedOut}
+                    onDownload={() => void notes.transcription.download()}
+                    onOpenNotes={
+                      notes.canRunNotes ? () => openPanel("notes") : undefined
+                    }
+                  />
+                ) : null
+              }
+            />
+          </div>
           <ConnectionBanner status={media.status} />
           <div className="flex min-h-0 flex-1 px-3">
-            <main className="relative min-h-0 min-w-0 flex-1">
+            <main inert={sheetOpen} className="relative min-h-0 min-w-0 flex-1">
               <RoomBadgesProvider value={badges}>
                 <Stage view={view} />
               </RoomBadgesProvider>
               <FloatingReactions
-                reactions={shownReactions}
+                reactions={reactions.shown}
                 nameOf={nameOf}
                 selfId={self.id}
-                animate={reactionAnimation}
+                animate={prefs.reactionAnimation}
               />
-              <div role="status" className="sr-only">
-                {reactionNews}
+              {/* Heard even while a dialog is open (React Aria leaves top layers be). */}
+              <div
+                role="status"
+                data-react-aria-top-layer="true"
+                className="sr-only"
+              >
+                {reactions.news}
               </div>
               <AnimatePresence>
                 {alone ? <AloneCard key="alone" meeting={meeting} /> : null}
               </AnimatePresence>
             </main>
             {phone ? (
-              <AnimatePresence>{shownPanels.map(renderPanel)}</AnimatePresence>
+              <AnimatePresence>{panels.shown.map(renderPanel)}</AnimatePresence>
             ) : (
               <AnimatePresence initial={false}>
-                {shownPanels.length > 0 ? (
+                {panels.shown.length > 0 ? (
                   // The column slides in beside the stage; a second panel grows in
                   // below the first.
                   <motion.div
@@ -659,7 +371,7 @@ export function MeetingShell({
                   >
                     <div className="flex min-h-0 w-[360px] shrink-0 flex-col gap-3">
                       <AnimatePresence initial={false}>
-                        {shownPanels.map(renderPanel)}
+                        {panels.shown.map(renderPanel)}
                       </AnimatePresence>
                     </div>
                   </motion.div>
@@ -683,9 +395,9 @@ export function MeetingShell({
             onClose={() => setMutingAll(false)}
           />
           <TakeoverDialog
-            presenterName={takeover?.presenter.name ?? null}
-            onConfirm={() => void takeOver()}
-            onClose={() => setTakeover(null)}
+            presenterName={share.takeover}
+            onConfirm={() => void share.takeOver()}
+            onClose={share.cancelTakeover}
           />
           <UnmuteRequestDialog
             isOpen={notices.unmuteAsked}
@@ -714,36 +426,39 @@ export function MeetingShell({
             onSectionChange={setSettings}
             onClose={() => setSettings(null)}
           />
-          <ControlBar
-            title={title}
-            isOwner={selfRole === "host"}
-            onEndForAll={onEndForAll}
-            panels={panels}
-            onTogglePanel={togglePanel}
-            onOpenSettings={(section) => setSettings(section ?? "audio")}
-            onOpenPictureInPicture={
-              pip.supported ? () => void pip.open() : undefined
-            }
-            onOpenNotes={canRunNotes ? () => openPanel("notes") : undefined}
-            onOpenEffects={
-              canUseEffects ? () => openPanel("effects") : undefined
-            }
-            unreadChat={chat.unread}
-            waitingCount={lobby.requests.length}
-            onToggleMic={toggleMic}
-            share={{
-              onBlocked: shareBlocked,
-              onStart: startShare,
-              onStop: () => void media.screenShare.stop(),
-            }}
-            handRaised={self.id in hands}
-            onToggleHand={() =>
-              void changeHand({ raised: !(self.id in hands) })
-            }
-            onReaction={
-              reactionsAllowed ? (code) => void sendReaction(code) : null
-            }
-          />
+          <div className="contents">
+            <ControlBar
+              inert={sheetOpen}
+              title={title}
+              isOwner={selfRole === "host"}
+              onEndForAll={onEndForAll}
+              panels={panels.open}
+              onTogglePanel={togglePanel}
+              onOpenSettings={(section) => setSettings(section ?? "audio")}
+              onOpenPictureInPicture={
+                pip.supported ? () => void pip.open() : undefined
+              }
+              onOpenNotes={
+                notes.canRunNotes ? () => openPanel("notes") : undefined
+              }
+              onOpenEffects={
+                canUseEffects ? () => openPanel("effects") : undefined
+              }
+              unreadChat={chat.unread}
+              waitingCount={lobby.requests.length}
+              onToggleMic={toggleMic}
+              share={{
+                onBlocked: share.blocked,
+                onStart: share.start,
+                onStop: share.stop,
+              }}
+              handRaised={self.id in hands}
+              onToggleHand={() =>
+                void changeHand({ raised: !(self.id in hands) })
+              }
+              onReaction={reactions.send}
+            />
+          </div>
         </RoomControlsProvider>
       </UNSAFE_PortalProvider>
     </div>

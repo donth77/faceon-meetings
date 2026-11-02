@@ -11,7 +11,13 @@ import {
   VideoOff,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -32,8 +38,11 @@ const documentPip = (): DocumentPictureInPicture | undefined =>
 
 const noSubscribe = () => () => {};
 
-/** The page's styles, copied into the picture-in-picture window so it looks the same. */
-function copyStyles(into: Window) {
+/**
+ * The page's styles, copied into the picture-in-picture window so it looks the same,
+ * with the page's language and a title (it's a window of its own, 3.1.1 and 2.4.2).
+ */
+function copyStyles(into: Window, title: string) {
   for (const sheet of [...document.styleSheets]) {
     try {
       const style = into.document.createElement("style");
@@ -51,6 +60,8 @@ function copyStyles(into: Window) {
     }
   }
   into.document.documentElement.className = `${document.documentElement.className} dark`;
+  into.document.documentElement.lang = document.documentElement.lang;
+  into.document.title = title;
   into.document.body.className =
     "bg-background text-foreground m-0 h-screen overflow-hidden font-sans";
 }
@@ -59,7 +70,7 @@ function copyStyles(into: Window) {
  * A small window that stays on top while you work in other tabs and apps, as in Meet:
  * Chrome's Document Picture-in-Picture. Null where the browser has none.
  */
-export function usePictureInPicture() {
+export function usePictureInPicture(title: string) {
   const supported = useSyncExternalStore(
     noSubscribe,
     () => documentPip() !== undefined,
@@ -73,7 +84,7 @@ export function usePictureInPicture() {
     if (!api) return false;
     try {
       const opened = await api.requestWindow({ width: 360, height: 300 });
-      copyStyles(opened);
+      copyStyles(opened, title);
       opened.addEventListener("pagehide", () => setPipWindow(null), {
         once: true,
       });
@@ -82,14 +93,41 @@ export function usePictureInPicture() {
     } catch {
       return false;
     }
-  }, []);
-
-  const close = useCallback(() => pipWindow?.close(), [pipWindow]);
+  }, [title]);
 
   // Leaving the meeting closes it.
   useEffect(() => () => pipWindow?.close(), [pipWindow]);
 
-  return { supported, pipWindow, open, close };
+  return { supported, pipWindow, open };
+}
+
+/**
+ * Chrome opens the small window by itself when you switch away from a call, if the page
+ * asks it to (it asks you once, as for Meet). Settings → Video can turn that off.
+ */
+export function useAutoPictureInPicture(
+  pip: ReturnType<typeof usePictureInPicture>,
+  enabled: boolean,
+) {
+  const openPip = useEffectEvent(() => void pip.open());
+  useEffect(() => {
+    if (!enabled || !pip.supported) return;
+    const session = navigator.mediaSession as MediaSession & {
+      setActionHandler(action: string, handler: (() => void) | null): void;
+    };
+    try {
+      session.setActionHandler("enterpictureinpicture", () => openPip());
+    } catch {
+      return; // this Chrome doesn't offer it
+    }
+    return () => {
+      try {
+        session.setActionHandler("enterpictureinpicture", null);
+      } catch {
+        // Already gone.
+      }
+    };
+  }, [enabled, pip.supported]);
 }
 
 /** Who the small window shows: a shared screen, else whoever's talking, else someone. */
@@ -106,7 +144,7 @@ function mainOf(
 }
 
 const control =
-  "flex size-10 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white";
+  "flex size-10 items-center justify-center rounded-full outline-hidden focus-visible:focus-ring";
 
 /**
  * The meeting in the small window: the shared screen or whoever's talking, and Mute,
@@ -212,12 +250,11 @@ function MiniRoom({
           type="button"
           aria-label={handRaised ? t("hand.lower") : t("hand.raise")}
           title={handRaised ? t("hand.lower") : t("hand.raise")}
-          aria-pressed={handRaised}
           onClick={onToggleHand}
           className={cn(
             control,
             handRaised
-              ? "bg-[#f2b200] text-[#1b1500]"
+              ? "bg-hand text-hand-foreground"
               : "bg-white/10 hover:bg-white/15",
           )}
         >
@@ -228,7 +265,7 @@ function MiniRoom({
           aria-label={t("leave")}
           title={t("leave")}
           onClick={() => void media.leave()}
-          className={cn(control, "bg-destructive w-14 text-white")}
+          className={cn(control, "bg-destructive-fill w-14 text-white")}
         >
           <PhoneOff className="size-5" aria-hidden="true" />
         </button>

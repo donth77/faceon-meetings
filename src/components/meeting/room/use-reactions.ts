@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 
-import type { ReactionCode } from "@/lib/meetings/events";
+import { reactionName, type ReactionCode } from "@/lib/meetings/events";
 
+import { playSound } from "../chime";
 import type { RoomMedia } from "../media";
 
 export type LiveReaction = {
@@ -13,8 +15,7 @@ export type LiveReaction = {
   at: number;
 };
 
-/** A reaction floats for this long, and stays on the sender's tile a little longer. */
-export const FLOAT_MS = 3500;
+/** How long a reaction stays on its sender's tile (it floats for less: see globals.css). */
 export const BADGE_MS = 5000;
 /** At most this many float at once; older ones drop first. */
 const MAX_FLOATING = 30;
@@ -67,8 +68,8 @@ export function useReactions(
 }
 
 /**
- * Sends a reaction, at most one per half second and 10 per 10 seconds (receivers drop
- * the rest anyway). Returns false when throttled.
+ * Sends a reaction, at most one per 120 ms and 25 per 10 seconds, so quick bursts work
+ * as in Meet (receivers drop anything more). Returns false when throttled.
  */
 export function useReactionSender(send: RoomMedia["sendReaction"]) {
   const sent = useRef<number[]>([]);
@@ -151,3 +152,63 @@ export function useReactionAnnouncement(
 }
 
 type Timer = ReturnType<typeof setTimeout>;
+
+/**
+ * Reactions in the room: everyone's (others' only if Settings → Reactions shows them),
+ * a soft sound with each new one, what screen readers hear, and sending your own. With
+ * reactions turned off by a host, only hosts' get through.
+ */
+export function useRoomReactions({
+  media,
+  selfId,
+  isHost,
+  sentByHost,
+  nameOf,
+  showOthers,
+  announcements,
+}: {
+  media: RoomMedia;
+  selfId: string;
+  isHost: boolean;
+  sentByHost: (userId: string) => boolean;
+  nameOf: (userId: string) => string;
+  showOthers: boolean;
+  announcements: "off" | "summary" | "each";
+}) {
+  const t = useTranslations("Meeting");
+  const allowed = media.sessionState?.reactions ?? true;
+  const reactions = useReactions(
+    media.subscribeReactions,
+    (userId) => allowed || sentByHost(userId),
+  );
+  const send = useReactionSender(media.sendReaction);
+  const shown = useMemo(
+    () =>
+      showOthers
+        ? reactions
+        : reactions.filter((reaction) => reaction.userId === selfId),
+    [reactions, showOthers, selfId],
+  );
+  const news = useReactionAnnouncement(shown, selfId, announcements, {
+    summary: (count) => t("reactionsSummary", { count }),
+    each: (reaction) =>
+      t("reactionFrom", {
+        name: nameOf(reaction.userId),
+        reaction: t(`reactions.names.${reactionName(reaction.code)}`),
+      }),
+  });
+  const lastSounded = useRef(-1);
+  useEffect(() => {
+    const newest = shown.at(-1);
+    if (!newest || newest.id <= lastSounded.current) return;
+    lastSounded.current = newest.id;
+    playSound("reaction");
+  }, [shown]);
+
+  return {
+    shown,
+    news,
+    /** Null when a host has turned reactions off (hosts can still send them). */
+    send: allowed || isHost ? (code: ReactionCode) => void send(code) : null,
+  };
+}

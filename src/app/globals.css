@@ -96,9 +96,10 @@
   --sidebar-ring: #4d7eff;
 }
 
-/* Reactions float up and fade, as in Meet and Zoom; with reduced motion they only fade. */
+/* Reactions rise and fade, as in Meet and Zoom; with reduced motion they only fade. */
 @theme {
-  --animate-reaction-float: reaction-float 3.5s ease-out forwards;
+  /* In place, without rising: reduced motion, or Settings turning rising off. */
+  --animate-reaction-fade: reaction-fade 3.5s ease-out forwards;
   /* Reactions rise the stage's height (cqh: the container's), sway and wiggle. */
   --animate-reaction-rise: reaction-rise var(--rise-for, 4s)
     cubic-bezier(0.2, 0.6, 0.35, 1) forwards;
@@ -148,23 +149,6 @@
     }
     100% {
       transform: rotate(0deg);
-    }
-  }
-  @keyframes reaction-float {
-    0% {
-      transform: translateY(0) scale(0.8);
-      opacity: 0;
-    }
-    10% {
-      transform: translateY(-20px) scale(1);
-      opacity: 1;
-    }
-    75% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(-320px);
-      opacity: 0;
     }
   }
   @keyframes reaction-fade {
