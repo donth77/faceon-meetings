@@ -12,15 +12,21 @@ written in TypeScript, bundled with esbuild and pushed with [clasp](https://gith
 It's a thin client: every action is one call to FaceOn's API (`/api/addon/google/*`)
 with the person's Google identity token, and it keeps no data of its own.
 
-|                              |                                                           |
-| ---------------------------- | --------------------------------------------------------- |
-| `src/main.ts`                | Every handler Google calls (listed in `src/handlers.ts`)  |
-| `src/conference.ts`          | **FaceOn meeting** in Calendar                            |
-| `src/home.ts`                | The sidebar's homepage                                    |
-| `src/settings.ts`            | Calendar's settings link to FaceOn's Settings             |
-| `src/text.ts`, `src/i18n.ts` | Card text from `messages/<language>.json` (`GoogleAddon`) |
-| `appsscript.json`            | The manifest, filled in by the build for your copy        |
-| `build.mjs`                  | Builds `dist/Code.js` and `dist/appsscript.json`          |
+|                                               |                                                                             |
+| --------------------------------------------- | --------------------------------------------------------------------------- |
+| `src/main.ts`, `src/handlers.ts`              | Every handler Google calls; the build makes each a global function          |
+| `src/conference.ts`, `src/conference-plan.ts` | **FaceOn meeting** in Calendar: the conference data, or Google's error      |
+| `src/sync.ts`, `src/calendar-events.ts`       | The Calendar trigger that keeps FaceOn's meetings in step with their events |
+| `src/home.ts`, `src/compose.ts`               | The sidebar, and Gmail's **Insert a FaceOn meeting**                        |
+| `src/cards.ts`, `src/render.ts`               | The cards as plain values (tested), and as CardService cards                |
+| `src/api.ts`, `src/api-errors.ts`             | Calls to FaceOn's API, with the person's Google identity token              |
+| `src/settings.ts`                             | Calendar's settings link to FaceOn's Settings → Calendar                    |
+| `src/text.ts`, `src/i18n.ts`                  | Card text from `messages/<language>.json` (`GoogleAddon`)                   |
+| `appsscript.json`                             | The manifest, filled in by the build for your copy                          |
+| `build.mjs`                                   | Builds `dist/Code.js` and `dist/appsscript.json`                            |
+
+The API's request and response types are shared with FaceOn's server
+(`src/lib/addon/google/types.ts`).
 
 ## Build and push
 
@@ -33,4 +39,5 @@ Settings for the build (environment variables): `FACEON_URL`, `NEXT_PUBLIC_APP_N
 `FACEON_ADDON_LOGO_URL` and `FACEON_CONFERENCE_LOGO_URL` (Google asks for a conference
 logo it hosts).
 
-Setting up a test deployment for the first time is in [SPIKE.md](SPIKE.md).
+Setting it up the first time, and what to check then, is in [SPIKE.md](SPIKE.md).
+The checklist for each release is [QA.md](QA.md).

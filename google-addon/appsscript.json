@@ -17,15 +17,24 @@
   "urlFetchWhitelist": ["{{FACEON_URL}}/"],
   "dependencies": {
     "enabledAdvancedServices": [
-      { "userSymbol": "Calendar", "serviceId": "calendar", "version": "v3" }
+      {
+        "userSymbol": "Calendar",
+        "serviceId": "calendar",
+        "version": "v3"
+      }
     ]
   },
   "addOns": {
     "common": {
       "name": "{{APP_NAME}}",
       "logoUrl": "{{LOGO_URL}}",
-      "layoutProperties": { "primaryColor": "#1f5eff" },
-      "homepageTrigger": { "runFunction": "onHomepage", "enabled": true },
+      "layoutProperties": {
+        "primaryColor": "#1f5eff"
+      },
+      "homepageTrigger": {
+        "runFunction": "onHomepage",
+        "enabled": true
+      },
       "useLocaleFromApp": true
     },
     "calendar": {
@@ -39,6 +48,17 @@
       ],
       "createSettingsUrlFunction": "createSettingsUrl",
       "currentEventAccess": "READ_WRITE"
+    },
+    "gmail": {
+      "composeTrigger": {
+        "selectActions": [
+          {
+            "text": "Insert a {{APP_NAME}} meeting",
+            "runFunction": "onCompose"
+          }
+        ],
+        "draftAccess": "NONE"
+      }
     }
   }
 }

@@ -1,5 +1,10 @@
-import { CONFERENCE_SOLUTION_ID, FACEON_URL } from "./config";
-import { textFor } from "./i18n";
+import type { EventTiming } from "../../src/lib/addon/google/types";
+import { api } from "./api";
+import { CODE_PARAMETER, timingOf } from "./calendar-events";
+import { conferencePlan, type ConferencePlan } from "./conference-plan";
+import { CONFERENCE_SOLUTION_ID } from "./config";
+import { localeOf, textFor } from "./i18n";
+import { ensureSyncTrigger, rememberEvent } from "./sync";
 
 /** Calendar's conference-creation event (calendar.conferenceSolution.onCreateFunction). */
 export type ConferenceCreateEvent = {
@@ -7,70 +12,100 @@ export type ConferenceCreateEvent = {
 };
 
 /**
- * The spike: a stub "FaceOn meeting" that proves the conference solution shows up and
- * how Google calls it. It logs the identity token's claims (not the token) to the
- * project's executions, so `aud` and `sub` can be checked against what FaceOn's API
- * expects. An event titled "auth-test" returns the AUTHENTICATION error instead, to try
- * its sign-in link. The real conference (piece 3) replaces this.
+ * "FaceOn meeting" chosen in Calendar's Add video conferencing: FaceOn makes the meeting
+ * (or gives the one it already made for this event) and the event gets its join link,
+ * meeting ID and passcode. A new event Google hasn't saved yet gets its time on FaceOn's
+ * side when it is: the Calendar trigger set up here sends it.
  */
 export function onCreateConference(
   event: ConferenceCreateEvent,
 ): GoogleAppsScript.Conference_Data.ConferenceData {
-  const builder = ConferenceDataService.newConferenceDataBuilder();
-  logIdentityClaims();
-  const title = eventTitle(event);
-  if (title === "auth-test") {
-    return builder
-      .setError(
-        ConferenceDataService.newConferenceError()
-          .setConferenceErrorType(
-            ConferenceDataService.ConferenceErrorType.AUTHENTICATION,
-          )
-          .setAuthenticationUrl(
-            `${FACEON_URL}/sign-in?next=/settings/calendar`,
-          ),
-      )
-      .build();
+  const { calendarId, eventId } = event.eventData ?? {};
+  const t = textFor();
+  if (!calendarId || !eventId) {
+    return build({ kind: "error", type: "TEMPORARY" });
   }
-  const id = "spike-0000";
+  const timing = savedTiming(calendarId, eventId);
+  const result = api.createConference({
+    eventId,
+    calendarId,
+    locale: localeOf(),
+    ...(timing ? { event: timing } : {}),
+  });
+  if (
+    !result.ok &&
+    ["NOT_AVAILABLE", "INVALID_TOKEN"].includes(result.error.code)
+  ) {
+    // FaceOn doesn't accept this add-on's tokens yet: log what it needs to (SPIKE.md).
+    logIdentityClaims();
+  }
+  if (result.ok) {
+    rememberEvent(eventId, result.data.code);
+    try {
+      ensureSyncTrigger(calendarId);
+    } catch (error) {
+      // Without the trigger, later changes to the event don't reach FaceOn; the meeting works.
+      console.error(`Couldn't set up the Calendar trigger: ${String(error)}`);
+    }
+  }
+  return build(conferencePlan(result, t));
+}
+
+/** The event as Calendar has it saved; nothing while it's new and unsaved. */
+function savedTiming(
+  calendarId: string,
+  eventId: string,
+): EventTiming | undefined {
+  try {
+    const saved = Calendar?.Events?.get(calendarId, eventId);
+    return saved ? timingOf(saved as never) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function build(
+  plan: ConferencePlan,
+): GoogleAppsScript.Conference_Data.ConferenceData {
+  const builder = ConferenceDataService.newConferenceDataBuilder();
+  if (plan.kind === "error") {
+    const error =
+      ConferenceDataService.newConferenceError().setConferenceErrorType(
+        ConferenceDataService.ConferenceErrorType[plan.type],
+      );
+    if (plan.authenticationUrl)
+      error.setAuthenticationUrl(plan.authenticationUrl);
+    return builder.setError(error).build();
+  }
+  const video = ConferenceDataService.newEntryPoint()
+    .setEntryPointType(ConferenceDataService.EntryPointType.VIDEO)
+    .setUri(plan.joinUrl)
+    .setMeetingCode(plan.code);
+  if (plan.passcode) video.setPasscode(plan.passcode);
   return builder
     .setConferenceSolutionId(CONFERENCE_SOLUTION_ID)
-    .setConferenceId(id)
-    .addEntryPoint(
-      ConferenceDataService.newEntryPoint()
-        .setEntryPointType(ConferenceDataService.EntryPointType.VIDEO)
-        .setUri(`${FACEON_URL}/`)
-        .setMeetingCode(id),
+    .setConferenceId(plan.code)
+    .addEntryPoint(video)
+    .addConferenceParameter(
+      ConferenceDataService.newConferenceParameter()
+        .setKey(CODE_PARAMETER)
+        .setValue(plan.code),
     )
-    .setNotes(textFor(undefined)("conference.spike"))
+    .setNotes(plan.notes)
     .build();
 }
 
-function eventTitle(event: ConferenceCreateEvent): string | null {
-  const { calendarId, eventId } = event.eventData ?? {};
-  if (!calendarId || !eventId) return null;
-  try {
-    return Calendar?.Events?.get(calendarId, eventId).summary ?? null;
-  } catch {
-    // A new event isn't saved yet: Calendar knows only its ID.
-    return null;
-  }
-}
-
-/** The identity token's audience and subject, for the spike's checklist. */
+/**
+ * The identity token's audience and subject (not the token), in the project's
+ * executions: `aud` is what FaceOn's GOOGLE_ADDON_CLIENT_ID must be.
+ */
 function logIdentityClaims(): void {
-  const token = ScriptApp.getIdentityToken();
-  const payload = token.split(".")[1];
+  const payload = ScriptApp.getIdentityToken().split(".")[1];
   if (!payload) return;
   const claims = JSON.parse(
     Utilities.newBlob(Utilities.base64DecodeWebSafe(payload)).getDataAsString(),
   ) as Record<string, unknown>;
   console.log(
-    JSON.stringify({
-      aud: claims.aud,
-      sub: claims.sub,
-      iss: claims.iss,
-      email_verified: claims.email_verified,
-    }),
+    JSON.stringify({ aud: claims.aud, sub: claims.sub, iss: claims.iss }),
   );
 }

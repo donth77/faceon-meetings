@@ -1743,7 +1743,6 @@
   },
   "GoogleAddon": {
     "conference": {
-      "spike": "{appName} add-on test: this isn't a real meeting yet.",
       "note": "Meeting ID: {meetingId}",
       "notePasscode": "Meeting ID: {meetingId} · Passcode: {passcode}"
     },
@@ -1766,8 +1765,7 @@
       "title": "Your meeting",
       "ready": "Your meeting is ready. Join it now, or send the invitation.",
       "invitation": "Invitation",
-      "invitationHint": "Select the text to copy it.",
-      "back": "Back"
+      "invitationHint": "Select the text to copy it."
     },
     "signIn": {
       "title": "Sign in to {appName}",
@@ -1781,7 +1779,6 @@
       "unreachable": "{appName} can’t be reached right now.",
       "tryAgain": "Try again",
       "dailyLimit": "You’ve made as many meetings as {appName} allows in a day. Try again tomorrow.",
-      "unsupported": "{appName} can’t follow this event’s repeat yet. Choose a simpler repeat, or add {appName} to one event.",
       "limits": "About meeting limits",
       "notAvailable": "{appName} isn’t set up for Google Calendar and Gmail on this site."
     },
