@@ -20,6 +20,7 @@ import { ProviderError, type ProviderFailure } from "@/lib/notes/providers";
 import { useNotesSettings } from "@/lib/notes/settings";
 import {
   loadMadeNotes,
+  notesOutdated,
   saveMadeNotes,
   transcriptText,
   type MadeNotes,
@@ -79,6 +80,8 @@ export function useNotesMaker({
 
   /** Whether making notes can start now, without a trip to Settings. */
   const ready = canMakeNotes(settings, onDevice ?? "none");
+  /** Made before the last of the transcript (AI notes went on again since). */
+  const outdated = state.step === "done" && notesOutdated(state.made, lines);
 
   async function make() {
     running.current?.abort();
@@ -90,13 +93,18 @@ export function useNotesMaker({
     }
     setState({ step: "making", progress: null });
     setSaveState("idle");
+    // Chrome reports download progress while it loads a model it already has (0, then
+    // 1); only a real download is shown as one.
+    const downloads = engine === "onDevice" && onDevice !== "ready";
     const job = {
       locale,
       title,
       transcript: transcriptOf(),
       signal: controller.signal,
       onProgress: (progress: NotesProgress) => {
-        if (!controller.signal.aborted) setState({ step: "making", progress });
+        if (controller.signal.aborted) return;
+        if (progress.phase === "download" && !downloads) return;
+        setState({ step: "making", progress });
       },
     };
     try {
@@ -190,6 +198,7 @@ export function useNotesMaker({
     onDevice,
     provider: choice.provider,
     ready,
+    outdated,
     make,
     cancel,
     discard,

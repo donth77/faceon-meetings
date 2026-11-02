@@ -35,13 +35,17 @@ They start in the browser of whoever joins, as long as it can make notes (see Ho
 
 Each person's browser turns what _they_ say into text, on their own device, and sends only the text to the notetaker. Audio never leaves anyone's device for this, and nothing is transcribed while you're muted.
 
-This works in Chrome on a computer. The first time, Chrome may need a one-time download to transcribe your language: select **Download** when it asks. Where a browser can't transcribe on the device (Safari, Firefox and some phones), that person's words aren't in the notes, and the notetaker sees who's missing.
+This works in Chrome on a computer. The first time, Chrome needs a one-time download to turn your language into text: a few hundred MB, which it keeps. You can do it before a meeting, in **Settings**, then **AI notes** (**Transcription on this device**), or before you join a meeting that has AI notes on. In a meeting, select **AI notes on**, then **Download now**. Until it's done, what you say isn't in the notes, and the notetaker sees that you're waiting for it.
+
+Where a browser can't transcribe on the device (Safari, Firefox and some phones), that person's words aren't in the notes, and the notetaker sees who's missing.
+
+The transcript groups each person's words under their name and the time, starting a new paragraph when they pause for half a minute, and about every minute of talk.
 
 ## How the notes are made
 
-When the notetaker stops AI notes, or leaves, the notes are made from the transcript. Choose how in **Settings**, then **AI notes**:
+When the notetaker stops AI notes, or leaves, the notes are made from the transcript. If AI notes start again later, they're made again with everything. If the meeting's host turns AI notes off instead, they're made only when you select **Make notes**. Choose how in **Settings**, then **AI notes**:
 
-- **On this computer**: Chrome's built-in AI makes the notes on the notetaker's own computer. It's free, and nothing leaves the computer. The first time, Chrome downloads its AI, which can take a few minutes. It needs a recent Chrome on a computer with enough memory and disk space, and writes notes in English, Spanish or Japanese (in English for other languages).
+- **On this computer**: Chrome's built-in AI makes the notes on the notetaker's own computer. It's free, and nothing leaves the computer. The first time, Chrome downloads its AI, a few gigabytes that can take a while, and only once you select **Download and make notes**. It needs a recent Chrome on a computer with enough memory and disk space, and writes notes in English, Spanish or Japanese (in English for other languages).
 - **Your own AI key**: your AI provider (OpenAI, Anthropic, Google, DeepSeek or OpenRouter) makes the notes, with a key from your account with them. Your browser sends the transcript straight to the provider, and they bill you. Select **Test key** to check that it works.
 
 > **Your key stays in your browser.** {appName} never receives or stores it. Some providers' free plans may use what you send to improve their products, so check your provider's terms before using a free key for private meetings.

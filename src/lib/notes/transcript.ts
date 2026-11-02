@@ -43,7 +43,17 @@ export function addLine(
   return [...lines, line];
 }
 
-/** One speaker's turn: their lines in a row, shown and written together. */
+/** A pause this long starts a new block, even when the same person goes on. */
+export const BLOCK_PAUSE_MS = 30_000;
+/** A block runs this long at most, so a long stretch reads as paragraphs, each timed. */
+export const BLOCK_MAX_MS = 60_000;
+/** …and this many words at most. */
+export const BLOCK_MAX_WORDS = 120;
+
+/**
+ * A block of the transcript: one speaker's lines in a row, shown and written together
+ * under their name and the time, until they pause or it runs long.
+ */
 export type Turn = {
   key: string;
   speakerId: string;
@@ -52,26 +62,40 @@ export type Turn = {
   text: string;
 };
 
+const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
 export function turnsOf(lines: readonly TranscriptLine[]): Turn[] {
   const turns: Turn[] = [];
+  /** The block being added to: its last line's time, and its words so far. */
+  let open: { turn: Turn; lastAt: number; words: number } | null = null;
   for (const line of lines) {
-    const last = turns.at(-1);
-    if (last && last.speakerId === line.speakerId) {
-      last.text = `${last.text} ${line.text}`;
-    } else {
-      turns.push({
-        key: line.id,
-        speakerId: line.speakerId,
-        speaker: line.speaker,
-        at: line.at,
-        text: line.text,
-      });
+    const words = wordCount(line.text);
+    if (
+      open &&
+      open.turn.speakerId === line.speakerId &&
+      line.at - open.lastAt < BLOCK_PAUSE_MS &&
+      line.at - open.turn.at < BLOCK_MAX_MS &&
+      open.words + words <= BLOCK_MAX_WORDS
+    ) {
+      open.turn.text = `${open.turn.text} ${line.text}`;
+      open.lastAt = line.at;
+      open.words += words;
+      continue;
     }
+    const turn: Turn = {
+      key: line.id,
+      speakerId: line.speakerId,
+      speaker: line.speaker,
+      at: line.at,
+      text: line.text,
+    };
+    turns.push(turn);
+    open = { turn, lastAt: line.at, words };
   }
   return turns;
 }
 
-/** The transcript as plain text, one turn a paragraph: "Ana (10:02): …". */
+/** The transcript as plain text, one block a paragraph: "Ana (10:02): …". */
 export function transcriptText(
   lines: readonly TranscriptLine[],
   time: (at: number) => string,
@@ -108,6 +132,30 @@ export function saveTranscript(
   }
 }
 
+const turnedOffKey = (sessionId: string) =>
+  `faceon.transcript.${sessionId}.turnedOff`;
+
+/**
+ * The meeting's host turned AI notes off for their meetings while this tab had a
+ * transcript: notes are made from it only when asked, in the room or after it.
+ */
+export function markNotesTurnedOff(sessionId: string, off: boolean): void {
+  try {
+    if (off) sessionStorage.setItem(turnedOffKey(sessionId), "1");
+    else sessionStorage.removeItem(turnedOffKey(sessionId));
+  } catch {
+    // Without storage, notes after the meeting are made as usual.
+  }
+}
+
+export function notesTurnedOff(sessionId: string): boolean {
+  try {
+    return sessionStorage.getItem(turnedOffKey(sessionId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Notes made from the transcript in this tab: what they say, how, and when. */
 export const MadeNotes = z.object({
   notes: MeetingNotes,
@@ -119,6 +167,15 @@ export const MadeNotes = z.object({
   saved: z.object({ shared: z.boolean() }).optional(),
 });
 export type MadeNotes = z.infer<typeof MadeNotes>;
+
+/**
+ * Notes made before the last of the transcript: AI notes went on again after they were
+ * made, so they leave the rest out.
+ */
+export const notesOutdated = (
+  made: MadeNotes,
+  lines: readonly TranscriptLine[],
+): boolean => lines.some((line) => line.at > made.madeAt);
 
 const notesKey = (sessionId: string) => `faceon.notes.${sessionId}`;
 

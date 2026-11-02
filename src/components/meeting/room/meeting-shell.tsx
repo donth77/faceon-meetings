@@ -414,7 +414,7 @@ export function MeetingShell({
                     notes={notes.notes}
                     self={notes.transcription.state}
                     onOptOutChange={notes.transcription.setOptedOut}
-                    onDownload={() => void notes.transcription.download()}
+                    onDownload={() => void notes.downloadSpeech()}
                     onOpenNotes={
                       notes.canRunNotes ? () => openPanel("notes") : undefined
                     }

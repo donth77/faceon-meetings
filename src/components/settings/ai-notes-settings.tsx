@@ -18,6 +18,7 @@ import {
 } from "react-aria-components";
 import { toast } from "sonner";
 
+import { SpeechDownload } from "@/components/notes/speech-download";
 import {
   FIELD_POPOVER,
   INPUT,
@@ -296,6 +297,9 @@ export function AiNotesSettings({
       {notesInMeetings === undefined ? null : (
         <NotesInMeetings allowed={notesInMeetings} />
       )}
+      <SettingsCard title={t("speechTitle")}>
+        <SpeechDownload place="settings" />
+      </SettingsCard>
       <SettingsCard title={t("how")}>
         <RadioGroup
           aria-label={t("how")}

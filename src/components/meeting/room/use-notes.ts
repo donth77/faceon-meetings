@@ -1,6 +1,5 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import {
   useCallback,
   useEffect,
@@ -9,20 +8,19 @@ import {
   useState,
 } from "react";
 
+import { useSpeechLanguage } from "@/hooks/use-speech-language";
 import type { NotesState } from "@/lib/media/types";
 import {
   MAX_NOTES_LINE,
   type TranscriptionStatus,
 } from "@/lib/meetings/events";
 import {
-  installSpeech,
   speechApi,
-  speechLanguage,
-  speechSupport,
   startTranscribing,
-  type SpeechSupport,
+  transcriptionStatus,
   type Transcriber,
 } from "@/lib/notes/speech";
+import { downloadSpeech, useSpeechSetup } from "@/lib/notes/speech-setup";
 import {
   addLine,
   loadTranscript,
@@ -60,39 +58,19 @@ export function useTranscription({
   notes,
   onLine,
 }: {
-  media: Pick<RoomMedia, "mic" | "sendEvent" | "participants">;
+  media: Pick<RoomMedia, "mic" | "sendEvent" | "subscribeEvents">;
   notes: NotesState | null;
   /** Your own line, for the transcript when you're the notetaker. */
   onLine: (line: OwnLine) => void;
 }) {
-  const locale = useLocale();
-  const lang = speechLanguage(locale, navigator.languages);
+  const lang = useSpeechLanguage();
   const on = notes !== null;
   const [optedOut, setOptedOut] = useState(false);
-  const [support, setSupport] = useState<SpeechSupport | "checking">(
-    "checking",
-  );
+  // What this device can do, shared with pre-join and Settings → AI notes.
+  const support = useSpeechSetup(lang);
   const [failed, setFailed] = useState(false);
   const transcriber = useRef<Transcriber | null>(null);
   const { sendEvent } = media;
-
-  // What this device can do, asked once AI notes are on; while another tab downloads
-  // the language, asked again until it's ready.
-  useEffect(() => {
-    if (!on || (support !== "checking" && support !== "downloading")) return;
-    let cancelled = false;
-    const check = () =>
-      void speechSupport(speechApi(), lang).then((found) => {
-        if (!cancelled) setSupport(found);
-      });
-    if (support === "checking") check();
-    const timer =
-      support === "downloading" ? setInterval(check, 5000) : undefined;
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [on, support, lang]);
 
   const track = media.mic.enabled ? media.mic.track : null;
   const ready = on && !optedOut && support === "available" && !failed;
@@ -124,27 +102,27 @@ export function useTranscription({
   }, [ready, track, lang]);
 
   // Tell the notetaker whether you're in the notes: when that changes, when AI notes
-  // start, and when the notetaker (re)joins.
-  const status: TranscriptionStatus | null = !on
-    ? null
-    : optedOut
-      ? "optedOut"
-      : support === "checking"
-        ? null
-        : support === "available" && !failed
-          ? "on"
-          : "unsupported";
-  const notetakerJoined = Math.max(
-    0,
-    ...media.participants
-      .filter((p) => p.userId === notes?.by)
-      .map((p) => p.joinedAt),
-  );
+  // start, and when the notetaker's tab asks (it's started listening, or rejoined).
+  const status = on ? transcriptionStatus({ optedOut, support, failed }) : null;
   const startedAt = notes?.startedAt;
   useEffect(() => {
     if (status === null || startedAt === undefined) return;
     void sendEvent({ type: "notes.status", status }).catch(() => {});
-  }, [status, startedAt, notetakerJoined, sendEvent]);
+  }, [status, startedAt, sendEvent]);
+  const sayStatus = useEffectEvent((askedBy: string) => {
+    if (status === null || askedBy !== notes?.by) return;
+    void sendEvent({ type: "notes.status", status }).catch(() => {});
+  });
+  const { subscribeEvents } = media;
+  useEffect(
+    () =>
+      subscribeEvents((event, sender) => {
+        if (sender && event.type === "notes.statusRequest") {
+          sayStatus(sender.userId);
+        }
+      }),
+    [subscribeEvents],
+  );
 
   const state: SelfTranscription = !on
     ? "off"
@@ -167,14 +145,8 @@ export function useTranscription({
     if (value) transcriber.current?.stop("discard");
     setOptedOut(value);
   }, []);
-  /** The one-time download; the person asks for it. */
-  const download = useCallback(async () => {
-    setSupport("downloading");
-    const installed = await installSpeech(speechApi(), lang);
-    setSupport(
-      installed ? "available" : await speechSupport(speechApi(), lang),
-    );
-  }, [lang]);
+  /** The one-time download; the person asks for it. True once it's ready. */
+  const download = useCallback(() => downloadSpeech(lang), [lang]);
 
   return { state, optedOut, setOptedOut: optOut, download };
 }
@@ -189,7 +161,7 @@ export function useTranscript({
   collecting,
   self,
 }: {
-  media: Pick<RoomMedia, "subscribeEvents">;
+  media: Pick<RoomMedia, "subscribeEvents" | "sendEvent">;
   sessionId: string;
   /** You're the notetaker, and AI notes are on. */
   collecting: boolean;
@@ -202,13 +174,30 @@ export function useTranscript({
     Readonly<Record<string, TranscriptionStatus>>
   >({});
   const isCollecting = useEffectEvent(() => collecting);
-  const { subscribeEvents } = media;
+  const { subscribeEvents, sendEvent } = media;
+
+  // Starting to listen, everyone says again whether they're in the notes: what they said
+  // before this tab was listening (before a rejoin, say) never arrived.
+  useEffect(() => {
+    if (!collecting) return;
+    void sendEvent({ type: "notes.statusRequest" }).catch(() => {});
+  }, [collecting, sendEvent]);
 
   useEffect(
     () =>
       subscribeEvents((event, sender) => {
-        if (!sender || !isCollecting()) return;
-        if (event.type === "notes.line") {
+        if (!sender) return;
+        // Kept even before this tab knows it's taking the notes: everyone says it as the
+        // notetaker (re)joins, which can be before the session's state has arrived.
+        if (event.type === "notes.status") {
+          setStatuses((all) =>
+            all[sender.userId] === event.status
+              ? all
+              : { ...all, [sender.userId]: event.status },
+          );
+          return;
+        }
+        if (event.type === "notes.line" && isCollecting()) {
           setLines((list) =>
             addLine(list, {
               id: event.id,
@@ -218,12 +207,6 @@ export function useTranscript({
               at: Date.now(),
               lang: event.lang,
             }),
-          );
-        } else if (event.type === "notes.status") {
-          setStatuses((all) =>
-            all[sender.userId] === event.status
-              ? all
-              : { ...all, [sender.userId]: event.status },
           );
         }
       }),
