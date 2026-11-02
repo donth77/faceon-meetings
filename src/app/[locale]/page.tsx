@@ -1,5 +1,6 @@
 import { Video } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 
 import { Features } from "@/components/marketing/features";
 import { ProductShot } from "@/components/marketing/product-shot";
@@ -55,7 +56,18 @@ export default async function LandingPage() {
                 <JoinForm />
               </div>
             </div>
-            <p className="text-muted-foreground text-sm">{t("newHere")}</p>
+            <p className="text-muted-foreground text-sm">
+              {t.rich("newHere", {
+                link: (chunks) => (
+                  <Link
+                    href="/sign-up"
+                    className="text-primary focus-visible:focus-ring rounded-[2px] font-semibold underline-offset-4 outline-hidden hover:underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </p>
           </div>
           <div className="flex justify-center lg:justify-end">
             <ProductShot />
