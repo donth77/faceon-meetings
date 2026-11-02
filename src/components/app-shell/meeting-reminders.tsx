@@ -6,7 +6,11 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "sonner";
 
 import { subscribeMeetingsChanged } from "@/lib/meetings/changes";
-import { reminderKey, staleReminders } from "@/lib/meetings/reminders";
+import {
+  reminderKey,
+  remindersDue,
+  staleReminders,
+} from "@/lib/meetings/reminders";
 import {
   occurrencesAction,
   type OccurrenceRow,
@@ -155,8 +159,17 @@ export function MeetingReminders() {
   useEffect(() => {
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let cancelled = false;
+    /** The occurrences the last look found, to tell a changed meeting from the rest. */
+    let known = new Set<string>();
+    /** Occurrences first seen right after a change made here: no late reminder for them. */
+    const fresh = new Set<string>();
 
-    async function plan() {
+    /**
+     * Sets this tab's reminders. After a change made here (`changed`), a meeting that's
+     * new or moved gets no reminder whose time has already passed: whoever just
+     * scheduled it knows it's about to start.
+     */
+    async function plan(changed = false) {
       timers.forEach(clearTimeout);
       timers.clear();
       const minutes = withDefaults(loadPreferences()).reminderMinutes;
@@ -173,12 +186,19 @@ export function MeetingReminders() {
         toast.dismiss(key);
         void closeNotification(key);
       }
-      for (const row of rows) {
-        const start = new Date(row.start).getTime();
-        if (start <= Date.now()) continue;
-        // A reminder whose time has passed (FaceOn opened late) shows at once.
-        const wait = Math.max(0, start - minutes * 60_000 - Date.now());
-        if (wait > REFRESH_MS + 60_000) continue; // planned on a later look
+      const keys = rows.map(reminderKey);
+      if (changed) {
+        for (const key of keys) if (!known.has(key)) fresh.add(key);
+      }
+      known = new Set(keys);
+      for (const key of fresh) if (!known.has(key)) fresh.delete(key);
+      for (const { row, wait } of remindersDue({
+        rows,
+        now: Date.now(),
+        minutes,
+        horizon: REFRESH_MS + 60_000,
+        late: (row) => !fresh.has(reminderKey(row)),
+      })) {
         timers.add(setTimeout(() => remind(row), wait));
       }
     }
@@ -187,7 +207,7 @@ export function MeetingReminders() {
     const every = setInterval(() => void plan(), REFRESH_MS);
     // A meeting scheduled, moved or deleted (here or in another tab) is looked at now,
     // and so is the calendar when the tab comes back, rather than at the next look.
-    const stopChanges = subscribeMeetingsChanged(() => void plan());
+    const stopChanges = subscribeMeetingsChanged(() => void plan(true));
     const onVisible = () => {
       if (document.visibilityState === "visible") void plan();
     };

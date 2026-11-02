@@ -6,12 +6,14 @@
  */
 const EVENT = "faceon:meetings-changed";
 const CHANNEL = "faceon.meetings";
+/** This tab, so it hears its own changes once (the window event), not twice. */
+const TAB = Math.random().toString(36).slice(2);
 
 export function announceMeetingsChanged(): void {
   window.dispatchEvent(new Event(EVENT));
   try {
     const channel = new BroadcastChannel(CHANNEL);
-    channel.postMessage("changed");
+    channel.postMessage({ from: TAB });
     channel.close();
   } catch {
     // No BroadcastChannel: other tabs catch up at their next look.
@@ -24,7 +26,9 @@ export function subscribeMeetingsChanged(onChange: () => void): () => void {
   let channel: BroadcastChannel | null = null;
   try {
     channel = new BroadcastChannel(CHANNEL);
-    channel.onmessage = () => onChange();
+    channel.onmessage = (event: MessageEvent<{ from?: string }>) => {
+      if (event.data?.from !== TAB) onChange();
+    };
   } catch {
     channel = null;
   }
