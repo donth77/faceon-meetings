@@ -16,9 +16,12 @@ import { useRoomMedia, type RoomStatus } from "../media";
 import { useMeetingTitle } from "../meeting-title";
 import { AloneCard } from "./alone-card";
 import { AloneCheckDialog, useAloneCheck } from "./alone-check";
-import { ControlBar } from "./control-bar";
+import { ChatPanel } from "./chat-panel";
+import { ControlBar, type PanelName } from "./control-bar";
+import { ParticipantsPanel } from "./participants-panel";
 import { Stage, type LayoutChoice } from "./stage";
 import { TopBar } from "./top-bar";
+import { useChat } from "./use-chat";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
 
 /** Says when the connection drops and while it comes back. */
@@ -77,9 +80,32 @@ export function MeetingShell({
   /** Called before leaving because nobody else was here. */
   onAloneTimeout: () => void;
 }) {
+  const t = useTranslations("Meeting");
   const media = useRoomMedia();
   const title = useMeetingTitle(meeting);
   const [layout, setLayout] = useState<LayoutChoice>("auto");
+  const [panel, setPanel] = useState<PanelName | null>(null);
+  const chat = useChat({
+    media,
+    self,
+    isOpen: panel === "chat",
+    // A preview of each new message while the chat panel is closed, as in both apps.
+    onPreview: (message) =>
+      toast(message.senderName, {
+        description: message.text,
+        action: { label: t("chat.open"), onClick: () => openPanel("chat") },
+      }),
+  });
+
+  function openPanel(next: PanelName) {
+    setPanel(next);
+    if (next === "chat") chat.markRead();
+  }
+
+  function togglePanel(next: PanelName) {
+    if (panel === next) setPanel(null);
+    else openPanel(next);
+  }
   useMeetingShortcuts(media);
   const alone = media.participants.length === 1;
   const aloneCheck = useAloneCheck(alone, session.aloneTimeoutMinutes);
@@ -100,10 +126,21 @@ export function MeetingShell({
         onLayoutChange={setLayout}
       />
       <ConnectionBanner status={media.status} />
-      <main className="relative min-h-0 flex-1 px-3">
-        <Stage layout={layout} />
-        {alone ? <AloneCard meeting={meeting} /> : null}
-      </main>
+      <div className="flex min-h-0 flex-1 gap-3 px-3">
+        <main className="relative min-h-0 min-w-0 flex-1">
+          <Stage layout={layout} />
+          {alone ? <AloneCard meeting={meeting} /> : null}
+        </main>
+        {panel === "people" ? (
+          <ParticipantsPanel meeting={meeting} onClose={() => setPanel(null)} />
+        ) : panel === "chat" ? (
+          <ChatPanel
+            messages={chat.messages}
+            onSend={chat.send}
+            onClose={() => setPanel(null)}
+          />
+        ) : null}
+      </div>
       <AloneCheckDialog
         askedAt={aloneCheck.askedAt}
         minutes={session.aloneTimeoutMinutes ?? 0}
@@ -117,6 +154,9 @@ export function MeetingShell({
         title={title}
         isHost={self.role === "host"}
         onEndForAll={onEndForAll}
+        panel={panel}
+        onTogglePanel={togglePanel}
+        unreadChat={chat.unread}
       />
     </div>
   );

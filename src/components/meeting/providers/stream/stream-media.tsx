@@ -20,6 +20,7 @@ import {
 } from "react";
 
 import { deviceProblem } from "@/lib/device/problems";
+import { isReactionCode, RoomEvent } from "@/lib/meetings/events";
 
 import {
   RoomMediaProvider,
@@ -155,6 +156,49 @@ export function StreamMedia({
   const clockSkew =
     local && joinTimeOf(local) > 0 ? joinTimeOf(local) - joinedAt : 0;
 
+  // Stable for the life of the call, so subscribers don't resubscribe on every render.
+  const actions = useMemo<
+    Pick<
+      RoomMedia,
+      | "leave"
+      | "sendEvent"
+      | "subscribeEvents"
+      | "sendReaction"
+      | "subscribeReactions"
+    >
+  >(
+    () => ({
+      leave: async () => {
+        leaveReason.current = "left";
+        await call.leave();
+      },
+      sendEvent: async (event) => {
+        await call.sendCustomEvent(event);
+      },
+      subscribeEvents: (handler) =>
+        call.on("custom", (event) => {
+          const parsed = RoomEvent.safeParse(event.custom);
+          if (!parsed.success) return;
+          handler(parsed.data, {
+            userId: event.user.id,
+            name: event.user.name || event.user.id,
+            ...(event.user.image ? { image: event.user.image } : {}),
+          });
+        }),
+      sendReaction: async (code) => {
+        await call.sendReaction({ type: "reaction", emoji_code: code });
+      },
+      subscribeReactions: (handler) =>
+        call.on("call.reaction_new", (event) => {
+          const code = event.reaction.emoji_code;
+          if (isReactionCode(code)) {
+            handler({ userId: event.reaction.user.id, code });
+          }
+        }),
+    }),
+    [call],
+  );
+
   const media = useMemo<RoomMedia>(
     () => ({
       status: statusOf(callingState),
@@ -188,13 +232,10 @@ export function StreamMedia({
         enabled: !screenShare.optionsAwareIsMute,
         toggle: () => screenShare.screenShare.toggle(),
       },
-      leave: async () => {
-        leaveReason.current = "left";
-        await call.leave();
-      },
+      ...actions,
     }),
     [
-      call,
+      actions,
       callingState,
       clockSkew,
       participants,

@@ -2,6 +2,8 @@
 
 import { cn } from "cn";
 import {
+  Ellipsis,
+  MessageSquare,
   Mic,
   MicOff,
   MonitorUp,
@@ -139,14 +141,121 @@ function LeaveControl({
  * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
  * without labels.
  */
+export type PanelName = "people" | "chat";
+
+/** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
+function PanelButton({
+  icon: Icon,
+  label,
+  accessibleLabel,
+  badge,
+  badgeTone = "neutral",
+  active,
+  onPress,
+}: {
+  icon: LucideIcon;
+  label: string;
+  accessibleLabel: string;
+  badge: number | null;
+  badgeTone?: "neutral" | "brand";
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Button
+      aria-label={accessibleLabel}
+      aria-pressed={active}
+      onPress={onPress}
+      className="group flex w-24 flex-col items-center gap-1.5 rounded-xl px-0.5 py-1 outline-none"
+    >
+      <span
+        className={cn(
+          "group-focus-visible:ring-ring relative flex size-11 items-center justify-center rounded-full transition-colors group-focus-visible:ring-2",
+          active
+            ? "bg-secondary text-primary"
+            : "text-foreground bg-white/10 group-hover:bg-white/15",
+        )}
+      >
+        <Icon className="size-[22px]" aria-hidden="true" />
+        {badge !== null ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute -top-1 -right-2.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
+              badgeTone === "brand"
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground bg-[#3a424d]",
+            )}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-foreground/80 max-w-[94px] text-center text-xs leading-[15px]">
+        {label}
+      </span>
+    </Button>
+  );
+}
+
+/** On phones, Participants and Chat live in the More menu. */
+function MoreMenu({
+  peopleCount,
+  unreadChat,
+  onOpenPanel,
+}: {
+  peopleCount: number;
+  unreadChat: number;
+  onOpenPanel: (panel: PanelName) => void;
+}) {
+  const t = useTranslations("Meeting");
+  return (
+    <div className="flex md:hidden">
+      <DropdownMenuTrigger>
+        <Button
+          aria-label={t("more")}
+          className="text-foreground focus-visible:ring-ring relative flex size-14 items-center justify-center rounded-full bg-white/10 outline-none hover:bg-white/15 focus-visible:ring-2"
+        >
+          <Ellipsis className="size-6" aria-hidden="true" />
+          {unreadChat > 0 ? (
+            <span
+              aria-hidden="true"
+              className="bg-primary absolute top-1 right-1 size-2.5 rounded-full"
+            />
+          ) : null}
+        </Button>
+        <DropdownMenu placement="top end" className="min-w-56">
+          <DropdownMenuItem onAction={() => onOpenPanel("people")}>
+            <Users aria-hidden="true" />
+            {t("people.withCount", { count: peopleCount })}
+          </DropdownMenuItem>
+          <DropdownMenuItem onAction={() => onOpenPanel("chat")}>
+            <MessageSquare aria-hidden="true" />
+            {unreadChat > 0
+              ? t("chat.withUnread", { count: unreadChat })
+              : t("chat.title")}
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </DropdownMenuTrigger>
+    </div>
+  );
+}
+
 export function ControlBar({
   title,
   isHost,
   onEndForAll,
+  panel,
+  onTogglePanel,
+  unreadChat,
 }: {
   title: string;
   isHost: boolean;
   onEndForAll: () => void;
+  /** The side panel that's open, if any. */
+  panel: PanelName | null;
+  onTogglePanel: (panel: PanelName) => void;
+  unreadChat: number;
 }) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
@@ -218,13 +327,36 @@ export function ControlBar({
             onPress={() => void screenShare.toggle()}
           />
         ) : null}
+        <MoreMenu
+          peopleCount={count}
+          unreadChat={unreadChat}
+          onOpenPanel={onTogglePanel}
+        />
         <LeaveControl isHost={isHost} onEndForAll={onEndForAll} />
       </div>
 
-      <div className="text-foreground/80 flex flex-1 justify-end gap-2 pt-[18px] text-sm max-md:hidden">
-        <Users className="size-5" aria-hidden="true" />
-        <span aria-hidden="true">{count}</span>
-        <span className="sr-only">{t("participantCount", { count })}</span>
+      <div className="flex flex-1 items-start justify-end gap-0.5 max-md:hidden">
+        <PanelButton
+          icon={Users}
+          label={t("people.button")}
+          accessibleLabel={t("participantCount", { count })}
+          badge={count}
+          active={panel === "people"}
+          onPress={() => onTogglePanel("people")}
+        />
+        <PanelButton
+          icon={MessageSquare}
+          label={t("chat.title")}
+          accessibleLabel={
+            unreadChat > 0
+              ? t("chat.withUnread", { count: unreadChat })
+              : t("chat.title")
+          }
+          badge={unreadChat > 0 ? unreadChat : null}
+          badgeTone="brand"
+          active={panel === "chat"}
+          onPress={() => onTogglePanel("chat")}
+        />
       </div>
     </footer>
   );

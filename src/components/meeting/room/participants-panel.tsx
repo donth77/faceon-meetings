@@ -1,0 +1,134 @@
+"use client";
+
+import { Link2, Mic, MicOff, Search, VideoOff } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useId, useState } from "react";
+import { Button } from "react-aria-components";
+
+import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
+
+import { useInvitation } from "../invitation";
+import { useRoomMedia, type RoomParticipant } from "../media";
+import { SidePanel } from "./side-panel";
+import { orderParticipants } from "./stage";
+
+/** Guests' media identities start with "g_" (signed-in people have "u_"). */
+const isGuest = (participant: RoomParticipant) =>
+  participant.userId.startsWith("g_");
+
+function ParticipantRow({ participant }: { participant: RoomParticipant }) {
+  const t = useTranslations("Meeting.people");
+  const tags = [
+    participant.isLocal ? t("you") : null,
+    participant.isHost ? t("host") : null,
+    isGuest(participant) ? t("guest") : null,
+  ].filter(Boolean);
+
+  return (
+    <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
+      {participant.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={participant.image}
+          alt=""
+          className="size-8 shrink-0 rounded-full"
+        />
+      ) : (
+        <span className="size-8 shrink-0 rounded-full bg-white/10" />
+      )}
+      <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
+        <span className="truncate">{participant.name}</span>
+        {tags.length > 0 ? (
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {tags.join(", ")}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-muted-foreground flex items-center gap-2">
+        {participant.video ? null : (
+          <VideoOff className="size-[18px]" aria-label={t("videoOff")} />
+        )}
+        {participant.audio ? (
+          <Mic className="size-[18px]" aria-label={t("micOn")} />
+        ) : (
+          <MicOff
+            className="size-[18px] text-[#ff7a7d]"
+            aria-label={t("muted")}
+          />
+        )}
+      </span>
+    </li>
+  );
+}
+
+/** Participants: everyone in the meeting, searchable, with an Invite button. */
+export function ParticipantsPanel({
+  meeting,
+  onClose,
+}: {
+  meeting: AdmittedMeetingInfo;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Meeting.people");
+  const media = useRoomMedia();
+  const { copyInvitation } = useInvitation(meeting);
+  const searchId = useId();
+  const [query, setQuery] = useState("");
+
+  const everyone = orderParticipants(media.participants);
+  const q = query.trim().toLocaleLowerCase();
+  const shown = q
+    ? everyone.filter((p) => p.name.toLocaleLowerCase().includes(q))
+    : everyone;
+
+  return (
+    <SidePanel
+      title={t("title", { count: everyone.length })}
+      closeLabel={t("close")}
+      onClose={onClose}
+      footer={
+        <Button
+          onPress={() => void copyInvitation()}
+          className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+        >
+          <Link2 className="size-[18px]" aria-hidden="true" />
+          {t("invite")}
+        </Button>
+      }
+    >
+      <div className="relative shrink-0 px-4 pb-3">
+        <label htmlFor={searchId} className="sr-only">
+          {t("search")}
+        </label>
+        <Search
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-7 size-4 -translate-y-[calc(50%+6px)]"
+          aria-hidden="true"
+        />
+        <input
+          id={searchId}
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("search")}
+          className="bg-background focus-visible:ring-ring h-10 w-full rounded-[10px] border pr-3 pl-9 text-sm outline-none focus-visible:ring-2"
+        />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+        <h3 className="text-muted-foreground px-5 pb-1.5 text-xs font-bold tracking-[0.06em] uppercase">
+          {t("inMeeting")}
+        </h3>
+        {shown.length > 0 ? (
+          <ul>
+            {shown.map((participant) => (
+              <ParticipantRow key={participant.key} participant={participant} />
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground px-5 py-3 text-sm">
+            {t("noMatch")}
+          </p>
+        )}
+      </div>
+    </SidePanel>
+  );
+}

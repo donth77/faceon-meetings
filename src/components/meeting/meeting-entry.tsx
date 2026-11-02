@@ -272,7 +272,10 @@ export default function MeetingEntry({
     <>
       {content}
       <Toaster
-        {...(inRoom ? { theme: "dark" as const } : {})}
+        // In the room, toasts use the dark tokens too (the toaster sits outside its .dark).
+        {...(inRoom
+          ? { theme: "dark" as const, className: "toaster group dark" }
+          : {})}
         position={isMobile ? "top-center" : "bottom-left"}
         offset={inRoom && !isMobile ? { bottom: 104 } : undefined}
       />

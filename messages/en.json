@@ -289,6 +289,33 @@
       },
       "signInAction": "Sign in",
       "returnHome": "Return home"
+    },
+    "more": "More",
+    "people": {
+      "title": "Participants ({count})",
+      "button": "Participants",
+      "withCount": "Participants ({count})",
+      "close": "Close participants",
+      "search": "Find a participant",
+      "inMeeting": "In the meeting",
+      "noMatch": "Nobody here matches that name.",
+      "invite": "Invite",
+      "you": "You",
+      "host": "Host",
+      "guest": "Guest",
+      "videoOff": "Camera off",
+      "micOn": "Mic on",
+      "muted": "Muted"
+    },
+    "chat": {
+      "title": "Chat",
+      "withUnread": "Chat ({count, plural, one {# new message} other {# new messages}})",
+      "close": "Close chat",
+      "notice": "Messages are visible to everyone in the meeting and aren’t saved after it ends.",
+      "placeholder": "Message everyone",
+      "send": "Send message",
+      "you": "You",
+      "open": "Open"
     }
   },
   "PreJoin": {

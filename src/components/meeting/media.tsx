@@ -10,6 +10,11 @@ import { createContext, use, type ComponentType, type ReactNode } from "react";
 import type { DevicePreferences } from "@/lib/device/preferences";
 import type { DeviceProblem } from "@/lib/device/problems";
 import type { JoinInfo } from "@/lib/media/types";
+import type {
+  EventSender,
+  ReactionCode,
+  RoomEvent,
+} from "@/lib/meetings/events";
 
 export type ConnectionQuality = "good" | "poor" | "unknown";
 
@@ -61,6 +66,18 @@ export type RoomMedia = {
   };
   screenShare: { enabled: boolean; toggle: () => Promise<void> };
   leave: () => Promise<void>;
+
+  /** Sends a chat message or prompt to everyone in the meeting. */
+  sendEvent: (event: RoomEvent) => Promise<void>;
+  /** Events from others, already validated. Returns the unsubscribe function. */
+  subscribeEvents: (
+    handler: (event: RoomEvent, sender: EventSender) => void,
+  ) => () => void;
+  sendReaction: (code: ReactionCode) => Promise<void>;
+  /** Everyone's reactions, your own included. Returns the unsubscribe function. */
+  subscribeReactions: (
+    handler: (reaction: { userId: string; code: ReactionCode }) => void,
+  ) => () => void;
 };
 
 export type TrackViewProps = {
