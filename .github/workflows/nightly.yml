@@ -52,7 +52,9 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium firefox
       - name: Browser tests
-        run: pnpm test:e2e:nightly
+        # Firefox on Linux has no WebGL without a display, even headless; under Xvfb,
+        # Mesa draws it in software.
+        run: xvfb-run -a pnpm test:e2e:nightly
       - name: Keep the report and traces of a failure
         if: failure()
         uses: actions/upload-artifact@v7
