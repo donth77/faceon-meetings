@@ -35,7 +35,12 @@ export type HelpArticle = {
   body: string;
 };
 
-const ROOT = path.join(process.cwd(), "content", "help");
+/**
+ * A file or folder under content/help. The path is written out in full each time, so
+ * the build can tell exactly which files are read (and doesn't trace the whole project).
+ */
+const helpPath = (...parts: string[]) =>
+  path.join(process.cwd(), "content", "help", ...parts);
 function parse(slug: string, raw: string): HelpArticle {
   // Articles say {appName}; a self-hosted copy may go by another name.
   const { fields, body } = parseFrontMatter(
@@ -55,25 +60,30 @@ function parse(slug: string, raw: string): HelpArticle {
   };
 }
 
-/** The folder for a language's articles; English until a translation exists. */
-async function folderFor(locale: string): Promise<string> {
-  const own = path.join(ROOT, locale);
+/** The language whose articles to show; English until a translation exists. */
+async function languageFor(locale: string): Promise<string> {
   try {
-    if ((await readdir(own)).some((file) => file.endsWith(".md"))) return own;
+    const files = await readdir(helpPath(locale));
+    if (files.some((file) => file.endsWith(".md"))) return locale;
   } catch {
     // No translation yet.
   }
-  return path.join(ROOT, "en");
+  return "en";
 }
 
 /** Every help article in a language, in reading order (by category, then order). */
 export async function helpArticles(locale: string): Promise<HelpArticle[]> {
   "use cache";
-  const folder = await folderFor(locale);
-  const files = (await readdir(folder)).filter((file) => file.endsWith(".md"));
+  const language = await languageFor(locale);
+  const files = (await readdir(helpPath(language))).filter((file) =>
+    file.endsWith(".md"),
+  );
   const articles = await Promise.all(
     files.map(async (file) =>
-      parse(file.slice(0, -3), await readFile(path.join(folder, file), "utf8")),
+      parse(
+        file.slice(0, -3),
+        await readFile(helpPath(language, file), "utf8"),
+      ),
     ),
   );
   return articles.sort(

@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { AppFrame } from "@/components/app-shell/app-frame";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";

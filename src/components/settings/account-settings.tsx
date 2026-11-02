@@ -42,7 +42,7 @@ import {
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem } from "@/lib/auth/problems";
 import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
-import { SIGN_IN_ROUTE } from "@/lib/routes";
+import { signInPath } from "@/lib/routes";
 
 import { SettingsCard } from "./settings-nav";
 
@@ -567,7 +567,9 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
     setDeleting(true);
     const { error } = await deleteUser(hasPassword ? { password } : {});
     if (!error) {
-      window.location.assign("/");
+      // A full load, so nothing from the deleted account stays in memory, and Back
+      // doesn't return to its settings.
+      window.location.replace("/");
       return;
     }
     setDeleting(false);
@@ -583,9 +585,8 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
 
   async function signInAgain() {
     await signOut();
-    window.location.assign(
-      `${SIGN_IN_ROUTE}?next=${encodeURIComponent(ACCOUNT_ROUTE)}`,
-    );
+    // A full load after signing out, as above.
+    window.location.replace(signInPath(ACCOUNT_ROUTE));
   }
 
   return (
