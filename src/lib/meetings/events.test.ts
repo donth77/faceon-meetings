@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SharedSessionState } from "./events";
+import { MAX_NOTES_LINE, RoomEvent, SharedSessionState } from "./events";
 
 describe("SharedSessionState", () => {
   const stored = {
@@ -59,5 +59,38 @@ describe("SharedSessionState", () => {
       spotlight: null,
       notes: null,
     });
+  });
+});
+
+describe("RoomEvent", () => {
+  it("reads transcript lines for AI notes", () => {
+    const line = {
+      type: "notes.line",
+      id: "l1",
+      text: " Hello ",
+      lang: "en-US",
+    };
+    expect(RoomEvent.parse(line)).toEqual({ ...line, text: "Hello" });
+  });
+
+  it("refuses empty or overlong lines", () => {
+    const line = { type: "notes.line", id: "l1", lang: "en-US" };
+    expect(RoomEvent.safeParse({ ...line, text: "  " }).success).toBe(false);
+    expect(
+      RoomEvent.safeParse({ ...line, text: "x".repeat(MAX_NOTES_LINE + 1) })
+        .success,
+    ).toBe(false);
+  });
+
+  it("reads whether someone is in the notes", () => {
+    expect(
+      RoomEvent.parse({ type: "notes.status", status: "optedOut" }),
+    ).toEqual({
+      type: "notes.status",
+      status: "optedOut",
+    });
+    expect(
+      RoomEvent.safeParse({ type: "notes.status", status: "maybe" }).success,
+    ).toBe(false);
   });
 });

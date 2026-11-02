@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 
-import { lowerHandOnLeave, recordAttendance } from "@/lib/meetings/attendance";
+import {
+  recordAttendance,
+  tidyUpAfterLeaving,
+} from "@/lib/meetings/attendance";
 import { parseStreamWebhook, verifyStreamWebhook } from "@/lib/stream/server";
 
 /**
@@ -26,9 +29,10 @@ export async function POST(request: Request) {
   const event = parseStreamWebhook(payload);
   const result = await recordAttendance(deliveryId, event);
   if (result === "recorded" && event?.type === "left") {
-    // A hand left raised by someone who's gone would greet them when they come back.
-    await lowerHandOnLeave(event).catch((error: unknown) =>
-      console.error("Could not lower the hand of someone who left.", error),
+    // A hand left raised would greet them when they come back, and AI notes they were
+    // taking would have nobody to take them.
+    await tidyUpAfterLeaving(event).catch((error: unknown) =>
+      console.error("Could not tidy up after someone who left.", error),
     );
   }
   return new Response(null, { status: 200 });

@@ -30,10 +30,10 @@ export type JoinInfo = {
 
 export type TrackKind = "audio" | "video" | "screenshare" | "screenshare_audio";
 
-/** Shared session state every participant sees the same way. */
 /** AI notes are on: who turned them on, and when (ISO 8601). */
 export type NotesState = { by: string; name: string; startedAt: string };
 
+/** Shared session state every participant sees the same way. */
 export type SessionState = {
   rev: number;
   /** Nobody new can join. */

@@ -102,10 +102,14 @@ export async function pruneWebhookEvents(before: Date): Promise<number> {
 }
 
 /**
- * Someone left: their raised hand goes down once their last connection has gone, as in
- * Meet. (Another tab or device keeps it up.) Coming back, they start with it down.
+ * Someone's last connection left (another tab or device keeps them here):
+ * - their raised hand goes down, as in Meet, so coming back they start with it down;
+ * - AI notes they were taking stop for everyone, since only their browser held the
+ *   transcript.
  */
-export async function lowerHandOnLeave(event: AttendanceEvent): Promise<void> {
+export async function tidyUpAfterLeaving(
+  event: AttendanceEvent,
+): Promise<void> {
   if (event.type !== "left") return;
   // The event names the connection; its row says whose it was.
   const [left] = await db()
@@ -133,8 +137,11 @@ export async function lowerHandOnLeave(event: AttendanceEvent): Promise<void> {
     .where(eq(meetingSession.id, event.sessionId))
     .limit(1);
   if (!row || row.session.status !== "open") return;
-  if (!(left.mediaUserId in (row.session.hands ?? {}))) return;
-  await changeSession(readMeeting(row.meeting), row.session, {
-    lower: left.mediaUserId,
-  });
+  const theMeeting = readMeeting(row.meeting);
+  if (left.mediaUserId in (row.session.hands ?? {})) {
+    await changeSession(theMeeting, row.session, { lower: left.mediaUserId });
+  }
+  if (row.session.notes?.by === left.mediaUserId) {
+    await changeSession(theMeeting, row.session, { notes: null });
+  }
 }

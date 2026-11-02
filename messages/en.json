@@ -487,14 +487,30 @@
       "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
       "start": "Start AI notes",
       "stop": "Stop AI notes",
-      "onBy": "{name} turned on AI notes. Everyone sees that they're on.",
       "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
       "stopped": "AI notes are off.",
       "dontTranscribe": "Don't transcribe me",
       "dontTranscribeHelp": "What you say stays out of the notes",
       "open": "Open AI notes",
       "notInDemo": "AI notes aren't available in demo meetings.",
-      "failed": "Couldn't change AI notes. Try again."
+      "failed": "Couldn't change AI notes. Try again.",
+      "youTakeNotes": "You're taking notes. What everyone says appears here, transcribed on each person's device.",
+      "takingNotes": "{name} is taking notes. The transcript is in their browser.",
+      "transcript": "Transcript",
+      "transcriptEmpty": "Nothing said yet.",
+      "notTranscribed": "Not in the notes",
+      "personOptedOut": "{name} chose not to be transcribed.",
+      "personUnsupported": "{name}'s browser can't transcribe on their device.",
+      "download": "Download",
+      "downloadOffer": "To put what you say in the AI notes, your browser needs a one-time download for transcribing on this device.",
+      "self": {
+        "listening": "What you say goes into the notes. It's transcribed on this device.",
+        "muted": "What you say goes into the notes when you unmute.",
+        "optedOut": "What you say stays out of the notes.",
+        "download": "Your browser needs a one-time download to transcribe what you say on this device.",
+        "downloading": "Downloading what your browser needs to transcribe on this device…",
+        "unsupported": "This browser can't transcribe on your device, so what you say isn't in the notes. Chrome on a computer can."
+      }
     }
   },
   "PreJoin": {

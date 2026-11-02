@@ -43,7 +43,7 @@ import {
 } from "./host-dialogs";
 import { InCallSettings, type InCallSection } from "./in-call-settings";
 import { useRoomTransition } from "./motion";
-import { NotesChip, NotesPanel } from "./notes-panel";
+import { NotesChip, NotesPanel, type NotTranscribed } from "./notes-panel";
 import { ParticipantsPanel } from "./participants-panel";
 import { PictureInPicture, usePictureInPicture } from "./picture-in-picture";
 import { FloatingReactions } from "./reactions";
@@ -56,6 +56,7 @@ import { useChat } from "./use-chat";
 import { useHostNotices } from "./use-host-notices";
 import { useLobby } from "./use-lobby";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
+import { useTranscript, useTranscription } from "./use-notes";
 import {
   useReactionAnnouncement,
   useReactions,
@@ -234,9 +235,22 @@ export function MeetingShell({
   const nameOf = (userId: string) =>
     media.participants.find((p) => p.userId === userId)?.name ?? "";
 
-  // AI notes: everyone hears when they go on; anyone can stay out of the transcript.
+  // AI notes: everyone hears when they go on, and each device transcribes its own
+  // person unless they'd rather not. The notetaker's device collects the transcript.
   const notes = state?.notes ?? null;
-  const [notesOptOut, setNotesOptOut] = useState(false);
+  const isNotetaker = notes?.by === self.id;
+  const transcript = useTranscript({
+    media,
+    code: meeting.code,
+    collecting: isNotetaker,
+    self,
+  });
+  const transcription = useTranscription({
+    media,
+    notes,
+    onLine: transcript.addOwn,
+  });
+  const { setOptedOut, download } = transcription;
   const announcedNotes = useRef<string | null>(null);
   useEffect(() => {
     const key = notes ? `${notes.by}@${notes.startedAt}` : null;
@@ -253,10 +267,38 @@ export function MeetingShell({
       duration: 15_000,
       action: {
         label: t("notes.dontTranscribe"),
-        onClick: () => setNotesOptOut(true),
+        onClick: () => setOptedOut(true),
       },
     });
-  }, [notes, self.id, t]);
+  }, [notes, self.id, t, setOptedOut]);
+  // Where this browser needs its one-time speech download, offer it once.
+  const offeredDownload = useRef(false);
+  useEffect(() => {
+    if (transcription.state !== "download" || offeredDownload.current) return;
+    offeredDownload.current = true;
+    toast(t("notes.downloadOffer"), {
+      id: "notes-download",
+      duration: 20_000,
+      action: { label: t("notes.download"), onClick: () => void download() },
+    });
+  }, [transcription.state, t, download]);
+  // Who isn't in the notes, for the notetaker; you see your own state in the chip.
+  const notTranscribed: NotTranscribed[] = [];
+  for (const person of media.participants) {
+    const status = transcript.statuses[person.userId];
+    if (
+      person.userId === self.id ||
+      notTranscribed.some((p) => p.userId === person.userId) ||
+      (status !== "optedOut" && status !== "unsupported")
+    ) {
+      continue;
+    }
+    notTranscribed.push({
+      userId: person.userId,
+      name: person.name,
+      reason: status,
+    });
+  }
 
   async function setNotesOn(on: boolean) {
     try {
@@ -488,6 +530,9 @@ export function MeetingShell({
           key="notes"
           notes={notes}
           demo={session.demo}
+          isNotetaker={isNotetaker}
+          lines={transcript.lines}
+          notTranscribed={notTranscribed}
           onChange={setNotesOn}
           onClose={() => closePanel("notes")}
         />
@@ -543,8 +588,9 @@ export function MeetingShell({
               notes ? (
                 <NotesChip
                   notes={notes}
-                  optedOut={notesOptOut}
-                  onOptOutChange={setNotesOptOut}
+                  self={transcription.state}
+                  onOptOutChange={setOptedOut}
+                  onDownload={() => void download()}
                   onOpenNotes={isHost ? () => openPanel("notes") : undefined}
                 />
               ) : null
