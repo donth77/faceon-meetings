@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
@@ -14,6 +15,9 @@ import {
   setPreference,
   usePreferences,
 } from "@/lib/preferences";
+import { setEmailRemindersAction } from "@/lib/reminders/actions";
+import { EMAIL_REMINDER_MINUTES } from "@/lib/reminders/rules";
+import { viewerTimeZone } from "@/lib/time";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
@@ -26,12 +30,20 @@ const SOUNDS = [
 const POPUPS = ["popupChat", "popupHands", "popupLobby"] as const;
 type Switch = (typeof SOUNDS)[number] | (typeof POPUPS)[number];
 
+/** The account's email reminders, as the Settings page reads them: 0 is off. */
+export type EmailRemindersSetting = { minutes: number; email: string };
+
 /**
  * Settings → Notifications, as in Meet: which events make a sound, and which show a
  * pop-up. Everything is on to start; reactions have their own section. One switch
  * pauses them all and keeps each choice, which shows (unavailable) until it's back on.
+ * On the Settings page (not in a meeting), email reminders too, which are the account's.
  */
-export function NotificationsSettings() {
+export function NotificationsSettings({
+  emailReminders,
+}: {
+  emailReminders?: EmailRemindersSetting | undefined;
+}) {
   const t = useTranslations("Settings.notifications");
   const settings = chosenSettings(usePreferences());
   const paused = !settings.notifications;
@@ -62,6 +74,7 @@ export function NotificationsSettings() {
         </div>
       </SettingsCard>
       <Reminders paused={paused} />
+      {emailReminders ? <EmailReminders {...emailReminders} /> : null}
       <SettingsCard title={t("popups")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           {POPUPS.map(row)}
@@ -151,6 +164,49 @@ function Reminders({ paused }: { paused: boolean }) {
           </p>
         ) : null
       ) : null}
+    </SettingsCard>
+  );
+}
+
+/**
+ * Email reminders: the account's, sent by the server before meetings you host or are
+ * invited to, so they come wherever you are. Off to start; the time zone they give times
+ * in is this device's, saved with the choice.
+ */
+function EmailReminders({ minutes, email }: EmailRemindersSetting) {
+  const t = useTranslations("Settings.notifications.email");
+  const [chosen, setChosen] = useState(minutes);
+
+  async function choose(next: number) {
+    const before = chosen;
+    setChosen(next);
+    const saved = await setEmailRemindersAction({
+      minutes: next,
+      timeZone: viewerTimeZone(),
+    }).catch(() => false);
+    if (!saved) {
+      setChosen(before);
+      toast.error(t("saveFailed"));
+    }
+  }
+
+  return (
+    <SettingsCard title={t("title")}>
+      <div className="flex max-w-[440px] flex-col gap-1.5">
+        <SelectField
+          label={t("label")}
+          options={[0, ...EMAIL_REMINDER_MINUTES].map((value) => ({
+            id: String(value),
+            label:
+              value === 0 ? t("off") : t("before", { minutes: String(value) }),
+          }))}
+          value={String(chosen)}
+          onChange={(value) => void choose(Number(value))}
+        />
+        <span className="text-muted-foreground text-[13px]">
+          {t("help", { email })}
+        </span>
+      </div>
     </SettingsCard>
   );
 }

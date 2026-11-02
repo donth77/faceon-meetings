@@ -161,6 +161,14 @@ export const auth = betterAuth({
         input: false,
         returned: false,
       },
+      // Settings → Notifications: email reminders before meetings, when they're on
+      // (lib/reminders). Read from the database by the reminders and their setting.
+      emailReminders: {
+        type: "json",
+        required: false,
+        input: false,
+        returned: false,
+      },
     },
   },
   databaseHooks: {

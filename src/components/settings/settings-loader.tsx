@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 
 import { PanelLoading } from "@/components/app-shell/loading";
 
+import type { EmailRemindersSetting } from "./notifications-settings";
+
 const loading = () => <PanelLoading height="h-72" />;
 
 // These sections read this device's settings, devices and clock, so they render in the browser.
@@ -54,6 +56,7 @@ const Accessibility = dynamic(
 export function SettingsLoader({
   section,
   notesInMeetings,
+  emailReminders,
 }: {
   section:
     | "general"
@@ -67,6 +70,8 @@ export function SettingsLoader({
     | "desktop";
   /** Settings → AI notes: the account's switch for meetings you host. */
   notesInMeetings?: boolean;
+  /** Settings → Notifications: the account's email reminders (not in a meeting). */
+  emailReminders?: EmailRemindersSetting;
 }) {
   switch (section) {
     case "general":
@@ -78,7 +83,7 @@ export function SettingsLoader({
     case "reactions":
       return <Reactions />;
     case "notifications":
-      return <Notifications />;
+      return <Notifications emailReminders={emailReminders} />;
     case "effects":
       return <Effects />;
     case "aiNotes":

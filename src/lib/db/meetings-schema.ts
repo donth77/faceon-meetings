@@ -370,3 +370,26 @@ export const webhookEvent = pgTable("webhook_event", {
     .defaultNow()
     .notNull(),
 });
+
+/**
+ * Reminder emails sent: one per person and occurrence (the meeting's ID and the start
+ * reminded about), so each goes once however often the scheduler runs, and a moved
+ * occurrence gets a new one. Kept two days (retention.ts).
+ */
+export const reminderSent = pgTable(
+  "reminder_sent",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    meetingCode: text("meeting_code").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.meetingCode, table.startsAt],
+    }),
+    index("reminder_sent_sent_at").on(table.sentAt),
+  ],
+);

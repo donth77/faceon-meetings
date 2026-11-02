@@ -4,7 +4,14 @@ import { waitUntil } from "@vercel/functions";
 
 import { serverEnv } from "@/lib/server-env";
 
-export type Email = { to: string; subject: string; text: string; html: string };
+export type Email = {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  /** Extra headers, such as List-Unsubscribe on reminder emails. */
+  headers?: Record<string, string>;
+};
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
@@ -45,6 +52,7 @@ export async function sendEmail(email: Email): Promise<void> {
       subject: email.subject,
       text: email.text,
       html: email.html,
+      ...(email.headers ? { headers: email.headers } : {}),
     }),
   });
   if (!response.ok) {

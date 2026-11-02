@@ -26,6 +26,8 @@ export const user = pgTable("user", {
   avatarSource: text("avatar_source"),
   aiNotes: boolean("ai_notes").default(false).notNull(),
   scheduleDefaults: jsonb("schedule_defaults"),
+  /** Settings → Notifications: email reminders, when on (lib/reminders). */
+  emailReminders: jsonb("email_reminders"),
 });
 
 export const session = pgTable(

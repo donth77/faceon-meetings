@@ -16,6 +16,8 @@ export const KEEP_DAYS = {
   counters: 1,
   /** Requests to host full meetings, after an admin answered them. */
   hostingRequests: 90,
+  /** Records of reminder emails sent, after the meeting's start (so none goes twice). */
+  reminders: 2,
 } as const;
 
 /** The moment `days` days before `now`. */

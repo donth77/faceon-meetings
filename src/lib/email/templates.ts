@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { BRAND_COLORS } from "@/lib/brand";
 import { publicEnv } from "@/lib/env";
 
+import { escapeHtml } from "./html";
 import type { Email } from "./send";
 
 /**
@@ -21,14 +22,6 @@ export type AccountEmail =
   | "hostingAsked"
   | "hostingApproved"
   | "hostingDeclined";
-
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 
 /** The person's language when we know it and support it; otherwise the default. */
 export function emailLocale(user: object): Locale {

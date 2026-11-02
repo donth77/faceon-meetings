@@ -17,6 +17,7 @@ updated: 2026-11-02
 - Your **sign-in sessions**, with the IP address and browser each came from, so you stay signed in and sessions can be checked and ended.
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
 - The **options you last scheduled a meeting with**, such as its length, passcode on or off, and waiting room, so your next meeting starts from them. Never its title, people or passcode.
+- If you turn on **email reminders**: how long before a meeting they come, and the time zone their times are in. They go to your account's email address, before meetings you host or are invited to, and each one has the meeting's title, time, link, ID and passcode. To stop them, select the link at the foot of any reminder, or turn them off in **Settings**, under **Notifications**. {appName} keeps a short record of each reminder it sent (the meeting and its time), so none goes twice.
 - If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
 - If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when.
 
@@ -70,7 +71,7 @@ To slow down password and passcode guessing, {appName} counts recent attempts. S
 
 ## How {appName} uses it
 
-Only to run the service: to sign you in, connect your meetings, show your upcoming and past meetings, keep your Google Calendar up to date if you connect it, send the emails your account needs (like verifying your address or resetting your password), and protect {appName} and the people using it from abuse. Nothing is used for advertising or profiling.
+Only to run the service: to sign you in, connect your meetings, show your upcoming and past meetings, keep your Google Calendar up to date if you connect it, send the emails your account needs (like verifying your address or resetting your password) and the meeting reminders you turn on, and protect {appName} and the people using it from abuse. Nothing is used for advertising or profiling.
 
 If you're in the European Economic Area, the United Kingdom or somewhere with similar laws, {appName} relies on these grounds:
 
@@ -101,7 +102,7 @@ If you use {appName}'s app for Mac or Windows, it keeps on your computer its set
 - **Vercel** hosts the website and runs its server. Like any web host, it logs requests, including IP addresses, to run and protect the site.
 - **Neon** hosts the database.
 - **Stream** runs the meetings. It carries audio, video, screen sharing, chat and reactions, and the text for AI notes on its way to the host taking them. It keeps the name and picture each person uses in meetings and a record of each call and who was in it, and it handles the technical details needed to connect you, such as your IP address and connection quality.
-- **Resend** sends account emails, such as verifying your address or resetting your password.
+- **Resend** sends account emails, such as verifying your address or resetting your password, and the meeting reminder emails you turn on.
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
 - **GitHub** hosts the desktop app's downloads and updates. It sees your IP address when the app checks for an update or you download it.
 - **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations. **Google Workspace**, if you use {appName}'s add-on: Google runs it, as described above.
@@ -126,6 +127,7 @@ These services may handle your information in the United States and other countr
 - **Who joined and left**, and **saved AI notes**, are deleted after 90 days. Whoever saved notes, or the meeting's host, can delete them sooner.
 - **Waiting room requests and admission records** are deleted a week after the meeting. That someone was removed is kept as long as who joined (90 days).
 - **Attempt counters and sign-in limits** are deleted after a day.
+- **Records of reminder emails sent** are deleted two days after their meeting's start.
 - **Requests to host full meetings** are deleted 90 days after they're answered. An approved address stays approved until an admin moves it back to demo meetings, or you delete your account.
 - **A guest's cookie** expires 90 days after its last use.
 
@@ -135,6 +137,7 @@ When you **delete your account**, {appName} deletes your account, the meetings y
 
 - **See and change** your name, picture and sign-in methods in **Settings**, under **Account**.
 - **Disconnect Google Calendar** in **Settings**, under **Calendar**.
+- **Turn email reminders on or off** in **Settings**, under **Notifications**, or with the link in any reminder.
 - **Delete your account** and its data at any time, under **Account**.
 - **Ask** for a copy of your information, for a correction, or anything about this policy: {contact} {operator} answers within a month.
 

@@ -41,6 +41,8 @@ Choose which events make a sound (people joining and leaving, chat messages, rai
 
 **Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. On iPhone and iPad, notifications work once {appName} is on your Home Screen: see [Install {appName} as an app](/help/install-the-app). Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
 
+**Email reminders** are off until you choose how long before a meeting they come: 10 or 30 minutes, an hour or a day. They go to your account's email address for meetings you host or are invited to, wherever you are, with the meeting's time in your time zone, its link, ID and passcode. Each reminder has a link that turns them off. The pause switch at the top is for this device's sounds and pop-ups, so it doesn't stop them.
+
 ## Calendar
 
 Connect **Google Calendar**, and meetings you schedule go on your calendar, with Google emailing the people you invite. Your changes and cancellations reach everyone's calendar. Select **Disconnect** to stop: events already in your calendar stay there, but {appName} stops updating them. See [Schedule and repeat meetings](/help/schedule-meetings).

@@ -819,6 +819,20 @@
   },
   "Emails": {
     "linkFallback": "If the button doesn’t work, copy this link into your browser:",
+    "reminder": {
+      "subject": "Reminder: {title} starts {left}",
+      "heading": "{title} starts {left}",
+      "invited": "{host} is inviting you to a scheduled {appName} meeting.",
+      "hosting": "You’re hosting this {appName} meeting.",
+      "untitled": "{host}’s meeting",
+      "topic": "Topic: {title}",
+      "time": "Time: {when}",
+      "join": "Join {appName} meeting",
+      "meetingId": "Meeting ID: {code}",
+      "passcode": "Passcode: {passcode}",
+      "why": "You’re getting this because email reminders are on in {appName}’s Settings → Notifications.",
+      "stop": "Stop reminder emails"
+    },
     "verify": {
       "subject": "Confirm your email for {appName}",
       "heading": "Confirm your email",
@@ -1490,6 +1504,14 @@
         "blocked": "Your browser blocks {appName}’s notifications, so reminders show only in {appName}’s tab. Allow them in the site settings (the icon in the address bar).",
         "allowed": "Reminders also show as notifications from your browser.",
         "homeScreen": "On iPhone and iPad, reminders can show as notifications once {appName} is on your Home Screen. <link>How to add it</link>"
+      },
+      "email": {
+        "title": "Email reminders",
+        "label": "Email me before my meetings",
+        "off": "Don’t email me",
+        "before": "{minutes, select, 10 {10 minutes before} 30 {30 minutes before} 60 {1 hour before} other {1 day before}}",
+        "help": "Sent to {email}, for meetings you host or are invited to, with times in your time zone.",
+        "saveFailed": "Couldn’t save that. Try again."
       }
     },
     "desktop": {
@@ -1887,5 +1909,16 @@
       }
     },
     "help": "Questions about installing or signing in? <link>Get the desktop app</link> in Help covers them."
+  },
+  "Unsubscribe": {
+    "title": "Stop reminder emails?",
+    "body": "You won’t get emails before your meetings any more. You can turn them back on in Settings → Notifications.",
+    "stop": "Stop reminder emails",
+    "doneTitle": "Reminder emails are off",
+    "doneBody": "You won’t get emails before your meetings. Turn them back on any time in Settings → Notifications.",
+    "settings": "Open Settings",
+    "invalidTitle": "This link doesn’t work",
+    "invalidBody": "It may not have been copied in full. You can turn reminder emails off in Settings → Notifications.",
+    "failed": "Couldn’t turn them off. Try again."
   }
 }

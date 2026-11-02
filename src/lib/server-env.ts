@@ -43,8 +43,16 @@ const ServerEnv = z.object({
     .string()
     .regex(/^([\w.-]+\/[\w.-]+)?$/)
     .optional(),
-  /** Authorizes the scheduled sweep (sent as "Authorization: Bearer <secret>"). */
+  /**
+   * Authorizes the schedulers (sent as "Authorization: Bearer <secret>"): the daily sweep,
+   * and meeting reminder emails every few minutes.
+   */
   CRON_SECRET: z.string().optional(),
+  /**
+   * How many reminder emails a day at most, so account emails always fit within Resend's
+   * free plan (100 a day). Reminders past it wait, and are dropped once the meeting starts.
+   */
+  REMINDER_EMAILS_PER_DAY: z.coerce.number().int().min(0).default(50),
   /** Cloudflare Turnstile's secret key, with NEXT_PUBLIC_TURNSTILE_SITE_KEY (lib/human-check). */
   TURNSTILE_SECRET_KEY: z.string().optional(),
   /** Other hostnames whose Turnstile tokens a guest join accepts, comma-separated. */

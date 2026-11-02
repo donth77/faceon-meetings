@@ -217,7 +217,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 **Email** (optional): `RESEND_API_KEY` and `EMAIL_FROM`, from [step 7](#7-set-up-account-emails-resend-optional).
 
-**The daily cleanup:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)).
+**The daily cleanup and reminder emails:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)). `REMINDER_EMAILS_PER_DAY` is optional (50 by default).
 
 **Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
 
@@ -278,6 +278,18 @@ curl -H "Authorization: Bearer <CRON_SECRET>" https://faceon.example.com/api/cro
 ```
 
 It answers with what it did, such as `"closedSessions": 0`. Scheduled runs don't follow redirects, so the cleanup has to answer at your production address itself.
+
+### Reminder emails (optional)
+
+People with an account can turn on **Email me before my meetings** in Settings → Notifications. The emails need account emails set up ([step 7](#7-set-up-account-emails-resend-optional)) and something that calls `/api/cron/reminders` every 5 minutes. Vercel's free crons run only once a day, so use [cron-job.org](https://cron-job.org) (free):
+
+1. Create an account, then open **Settings → API**, create an API key, and put it in `.env.production.local` as `CRON_JOB_DOT_ORG_API_KEY`, with your production `CRON_SECRET` beside it. Both stay on your computer.
+2. Run `pnpm cron:setup --url https://faceon.example.com`. It creates a job called "FaceOn reminders" (with your app's name) that calls the endpoint every 5 minutes with your secret, and emails you if it starts failing. Run it again after changing the secret or the address; it updates the same job.
+3. A few minutes later, `pnpm cron:setup --check` shows its latest runs, each `HTTP 200`.
+
+You can also make the job in cron-job.org's site: a GET to `https://faceon.example.com/api/cron/reminders` every 5 minutes, with the header `Authorization: Bearer <CRON_SECRET>`.
+
+Each reminder goes once, soonest first, and at most `REMINDER_EMAILS_PER_DAY` a day (50 by default), which leaves room for account emails in Resend's free 100 a day. A reminder held back by that cap waits for the next run, and is dropped once its meeting starts. Every email has a link that turns them off, and mail apps offer the same in one click.
 
 ## 12. Use your own domain (optional)
 
@@ -470,7 +482,8 @@ Then:
 3. **Google:** in the OAuth client, add the new JavaScript origin and `https://<new domain>/api/auth/callback/google`. Update the home page, privacy policy, terms and authorized domains under **Branding**.
 4. **GitHub:** change the OAuth app's homepage and callback to `https://<new domain>/api/auth/callback/github`. It has only one callback, so Sign in with GitHub stops working at the old address.
 5. **Resend:** nothing changes, unless your email domain does too.
-6. **Installed apps** belong to the address they were installed from. People who added FaceOn to their home screen or dock add it again from the new address.
+6. **Reminder emails:** run `pnpm cron:setup --url https://<new domain>`, which points the job at the new address.
+7. **Installed apps** belong to the address they were installed from. People who added FaceOn to their home screen or dock add it again from the new address.
 
 ## Troubleshooting
 
@@ -497,6 +510,8 @@ Then:
 **Previous stays empty.** The webhook must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: FaceOn turns away deliveries it can't verify. Stream's dashboard shows webhook deliveries.
 
 **The cleanup returns 401.** Set `CRON_SECRET` in Vercel and redeploy.
+
+**cron-job.org shows the reminders job failing with 401.** The job's secret and Vercel's `CRON_SECRET` differ: run `pnpm cron:setup --url …` again with the value that's in Vercel.
 
 **The database stops answering.** Neon's free compute or data transfer for the month is used up. It comes back next month, or on a paid plan.
 

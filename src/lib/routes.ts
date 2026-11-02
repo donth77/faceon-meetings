@@ -35,11 +35,15 @@ export const MEETING_ROUTES = ["/j", "/join"] as const;
 /** The desktop app's pages in the browser (signing it in). */
 export const DESKTOP_ROUTES = ["/desktop"] as const;
 
+/** Where a reminder email's "Stop reminder emails" link lands; signed in or not. */
+export const UNSUBSCRIBE_ROUTE = "/unsubscribe";
+
 /** Everything that must stay out of search engines and AI crawlers. */
 export const NOINDEX_ROUTES = [
   ...AUTH_ROUTES,
   ...DESKTOP_ROUTES,
   VERIFY_EMAIL_ROUTE,
+  UNSUBSCRIBE_ROUTE,
   ...APP_ROUTES,
   ...MEETING_ROUTES,
 ] as const;
