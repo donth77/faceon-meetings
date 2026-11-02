@@ -21,10 +21,11 @@ You can sign in with Google, GitHub, or your email and a password, and use more 
 
 - **Connect** Google or GitHub. It must use the same email address as your account.
 - **Remove** a method you no longer use. You always keep at least one.
+- Connecting Google Calendar (**Settings**, then **Calendar**) also connects Google as a way to sign in. Removing Google disconnects Google Calendar too.
 - **Set a password** to sign in with your email, too, or **Change password**. Changing it signs you out on your other devices.
 
 ## Delete your account
 
-Select **Delete account**. This removes your meetings, notes and avatar for good, and people you invited can no longer join your meetings. If you haven't signed in recently, you'll be asked to sign in again first.
+Select **Delete account**. This removes your meetings, notes and avatar for good, and people you invited can no longer join your meetings. {appName} also gives up its access to your Google Calendar, if you connected it. If you haven't signed in recently, you'll be asked to sign in again first.
 
 The [privacy policy](/privacy) explains what's deleted with your account, and what's kept for a while.

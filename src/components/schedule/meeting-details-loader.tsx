@@ -11,6 +11,12 @@ const View = dynamic(
   { ssr: false, loading: () => <PanelLoading height="h-96" /> },
 );
 
-export function MeetingDetailsLoader({ details }: { details: MeetingDetails }) {
-  return <View details={details} />;
+export function MeetingDetailsLoader({
+  details,
+  viewerEmail,
+}: {
+  details: MeetingDetails;
+  viewerEmail: string;
+}) {
+  return <View details={details} viewerEmail={viewerEmail} />;
 }

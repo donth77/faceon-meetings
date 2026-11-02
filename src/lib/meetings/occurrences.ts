@@ -99,6 +99,14 @@ function hasStart(row: RuleRow, start: Date): boolean {
   );
 }
 
+/** The rule of a series that produces the occurrence planned for `start`, if any. */
+export function ruleWithStart<Rule extends RuleRow>(
+  rules: Rule[],
+  start: Date,
+): Rule | undefined {
+  return rules.find((rule) => hasStart(rule, start));
+}
+
 /**
  * A series' occurrences that overlap [from, to): its rules expanded in the meeting's time
  * zone, with cancelled ones dropped and moved ones moved. Capped at `limit`.
@@ -143,7 +151,7 @@ export function occurrencesBetween(input: {
     if (change.cancelled || !change.startsAt) continue;
     if (found.has(change.originalStart.getTime())) continue;
     if (change.startsAt >= to) continue;
-    const row = rules.find((r) => hasStart(r, change.originalStart));
+    const row = ruleWithStart(rules, change.originalStart);
     if (row) add(row, change.originalStart);
   }
 

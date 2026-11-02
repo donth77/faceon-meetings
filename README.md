@@ -7,6 +7,7 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 ## What it does (planned)
 
 - Instant and scheduled meetings (including recurring ones), a personal room, and joining by link or meeting ID
+- Invitations through Google Calendar: connect it once, and Google emails the people you invite and keeps their calendars up to date. Links for Google Calendar, Outlook and any calendar app (.ics) work without connecting
 - Guests join with just a name; passcodes, a waiting room and host controls keep meetings safe
 - Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
 - Background blur and backgrounds (paintings, places, moving backgrounds, or your own image or looping video), processed on your own device
@@ -47,6 +48,8 @@ Useful scripts:
 ## Deploy your own
 
 FaceOn is designed to run on free tiers. A step-by-step guide to deploying your own copy (Vercel, Stream and Neon accounts, plus every environment variable) will be added here as the features land. `.env.example` lists every variable.
+
+Google Calendar sync uses the same Google OAuth client as sign-in. Turn on the Google Calendar API in its Google Cloud project, and add the `https://www.googleapis.com/auth/calendar.events.owned` scope to its consent screen (Data access). The scope is sensitive: until Google verifies the app, only the test users listed on the consent screen can connect, and Google asks them to reconnect every 7 days. `GOOGLE_CALENDAR_SYNC=off` turns the feature off.
 
 Email and password accounts need email delivery: a free [Resend](https://resend.com) account with a verified sending domain (a subdomain of a domain you already own works), set as `RESEND_API_KEY` and `EMAIL_FROM`. Until both are set, production offers only Google and GitHub.
 

@@ -1,6 +1,6 @@
 ---
 title: Settings
-summary: Your language, times, theme, devices, AI notes and accessibility choices.
+summary: Your language, times, theme, devices, calendar, AI notes and accessibility choices.
 category: account
 order: 1
 ---
@@ -39,6 +39,10 @@ Choose which events make a sound (people joining and leaving, chat messages, rai
 **Sounds, pop-ups and reminders**, at the top, pauses them all at once, the reaction sound and meeting reminders too. Your other choices stay as they are and come back when you turn it on again. What screen readers hear about reactions doesn't change, and people asking to join still show under **Participants**.
 
 **Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
+
+## Calendar
+
+Connect **Google Calendar**, and meetings you schedule go on your calendar, with Google emailing the people you invite. Your changes and cancellations reach everyone's calendar. Select **Disconnect** to stop: events already in your calendar stay there, but {appName} stops updating them. See [Schedule and repeat meetings](/help/schedule-meetings).
 
 ## AI notes
 

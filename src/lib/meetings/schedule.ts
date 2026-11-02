@@ -4,6 +4,8 @@
  */
 import { z } from "zod";
 
+import type { CalendarOutcome } from "@/lib/google-calendar/shared";
+
 import { latestSeriesEnd, Recurrence } from "./recurrence";
 
 /** Invite up to this many people by email. */
@@ -31,6 +33,8 @@ export const ScheduleInput = z
     invitees: z
       .array(z.email().transform((email) => email.toLowerCase()))
       .max(MAX_INVITEES),
+    /** Add it to the host's Google Calendar, so Google invites people (Calendar sync). */
+    googleCalendar: z.boolean().default(false),
   })
   // A series ends within a few years of its start, as the form's date picker allows.
   .refine(
@@ -61,5 +65,13 @@ export type SeriesScope = z.infer<typeof SeriesScope>;
 export const OccurrenceRef = z.iso.datetime({ offset: true });
 
 export type ScheduleResult =
-  | { ok: true; code: string; passcode: string | null }
+  | {
+      ok: true;
+      code: string;
+      passcode: string | null;
+      /** How Google Calendar took it, for a synced meeting. */
+      calendar?: CalendarOutcome;
+    }
   | { ok: false; reason: "dailyLimit" | "invalid" | "notFound" };
+
+export type DeleteResult = { ok: boolean; calendar?: CalendarOutcome };

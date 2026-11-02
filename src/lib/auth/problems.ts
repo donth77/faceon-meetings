@@ -32,3 +32,16 @@ export function authProblem(error: {
       return error.status === 401 ? "wrongCredentials" : "generic";
   }
 }
+
+/**
+ * Why connecting Google or GitHub to an account failed, from the error it came back
+ * with ("email_does_not_match"; older Better Auth said "email_doesn't_match").
+ */
+export function linkProblem(
+  error: string,
+): "emailMismatch" | "alreadyLinked" | "generic" {
+  if (error.startsWith("email_does")) return "emailMismatch";
+  if (error === "account_already_linked_to_different_user")
+    return "alreadyLinked";
+  return "generic";
+}

@@ -37,7 +37,9 @@ const KEEP_AFTER_MS = 30 * DAY_MS;
 /** A series that never ends lasts this long past its last session, like Zoom's. */
 const OPEN_SERIES_MS = 365 * DAY_MS;
 
-export type Series = { rules: RuleRow[]; exceptions: ExceptionRow[] };
+/** A repeat rule as stored: each has an ID (Calendar sync keeps an event per rule). */
+export type SeriesRule = RuleRow & { id: string };
+export type Series = { rules: SeriesRule[]; exceptions: ExceptionRow[] };
 
 export class ScheduleError extends Error {
   constructor(readonly reason: "invalid" | "notFound") {
@@ -96,12 +98,14 @@ function checked(values: ScheduleValues): Date {
 /**
  * Creates a scheduled meeting, one-off or repeating, with the code and passcode the
  * form previewed. If that code was taken meanwhile, it's refused as invalid.
+ * `googleCalendar` marks it for Calendar sync, which makes its events afterwards.
  */
 export async function scheduleMeeting(input: {
   hostId: string;
   code: string;
   passcode: string;
   values: ScheduleValues;
+  googleCalendar: boolean;
 }): Promise<Meeting> {
   const { values } = input;
   const start = checked(values);
@@ -125,6 +129,7 @@ export async function scheduleMeeting(input: {
           durationMin: values.durationMin,
           timeZone: values.timeZone,
           expiresAt: expiryFor(start, values.durationMin, rules),
+          googleEvents: input.googleCalendar ? {} : null,
         })
         .returning();
     } catch (error) {
@@ -213,7 +218,8 @@ async function replaceInvitees(
 /**
  * Saves the schedule form over a meeting. For a series, `scope` says which meetings:
  * just one (an exception), it and the ones after it (a new rule from there), or all.
- * Settings, invitees and the passcode always apply to the whole meeting.
+ * Settings, invitees and the passcode always apply to the whole meeting, and so does
+ * `googleCalendar`, which starts Calendar sync (it's never turned off here).
  */
 export async function updateSchedule(input: {
   row: Meeting;
@@ -221,6 +227,7 @@ export async function updateSchedule(input: {
   scope: SeriesScope;
   /** The occurrence being edited (its planned start), for "this" and "following". */
   occurrence: Date | null;
+  googleCalendar: boolean;
 }): Promise<void> {
   const { row, values, scope, occurrence } = input;
   const start = checked(values);
@@ -236,6 +243,9 @@ export async function updateSchedule(input: {
       description: values.description || null,
       passcode,
       settings: settingsFrom(values),
+      ...(input.googleCalendar
+        ? { googleEvents: sql`coalesce(${meeting.googleEvents}, '{}'::jsonb)` }
+        : {}),
     };
 
     if (isSeries && scope === "this" && occurrence) {
@@ -515,6 +525,8 @@ export type MeetingDetails = {
   rrule: string | null;
   next: DetailsOccurrence[];
   invitees: Array<{ email: string; name: string | null; image: string | null }>;
+  /** The host keeps it in their Google Calendar (Calendar sync); host only. */
+  onGoogleCalendar: boolean;
   settings: Pick<
     MeetingSettings,
     "waitingRoom" | "allowGuests" | "muteOnEntry" | "joinBeforeHost"
@@ -621,6 +633,7 @@ export async function meetingDetails(input: {
         image: person ? avatarUrl(person) : null,
       };
     }),
+    onGoogleCalendar: isHost && row.googleEvents !== null,
     settings: {
       waitingRoom: row.settings.waitingRoom,
       allowGuests: row.settings.allowGuests,

@@ -1010,7 +1010,22 @@
     "calendar": {
       "title": "Calendar",
       "google": "Google Calendar",
-      "comingSoon": "Connecting Google Calendar is on its way. Until then, each meeting’s page has buttons to add it to Google Calendar, Outlook or any calendar app."
+      "unavailable": "Each meeting’s page has buttons to add it to Google Calendar, Outlook or any calendar app.",
+      "connectTitle": "Add meetings to your Google Calendar",
+      "connectBody": "Connect once, and Google emails the people you invite. If you change or cancel a meeting, everyone’s calendar updates. FaceOn only touches the events it makes.",
+      "alsoSignIn": "Connecting also lets you sign in with that Google account.",
+      "connectedBody": "When you schedule a meeting, leave “Add to my Google Calendar and send invitations” on. Google sends the invitations, and your changes reach everyone’s calendar.",
+      "reconnectTitle": "Reconnect Google Calendar",
+      "reconnectBody": "Google stopped FaceOn’s access to your calendar. Until Google verifies FaceOn’s calendar access, it asks again every 7 days. Your meetings are still saved here.",
+      "disconnect": "Disconnect",
+      "disconnectTitle": "Disconnect Google Calendar?",
+      "disconnectBody": "Events already in your calendar stay there, but FaceOn stops updating them. You can connect again any time.",
+      "cancel": "Cancel",
+      "disconnected": "Google Calendar disconnected",
+      "disconnectFailed": "Couldn’t disconnect Google Calendar. Try again.",
+      "otherCalendars": "Each meeting’s page also has buttons to add it to Outlook or any calendar app.",
+      "popupConnected": "Google Calendar is connected. You can close this window.",
+      "popupNotConnected": "Google Calendar wasn’t connected. You can close this window and try again."
     },
     "effects": {
       "title": "Backgrounds and effects",
@@ -1172,6 +1187,36 @@
         "blocked": "Your browser blocks FaceOn’s notifications, so reminders show only in FaceOn’s tab. Allow them in the site settings (the icon in the address bar).",
         "allowed": "Reminders also show as notifications from your browser."
       }
+    }
+  },
+  "GoogleCalendar": {
+    "add": "Add to my Google Calendar and send invitations",
+    "addHelp": "Google sends the invitations. If you change or cancel the meeting, everyone’s calendar updates.",
+    "connectedAs": "Connected as {email}",
+    "connect": "Connect Google Calendar",
+    "connectHelp": "Connect Google Calendar once, and Google emails the people you invite.",
+    "reconnect": "Reconnect Google Calendar",
+    "reconnectHelp": "Google stopped FaceOn’s access to your calendar. Reconnect so FaceOn can keep it up to date.",
+    "connected": "Google Calendar connected",
+    "onCalendar": "On your Google Calendar",
+    "onCalendarHelp": "Saving updates it, and Google emails everyone invited.",
+    "onCalendarNote": "On your Google Calendar. Google emails updates to everyone invited.",
+    "added": "Added to your Google Calendar.",
+    "addedInvited": "Added to your Google Calendar. Google emailed the invitation to {count, plural, one {# person} other {# people}}.",
+    "addFailed": "Couldn’t add it to Google Calendar. The meeting is saved, and the calendar links below still work.",
+    "addReconnect": "Reconnect Google Calendar to add it there and send the invitations. The meeting is saved.",
+    "updated": "Google Calendar updated too.",
+    "removed": "Removed from Google Calendar too.",
+    "updateFailed": "Couldn’t update Google Calendar",
+    "updateReconnect": "Reconnect Google Calendar to update it",
+    "retry": "Retry",
+    "retried": "Google Calendar updated",
+    "problems": {
+      "emailMismatch": "That Google account uses a different email. Connect the one that uses {email}.",
+      "alreadyLinked": "That Google account is connected to a different FaceOn account.",
+      "denied": "Google Calendar wasn’t connected.",
+      "scope": "Google Calendar wasn’t connected: FaceOn needs permission to make events in your calendar. Try again and allow it.",
+      "generic": "Couldn’t connect Google Calendar. Try again."
     }
   },
   "Legal": {

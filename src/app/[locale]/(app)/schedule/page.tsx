@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import type { ScheduleFormValues } from "@/components/schedule/schedule-form";
 import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
+import { calendarConnection } from "@/lib/google-calendar/connection";
 import { findMeetingByCode } from "@/lib/meetings/queries";
 import { newScheduleDraft } from "@/lib/meetings/schedule-draft";
 import { inviteesOf } from "@/lib/meetings/scheduling";
@@ -57,6 +58,11 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
   return (
     <ScheduleFormLoader
       hostName={session.user.name}
+      calendar={{
+        connection: await calendarConnection(session.user),
+        email: session.user.email,
+        synced: false,
+      }}
       draft={draft}
       initial={initial}
     />

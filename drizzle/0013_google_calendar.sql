@@ -1,0 +1,1 @@
+ALTER TABLE "meeting" ADD COLUMN "google_events" jsonb;

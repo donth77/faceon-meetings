@@ -17,6 +17,8 @@ import {
   type AccountEmail,
 } from "@/lib/email/templates";
 import { publicEnv } from "@/lib/env";
+import { refreshGoogleToken } from "@/lib/google-calendar/refresh";
+import { hasCalendarScope } from "@/lib/google-calendar/shared";
 import { siteUrl } from "@/lib/site";
 
 import { dropUnverifiedPassword } from "./linking";
@@ -25,6 +27,13 @@ import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
 /** Production origin. Preview deployments send OAuth through it (oAuthProxy). */
 const productionUrl = siteUrl();
+
+/** Calendar sync reads its tokens through `auth`, so the hooks load it when they run. */
+const googleCalendar = () => import("@/lib/google-calendar/connection");
+const revokeGoogleCalendar = async (userId: string) =>
+  (await googleCalendar()).revokeGoogleCalendar(userId);
+const disconnectGoogleCalendar = async (userId: string) =>
+  (await googleCalendar()).disconnectGoogleCalendar(userId);
 
 /** Sends an account email to a user, in their language, after the response. */
 function emailUser(
@@ -54,9 +63,12 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db(), { provider: "pg", schema }),
   socialProviders: {
+    // Sign-in asks only for openid, email and profile. Calendar sync adds its scope later,
+    // when a host connects Google Calendar (incremental consent through linkSocial).
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      refreshAccessToken: refreshGoogleToken,
     },
     github: {
       clientId: process.env.GITHUB_CLIENT_ID ?? "",
@@ -105,10 +117,14 @@ export const auth = betterAuth({
   },
   user: {
     // Settings → Account → Delete account; a recent sign-in (or the password) confirms it.
-    // Meetings go with the user (foreign keys); calls in progress end first.
+    // Meetings go with the user (foreign keys); calls in progress end first, and Google
+    // Calendar access is revoked.
     deleteUser: {
       enabled: true,
-      beforeDelete: async (deleted) => endHostedCalls(deleted.id),
+      beforeDelete: async (deleted) => {
+        await endHostedCalls(deleted.id);
+        await revokeGoogleCalendar(deleted.id);
+      },
       afterDelete: async (deleted) => forgetMediaUser(deleted.id),
     },
     additionalFields: {
@@ -131,6 +147,17 @@ export const auth = betterAuth({
         before: async (created) => {
           if (created.providerId !== "credential") {
             await dropUnverifiedPassword(created.userId);
+          }
+        },
+      },
+      delete: {
+        // Removing Google as a sign-in method also disconnects Google Calendar.
+        before: async (removed) => {
+          if (
+            removed.providerId === "google" &&
+            hasCalendarScope(removed.scope)
+          ) {
+            await disconnectGoogleCalendar(removed.userId);
           }
         },
       },

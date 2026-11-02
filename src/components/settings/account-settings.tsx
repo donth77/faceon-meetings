@@ -41,7 +41,7 @@ import {
   unlinkAccount,
 } from "@/lib/auth/client";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
-import { authProblem } from "@/lib/auth/problems";
+import { authProblem, linkProblem } from "@/lib/auth/problems";
 import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
 import { publicEnv } from "@/lib/env";
 import { signInPath } from "@/lib/routes";
@@ -373,16 +373,6 @@ const PROVIDERS = [
   { id: "google", name: "Google", Icon: GoogleIcon },
   { id: "github", name: "GitHub", Icon: GitHubIcon },
 ] as const;
-
-/** Why connecting Google or GitHub failed, from the error the page came back with. */
-function linkProblem(
-  error: string,
-): "emailMismatch" | "alreadyLinked" | "generic" {
-  if (error.startsWith("email_doesn")) return "emailMismatch";
-  if (error === "account_already_linked_to_different_user")
-    return "alreadyLinked";
-  return "generic";
-}
 
 function SignIn({
   account,

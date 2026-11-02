@@ -32,5 +32,7 @@ async function Details({
   const session = await requireSession(`/meetings/${code}`);
   const details = await meetingDetails({ code, viewer: session.user });
   if (!details) notFound();
-  return <MeetingDetailsLoader details={details} />;
+  return (
+    <MeetingDetailsLoader details={details} viewerEmail={session.user.email} />
+  );
 }

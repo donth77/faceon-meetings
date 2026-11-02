@@ -17,6 +17,11 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import { GoogleCalendarField } from "@/components/google-calendar/calendar-field";
+import {
+  CalendarOutcomeNote,
+  useCalendarProblemToast,
+} from "@/components/google-calendar/outcome";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +40,10 @@ import {
   SelectField,
   SwitchRow,
 } from "@/components/ui/form-fields";
+import type {
+  CalendarConnection,
+  CalendarOutcome,
+} from "@/lib/google-calendar/shared";
 import type { Recurrence } from "@/lib/meetings/recurrence";
 import type {
   ScheduleDraft,
@@ -69,6 +78,17 @@ export type ScheduleFormValues = {
   allowGuests: boolean;
   joinBeforeHost: boolean;
   muteOnEntry: boolean;
+  /** Add it to the host's Google Calendar (Calendar sync). */
+  googleCalendar: boolean;
+};
+
+/** The host's Google Calendar, for the form's "Add to my Google Calendar" row. */
+export type ScheduleCalendar = {
+  connection: CalendarConnection;
+  /** The host's email, so Google's consent screen offers the matching account. */
+  email: string;
+  /** Editing a meeting that's already on the calendar. */
+  synced: boolean;
 };
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360, 480];
@@ -97,6 +117,7 @@ export function defaultValues(): ScheduleFormValues {
     allowGuests: true,
     joinBeforeHost: false,
     muteOnEntry: false,
+    googleCalendar: false,
   };
 }
 
@@ -139,6 +160,7 @@ const toInput = (values: ScheduleFormValues): ScheduleInput => ({
   joinBeforeHost: values.joinBeforeHost && !values.waitingRoom,
   muteOnEntry: values.muteOnEntry,
   invitees: values.invitees,
+  googleCalendar: values.googleCalendar,
 });
 
 function InvitationCard({
@@ -201,9 +223,14 @@ function InvitationCard({
 /** "Meeting scheduled": the link, the invitation, and Add to calendar. */
 function ScheduledDialog({
   meeting,
+  calendar,
+  email,
   onDone,
 }: {
   meeting: ScheduledMeeting;
+  /** What Google Calendar did with it, when the host added it there. */
+  calendar: CalendarOutcome | undefined;
+  email: string;
   onDone: () => void;
 }) {
   const t = useTranslations("Schedule");
@@ -236,6 +263,18 @@ function ScheduledDialog({
           </span>
         ) : null}
       </div>
+      {calendar ? (
+        <CalendarOutcomeNote
+          outcome={calendar}
+          code={meeting.code}
+          invited={
+            meeting.invitees.filter(
+              (invitee) => invitee !== email.toLowerCase(),
+            ).length
+          }
+          email={email}
+        />
+      ) : null}
       <div className="flex flex-col gap-1.5">
         <label htmlFor={linkId} className="text-sm font-semibold">
           {t("meetingLink")}
@@ -315,11 +354,13 @@ function ScheduledDialog({
  */
 export function ScheduleForm({
   hostName,
+  calendar,
   draft,
   initial,
   edit,
 }: {
   hostName: string;
+  calendar: ScheduleCalendar;
   /** New meetings: the ID and passcode the invitation previews. */
   draft?: ScheduleDraft;
   /** New meetings: values to start from (Schedule again). */
@@ -334,15 +375,26 @@ export function ScheduleForm({
   };
 }) {
   const t = useTranslations("Schedule");
+  const tc = useTranslations("GoogleCalendar");
   const locale = useIntlLocale();
   const router = useRouter();
+  const showCalendarProblem = useCalendarProblemToast(calendar.email);
   const ids = { title: useId(), date: useId(), description: useId() };
   const [values, setValues] = useState<ScheduleFormValues>(
-    () => edit?.values ?? { ...defaultValues(), ...initial },
+    () =>
+      edit?.values ?? {
+        ...defaultValues(),
+        // Once Google Calendar is connected, new meetings go on it unless switched off.
+        googleCalendar: calendar.connection.status === "connected",
+        ...initial,
+      },
   );
   const [saving, setSaving] = useState(false);
   const [scoping, setScoping] = useState(false);
-  const [scheduled, setScheduled] = useState<string | null>(null);
+  const [scheduled, setScheduled] = useState<{
+    code: string;
+    calendar: CalendarOutcome | undefined;
+  } | null>(null);
   const set = (patch: Partial<ScheduleFormValues>) =>
     setValues((current) => ({ ...current, ...patch }));
 
@@ -384,10 +436,13 @@ export function ScheduleForm({
         return;
       }
       if (edit) {
-        toast.success(t("saved"));
+        toast.success(t("saved"), {
+          description: result.calendar === "synced" ? tc("updated") : undefined,
+        });
+        showCalendarProblem(result.calendar, edit.code);
         router.push(`/meetings/${edit.code}`);
       } else {
-        setScheduled(result.code);
+        setScheduled({ code: result.code, calendar: result.calendar });
       }
     } catch {
       toast.error(t("saveFailed"));
@@ -492,6 +547,13 @@ export function ScheduleForm({
             value={values.invitees}
             onChange={(invitees) => set({ invitees })}
           />
+          <GoogleCalendarField
+            connection={calendar.connection}
+            synced={calendar.synced}
+            value={values.googleCalendar}
+            onChange={(googleCalendar) => set({ googleCalendar })}
+            email={calendar.email}
+          />
           <fieldset className="flex flex-col">
             <legend className="text-muted-foreground mb-1 text-[13px] font-bold tracking-[0.06em] uppercase">
               {t("security")}
@@ -582,8 +644,10 @@ export function ScheduleForm({
       ) : null}
       {scheduled ? (
         <ScheduledDialog
-          meeting={{ ...meeting, code: scheduled }}
-          onDone={() => router.push(`/meetings/${scheduled}`)}
+          meeting={{ ...meeting, code: scheduled.code }}
+          calendar={scheduled.calendar}
+          email={calendar.email}
+          onDone={() => router.push(`/meetings/${scheduled.code}`)}
         />
       ) : null}
     </div>

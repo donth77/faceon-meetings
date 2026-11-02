@@ -13,6 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import type { GoogleEventIds } from "@/lib/google-calendar/shared";
 import type {
   MediaProviderId,
   NotesState,
@@ -71,8 +72,13 @@ export const meeting = pgTable(
     durationMin: integer("duration_min"),
     /** The IANA time zone it was scheduled in; a series keeps its local time in it. */
     timeZone: text("time_zone"),
-    /** The host's Google Calendar event, when Calendar sync is on. */
+    /** Never used: Calendar sync keeps googleEvents instead. A later migration drops it. */
     googleEventId: text("google_event_id"),
+    /**
+     * Calendar sync: the meeting's events in the host's Google Calendar, by the key each
+     * was made for (a series rule's ID, or "single"). Null when it isn't synced.
+     */
+    googleEvents: jsonb("google_events").$type<GoogleEventIds>(),
     createdAt: createdAt(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },

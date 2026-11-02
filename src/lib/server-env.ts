@@ -41,6 +41,8 @@ const ServerEnv = z.object({
   RESEND_API_KEY: z.string().optional(),
   /** The sender, e.g. "FaceOn <no-reply@mail.example.com>", on a domain verified in Resend. */
   EMAIL_FROM: z.string().optional(),
+  /** Google Calendar sync for hosts who connect it ("on" or "off"); off leaves the calendar links. */
+  GOOGLE_CALENDAR_SYNC: z.enum(["on", "off"]).default("on"),
   MAX_PARTICIPANTS_PER_MEETING: z.coerce.number().int().min(2).default(20),
   /** 0 means no time limit. */
   MAX_MEETING_MINUTES: z.coerce.number().int().min(0).default(0),

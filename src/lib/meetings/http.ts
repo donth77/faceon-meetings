@@ -3,6 +3,7 @@ import "server-only";
 import type { z } from "zod";
 
 import { loggable } from "@/lib/log";
+import { isSameOrigin } from "@/lib/same-origin";
 
 import {
   MEETING_ERRORS,
@@ -14,18 +15,6 @@ import { MeetingError } from "./errors";
 export function errorResponse(code: MeetingErrorCode): Response {
   const body: MeetingErrorBody = { error: { code } };
   return Response.json(body, { status: MEETING_ERRORS[code] });
-}
-
-/**
- * Browsers always send Origin on cross-site POSTs, so a mismatch means another site is
- * trying to act with the visitor's cookies. Non-browser clients send no Origin.
- */
-function isSameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (origin === null) return true;
-  const host =
-    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  return URL.canParse(origin) && new URL(origin).host === host;
 }
 
 /** The request's JSON body, validated; a malformed body is a BAD_REQUEST. */

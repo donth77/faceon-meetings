@@ -14,7 +14,7 @@ While you're the only one there, a card in the corner shows the link too.
 
 ## Before a meeting
 
-- **Scheduled meetings:** open the meeting from **Upcoming** to copy the link or invitation, or to add it to Google Calendar, Outlook or any calendar app.
+- **Scheduled meetings:** open the meeting from **Upcoming** to copy the link or invitation, or to add it to Google Calendar, Outlook or any calendar app. With Google Calendar connected, Google emails the invitations for you when you save the meeting. See [Schedule and repeat meetings](/help/schedule-meetings).
 - **Your personal room:** select **Copy invitation** on **Home** or on the **Personal room** page.
 
 ## About the passcode

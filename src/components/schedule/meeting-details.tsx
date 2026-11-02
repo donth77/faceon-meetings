@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarCheck,
   CalendarPlus,
   ChevronDown,
   ChevronLeft,
@@ -20,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { useCalendarProblemToast } from "@/components/google-calendar/outcome";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -78,11 +80,19 @@ function DetailRow({
 }
 
 /** A scheduled meeting's page: when it is, how to join, who's invited and its settings. */
-export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
+export function MeetingDetailsView({
+  details,
+  viewerEmail,
+}: {
+  details: MeetingDetails;
+  viewerEmail: string;
+}) {
   const t = useTranslations("MeetingDetails");
   const ts = useTranslations("Schedule");
+  const tc = useTranslations("GoogleCalendar");
   const locale = useIntlLocale();
   const router = useRouter();
+  const showCalendarProblem = useCalendarProblemToast(viewerEmail);
   const [showPasscode, setShowPasscode] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [settings, setSettings] = useState(details.settings);
@@ -154,16 +164,19 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
 
   async function remove(scope: SeriesScope) {
     setDeleting(false);
-    const ok = await deleteScheduleAction(
+    const result = await deleteScheduleAction(
       details.code,
       scope,
       next?.originalStart ?? null,
-    ).catch(() => false);
-    if (!ok) {
+    ).catch(() => ({ ok: false, calendar: undefined }));
+    if (!result.ok) {
       toast.error(t("deleteFailed"));
       return;
     }
-    toast.success(t("deleted"));
+    toast.success(t("deleted"), {
+      description: result.calendar === "synced" ? tc("removed") : undefined,
+    });
+    showCalendarProblem(result.calendar, details.code);
     router.push("/upcoming");
     router.refresh();
   }
@@ -381,6 +394,15 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
               {t("nobodyInvited")}
             </p>
           )}
+          {details.onGoogleCalendar ? (
+            <p className="text-muted-foreground flex items-start gap-2 border-t pt-3 text-[13px] leading-snug">
+              <CalendarCheck
+                className="text-primary mt-px size-4 shrink-0"
+                aria-hidden="true"
+              />
+              {tc("onCalendarNote")}
+            </p>
+          ) : null}
         </Card>
 
         {recurrence ? (
