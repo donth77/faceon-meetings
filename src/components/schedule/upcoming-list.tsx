@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNow } from "@/hooks/use-now";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
+import { announceMeetingsChanged } from "@/lib/meetings/changes";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule, recurrenceChip } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
@@ -91,6 +92,7 @@ function Row({ row }: { row: UpcomingRow }) {
       row.originalStart,
     ).catch(() => false);
     if (ok) {
+      announceMeetingsChanged();
       toast.success(t("deleted"));
       router.refresh();
     } else {

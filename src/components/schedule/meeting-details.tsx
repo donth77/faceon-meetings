@@ -34,6 +34,7 @@ import {
 import { SwitchRow } from "@/components/ui/form-fields";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { copyText } from "@/lib/clipboard";
+import { announceMeetingsChanged } from "@/lib/meetings/changes";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
@@ -183,6 +184,7 @@ export function MeetingDetailsView({
       return false;
     }
     setPasscode(result.passcode);
+    announceMeetingsChanged();
     toast.success(tp("changed"), {
       description: result.calendar === "synced" ? tc("updated") : undefined,
     });
@@ -201,6 +203,7 @@ export function MeetingDetailsView({
       toast.error(t("deleteFailed"));
       return;
     }
+    announceMeetingsChanged();
     toast.success(t("deleted"), {
       description: result.calendar === "synced" ? tc("removed") : undefined,
     });

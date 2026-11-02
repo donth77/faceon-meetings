@@ -290,11 +290,11 @@
       "addedOn": "Added {date}",
       "settingsHelp": "Addresses from settings are in HOST_ALLOWLIST where {appName} is hosted. Change them there, then redeploy.",
       "settingsOnly": "{email} is approved in your settings. Change it there.",
-      "remove": "Move to demo",
-      "removeLabel": "Move {email} back to demo meetings",
-      "removeTitle": "Move {email} back to demo meetings?",
+      "remove": "Remove",
+      "removeLabel": "Remove {email} from approved hosts",
+      "removeTitle": "Remove {email} from approved hosts?",
       "removeBody": "They’ll host demo meetings from their next meeting. A meeting already running keeps the limits it started with. They won’t get an email.",
-      "removed": "{email} hosts demo meetings from their next meeting.",
+      "removed": "{email} removed. They host demo meetings from their next meeting.",
       "cancel": "Cancel"
     },
     "admins": {

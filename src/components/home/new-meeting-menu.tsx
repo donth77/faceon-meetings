@@ -34,6 +34,10 @@ import { createInstantMeeting } from "@/lib/meetings/actions";
 
 type Created = { code: string; passcode: string | null };
 
+/** The menu under New meeting: roomier than other menus, as the main action. */
+const ROOMY =
+  "gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium [&_svg:not([class*='size-'])]:size-5";
+
 /** "Here's the link to your meeting", with Copy link and Start now, as in Meet. */
 function MeetingLinkDialog({
   meeting,
@@ -135,18 +139,30 @@ export function NewMeetingMenu() {
         </Button>
         <DropdownMenu
           placement="bottom start"
-          className="min-w-64"
+          className="min-w-72 p-1.5"
           onAction={handleAction}
         >
-          <DropdownMenuItem id="instant" textValue={t("startInstant")}>
+          <DropdownMenuItem
+            id="instant"
+            className={ROOMY}
+            textValue={t("startInstant")}
+          >
             <Video aria-hidden="true" />
             {t("startInstant")}
           </DropdownMenuItem>
-          <DropdownMenuItem id="later" textValue={t("createForLater")}>
+          <DropdownMenuItem
+            id="later"
+            className={ROOMY}
+            textValue={t("createForLater")}
+          >
             <Link2 aria-hidden="true" />
             {t("createForLater")}
           </DropdownMenuItem>
-          <DropdownMenuItem id="schedule" textValue={t("schedule")}>
+          <DropdownMenuItem
+            id="schedule"
+            className={ROOMY}
+            textValue={t("schedule")}
+          >
             <CalendarPlus aria-hidden="true" />
             {t("schedule")}
           </DropdownMenuItem>

@@ -47,6 +47,7 @@ import type {
   CalendarConnection,
   CalendarOutcome,
 } from "@/lib/google-calendar/shared";
+import { announceMeetingsChanged } from "@/lib/meetings/changes";
 import { passcodeProblem, randomPasscode } from "@/lib/meetings/codes";
 import type { Recurrence } from "@/lib/meetings/recurrence";
 import {
@@ -456,6 +457,7 @@ export function ScheduleForm({
         );
         return;
       }
+      announceMeetingsChanged();
       if (edit) {
         toast.success(t("saved"), {
           description: result.calendar === "synced" ? tc("updated") : undefined,

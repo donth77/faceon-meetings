@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent } from "react";
 import { toast } from "sonner";
 
+import { subscribeMeetingsChanged } from "@/lib/meetings/changes";
 import {
   occurrencesAction,
   type OccurrenceRow,
@@ -155,6 +156,13 @@ export function MeetingReminders() {
 
     void plan();
     const every = setInterval(() => void plan(), REFRESH_MS);
+    // A meeting scheduled, moved or deleted (here or in another tab) is looked at now,
+    // and so is the calendar when the tab comes back, rather than at the next look.
+    const stopChanges = subscribeMeetingsChanged(() => void plan());
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void plan();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     // A new reminder time in Settings (here or in another tab) plans again; other
     // settings don't need another look at the calendar.
     let minutes = withDefaults(loadPreferences()).reminderMinutes;
@@ -167,6 +175,8 @@ export function MeetingReminders() {
     return () => {
       cancelled = true;
       clearInterval(every);
+      stopChanges();
+      document.removeEventListener("visibilitychange", onVisible);
       unsubscribe();
       timers.forEach(clearTimeout);
     };
