@@ -451,7 +451,17 @@
       "shareHosts": "Hosts only",
       "endForAll": "End meeting for all"
     },
-    "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}"
+    "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}",
+    "settings": "Settings",
+    "fullScreen": "Full screen",
+    "exitFullScreen": "Exit full screen",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "audioSettingsMore": "Audio settings…",
+    "videoSettingsMore": "Video settings…",
+    "mutedNudge": "You’re muted. Unmute so others can hear you.",
+    "hidePreview": "Hide preview",
+    "showPreview": "Show preview",
+    "previewHidden": "Preview hidden. Everyone else still sees your screen."
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -991,6 +1001,8 @@
       "deleteForGood": "Delete account",
       "signInFirst": "For your security, sign in again, then delete your account.",
       "signInAgain": "Sign in again"
-    }
+    },
+    "close": "Close settings",
+    "forThisDevice": "For this device"
   }
 }

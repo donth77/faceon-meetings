@@ -4,10 +4,14 @@ import { cn } from "cn";
 import {
   Ellipsis,
   Hand,
+  Keyboard,
+  Maximize,
   MessageSquare,
   Mic,
   MicOff,
+  Minimize,
   PhoneOff,
+  Settings,
   SmilePlus,
   Users,
   Video,
@@ -15,12 +19,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
+import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import {
   DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -178,18 +184,91 @@ function PanelButton({
   );
 }
 
-/** On phones, Participants and Chat live in the More menu. */
+function subscribeFullscreen(onChange: () => void) {
+  document.addEventListener("fullscreenchange", onChange);
+  return () => document.removeEventListener("fullscreenchange", onChange);
+}
+
+/** Whether the meeting fills the screen, and a way to switch; null where it can't. */
+function useFullscreen() {
+  const active = useSyncExternalStore(
+    subscribeFullscreen,
+    () => document.fullscreenElement !== null,
+    () => false,
+  );
+  const supported = useSyncExternalStore(
+    subscribeFullscreen,
+    () => document.fullscreenEnabled,
+    () => false,
+  );
+  if (!supported) return null;
+  return {
+    active,
+    toggle: () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen().catch(() => {});
+    },
+  };
+}
+
+/** Settings, full screen and the keyboard shortcuts, in both More menus. */
+function MoreItems({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const t = useTranslations("Meeting");
+  const openShortcuts = useOpenShortcuts();
+  const fullscreen = useFullscreen();
+  return (
+    <>
+      <DropdownMenuItem onAction={onOpenSettings}>
+        <Settings aria-hidden="true" />
+        {t("settings")}
+      </DropdownMenuItem>
+      {fullscreen ? (
+        <DropdownMenuItem onAction={fullscreen.toggle}>
+          {fullscreen.active ? (
+            <Minimize aria-hidden="true" />
+          ) : (
+            <Maximize aria-hidden="true" />
+          )}
+          {fullscreen.active ? t("exitFullScreen") : t("fullScreen")}
+        </DropdownMenuItem>
+      ) : null}
+      <DropdownMenuItem onAction={openShortcuts} className="max-md:hidden">
+        <Keyboard aria-hidden="true" />
+        {t("keyboardShortcuts")}
+      </DropdownMenuItem>
+    </>
+  );
+}
+
+/** More, beside Raise hand on desktop: Settings, full screen and the shortcuts. */
+function DesktopMoreMenu({ onOpenSettings }: { onOpenSettings: () => void }) {
+  const t = useTranslations("Meeting");
+  return (
+    <div className="flex max-md:hidden">
+      <DropdownMenuTrigger>
+        <ControlButton icon={Ellipsis} label={t("more")} />
+        <DropdownMenu placement="top" className="min-w-56">
+          <MoreItems onOpenSettings={onOpenSettings} />
+        </DropdownMenu>
+      </DropdownMenuTrigger>
+    </div>
+  );
+}
+
+/** On phones, Participants, Chat and Settings live in the More menu. */
 function MoreMenu({
   peopleCount,
   unreadChat,
   onOpenPanel,
   onReaction,
+  onOpenSettings,
 }: {
   peopleCount: number;
   unreadChat: number;
   onOpenPanel: (panel: PanelName) => void;
   /** Null when the host has turned reactions off. */
   onReaction: ((code: ReactionCode) => void) | null;
+  onOpenSettings: () => void;
 }) {
   const t = useTranslations("Meeting");
   return (
@@ -243,6 +322,8 @@ function MoreMenu({
               ? t("chat.withUnread", { count: unreadChat })
               : t("chat.title")}
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <MoreItems onOpenSettings={onOpenSettings} />
         </DropdownMenu>
       </DropdownMenuTrigger>
     </div>
@@ -253,8 +334,9 @@ export function ControlBar({
   title,
   isOwner,
   onEndForAll,
-  panel,
+  panels,
   onTogglePanel,
+  onOpenSettings,
   unreadChat,
   waitingCount,
   onToggleMic,
@@ -267,9 +349,11 @@ export function ControlBar({
   /** The meeting's owner, who can end it for everyone. */
   isOwner: boolean;
   onEndForAll: () => void;
-  /** The side panel that's open, if any. */
-  panel: PanelName | null;
+  /** The side panels that are open. */
+  panels: PanelName[];
   onTogglePanel: (panel: PanelName) => void;
+  /** Opens Settings on a section. */
+  onOpenSettings: (section?: "audio" | "video") => void;
   unreadChat: number;
   /** People in the waiting room (hosts and co-hosts see them). */
   waitingCount: number;
@@ -308,6 +392,8 @@ export function ControlBar({
         >
           <DeviceMenu
             label={t("audioSettings")}
+            settingsLabel={t("audioSettingsMore")}
+            onOpenSettings={() => onOpenSettings("audio")}
             sections={[
               {
                 title: t("microphone"),
@@ -337,6 +423,8 @@ export function ControlBar({
         >
           <DeviceMenu
             label={t("videoSettings")}
+            settingsLabel={t("videoSettingsMore")}
+            onOpenSettings={() => onOpenSettings("video")}
             sections={[
               {
                 title: t("camera"),
@@ -361,11 +449,13 @@ export function ControlBar({
           tone={handRaised ? "amber" : "plain"}
           onPress={onToggleHand}
         />
+        <DesktopMoreMenu onOpenSettings={() => onOpenSettings()} />
         <MoreMenu
           peopleCount={count}
           unreadChat={unreadChat}
           onOpenPanel={onTogglePanel}
           onReaction={onReaction}
+          onOpenSettings={() => onOpenSettings()}
         />
         <LeaveControl isOwner={isOwner} onEndForAll={onEndForAll} />
       </div>
@@ -381,7 +471,7 @@ export function ControlBar({
           }
           badge={waitingCount > 0 ? waitingCount : count}
           badgeTone={waitingCount > 0 ? "brand" : "neutral"}
-          active={panel === "people"}
+          active={panels.includes("people")}
           onPress={() => onTogglePanel("people")}
         />
         <PanelButton
@@ -394,7 +484,7 @@ export function ControlBar({
           }
           badge={unreadChat > 0 ? unreadChat : null}
           badgeTone="brand"
-          active={panel === "chat"}
+          active={panels.includes("chat")}
           onPress={() => onTogglePanel("chat")}
         />
       </div>

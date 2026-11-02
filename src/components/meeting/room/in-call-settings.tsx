@@ -1,0 +1,305 @@
+"use client";
+
+import {
+  Accessibility,
+  Mic,
+  Settings,
+  Sparkles,
+  Video,
+  VideoOff,
+  Volume2,
+  WandSparkles,
+  type LucideIcon,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+
+import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
+import { SwitchRow } from "@/components/schedule/fields";
+import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
+import { DeviceField } from "@/components/settings/device-fields";
+import { GeneralSettings } from "@/components/settings/general-settings";
+import { SettingsChrome } from "@/components/settings/settings-nav";
+import { MirroredVideo } from "@/components/settings/video-settings";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  loadDevicePreferences,
+  saveDevicePreferences,
+  type DevicePreferences,
+} from "@/lib/device/preferences";
+import { playTestSound } from "@/lib/device/test-sound";
+import {
+  savePreferences,
+  usePreferences,
+  withDefaults,
+} from "@/lib/preferences";
+
+import { useRoomMedia } from "../media";
+
+export type InCallSection =
+  "audio" | "video" | "effects" | "general" | "accessibility" | "aiNotes";
+
+const SECTIONS: Array<{ id: InCallSection; icon: LucideIcon }> = [
+  { id: "audio", icon: Mic },
+  { id: "video", icon: Video },
+  { id: "effects", icon: WandSparkles },
+  { id: "general", icon: Settings },
+  { id: "accessibility", icon: Accessibility },
+  { id: "aiNotes", icon: Sparkles },
+];
+
+/** The device the next meeting starts with follows what you pick here. */
+const remember = (patch: Partial<DevicePreferences>) =>
+  saveDevicePreferences({ ...loadDevicePreferences(), ...patch });
+
+function AudioSection() {
+  const t = useTranslations("Settings.audio");
+  const { mic, speaker } = useRoomMedia();
+  const { noiseSuppression } = withDefaults(usePreferences());
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex max-w-[480px] flex-col gap-3">
+        <DeviceField
+          label={t("microphone")}
+          devices={mic.devices}
+          value={mic.selectedId}
+          onChange={(micId) => {
+            void mic.select(micId);
+            remember({ micId });
+          }}
+        />
+        <MicMeter track={mic.track} />
+      </div>
+      <div className="flex flex-wrap items-end gap-2.5">
+        {speaker.supported ? (
+          <div className="min-w-0 flex-[1_1_320px] sm:max-w-[480px]">
+            <DeviceField
+              label={t("speaker")}
+              devices={speaker.devices}
+              value={speaker.selectedId}
+              onChange={(speakerId) => {
+                speaker.select(speakerId);
+                remember({ speakerId });
+              }}
+            />
+          </div>
+        ) : null}
+        <Button
+          variant="secondary"
+          className="h-11 gap-2 rounded-[10px] px-4 text-sm font-semibold"
+          onPress={() => void playTestSound(speaker.selectedId).catch(() => {})}
+        >
+          <Volume2 className="size-[18px]" aria-hidden="true" />
+          {t("testSpeaker")}
+        </Button>
+      </div>
+      {speaker.supported ? null : (
+        <p className="text-muted-foreground -mt-2 text-[13px]">
+          {t("speakerFixed")}
+        </p>
+      )}
+      <div className="border-t border-white/10">
+        <SwitchRow
+          label={t("noiseSuppression")}
+          help={t("noiseSuppressionHelp")}
+          isSelected={noiseSuppression}
+          onChange={(on) => {
+            savePreferences({ noiseSuppression: on ? undefined : false });
+            void mic.setNoiseSuppression(on).catch(() => {});
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function VideoSection() {
+  const t = useTranslations("Settings.video");
+  const tm = useTranslations("Meeting");
+  const tp = useTranslations("PreJoin");
+  const { camera } = useRoomMedia();
+  const { mirrorVideo, hdVideo, cameraOffOnJoin } =
+    withDefaults(usePreferences());
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-start gap-5">
+        <div
+          role="img"
+          aria-label={t("preview")}
+          className="relative aspect-video w-[360px] max-w-full flex-none overflow-hidden rounded-xl bg-[#0e1013]"
+        >
+          {camera.track ? (
+            <MirroredVideo track={camera.track} mirror={mirrorVideo} />
+          ) : (
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-sm text-[#c9d0d8]">
+              <VideoOff className="size-6" aria-hidden="true" />
+              {tp("cameraOff")}
+              {camera.allowed ? (
+                <Button
+                  variant="secondary"
+                  className="h-9 rounded-full px-4"
+                  onPress={() => void camera.toggle()}
+                >
+                  {tm("startVideo")}
+                </Button>
+              ) : null}
+            </span>
+          )}
+          {camera.track && mirrorVideo ? (
+            <span className="absolute top-2.5 right-2.5 rounded-[10px] bg-black/55 px-2.5 py-1 text-xs font-semibold text-white">
+              {t("mirroredForYou")}
+            </span>
+          ) : null}
+        </div>
+        <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-3">
+          <DeviceField
+            label={t("camera")}
+            devices={camera.devices}
+            value={camera.selectedId}
+            onChange={(cameraId) => {
+              void camera.select(cameraId);
+              remember({ cameraId });
+            }}
+          />
+          <p className="text-muted-foreground text-sm leading-normal">
+            {t("othersSee")}
+          </p>
+        </div>
+      </div>
+      <div className="divide-y divide-white/10 border-t border-white/10">
+        <SwitchRow
+          label={t("mirror")}
+          help={t("mirrorHelp")}
+          isSelected={mirrorVideo}
+          onChange={(on) =>
+            savePreferences({ mirrorVideo: on ? undefined : false })
+          }
+        />
+        <SwitchRow
+          label={t("hd")}
+          help={t("hdHelp")}
+          isSelected={hdVideo}
+          onChange={(on) =>
+            savePreferences({ hdVideo: on ? undefined : false })
+          }
+        />
+        <SwitchRow
+          label={t("offOnJoin")}
+          isSelected={cameraOffOnJoin}
+          onChange={(on) =>
+            savePreferences({ cameraOffOnJoin: on ? true : undefined })
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function ComingSoon({ section }: { section: "effects" | "aiNotes" }) {
+  const t = useTranslations(`Settings.${section}`);
+  return (
+    <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
+      {t("comingSoon")}
+    </p>
+  );
+}
+
+function SectionContent({ section }: { section: InCallSection }) {
+  switch (section) {
+    case "audio":
+      return <AudioSection />;
+    case "video":
+      return <VideoSection />;
+    case "general":
+      return (
+        <div className="flex flex-col gap-5">
+          <GeneralSettings inMeeting />
+        </div>
+      );
+    case "accessibility":
+      return (
+        <div className="flex flex-col gap-5">
+          <AccessibilitySettings />
+        </div>
+      );
+    case "effects":
+    case "aiNotes":
+      return <ComingSoon section={section} />;
+  }
+}
+
+/**
+ * Settings during a meeting, as in the mockup: sections down the side (across the top
+ * on a phone) and the chosen one beside them. Changes apply at once and are kept on
+ * this device.
+ */
+export function InCallSettings({
+  section,
+  onSectionChange,
+  onClose,
+}: {
+  /** The open section; null when Settings is closed. */
+  section: InCallSection | null;
+  onSectionChange: (section: InCallSection) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Settings");
+  const phone = useIsMobile();
+
+  return (
+    <Dialog
+      isOpen={section !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      closeLabel={t("close")}
+      className="h-[min(820px,calc(100dvh-2rem))] w-[min(1000px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden bg-[#1c2026] p-0 max-md:h-dvh max-md:w-screen max-md:max-w-none max-md:rounded-none sm:max-w-none"
+      bodyClassName="flex size-full min-h-0"
+    >
+      <SettingsChrome value="dialog">
+        <Tabs
+          orientation={phone ? "horizontal" : "vertical"}
+          selectedKey={section ?? "audio"}
+          onSelectionChange={(key) => onSectionChange(key as InCallSection)}
+          className="flex size-full min-h-0 max-md:flex-col"
+        >
+          <div className="flex shrink-0 flex-col bg-[#171a1f] px-3 py-5 max-md:pb-2 md:w-[260px]">
+            <DialogTitle className="mx-2.5 text-xl font-bold">
+              {t("title")}
+            </DialogTitle>
+            <span className="text-muted-foreground mx-2.5 mt-1 mb-3.5 text-[13px]">
+              {t("forThisDevice")}
+            </span>
+            <TabList
+              aria-label={t("sections")}
+              className="flex gap-1 max-md:-mx-3 max-md:overflow-x-auto max-md:px-3 md:flex-col"
+            >
+              {SECTIONS.map(({ id, icon: Icon }) => (
+                <Tab
+                  key={id}
+                  id={id}
+                  className="data-focus-visible:ring-ring flex min-h-[42px] shrink-0 cursor-default items-center gap-3 rounded-[10px] px-3 text-[15px] whitespace-nowrap text-[#c9d0d8] outline-none hover:bg-white/5 data-focus-visible:ring-2 data-selected:bg-[#262b33] data-selected:font-semibold data-selected:text-[#f2f4f7]"
+                >
+                  <Icon className="size-[18px]" aria-hidden="true" />
+                  {t(`section.${id}`)}
+                </Tab>
+              ))}
+            </TabList>
+          </div>
+          {SECTIONS.map(({ id }) => (
+            <TabPanel
+              key={id}
+              id={id}
+              className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-7 pt-5 pb-6 outline-none max-md:px-5"
+            >
+              <h3 className="pr-10 text-lg font-bold">{t(`section.${id}`)}</h3>
+              <SectionContent section={id} />
+            </TabPanel>
+          ))}
+        </Tabs>
+      </SettingsChrome>
+    </Dialog>
+  );
+}

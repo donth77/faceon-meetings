@@ -1,12 +1,18 @@
 "use client";
 
 import { X } from "lucide-react";
+import { motion } from "motion/react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { Button } from "react-aria-components";
 
+import { useIsMobile } from "@/hooks/use-mobile";
+
+import { useRoomTransition } from "./motion";
+
 /**
- * Participants and Chat open here: a column beside the stage on desktop, a bottom sheet
- * over the meeting on phones. Escape closes it.
+ * Participants and Chat open here: on desktop they share a column beside the stage
+ * (one grows in as the other makes room); on phones each is a bottom sheet over the
+ * meeting. Escape closes it.
  */
 export function SidePanel({
   title,
@@ -24,6 +30,9 @@ export function SidePanel({
   footer?: ReactNode;
   children: ReactNode;
 }) {
+  const phone = useIsMobile();
+  const transition = useRoomTransition();
+
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       event.stopPropagation();
@@ -33,16 +42,26 @@ export function SidePanel({
 
   return (
     <>
-      {/* On phones, tapping the meeting behind the sheet closes it. */}
-      <div
-        aria-hidden="true"
-        onClick={onClose}
-        className="fixed inset-0 z-30 bg-black/50 md:hidden"
-      />
-      <aside
+      {phone ? (
+        // Tapping the meeting behind the sheet closes it.
+        <motion.div
+          aria-hidden="true"
+          onClick={onClose}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={transition}
+          className="fixed inset-0 z-30 bg-black/50"
+        />
+      ) : null}
+      <motion.aside
         aria-label={title}
         onKeyDown={handleKeyDown}
-        className="bg-card z-40 flex min-h-0 flex-col overflow-hidden max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-[78dvh] max-md:rounded-t-2xl max-md:pb-[env(safe-area-inset-bottom)] md:w-[360px] md:shrink-0 md:rounded-2xl"
+        initial={phone ? { y: "100%" } : { opacity: 0, flexGrow: 0 }}
+        animate={phone ? { y: 0 } : { opacity: 1, flexGrow: 1 }}
+        exit={phone ? { y: "100%" } : { opacity: 0, flexGrow: 0 }}
+        transition={transition}
+        className="bg-card z-40 flex min-h-0 flex-col overflow-hidden max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-[78dvh] max-md:rounded-t-2xl max-md:pb-[env(safe-area-inset-bottom)] md:basis-0 md:rounded-2xl"
       >
         <div
           aria-hidden="true"
@@ -67,7 +86,7 @@ export function SidePanel({
             {footer}
           </div>
         ) : null}
-      </aside>
+      </motion.aside>
     </>
   );
 }

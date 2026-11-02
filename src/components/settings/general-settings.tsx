@@ -17,7 +17,7 @@ import {
 } from "@/lib/preferences";
 import { formattingLocale, systemTimeZone } from "@/lib/time";
 
-import { SettingsCard } from "./settings-nav";
+import { SectionTitle, SettingsCard } from "./settings-nav";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -70,7 +70,12 @@ function ThemePreview({ dark }: { dark: boolean }) {
 }
 
 /** Settings → General: language, time format, time zone and theme, for this device. */
-export function GeneralSettings() {
+export function GeneralSettings({
+  inMeeting = false,
+}: {
+  /** In the meeting's Settings: no language (it reloads the page) and no theme. */
+  inMeeting?: boolean;
+}) {
   const t = useTranslations("Settings.general");
   const locale = useLocale();
   const intlLocale = useIntlLocale();
@@ -103,22 +108,24 @@ export function GeneralSettings() {
 
   return (
     <>
-      <h2 className="text-[22px] font-bold">{t("title")}</h2>
+      <SectionTitle title={t("title")} />
       <SettingsCard title={t("region")}>
-        <div className="flex max-w-[440px] flex-col gap-1.5">
-          <SelectField
-            label={t("language")}
-            options={routing.locales.map((id) => ({
-              id,
-              label: nativeName(id),
-            }))}
-            value={locale}
-            onChange={chooseLanguage}
-          />
-          <span className="text-muted-foreground text-[13px]">
-            {t("languageHelp")}
-          </span>
-        </div>
+        {inMeeting ? null : (
+          <div className="flex max-w-[440px] flex-col gap-1.5">
+            <SelectField
+              label={t("language")}
+              options={routing.locales.map((id) => ({
+                id,
+                label: nativeName(id),
+              }))}
+              value={locale}
+              onChange={chooseLanguage}
+            />
+            <span className="text-muted-foreground text-[13px]">
+              {t("languageHelp")}
+            </span>
+          </div>
+        )}
         <RadioGroup
           value={timeFormat}
           onChange={(value) =>
@@ -171,37 +178,39 @@ export function GeneralSettings() {
         </div>
       </SettingsCard>
 
-      <SettingsCard title={t("theme")}>
-        <RadioGroup
-          aria-label={t("theme")}
-          value={theme}
-          onChange={setTheme}
-          className="flex flex-wrap gap-3"
-        >
-          {(["system", "light", "dark"] as const).map((option) => (
-            <Radio
-              key={option}
-              value={option}
-              className="group bg-card data-focus-visible:ring-ring flex min-w-0 flex-[1_1_160px] cursor-default flex-col gap-2 rounded-xl p-2.5 ring-1 ring-[#e2e5ea] outline-none data-focus-visible:ring-2 data-selected:ring-2 data-selected:ring-[#1f5eff] dark:ring-white/10"
-            >
-              <span className="flex h-[72px] overflow-hidden rounded-lg ring-1 ring-[#e2e5ea] dark:ring-white/10">
-                {option !== "dark" ? <ThemePreview dark={false} /> : null}
-                {option !== "light" ? <ThemePreview dark /> : null}
-              </span>
-              <span className="flex items-center gap-2 text-[15px] font-bold">
-                <RadioDot />
-                {t(`themes.${option}`)}
-              </span>
-              <span className="text-muted-foreground text-[13px]">
-                {t(`themeHelp.${option}`)}
-              </span>
-            </Radio>
-          ))}
-        </RadioGroup>
-        <span className="text-muted-foreground text-[13px]">
-          {t("themeNote")}
-        </span>
-      </SettingsCard>
+      {inMeeting ? null : (
+        <SettingsCard title={t("theme")}>
+          <RadioGroup
+            aria-label={t("theme")}
+            value={theme}
+            onChange={setTheme}
+            className="flex flex-wrap gap-3"
+          >
+            {(["system", "light", "dark"] as const).map((option) => (
+              <Radio
+                key={option}
+                value={option}
+                className="group bg-card data-focus-visible:ring-ring flex min-w-0 flex-[1_1_160px] cursor-default flex-col gap-2 rounded-xl p-2.5 ring-1 ring-[#e2e5ea] outline-none data-focus-visible:ring-2 data-selected:ring-2 data-selected:ring-[#1f5eff] dark:ring-white/10"
+              >
+                <span className="flex h-[72px] overflow-hidden rounded-lg ring-1 ring-[#e2e5ea] dark:ring-white/10">
+                  {option !== "dark" ? <ThemePreview dark={false} /> : null}
+                  {option !== "light" ? <ThemePreview dark /> : null}
+                </span>
+                <span className="flex items-center gap-2 text-[15px] font-bold">
+                  <RadioDot />
+                  {t(`themes.${option}`)}
+                </span>
+                <span className="text-muted-foreground text-[13px]">
+                  {t(`themeHelp.${option}`)}
+                </span>
+              </Radio>
+            ))}
+          </RadioGroup>
+          <span className="text-muted-foreground text-[13px]">
+            {t("themeNote")}
+          </span>
+        </SettingsCard>
+      )}
     </>
   );
 }

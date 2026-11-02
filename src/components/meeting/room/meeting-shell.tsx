@@ -1,11 +1,13 @@
 "use client";
 
 import { LoaderCircle } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
 import { toast } from "sonner";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { DeviceProblem } from "@/lib/device/problems";
 import type {
   AdmittedMeetingInfo,
@@ -33,6 +35,8 @@ import {
   TakeoverDialog,
   UnmuteRequestDialog,
 } from "./host-dialogs";
+import { InCallSettings, type InCallSection } from "./in-call-settings";
+import { useRoomTransition } from "./motion";
 import { ParticipantsPanel } from "./participants-panel";
 import { FloatingReactions } from "./reactions";
 import { moderates, roleIn, roomRoleOf } from "./roles";
@@ -53,19 +57,45 @@ import {
 /** Says when the connection drops and while it comes back. */
 function ConnectionBanner({ status }: { status: RoomStatus }) {
   const t = useTranslations("Meeting");
+  const transition = useRoomTransition();
   return (
-    <div role="status" className="flex justify-center px-3 empty:hidden">
-      {status === "joined" ? null : (
-        <p className="flex items-center gap-2 rounded-lg bg-amber-400/15 px-3 py-2 text-sm text-amber-100">
-          <LoaderCircle
-            className="size-4 animate-spin motion-reduce:animate-none"
-            aria-hidden="true"
-          />
-          {t(status === "offline" ? "offline" : "reconnecting")}
-        </p>
-      )}
+    <div role="status" className="flex justify-center px-3">
+      <AnimatePresence initial={false}>
+        {status === "joined" ? null : (
+          <motion.p
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", marginBottom: 8 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={transition}
+            className="flex items-center gap-2 overflow-hidden rounded-lg bg-amber-400/15 px-3 text-sm text-amber-100"
+          >
+            <span className="flex items-center gap-2 py-2">
+              <LoaderCircle
+                className="size-4 animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+              {t(status === "offline" ? "offline" : "reconnecting")}
+            </span>
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
+}
+
+/** "You're muted" when you seem to be talking with the mic off, at most once a minute. */
+function useMutedNudge(speakingWhileMuted: boolean, onUnmute: () => void) {
+  const t = useTranslations("Meeting");
+  const lastAt = useRef(0);
+  const unmute = useEffectEvent(onUnmute);
+  useEffect(() => {
+    if (!speakingWhileMuted || Date.now() - lastAt.current < 60_000) return;
+    lastAt.current = Date.now();
+    toast(t("mutedNudge"), {
+      id: "muted-nudge",
+      action: { label: t("unmute"), onClick: () => unmute() },
+    });
+  }, [speakingWhileMuted, t]);
 }
 
 /** A toast when the mic or camera fails to start, saying what to do, with Try again. */
@@ -111,7 +141,11 @@ export function MeetingShell({
   const title = useMeetingTitle(meeting);
   const shellRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<LayoutChoice>("auto");
-  const [panel, setPanel] = useState<PanelName | null>(null);
+  // Participants and Chat can both be open on desktop; a phone shows the latest one.
+  const [panels, setPanels] = useState<PanelName[]>([]);
+  const [settings, setSettings] = useState<InCallSection | null>(null);
+  const phone = useIsMobile();
+  const panelTransition = useRoomTransition();
   const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RoomParticipant | null>(null);
   const [mutingAll, setMutingAll] = useState(false);
@@ -139,7 +173,7 @@ export function MeetingShell({
   const chat = useChat({
     media,
     self,
-    isOpen: panel === "chat",
+    isOpen: panels.includes("chat"),
     accepts: (senderId) => (state?.chat ?? true) || sentByHost(senderId),
     // A preview of each new message while the chat panel is closed, as in both apps.
     onPreview: (message) =>
@@ -280,14 +314,25 @@ export function MeetingShell({
   }
 
   function openPanel(next: PanelName) {
-    setPanel(next);
+    setPanels((open) =>
+      open.includes(next) ? open : phone ? [next] : [...open, next],
+    );
     if (next === "chat") chat.markRead();
   }
 
+  function closePanel(name: PanelName) {
+    setPanels((open) => open.filter((panel) => panel !== name));
+  }
+
   function togglePanel(next: PanelName) {
-    if (panel === next) setPanel(null);
+    if (panels.includes(next)) closePanel(next);
     else openPanel(next);
   }
+
+  // Desktop keeps Participants above Chat; a phone shows the one opened last.
+  const shownPanels = phone
+    ? panels.slice(-1)
+    : (["people", "chat"] as const).filter((name) => panels.includes(name));
   useMeetingShortcuts({
     toggleMic,
     toggleCamera: () => void media.camera.toggle(),
@@ -298,6 +343,38 @@ export function MeetingShell({
   const aloneCheck = useAloneCheck(alone, session.aloneTimeoutMinutes);
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
+  useMutedNudge(media.mic.speakingWhileMuted, toggleMic);
+
+  function renderPanel(name: PanelName) {
+    return name === "people" ? (
+      <ParticipantsPanel
+        key="people"
+        meeting={meeting}
+        state={state}
+        waiting={lobby.requests}
+        onDecide={(action) => void lobby.decide(action)}
+        onLowerHand={(userId) =>
+          void changeHand({ raised: false, target: userId })
+        }
+        onLowerAll={() => void changeHand({ lowerAll: true })}
+        onMuteAll={() => setMutingAll(true)}
+        onPolicyChange={(policy) =>
+          void moderate({ action: "setPolicy", policy })
+        }
+        onEndForAll={onEndForAll}
+        onClose={() => closePanel("people")}
+      />
+    ) : (
+      <ChatPanel
+        key="chat"
+        title={title}
+        messages={chat.messages}
+        canSend={(state?.chat ?? true) || isHost}
+        onSend={chat.send}
+        onClose={() => closePanel("chat")}
+      />
+    );
+  }
 
   return (
     <div
@@ -317,7 +394,7 @@ export function MeetingShell({
             onLayoutChange={setLayout}
           />
           <ConnectionBanner status={media.status} />
-          <div className="flex min-h-0 flex-1 gap-3 px-3">
+          <div className="flex min-h-0 flex-1 px-3">
             <main className="relative min-h-0 min-w-0 flex-1">
               <RoomBadgesProvider value={badges}>
                 <Stage layout={layout} />
@@ -326,34 +403,34 @@ export function MeetingShell({
               <div role="status" className="sr-only">
                 {reactionNews}
               </div>
-              {alone ? <AloneCard meeting={meeting} /> : null}
+              <AnimatePresence>
+                {alone ? <AloneCard key="alone" meeting={meeting} /> : null}
+              </AnimatePresence>
             </main>
-            {panel === "people" ? (
-              <ParticipantsPanel
-                meeting={meeting}
-                state={state}
-                waiting={lobby.requests}
-                onDecide={(action) => void lobby.decide(action)}
-                onLowerHand={(userId) =>
-                  void changeHand({ raised: false, target: userId })
-                }
-                onLowerAll={() => void changeHand({ lowerAll: true })}
-                onMuteAll={() => setMutingAll(true)}
-                onPolicyChange={(policy) =>
-                  void moderate({ action: "setPolicy", policy })
-                }
-                onEndForAll={onEndForAll}
-                onClose={() => setPanel(null)}
-              />
-            ) : panel === "chat" ? (
-              <ChatPanel
-                title={title}
-                messages={chat.messages}
-                canSend={(state?.chat ?? true) || isHost}
-                onSend={chat.send}
-                onClose={() => setPanel(null)}
-              />
-            ) : null}
+            {phone ? (
+              <AnimatePresence>{shownPanels.map(renderPanel)}</AnimatePresence>
+            ) : (
+              <AnimatePresence initial={false}>
+                {shownPanels.length > 0 ? (
+                  // The column slides in beside the stage; a second panel grows in
+                  // below the first.
+                  <motion.div
+                    key="panels"
+                    initial={{ width: 0, marginLeft: 0, opacity: 0 }}
+                    animate={{ width: 360, marginLeft: 12, opacity: 1 }}
+                    exit={{ width: 0, marginLeft: 0, opacity: 0 }}
+                    transition={panelTransition}
+                    className="flex min-h-0 shrink-0 overflow-hidden"
+                  >
+                    <div className="flex min-h-0 w-[360px] shrink-0 flex-col gap-3">
+                      <AnimatePresence initial={false}>
+                        {shownPanels.map(renderPanel)}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            )}
           </div>
           <RemoveDialog
             participant={removing}
@@ -389,12 +466,18 @@ export function MeetingShell({
               void media.leave();
             }}
           />
+          <InCallSettings
+            section={settings}
+            onSectionChange={setSettings}
+            onClose={() => setSettings(null)}
+          />
           <ControlBar
             title={title}
             isOwner={selfRole === "host"}
             onEndForAll={onEndForAll}
-            panel={panel}
+            panels={panels}
             onTogglePanel={togglePanel}
+            onOpenSettings={(section) => setSettings(section ?? "audio")}
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}

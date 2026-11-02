@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button, type Selection } from "react-aria-components";
 
@@ -9,6 +9,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -33,9 +34,14 @@ const deviceIdOf = (key: string) => key.slice(key.indexOf(":") + 1);
 export function DeviceMenu({
   label,
   sections,
+  settingsLabel,
+  onOpenSettings,
 }: {
   label: string;
   sections: DeviceSection[];
+  /** "Audio settings…": the full settings for this device. */
+  settingsLabel: string;
+  onOpenSettings: () => void;
 }) {
   const t = useTranslations("Meeting");
 
@@ -86,6 +92,11 @@ export function DeviceMenu({
             )}
           </DropdownMenuGroup>
         ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onAction={onOpenSettings}>
+          <Settings aria-hidden="true" />
+          {settingsLabel}
+        </DropdownMenuItem>
       </DropdownMenu>
     </DropdownMenuTrigger>
   );

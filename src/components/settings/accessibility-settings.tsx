@@ -13,7 +13,7 @@ import {
   withDefaults,
 } from "@/lib/preferences";
 
-import { SettingsCard } from "./settings-nav";
+import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /**
  * Settings → Accessibility: only what the device can't tell us. Reduced motion, contrast
@@ -29,12 +29,7 @@ export function AccessibilitySettings() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h2 className="text-[22px] font-bold">{t("title")}</h2>
-        <p className="text-muted-foreground max-w-[64ch] text-[15px] leading-normal">
-          {t("intro")}
-        </p>
-      </div>
+      <SectionTitle title={t("title")} intro={t("intro")} />
       <SettingsCard title={t("keyboard")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           <SwitchRow

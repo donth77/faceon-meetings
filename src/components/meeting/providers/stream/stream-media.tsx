@@ -69,6 +69,7 @@ function toRoomParticipant(
     video: hasVideo(p),
     screen: hasScreenShare(p),
     speaking: p.isSpeaking,
+    audioLevel: p.audioLevel,
     connection: connectionOf(p),
   };
 }
@@ -115,6 +116,25 @@ async function startScreenShare(call: Call, options: ShareOptions) {
   manager.setDefaultConstraints(constraints);
   await manager.enable();
 }
+
+/** Noise suppression on the live microphone, and on any it restarts with. */
+async function setNoiseSuppression(call: Call, on: boolean) {
+  call.microphone.setDefaultConstraints({
+    autoGainControl: true,
+    echoCancellation: true,
+    noiseSuppression: on,
+  });
+  const track = call.microphone.state.mediaStream?.getAudioTracks()[0];
+  await track?.applyConstraints({
+    ...track.getConstraints(),
+    noiseSuppression: on,
+  });
+}
+
+const firstTrack = (stream: MediaStream | undefined, kind: "audio" | "video") =>
+  (kind === "audio"
+    ? stream?.getAudioTracks()
+    : stream?.getVideoTracks())?.[0] ?? null;
 
 const supportsSpeakerSelection = () =>
   typeof HTMLMediaElement !== "undefined" &&
@@ -279,6 +299,11 @@ export function StreamMedia({
       dominantSpeakerKey: dominantSpeaker?.sessionId,
       mic: {
         enabled: !mic.optionsAwareIsMute,
+        track: mic.optionsAwareIsMute
+          ? null
+          : firstTrack(mic.mediaStream, "audio"),
+        speakingWhileMuted: mic.isSpeakingWhileMuted,
+        setNoiseSuppression: (on) => setNoiseSuppression(call, on),
         allowed: canSendAudio,
         problem: mic.error ? deviceProblem(mic.error) : null,
         devices: mic.devices,
@@ -288,6 +313,9 @@ export function StreamMedia({
       },
       camera: {
         enabled: !camera.optionsAwareIsMute,
+        track: camera.optionsAwareIsMute
+          ? null
+          : firstTrack(camera.mediaStream, "video"),
         allowed: canSendVideo,
         problem: camera.error ? deviceProblem(camera.error) : null,
         devices: camera.devices,

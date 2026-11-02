@@ -15,6 +15,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createContext, use, type ReactNode } from "react";
 
 export const SETTINGS_SECTIONS = [
   { slug: "general", key: "general", icon: Settings },
@@ -68,14 +69,57 @@ export function SettingsNav() {
   );
 }
 
-/** A settings card: a heading and its rows. */
+/**
+ * Where a settings section renders: its own page, or the meeting's Settings dialog,
+ * which titles the section itself and has no room for cards.
+ */
+export const SettingsChrome = createContext<"page" | "dialog">("page");
+
+/** A section's title (and introduction), on its page. */
+export function SectionTitle({
+  title,
+  intro,
+}: {
+  title: string;
+  intro?: ReactNode;
+}) {
+  const chrome = use(SettingsChrome);
+  if (chrome === "dialog") {
+    return intro ? (
+      <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
+        {intro}
+      </p>
+    ) : null;
+  }
+  return (
+    <div className="flex flex-col gap-1">
+      <h2 className="text-[22px] font-bold">{title}</h2>
+      {intro ? (
+        <p className="text-muted-foreground max-w-[64ch] text-[15px] leading-normal">
+          {intro}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** A settings card: a heading and its rows. In the meeting's dialog, a plain group. */
 export function SettingsCard({
   title,
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
+  const chrome = use(SettingsChrome);
+  if (chrome === "dialog") {
+    return (
+      <section className="flex flex-col gap-4 border-t border-white/10 pt-5 first:border-t-0 first:pt-0">
+        <h3 className="text-[15px] font-bold">{title}</h3>
+        {children}
+      </section>
+    );
+  }
   return (
     <section className="bg-card flex flex-col gap-4 rounded-2xl px-6 py-5.5 ring-1 ring-[#e2e5ea] dark:ring-white/10">
       <h2 className="text-lg font-bold">{title}</h2>

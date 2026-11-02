@@ -32,12 +32,16 @@ export type RoomParticipant = {
   video: boolean;
   screen: boolean;
   speaking: boolean;
+  /** How loud they are right now, from 0 to 1, for the voice indicator. */
+  audioLevel: number;
   connection: ConnectionQuality;
 };
 
 export type InputDevice = {
   /** On, optimistically while a toggle is in flight. */
   enabled: boolean;
+  /** The live track while it's on, for a level meter or a preview. */
+  track: MediaStreamTrack | null;
   /** Whether you may turn it on: a host's policy can take that away. */
   allowed: boolean;
   problem: DeviceProblem | null;
@@ -69,7 +73,12 @@ export type RoomMedia = {
   sessionState: SharedSessionState | null;
   participants: RoomParticipant[];
   dominantSpeakerKey: string | undefined;
-  mic: InputDevice;
+  mic: InputDevice & {
+    /** You seem to be talking while muted. */
+    speakingWhileMuted: boolean;
+    /** Turns the browser's noise suppression on or off, now and for the rest of the call. */
+    setNoiseSuppression: (on: boolean) => Promise<void>;
+  };
   camera: InputDevice & { flip: () => Promise<void> };
   speaker: {
     /** False where the browser can't choose an output device (Safari, phones). */

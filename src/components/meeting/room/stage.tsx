@@ -1,6 +1,8 @@
 "use client";
 
-import { MonitorUp } from "lucide-react";
+import { cn } from "cn";
+import { Eye, EyeOff, MonitorUp } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "react-aria-components";
@@ -8,8 +10,9 @@ import { Button } from "react-aria-components";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { useRoomMedia, type RoomParticipant } from "../media";
+import { TrackView, useRoomMedia, type RoomParticipant } from "../media";
 import { fitGrid } from "./grid";
+import { useRoomTransition } from "./motion";
 import { useRoomControls } from "./room-controls";
 import { Tile } from "./tile";
 
@@ -70,30 +73,39 @@ export function Stage({ layout }: { layout: LayoutChoice }) {
   const pinned = people.find((p) => p.key === pinnedKey);
   if (pinned) {
     return (
-      <FocusLayout
-        main={videoOf(pinned)}
-        strip={[...screen, ...people.filter((p) => p !== pinned).map(videoOf)]}
-      />
+      <StageFade kind="focus">
+        <FocusLayout
+          main={videoOf(pinned)}
+          strip={[
+            ...screen,
+            ...people.filter((p) => p !== pinned).map(videoOf),
+          ]}
+        />
+      </StageFade>
     );
   }
   if (presenter && layout !== "gallery") {
     return (
-      <FocusLayout
-        main={{ participant: presenter, kind: "screen" }}
-        strip={people.map(videoOf)}
-      />
+      <StageFade kind="focus">
+        <FocusLayout
+          main={{ participant: presenter, kind: "screen" }}
+          strip={people.map(videoOf)}
+        />
+      </StageFade>
     );
   }
   const spotlighted = people.find((p) => p.userId === spotlight);
   if (spotlighted) {
     return (
-      <FocusLayout
-        main={videoOf(spotlighted)}
-        strip={[
-          ...screen,
-          ...people.filter((p) => p !== spotlighted).map(videoOf),
-        ]}
-      />
+      <StageFade kind="focus">
+        <FocusLayout
+          main={videoOf(spotlighted)}
+          strip={[
+            ...screen,
+            ...people.filter((p) => p !== spotlighted).map(videoOf),
+          ]}
+        />
+      </StageFade>
     );
   }
 
@@ -102,14 +114,20 @@ export function Stage({ layout }: { layout: LayoutChoice }) {
   const speaker = others.find((p) => p.key === speakerKey) ?? others[0] ?? self;
 
   if (layout === "auto" && others.length === 1 && speaker) {
-    return <OneOnOne other={speaker} self={self} />;
+    return (
+      <StageFade kind="oneOnOne">
+        <OneOnOne other={speaker} self={self} />
+      </StageFade>
+    );
   }
   if (layout === "speaker" && speaker) {
     return (
-      <FocusLayout
-        main={videoOf(speaker)}
-        strip={people.filter((p) => p !== speaker).map(videoOf)}
-      />
+      <StageFade kind="focus">
+        <FocusLayout
+          main={videoOf(speaker)}
+          strip={people.filter((p) => p !== speaker).map(videoOf)}
+        />
+      </StageFade>
     );
   }
 
@@ -118,28 +136,58 @@ export function Stage({ layout }: { layout: LayoutChoice }) {
     kind: "video",
   }));
   if (presenter) tiles.unshift({ participant: presenter, kind: "screen" });
-  return <Gallery tiles={tiles} />;
+  return (
+    <StageFade kind="gallery">
+      <Gallery tiles={tiles} />
+    </StageFade>
+  );
+}
+
+/** A new layout (gallery, one-on-one, a focus) fades in rather than snapping. */
+function StageFade({ kind, children }: { kind: string; children: ReactNode }) {
+  const transition = useRoomTransition(0.2);
+  return (
+    <motion.div
+      key={kind}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={transition}
+      className="size-full"
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 function Gallery({ tiles }: { tiles: StageTile[] }) {
   const t = useTranslations("Meeting");
   const [size, ref] = useElementSize<HTMLUListElement>();
   const fit = fitGrid(tiles.length, size.width, size.height, GAP);
+  const transition = useRoomTransition(0.28);
 
   return (
     <ul
       ref={ref}
       aria-label={t("stageLabel")}
-      className="flex size-full flex-wrap content-center items-center justify-center gap-2.5"
+      className="relative flex size-full flex-wrap content-center items-center justify-center gap-2.5"
     >
-      {tiles.map((tile) => (
-        <li
-          key={tileKey(tile)}
-          style={{ width: fit.tileWidth, height: fit.tileHeight }}
-        >
-          <MainTile tile={tile} />
-        </li>
-      ))}
+      <AnimatePresence initial={false} mode="popLayout">
+        {tiles.map((tile) => (
+          <motion.li
+            key={tileKey(tile)}
+            // Joins and leaves move tiles smoothly; a resize just follows.
+            layout
+            layoutDependency={tiles.length}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={transition}
+            style={{ width: fit.tileWidth, height: fit.tileHeight }}
+          >
+            <MainTile tile={tile} />
+          </motion.li>
+        ))}
+      </AnimatePresence>
     </ul>
   );
 }
@@ -185,29 +233,81 @@ function OneOnOne({
 }
 
 /**
- * In place of your own shared screen: showing it back to you would make a hall of
- * mirrors. Everyone else sees the screen itself.
+ * Your own shared screen as everyone else sees it, with Stop sharing. Sharing the whole
+ * screen shows the preview inside itself, so you can hide it; only you stop seeing it.
  */
-function SharingNotice() {
+function OwnScreen({
+  participant,
+  compact,
+}: {
+  participant: RoomParticipant;
+  /** In the strip beside a larger tile: just the preview and a label. */
+  compact: boolean;
+}) {
   const t = useTranslations("Meeting");
   const { screenShare } = useRoomMedia();
+  const [hidden, setHidden] = useState(false);
+  const pill =
+    "focus-visible:ring-ring flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold outline-none focus-visible:ring-2";
   return (
-    <div className="bg-card flex size-full flex-col items-center justify-center gap-4 rounded-xl p-6 text-center">
-      <MonitorUp className="text-primary size-10" aria-hidden="true" />
-      <p className="text-lg font-semibold">{t("youAreSharing")}</p>
-      <Button
-        onPress={() => void screenShare.stop()}
-        className="bg-destructive hover:bg-destructive/90 focus-visible:ring-ring h-10 rounded-full px-5 text-sm font-semibold text-white outline-none focus-visible:ring-2"
-      >
-        {t("stopSharing")}
-      </Button>
+    <div className="bg-card relative size-full overflow-hidden rounded-xl">
+      {hidden ? (
+        <p className="text-muted-foreground absolute inset-0 flex items-center justify-center p-6 pb-20 text-center text-sm">
+          {t("previewHidden")}
+        </p>
+      ) : (
+        <TrackView
+          participant={participant}
+          kind="screen"
+          className="absolute inset-0 size-full object-contain"
+        />
+      )}
+      {compact ? (
+        <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 rounded-lg bg-black/65 px-2 py-1 text-[13px] font-medium text-white">
+          <MonitorUp className="size-3.5" aria-hidden="true" />
+          {t("youAreSharing")}
+        </span>
+      ) : (
+        <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 bg-gradient-to-t from-black/80 via-black/50 to-transparent px-4 pt-12 pb-4">
+          <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <MonitorUp className="text-primary size-5" aria-hidden="true" />
+            {t("youAreSharing")}
+          </span>
+          <Button
+            onPress={() => setHidden((current) => !current)}
+            className={cn(pill, "bg-white/15 text-white hover:bg-white/25")}
+          >
+            {hidden ? (
+              <Eye className="size-4" aria-hidden="true" />
+            ) : (
+              <EyeOff className="size-4" aria-hidden="true" />
+            )}
+            {hidden ? t("showPreview") : t("hidePreview")}
+          </Button>
+          <Button
+            onPress={() => void screenShare.stop()}
+            className={cn(
+              pill,
+              "bg-destructive hover:bg-destructive/90 text-white",
+            )}
+          >
+            {t("stopSharing")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function MainTile({ tile }: { tile: StageTile }) {
+function MainTile({
+  tile,
+  compact = false,
+}: {
+  tile: StageTile;
+  compact?: boolean;
+}) {
   if (tile.kind === "screen" && tile.participant.isLocal) {
-    return <SharingNotice />;
+    return <OwnScreen participant={tile.participant} compact={compact} />;
   }
   return <Tile participant={tile.participant} kind={tile.kind} />;
 }
@@ -232,7 +332,7 @@ function FocusLayout({ main, strip }: { main: StageTile; strip: StageTile[] }) {
               key={tileKey(tile)}
               className="aspect-video h-24 shrink-0 lg:h-auto lg:w-full"
             >
-              <MainTile tile={tile} />
+              <MainTile tile={tile} compact />
             </li>
           ))}
         </ul>

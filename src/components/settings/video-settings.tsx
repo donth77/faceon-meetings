@@ -19,9 +19,10 @@ import {
   DeviceProblemNote,
   useRememberedDevices,
 } from "./device-fields";
-import { SettingsCard } from "./settings-nav";
+import { SectionTitle, SettingsCard } from "./settings-nav";
 
-function Preview({
+/** A live camera track, mirrored if you like it that way. */
+export function MirroredVideo({
   track,
   mirror,
 }: {
@@ -60,7 +61,7 @@ export function VideoSettings() {
 
   return (
     <>
-      <h2 className="text-[22px] font-bold">{t("title")}</h2>
+      <SectionTitle title={t("title")} />
       <SettingsCard title={t("camera")}>
         <div className="flex flex-wrap items-start gap-5">
           <div
@@ -69,7 +70,7 @@ export function VideoSettings() {
             className="relative aspect-video w-[400px] max-w-full flex-none overflow-hidden rounded-xl bg-[#1a1f26] text-[#c9d0d8]"
           >
             {camera.track ? (
-              <Preview track={camera.track} mirror={mirrorVideo} />
+              <MirroredVideo track={camera.track} mirror={mirrorVideo} />
             ) : (
               <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-sm">
                 {camera.pending ? (

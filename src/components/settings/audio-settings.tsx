@@ -21,7 +21,7 @@ import {
   DeviceProblemNote,
   useRememberedDevices,
 } from "./device-fields";
-import { SettingsCard } from "./settings-nav";
+import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /** Settings → Audio: microphone with a level meter, speaker with a test, noise suppression. */
 export function AudioSettings() {
@@ -34,7 +34,7 @@ export function AudioSettings() {
 
   return (
     <>
-      <h2 className="text-[22px] font-bold">{t("title")}</h2>
+      <SectionTitle title={t("title")} />
       <SettingsCard title={t("devices")}>
         <div className="flex max-w-[440px] flex-col gap-3.5">
           <DeviceField

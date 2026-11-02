@@ -62,6 +62,7 @@ function DialogOverlay({
 
 function Dialog({
   className,
+  bodyClassName,
   children,
   showCloseButton = true,
   closeLabel = "Close",
@@ -71,6 +72,8 @@ function Dialog({
 }: Omit<ModalOverlayPrimitiveProps, "className" | "children"> &
   Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> & {
     className?: string;
+    /** Classes for the dialog element inside the modal, for custom layouts. */
+    bodyClassName?: string;
     children: React.ReactNode;
     showCloseButton?: boolean;
     /** The close button's accessible name, translated by the caller. */
@@ -90,7 +93,10 @@ function Dialog({
         <DialogPrimitive
           data-slot="dialog"
           role={role}
-          className="[display:inherit] [gap:inherit] outline-none"
+          className={cn(
+            "[display:inherit] [gap:inherit] outline-none",
+            bodyClassName,
+          )}
         >
           {children}
           {showCloseButton && (
