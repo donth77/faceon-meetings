@@ -24,18 +24,20 @@ import {
 } from "react-aria-components";
 
 import { Button } from "@/components/ui/button";
-import { publicEnv } from "@/lib/env";
 import {
   ABOUT_MODEL,
-  answerLanguage,
+  modelApi,
+  modelLanguage,
+  modelState,
+  optionsFor,
+  type ModelState,
+} from "@/lib/ai/built-in";
+import { publicEnv } from "@/lib/env";
+import {
   ask,
   calloutDismissed,
-  chatState,
   dismissCallout,
-  modelApi,
-  optionsFor,
   relevant,
-  type ChatState,
   type Doc,
 } from "@/lib/help/assistant";
 
@@ -304,7 +306,7 @@ function Callout({
   onReady,
   onDismiss,
 }: {
-  kind: Exclude<ChatState, "ready" | "none">;
+  kind: Exclude<ModelState, "ready" | "none">;
   language: string;
   onReady: () => void;
   onDismiss: () => void;
@@ -400,8 +402,8 @@ function Callout({
  */
 function HelpAssistant({ entries }: { entries: HelpEntry[] }) {
   const locale = useLocale();
-  const language = answerLanguage(locale);
-  const [state, setState] = useState<ChatState | null>(null);
+  const language = modelLanguage(locale);
+  const [state, setState] = useState<ModelState | null>(null);
   const [dismissed, setDismissed] = useState(true);
   const docs = useMemo<Doc[]>(
     () =>
@@ -417,7 +419,7 @@ function HelpAssistant({ entries }: { entries: HelpEntry[] }) {
   useEffect(() => {
     if (!language) return;
     let cancelled = false;
-    void chatState(modelApi(), language).then((found) => {
+    void modelState(modelApi(), language).then((found) => {
       if (cancelled) return;
       setDismissed(calloutDismissed());
       setState(found);

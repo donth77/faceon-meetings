@@ -192,10 +192,13 @@ export async function getMeetingSummary(code: string): Promise<{
   joinable: boolean;
   allowGuests: boolean;
   waitingRoom: boolean;
+  /** AI notes are on in the session running now. */
+  notesOn: boolean;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
   if (!found) return null;
+  const open = await findOpenSession(found.meeting.id);
   return {
     code,
     title: found.meeting.title,
@@ -204,6 +207,7 @@ export async function getMeetingSummary(code: string): Promise<{
     joinable: isJoinable(found.meeting, new Date()),
     allowGuests: found.meeting.settings.allowGuests,
     waitingRoom: found.meeting.settings.waitingRoom,
+    notesOn: open?.notes != null,
   };
 }
 

@@ -49,6 +49,21 @@ export function Field({
   );
 }
 
+/** The dot of a radio choice; put it inside a React Aria Radio with the group class. */
+export function RadioDot({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "group-data-focus-visible:ring-ring flex size-[18px] shrink-0 items-center justify-center rounded-full border-2 border-[#c9cfd8] group-data-focus-visible:ring-2 group-data-selected:border-[#1f5eff] dark:border-white/30",
+        className,
+      )}
+    >
+      <span className="hidden size-2 rounded-full bg-[#1f5eff] group-data-selected:block" />
+    </span>
+  );
+}
+
 export type Option = { id: string; label: string };
 
 /** A select that looks like the form's inputs, with a check beside the chosen option. */

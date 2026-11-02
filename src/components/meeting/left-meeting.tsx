@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
+import { NotesAfterMeeting } from "@/components/notes/notes-after-meeting";
 import { Button, LinkButton } from "@/components/ui/button";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 
@@ -20,7 +21,10 @@ const CAN_REJOIN: ReadonlySet<LeftReason> = new Set([
   "connectionLost",
 ]);
 
-/** "You left the meeting", worded for the reason, with Rejoin and Return home. */
+/**
+ * "You left the meeting", worded for the reason, with Rejoin and Return home. Whoever
+ * took AI notes finds them below.
+ */
 export function LeftMeeting({
   reason,
   title,
@@ -37,24 +41,27 @@ export function LeftMeeting({
 
   return (
     <MeetingPageFrame>
-      <MeetingCard
-        title={t(`left.${reason}`)}
-        body={title}
-        footer={t("meetingIdLine", { code: formatMeetingCode(code) })}
-      >
-        {CAN_REJOIN.has(reason) ? (
-          <Button onPress={onRejoin} className="h-12 px-6 text-base">
-            {t("rejoin")}
-          </Button>
-        ) : null}
-        <LinkButton
-          href="/"
-          variant={CAN_REJOIN.has(reason) ? "outline" : "default"}
-          className="h-12 px-6 text-base"
+      <div className="flex w-full flex-col items-center gap-6">
+        <MeetingCard
+          title={t(`left.${reason}`)}
+          body={title}
+          footer={t("meetingIdLine", { code: formatMeetingCode(code) })}
         >
-          {t("returnHome")}
-        </LinkButton>
-      </MeetingCard>
+          {CAN_REJOIN.has(reason) ? (
+            <Button onPress={onRejoin} className="h-12 px-6 text-base">
+              {t("rejoin")}
+            </Button>
+          ) : null}
+          <LinkButton
+            href="/"
+            variant={CAN_REJOIN.has(reason) ? "outline" : "default"}
+            className="h-12 px-6 text-base"
+          >
+            {t("returnHome")}
+          </LinkButton>
+        </MeetingCard>
+        <NotesAfterMeeting code={code} title={title} />
+      </div>
     </MeetingPageFrame>
   );
 }

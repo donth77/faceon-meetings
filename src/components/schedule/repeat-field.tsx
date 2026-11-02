@@ -39,23 +39,12 @@ import {
 import { useIntlLocale } from "@/lib/preferences";
 
 import { DateField } from "./date-field";
-import { INPUT } from "./fields";
+import { INPUT, RadioDot } from "./fields";
 
 const NUMBER =
   "bg-background focus-visible:ring-ring h-10 w-16 rounded-[10px] border border-[#c9cfd8] px-2.5 text-[15px] outline-none focus-visible:ring-2 dark:border-white/15";
 const RADIO =
   "group flex min-h-10 cursor-default items-center gap-3 text-[15px] outline-none";
-
-function RadioDot() {
-  return (
-    <span
-      aria-hidden="true"
-      className="group-data-focus-visible:ring-ring flex size-[18px] shrink-0 items-center justify-center rounded-full border-2 border-[#c9cfd8] group-data-focus-visible:ring-2 group-data-selected:border-[#1f5eff] dark:border-white/30"
-    >
-      <span className="hidden size-2 rounded-full bg-[#1f5eff] group-data-selected:block" />
-    </span>
-  );
-}
 
 /** Days of the week in the reader's order: Sunday first in the US, Monday in Europe. */
 function weekOrder(locale: string): Weekday[] {

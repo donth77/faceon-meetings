@@ -478,7 +478,41 @@
     "hideNoVideo": "Hide tiles without video",
     "selfHidden": "Your tile is hidden from you. Others still see you.",
     "nothingToShow": "Nobody to show with these choices. Change them in Layout, at the top right.",
-    "openPictureInPicture": "Open picture-in-picture"
+    "openPictureInPicture": "Open picture-in-picture",
+    "notes": {
+      "title": "AI notes",
+      "close": "Close AI notes",
+      "chip": "AI notes on",
+      "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
+      "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
+      "start": "Start AI notes",
+      "stop": "Stop AI notes",
+      "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
+      "stopped": "AI notes are off.",
+      "dontTranscribe": "Don't transcribe me",
+      "dontTranscribeHelp": "What you say stays out of the notes",
+      "open": "Open AI notes",
+      "notInDemo": "AI notes aren't available in demo meetings.",
+      "failed": "Couldn't change AI notes. Try again.",
+      "youTakeNotes": "You're taking notes. What everyone says appears here, transcribed on each person's device.",
+      "takingNotes": "{name} is taking notes. The transcript is in their browser.",
+      "transcript": "Transcript",
+      "transcriptEmpty": "Nothing said yet.",
+      "notTranscribed": "Not in the notes",
+      "personOptedOut": "{name} chose not to be transcribed.",
+      "personUnsupported": "{name}'s browser can't transcribe on their device.",
+      "download": "Download",
+      "downloadOffer": "To put what you say in the AI notes, your browser needs a one-time download for transcribing on this device.",
+      "self": {
+        "listening": "What you say goes into the notes. It's transcribed on this device.",
+        "muted": "What you say goes into the notes when you unmute.",
+        "optedOut": "What you say stays out of the notes.",
+        "download": "Your browser needs a one-time download to transcribe what you say on this device.",
+        "downloading": "Downloading what your browser needs to transcribe on this device…",
+        "unsupported": "This browser can't transcribe on your device, so what you say isn't in the notes. Chrome on a computer can."
+      },
+      "startAgain": "Start AI notes again"
+    }
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -518,7 +552,8 @@
     "askingNote": "Keep this screen open. You’ll join as soon as someone lets you in, and we’ll play a sound.",
     "askingTitle": "Waiting for the host to let you in",
     "askingMeeting": "{title} · Hosted by {name}",
-    "leaveWaitingRoom": "Leave"
+    "leaveWaitingRoom": "Leave",
+    "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
   },
   "DeviceProblems": {
     "microphone": {
@@ -954,7 +989,35 @@
     },
     "aiNotes": {
       "title": "AI notes",
-      "comingSoon": "AI notes are on their way: a summary and action items after each meeting, made in your browser or with your own AI key."
+      "intro": "AI notes write a summary, decisions and action items for meetings you host. Start them from More › AI notes in a meeting. Everyone sees when they're on.",
+      "how": "How notes are made",
+      "onDevice": "On this computer",
+      "onDeviceHelp": "Free. Speech and summaries stay on each person's device. Needs a recent Chrome on a computer.",
+      "onDeviceState": {
+        "ready": "Ready here",
+        "download": "Downloads the first time",
+        "update": "Needs a newer Chrome",
+        "enable": "Turned off in Chrome",
+        "none": "Not in this browser"
+      },
+      "ownKey": "Your own AI key",
+      "ownKeyHelp": "Your AI provider writes the summary. They bill you, not FaceOn.",
+      "yourKey": "Your AI provider",
+      "provider": "Provider",
+      "model": "Model",
+      "recommended": "{model} (recommended)",
+      "modelHelp": "Pick one, or type any model ID your provider offers.",
+      "key": "API key",
+      "keyPlaceholder": "Paste your {provider} key",
+      "show": "Show",
+      "hide": "Hide",
+      "test": "Test key",
+      "testing": "Testing…",
+      "works": "Key works",
+      "getKey": "Get a key from {provider}",
+      "providerSaid": "It said: “{detail}”",
+      "keyStays": "Your key stays in this browser. FaceOn never stores it, and it goes only to your provider.",
+      "freeTiers": "Free plans may use what you send to improve their products. Google's free Gemini plan does, for example. Check your provider's terms before using a free key for private meetings."
     },
     "account": {
       "title": "Account",
@@ -1081,5 +1144,56 @@
     "body": "At {time}. Select to join.",
     "join": "Join",
     "untitled": "{name}’s meeting"
+  },
+  "Notes": {
+    "title": "AI notes",
+    "summary": "Summary",
+    "actionItems": "Action items",
+    "decisions": "Decisions",
+    "transcript": "Transcript",
+    "noOwner": "No owner yet",
+    "dueBy": "by {when}",
+    "none": "None",
+    "lineCount": "{count, plural, one {# line} other {# lines}} in the transcript.",
+    "engineOnDevice": "Notes are made on this computer, with Chrome's built-in AI.",
+    "engineOwnKey": "Notes are made by {provider}, with your key.",
+    "firstDownload": "Chrome downloads its built-in AI the first time, which can take a few minutes.",
+    "notReady": {
+      "noKey": "Add your {provider} key in AI notes settings.",
+      "update": "Chrome's built-in AI needs a newer Chrome. You can use your own AI key instead.",
+      "enable": "Chrome's built-in AI is turned off in this browser. You can use your own AI key instead.",
+      "none": "This browser doesn't have Chrome's built-in AI. You can use your own AI key instead."
+    },
+    "make": "Make notes",
+    "makeAgain": "Make again",
+    "settings": "AI notes settings",
+    "making": "Making notes…",
+    "downloading": "Downloading Chrome's built-in AI… {percent}",
+    "readingPart": "Reading part {part} of {parts}…",
+    "merging": "Putting it all together…",
+    "cancel": "Cancel",
+    "tryAgain": "Try again",
+    "failed": {
+      "unreadable": "The AI's answer couldn't be read as notes. Try again, or choose another model.",
+      "onDevice": "Chrome's built-in AI couldn't make the notes. Try again, or use your own AI key.",
+      "noKey": "Add your {provider} key in AI notes settings.",
+      "key": "{provider} didn't accept your key.",
+      "model": "{provider} doesn't offer that model.",
+      "limit": "{provider} says you're over your limit or out of credit.",
+      "unreachable": "Couldn't reach {provider}. Check your connection.",
+      "other": "{provider} couldn't make the notes."
+    },
+    "providerSaid": "{provider} said: “{detail}”",
+    "madeOnDevice": "Made on this computer at {time}",
+    "madeWith": "Made by {provider} at {time}",
+    "copy": "Copy",
+    "copied": "Notes copied",
+    "copyFailed": "Couldn't copy. Try Download instead.",
+    "download": "Download .md",
+    "fileName": "{title} AI notes",
+    "onlyYou": "Only you can see these notes, in this tab. Audio is never stored.",
+    "discard": "Delete notes and transcript",
+    "discardConfirm": "Delete them from this tab?",
+    "discardYes": "Delete"
   }
 }

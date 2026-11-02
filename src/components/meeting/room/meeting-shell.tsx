@@ -43,6 +43,7 @@ import {
 } from "./host-dialogs";
 import { InCallSettings, type InCallSection } from "./in-call-settings";
 import { useRoomTransition } from "./motion";
+import { NotesChip, NotesPanel, type NotTranscribed } from "./notes-panel";
 import { ParticipantsPanel } from "./participants-panel";
 import { PictureInPicture, usePictureInPicture } from "./picture-in-picture";
 import { FloatingReactions } from "./reactions";
@@ -55,6 +56,7 @@ import { useChat } from "./use-chat";
 import { useHostNotices } from "./use-host-notices";
 import { useLobby } from "./use-lobby";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
+import { useTranscript, useTranscription } from "./use-notes";
 import {
   useReactionAnnouncement,
   useReactions,
@@ -233,6 +235,79 @@ export function MeetingShell({
   const nameOf = (userId: string) =>
     media.participants.find((p) => p.userId === userId)?.name ?? "";
 
+  // AI notes: everyone hears when they go on, and each device transcribes its own
+  // person unless they'd rather not. The notetaker's device collects the transcript.
+  const notes = state?.notes ?? null;
+  const isNotetaker = notes?.by === self.id;
+  const transcript = useTranscript({
+    media,
+    code: meeting.code,
+    collecting: isNotetaker,
+    self,
+  });
+  const transcription = useTranscription({
+    media,
+    notes,
+    onLine: transcript.addOwn,
+  });
+  const { setOptedOut, download } = transcription;
+  const announcedNotes = useRef<string | null>(null);
+  useEffect(() => {
+    const key = notes ? `${notes.by}@${notes.startedAt}` : null;
+    if (key === announcedNotes.current) return;
+    const wasOn = announcedNotes.current !== null;
+    announcedNotes.current = key;
+    if (!notes) {
+      if (wasOn) toast(t("notes.stopped"), { id: "notes-banner" });
+      return;
+    }
+    if (notes.by === self.id) return;
+    toast(t("notes.banner", { name: notes.name }), {
+      id: "notes-banner",
+      duration: 15_000,
+      action: {
+        label: t("notes.dontTranscribe"),
+        onClick: () => setOptedOut(true),
+      },
+    });
+  }, [notes, self.id, t, setOptedOut]);
+  // Where this browser needs its one-time speech download, offer it once.
+  const offeredDownload = useRef(false);
+  useEffect(() => {
+    if (transcription.state !== "download" || offeredDownload.current) return;
+    offeredDownload.current = true;
+    toast(t("notes.downloadOffer"), {
+      id: "notes-download",
+      duration: 20_000,
+      action: { label: t("notes.download"), onClick: () => void download() },
+    });
+  }, [transcription.state, t, download]);
+  // Who isn't in the notes, for the notetaker; you see your own state in the chip.
+  const notTranscribed: NotTranscribed[] = [];
+  for (const person of media.participants) {
+    const status = transcript.statuses[person.userId];
+    if (
+      person.userId === self.id ||
+      notTranscribed.some((p) => p.userId === person.userId) ||
+      (status !== "optedOut" && status !== "unsupported")
+    ) {
+      continue;
+    }
+    notTranscribed.push({
+      userId: person.userId,
+      name: person.name,
+      reason: status,
+    });
+  }
+
+  async function setNotesOn(on: boolean) {
+    try {
+      await meetingApi.notes(meeting.code, { on });
+    } catch {
+      toast.error(t("notes.failed"));
+    }
+  }
+
   // Raised hands and reactions.
   const hands = useMemo(() => state?.hands ?? {}, [state]);
   const reactionsAllowed = (state?.reactions ?? true) || isHost;
@@ -404,10 +479,14 @@ export function MeetingShell({
     else openPanel(next);
   }
 
-  // Desktop keeps Participants above Chat; a phone shows the one opened last.
-  const shownPanels = phone
-    ? panels.slice(-1)
-    : (["people", "chat"] as const).filter((name) => panels.includes(name));
+  // Desktop keeps Participants above Chat, then AI notes; a phone shows the one opened last.
+  const shownPanels = (
+    phone
+      ? panels.slice(-1)
+      : (["people", "chat", "notes"] as const).filter((name) =>
+          panels.includes(name),
+        )
+  ).filter((name) => name !== "notes" || isHost);
   useMeetingShortcuts({
     toggleMic,
     toggleCamera: () => void media.camera.toggle(),
@@ -445,6 +524,24 @@ export function MeetingShell({
   usePresenceSounds(media.participants);
 
   function renderPanel(name: PanelName) {
+    if (name === "notes") {
+      return (
+        <NotesPanel
+          key="notes"
+          code={meeting.code}
+          title={title}
+          notes={notes}
+          demo={session.demo}
+          isNotetaker={isNotetaker}
+          lines={transcript.lines}
+          notTranscribed={notTranscribed}
+          onChange={setNotesOn}
+          onOpenSettings={() => setSettings("aiNotes")}
+          onDiscard={transcript.clear}
+          onClose={() => closePanel("notes")}
+        />
+      );
+    }
     return name === "people" ? (
       <ParticipantsPanel
         key="people"
@@ -491,6 +588,17 @@ export function MeetingShell({
             endsAt={endsAt}
             view={view}
             onViewChange={changeView}
+            notes={
+              notes ? (
+                <NotesChip
+                  notes={notes}
+                  self={transcription.state}
+                  onOptOutChange={setOptedOut}
+                  onDownload={() => void download()}
+                  onOpenNotes={isHost ? () => openPanel("notes") : undefined}
+                />
+              ) : null
+            }
           />
           <ConnectionBanner status={media.status} />
           <div className="flex min-h-0 flex-1 px-3">
@@ -593,6 +701,7 @@ export function MeetingShell({
             onOpenPictureInPicture={
               pip.supported ? () => void pip.open() : undefined
             }
+            onOpenNotes={isHost ? () => openPanel("notes") : undefined}
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}

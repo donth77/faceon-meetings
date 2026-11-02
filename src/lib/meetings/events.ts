@@ -34,6 +34,17 @@ export const reactionName = (code: ReactionCode) =>
 /** Chat messages are short; custom events are capped at 5 KB anyway. */
 export const MAX_CHAT_LENGTH = 1000;
 
+/** A transcript line is one stretch of speech; longer ones are cut. */
+export const MAX_NOTES_LINE = 1000;
+
+/** Whether what someone says goes into AI notes, and if not, why. */
+export const TRANSCRIPTION_STATUSES = [
+  "on",
+  "optedOut",
+  "unsupported",
+] as const;
+export type TranscriptionStatus = (typeof TRANSCRIPTION_STATUSES)[number];
+
 export const RoomEvent = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("chat.message"),
@@ -49,6 +60,22 @@ export const RoomEvent = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("lobby.updated"),
     count: z.number().int().min(0),
+  }),
+  /**
+   * AI notes: something the sender said, transcribed on their own device, for the
+   * notetaker. The id drops a repeat delivery.
+   */
+  z.object({
+    type: z.literal("notes.line"),
+    id: z.string().min(1).max(64),
+    text: z.string().trim().min(1).max(MAX_NOTES_LINE),
+    /** The language it was heard in (BCP 47). */
+    lang: z.string().min(2).max(35),
+  }),
+  /** AI notes: whether the sender is in them, sent when that changes. */
+  z.object({
+    type: z.literal("notes.status"),
+    status: z.enum(TRANSCRIPTION_STATUSES),
   }),
 ]);
 export type RoomEvent = z.infer<typeof RoomEvent>;
@@ -84,5 +111,10 @@ export const SharedSessionState = SessionPolicy.extend({
     .record(z.string(), z.string())
     .nullish()
     .transform((hands) => hands ?? {}),
+  /** AI notes, while a host has them on. */
+  notes: z
+    .object({ by: z.string(), name: z.string(), startedAt: z.string() })
+    .nullish()
+    .transform((notes) => notes ?? null),
 });
 export type SharedSessionState = z.infer<typeof SharedSessionState>;

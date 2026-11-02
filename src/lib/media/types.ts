@@ -30,6 +30,9 @@ export type JoinInfo = {
 
 export type TrackKind = "audio" | "video" | "screenshare" | "screenshare_audio";
 
+/** AI notes are on: who turned them on, and when (ISO 8601). */
+export type NotesState = { by: string; name: string; startedAt: string };
+
 /** Shared session state every participant sees the same way. */
 export type SessionState = {
   rev: number;
@@ -49,6 +52,8 @@ export type SessionState = {
   spotlight: string | null;
   /** userId → when the hand went up (ISO 8601). */
   hands: Record<string, string>;
+  /** AI notes, while they're on; everyone sees that they are. */
+  notes: NotesState | null;
 };
 
 /** What someone may publish; kinds left out of a change stay as they are. */

@@ -5,7 +5,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { meetingMember, meetingSession } from "@/lib/db/schema";
 import { mediaProvider } from "@/lib/media";
-import type { SessionState } from "@/lib/media/types";
+import type { NotesState, SessionState } from "@/lib/media/types";
 
 import { policyFromSettings, type SessionPolicy } from "./policy";
 import { userMediaId } from "./principal";
@@ -22,7 +22,10 @@ export function sessionPolicy(
 /** The complete shared state of a session, as every participant receives it. */
 export function sessionState(
   meeting: Meeting,
-  session: Pick<MeetingSession, "hands" | "rev" | "policy" | "spotlight">,
+  session: Pick<
+    MeetingSession,
+    "hands" | "rev" | "policy" | "spotlight" | "notes"
+  >,
   cohosts: string[],
 ): SessionState {
   return {
@@ -32,6 +35,7 @@ export function sessionState(
     cohosts,
     spotlight: session.spotlight,
     hands: session.hands,
+    notes: session.notes ?? null,
   };
 }
 
@@ -44,7 +48,9 @@ export type SessionChange =
   /** Someone was removed: their hand goes down and their spotlight ends. */
   | { forget: string }
   /** Someone became, or stopped being, a co-host. */
-  | { roles: true };
+  | { roles: true }
+  /** AI notes went on (who, when) or off. */
+  | { notes: NotesState | null };
 
 function updatesFor(change: SessionChange, now: Date) {
   const { hands, policy, spotlight } = meetingSession;
@@ -65,6 +71,7 @@ function updatesFor(change: SessionChange, now: Date) {
     };
   }
   if ("spotlight" in change) return { spotlight: change.spotlight };
+  if ("notes" in change) return { notes: change.notes };
   if ("forget" in change) {
     return {
       hands: sql`${hands} - ${change.forget}::text`,

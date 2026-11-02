@@ -1,6 +1,6 @@
 ---
 title: Privacy policy
-updated: 2026-11-01
+updated: 2026-11-02
 ---
 
 {appName} is a free, open-source video meeting service. This policy explains what {appName} at {siteUrl} keeps about you, why, and for how long. {operator} runs this copy of {appName}. Anyone can run their own copy, and each copy has its own policy.
@@ -30,6 +30,7 @@ Guests get a cookie with a random ID and avatar, so they're recognized when they
 
 - **Audio and video** pass through the media service (below) to reach the other people in the meeting. They aren't recorded.
 - **Chat messages** go straight to the people in the meeting and aren't stored. **Save chat** saves a copy on your own device only.
+- **AI notes**, when a host turns them on: each person's speech is turned into text on their own device, and only the text goes to the host taking notes. The transcript and the notes stay in that host's browser tab; {appName} doesn't store them. Anyone can choose not to be transcribed.
 - **Settings on your device**, such as your microphone, camera and time format, stay in your browser.
 
 ## Why
@@ -46,7 +47,8 @@ To run the service: to sign you in, connect your meetings, show your upcoming an
 
 - **Vercel** hosts the website.
 - **Neon** stores the database.
-- **Stream** carries meeting audio, video, chat and reactions, and keeps the name and picture each person uses in meetings.
+- **Stream** carries meeting audio, video, chat and reactions, and the text of AI notes to the host taking them, and keeps the name and picture each person uses in meetings.
+- **The host's AI provider** (OpenAI, Anthropic, Google, DeepSeek or OpenRouter), only when a host makes AI notes with their own AI key: the transcript goes from the host's browser straight to that provider, under the host's account with them.
 - **Resend** sends account emails, such as verifying your address or resetting a password.
 - **Google** and **GitHub**, only if you sign in with them.
 

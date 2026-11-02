@@ -14,6 +14,7 @@ import {
   PictureInPicture2,
   Settings,
   SmilePlus,
+  Sparkles,
   Users,
   Video,
   VideoOff,
@@ -128,7 +129,7 @@ function LeaveControl({
  * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
  * without labels.
  */
-export type PanelName = "people" | "chat";
+export type PanelName = "people" | "chat" | "notes";
 
 /** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
 function PanelButton({
@@ -212,19 +213,28 @@ function useFullscreen() {
   };
 }
 
-/** Settings, full screen and the keyboard shortcuts, in both More menus. */
+/** AI notes (for hosts), Settings, full screen and the shortcuts, in both More menus. */
 function MoreItems({
   onOpenSettings,
   onOpenPictureInPicture,
+  onOpenNotes,
 }: {
   onOpenSettings: () => void;
   onOpenPictureInPicture?: (() => void) | undefined;
+  /** For hosts and co-hosts. */
+  onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
   const openShortcuts = useOpenShortcuts();
   const fullscreen = useFullscreen();
   return (
     <>
+      {onOpenNotes ? (
+        <DropdownMenuItem onAction={onOpenNotes}>
+          <Sparkles aria-hidden="true" />
+          {t("notes.title")}
+        </DropdownMenuItem>
+      ) : null}
       <DropdownMenuItem onAction={onOpenSettings}>
         <Settings aria-hidden="true" />
         {t("settings")}
@@ -257,9 +267,11 @@ function MoreItems({
 function DesktopMoreMenu({
   onOpenSettings,
   onOpenPictureInPicture,
+  onOpenNotes,
 }: {
   onOpenSettings: () => void;
   onOpenPictureInPicture?: (() => void) | undefined;
+  onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
   return (
@@ -270,6 +282,7 @@ function DesktopMoreMenu({
           <MoreItems
             onOpenSettings={onOpenSettings}
             onOpenPictureInPicture={onOpenPictureInPicture}
+            onOpenNotes={onOpenNotes}
           />
         </DropdownMenu>
       </DropdownMenuTrigger>
@@ -284,6 +297,7 @@ function MoreMenu({
   onOpenPanel,
   onReaction,
   onOpenSettings,
+  onOpenNotes,
 }: {
   peopleCount: number;
   unreadChat: number;
@@ -291,6 +305,7 @@ function MoreMenu({
   /** Null when the host has turned reactions off. */
   onReaction: ((code: ReactionCode) => void) | null;
   onOpenSettings: () => void;
+  onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
   return (
@@ -345,7 +360,10 @@ function MoreMenu({
               : t("chat.title")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <MoreItems onOpenSettings={onOpenSettings} />
+          <MoreItems
+            onOpenSettings={onOpenSettings}
+            onOpenNotes={onOpenNotes}
+          />
         </DropdownMenu>
       </DropdownMenuTrigger>
     </div>
@@ -360,6 +378,7 @@ export function ControlBar({
   onTogglePanel,
   onOpenSettings,
   onOpenPictureInPicture,
+  onOpenNotes,
   unreadChat,
   waitingCount,
   onToggleMic,
@@ -379,6 +398,8 @@ export function ControlBar({
   onOpenSettings: (section?: "audio" | "video") => void;
   /** Opens the meeting in a small window; absent where the browser can't. */
   onOpenPictureInPicture?: (() => void) | undefined;
+  /** Opens AI notes; for hosts and co-hosts. */
+  onOpenNotes?: (() => void) | undefined;
   unreadChat: number;
   /** People in the waiting room (hosts and co-hosts see them). */
   waitingCount: number;
@@ -477,6 +498,7 @@ export function ControlBar({
         <DesktopMoreMenu
           onOpenSettings={() => onOpenSettings()}
           onOpenPictureInPicture={onOpenPictureInPicture}
+          onOpenNotes={onOpenNotes}
         />
         <MoreMenu
           peopleCount={count}
@@ -484,6 +506,7 @@ export function ControlBar({
           onOpenPanel={onTogglePanel}
           onReaction={onReaction}
           onOpenSettings={() => onOpenSettings()}
+          onOpenNotes={onOpenNotes}
         />
         <LeaveControl isOwner={isOwner} onEndForAll={onEndForAll} />
       </div>

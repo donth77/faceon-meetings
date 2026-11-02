@@ -130,6 +130,10 @@ export const HandRequest = z.union([
 ]);
 export type HandRequest = z.infer<typeof HandRequest>;
 
+/** AI notes: hosts and co-hosts turn them on or off, for everyone. */
+export const NotesRequest = z.object({ on: z.boolean() });
+export type NotesRequest = z.infer<typeof NotesRequest>;
+
 /** What hosts and co-hosts can do to others, and to the meeting. */
 export const ModerateRequest = z.discriminatedUnion("action", [
   /** Turn off someone's mic, camera or screen share. */

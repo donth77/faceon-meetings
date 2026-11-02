@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 
-import { SelectField } from "@/components/schedule/fields";
+import { RadioDot, SelectField } from "@/components/schedule/fields";
 import { TimeZoneField } from "@/components/schedule/time-zone-field";
 import { Button } from "@/components/ui/button";
 import { routing } from "@/i18n/routing";
@@ -23,17 +23,6 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 const nativeName = (locale: string) =>
   new Intl.DisplayNames([locale], { type: "language" }).of(locale) ?? locale;
-
-function RadioDot() {
-  return (
-    <span
-      aria-hidden="true"
-      className="group-data-focus-visible:ring-ring mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full border-2 border-[#c9cfd8] group-data-focus-visible:ring-2 group-data-selected:border-[#1f5eff] dark:border-white/30"
-    >
-      <span className="hidden size-2 rounded-full bg-[#1f5eff] group-data-selected:block" />
-    </span>
-  );
-}
 
 /** A small picture of the app in a theme, for the Theme choices. */
 function ThemePreview({ dark }: { dark: boolean }) {
@@ -142,7 +131,7 @@ export function GeneralSettings({
               value={value}
               className="group flex cursor-default items-start gap-3 py-2 text-[15px] font-semibold outline-none"
             >
-              <RadioDot />
+              <RadioDot className="mt-0.5" />
               {t(value === "12" ? "hours12" : "hours24")}
             </Radio>
           ))}
@@ -197,7 +186,7 @@ export function GeneralSettings({
                   {option !== "light" ? <ThemePreview dark /> : null}
                 </span>
                 <span className="flex items-center gap-2 text-[15px] font-bold">
-                  <RadioDot />
+                  <RadioDot className="mt-0.5" />
                   {t(`themes.${option}`)}
                 </span>
                 <span className="text-muted-foreground text-[13px]">

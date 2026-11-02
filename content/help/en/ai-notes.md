@@ -1,0 +1,41 @@
+---
+title: AI notes
+summary: A summary, action items and decisions from what's said, made in your browser.
+category: hosting
+order: 5
+---
+
+AI notes turn what's said in a meeting into a short summary, a list of action items (with who will do each and by when, when that's clear) and the decisions made. They're off unless a host turns them on, everyone can see when they're on, and nothing is saved anywhere.
+
+## Turn them on
+
+Hosts and co-hosts select **More**, then **AI notes**, then **Start AI notes**. AI notes aren't available in demo meetings.
+
+Whoever starts them is the notetaker: the transcript collects in their browser, and the notes are made there. Select **Stop AI notes** to end them for everyone. They also stop when the notetaker leaves.
+
+## What everyone sees
+
+- **AI notes on** at the top of the meeting, and a message saying who turned them on.
+- People about to join see the same note before they join.
+- To stay out of the notes, select **AI notes on**, then turn on **Don't transcribe me**. From then on, what you say isn't transcribed, and the notetaker sees that you chose this.
+
+## How speech becomes text
+
+Each person's browser turns what _they_ say into text, on their own device, and sends only the text to the notetaker. Audio never leaves anyone's device for this, and nothing is transcribed while you're muted.
+
+This works in Chrome on a computer. The first time, Chrome may need a one-time download to transcribe your language: select **Download** when it asks. Where a browser can't transcribe on the device (Safari, Firefox and some phones), that person's words aren't in the notes, and the notetaker sees who's missing.
+
+## How the notes are made
+
+When the notetaker stops AI notes, or leaves, the notes are made from the transcript. Choose how in **Settings**, then **AI notes**:
+
+- **On this computer**: Chrome's built-in AI makes the notes on the notetaker's own computer. It's free, and nothing leaves the computer. The first time, Chrome downloads its AI, which can take a few minutes. It needs a recent Chrome on a computer with enough memory and disk space, and writes notes in English, Spanish or Japanese (in English for other languages).
+- **Your own AI key**: your AI provider (OpenAI, Anthropic, Google, DeepSeek or OpenRouter) makes the notes, with a key from your account with them. Your browser sends the transcript straight to the provider, and they bill you. Select **Test key** to check that it works.
+
+> **Your key stays in your browser.** {appName} never receives or stores it. Some providers' free plans may use what you send to improve their products, so check your provider's terms before using a free key for private meetings.
+
+## After the meeting
+
+The notes show in the **AI notes** panel, and after you leave the meeting. Select **Copy** to copy them, or **Download .md** to save them, with the transcript, as a Markdown file. **Make again** makes them again, for example another way.
+
+The transcript and the notes stay only in that browser tab: closing the tab forgets them. Select **Delete notes and transcript** to remove them sooner.

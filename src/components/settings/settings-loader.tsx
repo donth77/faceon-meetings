@@ -31,6 +31,10 @@ const Notifications = dynamic(
     ),
   { ssr: false, loading },
 );
+const AiNotes = dynamic(
+  () => import("./ai-notes-settings").then((module) => module.AiNotesSettings),
+  { ssr: false, loading },
+);
 const Accessibility = dynamic(
   () =>
     import("./accessibility-settings").then(
@@ -48,6 +52,7 @@ export function SettingsLoader({
     | "video"
     | "reactions"
     | "notifications"
+    | "aiNotes"
     | "accessibility";
 }) {
   switch (section) {
@@ -61,6 +66,8 @@ export function SettingsLoader({
       return <Reactions />;
     case "notifications":
       return <Notifications />;
+    case "aiNotes":
+      return <AiNotes />;
     case "accessibility":
       return <Accessibility />;
   }

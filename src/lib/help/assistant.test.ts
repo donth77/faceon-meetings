@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  answerLanguage,
-  nearest,
-  promptFor,
-  relevant,
-  wordsOf,
-  type Doc,
-} from "./assistant";
+import { nearest, promptFor, relevant, wordsOf, type Doc } from "./assistant";
 
 const doc = (
   slug: string,
@@ -93,12 +86,5 @@ describe("promptFor", () => {
     const prompt = promptFor("How?", [DOCS[0] as Doc]);
     expect(prompt).toMatch(/^Help text:\n\n## Start a meeting\n/);
     expect(prompt.endsWith("Question: How?")).toBe(true);
-  });
-});
-
-describe("answerLanguage", () => {
-  it("answers in languages the model writes", () => {
-    expect(answerLanguage("en")).toBe("en");
-    expect(answerLanguage("pt-BR")).toBeNull();
   });
 });
