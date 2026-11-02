@@ -14,7 +14,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { DevicePreferences } from "@/lib/device/preferences";
+import { publicEnv } from "@/lib/env";
 import type { JoinResponse, MeetingErrorCode } from "@/lib/meetings/api";
+import { oneOf } from "@/lib/narrow";
 
 import { meetingApi, MeetingRequestError } from "./api-client";
 import { playSound } from "./chime";
@@ -69,7 +71,7 @@ const NOTICES: Partial<Record<MeetingErrorCode, NoticeKind>> = {
   REMOVED: "removed",
 };
 
-const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
+const RETRYABLE = [
   "BAD_PASSCODE",
   "LOCKED",
   "DENIED",
@@ -79,10 +81,24 @@ const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
   "RATE_LIMITED",
   "NETWORK",
   "BAD_REQUEST",
-]);
+] as const satisfies readonly JoinErrorKind[];
 
 const toJoinError = (code: MeetingErrorCode | "NETWORK"): JoinErrorKind =>
-  RETRYABLE.has(code) ? (code as JoinErrorKind) : "UNAVAILABLE";
+  oneOf(RETRYABLE, code) ?? "UNAVAILABLE";
+
+/** What the tab says at each step: where you are, then the meeting. */
+const STEP_TITLES = {
+  prejoin: "join",
+  joining: "join",
+  waiting: "waiting",
+  asking: "asking",
+  room: "room",
+  left: "left",
+  notice: null,
+} as const satisfies Record<
+  Step["name"],
+  "join" | "waiting" | "asking" | "room" | "left" | null
+>;
 
 /** The host's "mute people when they join" settings apply to everyone but hosts. */
 function entryDevices(
@@ -146,6 +162,14 @@ export default function MeetingEntry({
   const lastSession = useRef<{ id: string; signedIn: boolean } | null>(null);
 
   useEffect(() => scrubLinkPasscode(), []);
+
+  // The tab's title follows the screen, so it says where you are (2.4.2). A notice
+  // keeps the page's own title.
+  const titleKey = STEP_TITLES[step.name];
+  useEffect(() => {
+    if (!titleKey) return;
+    document.title = `${t(`stepTitles.${titleKey}`, { title })} · ${publicEnv.NEXT_PUBLIC_APP_NAME}`;
+  }, [titleKey, title, t]);
 
   const enter = useCallback(
     (admission: Admission, input: JoinInput) => {
@@ -309,7 +333,9 @@ export default function MeetingEntry({
       try {
         await meetingApi.end(code);
       } catch {
+        // Try again is the only way to finish, so it stays until it's used or dismissed.
         toast.error(t("endFailed"), {
+          duration: Infinity,
           action: { label: t("tryAgain"), onClick: () => void end() },
         });
       }

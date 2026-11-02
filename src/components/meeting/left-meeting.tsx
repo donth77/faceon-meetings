@@ -9,7 +9,11 @@ import { formatMeetingCode } from "@/lib/meetings/codes";
 
 import { playSound } from "./chime";
 import type { LeaveReason } from "./media";
-import { MeetingCard, MeetingPageFrame } from "./page-frame";
+import {
+  MEETING_CARD_TITLE,
+  MeetingCard,
+  MeetingPageFrame,
+} from "./page-frame";
 
 /** Why the meeting closed for you. Ending it yourself is told apart from the host ending it. */
 export type LeftReason = LeaveReason | "endedByYou" | "alone";
@@ -40,7 +44,11 @@ export function LeftMeeting({
   onRejoin: () => void;
 }) {
   const t = useTranslations("Meeting");
-  useEffect(() => playSound("youLeft"), []);
+  useEffect(() => {
+    playSound("youLeft");
+    // The room is gone; focus starts at what happened (2.4.3).
+    document.getElementById(MEETING_CARD_TITLE)?.focus();
+  }, []);
 
   return (
     <MeetingPageFrame>

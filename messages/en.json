@@ -209,6 +209,13 @@
   },
   "Meeting": {
     "pageTitle": "Join a meeting",
+    "stepTitles": {
+      "join": "Join {title}",
+      "waiting": "Waiting for the host · {title}",
+      "asking": "Asking to join · {title}",
+      "room": "{title}",
+      "left": "Left {title}"
+    },
     "defaultTitle": "{name}’s meeting",
     "you": "{name} (You)",
     "screenOf": "{name}’s screen",

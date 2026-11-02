@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button as AriaButton } from "react-aria-components";
 
 import { DeviceProblemNote } from "@/components/device/device-problem-note";
@@ -41,6 +41,7 @@ import {
   usePreferences,
   withDefaults,
 } from "@/lib/preferences";
+import { meetingPath, signInPath } from "@/lib/routes";
 
 import { loadGuestName, saveGuestName } from "../guest-name";
 import { useMeetingTitle } from "../meeting-title";
@@ -104,10 +105,10 @@ function PreviewToggle({
       aria-label={label}
       onPress={onPress}
       className={cn(
-        "flex size-14 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white",
+        "focus-visible:focus-ring flex size-14 items-center justify-center rounded-full outline-hidden",
         on
           ? "bg-[#262b33]/90 text-[#f2f4f7] hover:bg-[#303741]"
-          : "bg-destructive hover:bg-destructive/90 text-white",
+          : "bg-destructive-fill hover:bg-destructive-fill/90 text-white",
       )}
     >
       <Icon className="size-6" aria-hidden="true" />
@@ -141,7 +142,7 @@ function DeviceSelect({
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
         disabled={devices.length === 0}
-        className="border-input bg-card focus-visible:border-ring focus-visible:ring-ring/50 h-11 w-full min-w-0 truncate rounded-[10px] border px-2.5 text-[15px] outline-none focus-visible:ring-3 disabled:opacity-60"
+        className="border-input bg-card focus-visible:focus-ring h-11 w-full min-w-0 truncate rounded-[10px] border px-2.5 text-[15px] outline-hidden disabled:opacity-60"
       >
         {devices.length === 0 ? (
           <option value="">{t("noDevices")}</option>
@@ -219,8 +220,22 @@ export function PreJoin({
   // With a background on, the preview shows it, and never the bare camera meanwhile.
   const preview = useEffectsTrack(video.track, effect, useEffectProblems());
 
+  // Asking to join, waiting, and coming back replace the button you pressed, so focus
+  // goes to the new heading, and the status region below says what's happening.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const shownStatus = useRef(status);
+  useEffect(() => {
+    const before = shownStatus.current;
+    shownStatus.current = status;
+    const waitingNow = status === "asking" || status === "waiting";
+    const waitingBefore = before === "asking" || before === "waiting";
+    if (waitingNow !== waitingBefore || (waitingNow && status !== before)) {
+      heading.current?.focus();
+    }
+  }, [status]);
+
   const busy = status !== "idle";
-  const signInHref = `/sign-in?next=${encodeURIComponent(`/j/${meeting.code}`)}`;
+  const signInHref = signInPath(meetingPath(meeting.code));
   const needsPasscode = error === "BAD_PASSCODE";
   const errorMessage = error
     ? t(
@@ -310,7 +325,7 @@ export function PreJoin({
               <AriaButton
                 aria-label={te("title")}
                 onPress={() => setChoosingEffect(true)}
-                className="absolute right-4 bottom-[22px] flex size-11 items-center justify-center gap-2 rounded-full bg-[#262b33]/90 text-sm font-semibold text-[#f2f4f7] outline-none hover:bg-[#303741] focus-visible:ring-2 focus-visible:ring-white sm:w-auto sm:px-3.5"
+                className="focus-visible:focus-ring absolute right-4 bottom-[22px] flex size-11 items-center justify-center gap-2 rounded-full bg-[#262b33]/90 text-sm font-semibold text-[#f2f4f7] outline-hidden hover:bg-[#303741] sm:w-auto sm:px-3.5"
               >
                 <WandSparkles className="size-[18px]" aria-hidden="true" />
                 <span className="max-sm:hidden">{te("title")}</span>
@@ -374,7 +389,7 @@ export function PreJoin({
               onPress={() =>
                 void playTestSound(devices.speakerId).catch(() => {})
               }
-              className="text-primary focus-visible:ring-ring flex items-center gap-2 rounded px-0.5 py-1.5 text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
+              className="text-primary focus-visible:focus-ring flex items-center gap-2 rounded px-0.5 py-1.5 text-sm font-semibold outline-hidden hover:underline"
             >
               <Volume2 className="size-[18px]" aria-hidden="true" />
               {t("testSound")}
@@ -395,21 +410,22 @@ export function PreJoin({
                     <span
                       key={dot}
                       style={{ animationDelay: `${dot * 200}ms` }}
-                      className="size-2.5 animate-pulse rounded-full bg-[#f2b200] motion-reduce:animate-none"
+                      className="bg-hand size-2.5 animate-pulse rounded-full motion-reduce:animate-none"
                     />
                   ))}
                 </div>
-                <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
+                <h1
+                  ref={heading}
+                  tabIndex={-1}
+                  className="font-display text-3xl font-bold tracking-tight text-balance outline-none sm:text-[34px]"
+                >
                   {t("askingTitle")}
                 </h1>
                 <p className="text-muted-foreground">
                   {t("askingMeeting", { title, name: meeting.hostName })}
                 </p>
               </div>
-              <p
-                role="status"
-                className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal"
-              >
+              <p className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal">
                 <Info
                   className="text-muted-foreground mt-px size-5 shrink-0"
                   aria-hidden="true"
@@ -422,7 +438,11 @@ export function PreJoin({
               <p className="text-muted-foreground text-[13px] font-bold tracking-[0.06em] uppercase">
                 {status === "waiting" ? t("waitingEyebrow") : t("readyToJoin")}
               </p>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
+              <h1
+                ref={heading}
+                tabIndex={-1}
+                className="font-display text-3xl font-bold tracking-tight text-balance outline-none sm:text-[34px]"
+              >
                 {title}
               </h1>
               <p className="text-muted-foreground">
@@ -433,6 +453,15 @@ export function PreJoin({
               </p>
             </div>
           )}
+
+          {/* Mounted from the start, so a screen reader hears each change. */}
+          <p role="status" className="sr-only">
+            {status === "asking"
+              ? t("askingNote")
+              : status === "waiting"
+                ? t("waitingForHost")
+                : ""}
+          </p>
 
           {meeting.notesOn ? (
             <p
@@ -448,10 +477,7 @@ export function PreJoin({
           ) : null}
 
           {status === "waiting" ? (
-            <p
-              role="status"
-              className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-3.5 py-3 text-sm leading-normal text-amber-950 ring-1 ring-amber-200 ring-inset dark:bg-amber-400/10 dark:text-amber-100 dark:ring-amber-400/30"
-            >
+            <p className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-3.5 py-3 text-sm leading-normal text-amber-950 ring-1 ring-amber-200 ring-inset dark:bg-amber-400/10 dark:text-amber-100 dark:ring-amber-400/30">
               <span
                 aria-hidden="true"
                 className="mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-400"
@@ -506,7 +532,7 @@ export function PreJoin({
             <Button
               variant="outline"
               onPress={onStopWaiting}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive h-[52px] rounded-[14px] text-[16px] font-semibold"
+              className="border-destructive/40 text-destructive-text hover:bg-destructive/10 hover:text-destructive-text h-[52px] rounded-[14px] text-[16px] font-semibold"
             >
               {t("leaveWaitingRoom")}
             </Button>

@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { LinkButton } from "@/components/ui/button";
+import { meetingPath, signInPath } from "@/lib/routes";
 
 import { MeetingCard, MeetingPageFrame } from "./page-frame";
 
@@ -25,7 +26,7 @@ export function MeetingNotice({
       <MeetingCard title={t(`${kind}.title`)} body={t(`${kind}.body`)}>
         {signIn ? (
           <LinkButton
-            href={`/sign-in?next=${encodeURIComponent(`/j/${code}`)}`}
+            href={signInPath(meetingPath(code))}
             className={bigButton}
           >
             {t("signInAction")}

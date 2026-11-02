@@ -7,6 +7,7 @@ import { useOrigin } from "@/hooks/use-origin";
 import { publicEnv } from "@/lib/env";
 import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
+import { meetingPath } from "@/lib/routes";
 
 import { useMeetingTitle } from "./meeting-title";
 
@@ -15,8 +16,7 @@ export function inviteLink(
   origin: string,
   meeting: { code: string; passcode: string | null },
 ) {
-  const fragment = meeting.passcode ? `#pwd=${meeting.passcode}` : "";
-  return `${origin}/j/${meeting.code}${fragment}`;
+  return `${origin}${meetingPath(meeting.code, meeting.passcode)}`;
 }
 
 /**

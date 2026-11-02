@@ -43,6 +43,9 @@ export function MeetingPageFrame({
   );
 }
 
+/** The card's heading, which a screen that replaces another can move focus to. */
+export const MEETING_CARD_TITLE = "meeting-card-title";
+
 /** The centered card those pages use for a message and its next steps. */
 export function MeetingCard({
   title,
@@ -57,13 +60,14 @@ export function MeetingCard({
 }) {
   return (
     <section
-      aria-labelledby="meeting-card-title"
+      aria-labelledby={MEETING_CARD_TITLE}
       className="bg-card ring-border flex w-full max-w-[520px] flex-col gap-6 rounded-[20px] p-7 text-center ring-1 sm:p-9"
     >
       <div className="flex flex-col gap-2">
         <h1
-          id="meeting-card-title"
-          className="font-display text-2xl font-bold tracking-tight text-balance sm:text-3xl"
+          id={MEETING_CARD_TITLE}
+          tabIndex={-1}
+          className="font-display text-2xl font-bold tracking-tight text-balance outline-none sm:text-3xl"
         >
           {title}
         </h1>
