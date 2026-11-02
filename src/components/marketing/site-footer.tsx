@@ -6,12 +6,11 @@ import { GitHubIcon } from "@/components/auth/provider-icons";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 
-import { LanguageMenu } from "./language-menu";
 import { PUBLIC_CONTAINER } from "./layout";
 
 /**
- * Footer for public pages: Help, the legal pages and the credits, and the language menu.
- * The source link appears once NEXT_PUBLIC_REPO_URL is set.
+ * Footer for public pages: Help, the legal pages and the credits. The source link
+ * appears once NEXT_PUBLIC_REPO_URL is set. The language menu is in the header.
  */
 export async function SiteFooter() {
   const t = await getTranslations("Landing");
@@ -22,7 +21,7 @@ export async function SiteFooter() {
       <div
         className={cn(
           PUBLIC_CONTAINER,
-          "flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-5 sm:justify-between",
+          "flex justify-center py-5 sm:justify-start",
         )}
       >
         <nav
@@ -54,10 +53,6 @@ export async function SiteFooter() {
             </a>
           ) : null}
         </nav>
-        {/* Phones have it in the header, beside Sign in. */}
-        <div className="hidden sm:block">
-          <LanguageMenu />
-        </div>
       </div>
     </footer>
   );

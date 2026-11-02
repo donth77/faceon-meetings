@@ -3,8 +3,6 @@ title: Credits
 updated: 2026-11-02
 ---
 
-{appName} is built on other people's open work. Thank you to everyone below.
-
 ## Avatars
 
 The avatars are [Dylan](https://www.dicebear.com/styles/dylan/) by Natalia Spivak, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and drawn with [DiceBear](https://www.dicebear.com/) (MIT).
@@ -25,7 +23,7 @@ The avatars are [Dylan](https://www.dicebear.com/styles/dylan/) by Natalia Spiva
 - The California coast from the Pacific Coast Highway, by Carol M. Highsmith. [Library of Congress](https://www.loc.gov/item/2013633128/), public domain.
 - The Moon over Earth's horizon, from the International Space Station, by NASA. [NASA Image and Video Library](https://images.nasa.gov/details/iss002e9767), public domain.
 
-### Moving
+### Videos
 
 - A foggy aurora near Berlin, by Fritzchens Fritz. [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Foggy_Aurora_DSC03334.webm), CC0.
 - The Sahara under clouds, from the International Space Station, by NASA. [Wikimedia Commons](<https://commons.wikimedia.org/wiki/File:Crew_Earth_Observations_(4K).webm>), public domain.
@@ -33,8 +31,6 @@ The avatars are [Dylan](https://www.dicebear.com/styles/dylan/) by Natalia Spiva
 - Virginia Falls, Glacier National Park, by NPS / Jacob W. Frank. [Wikimedia Commons](<https://commons.wikimedia.org/wiki/File:Virginia_Falls_(26105159061).webm>), public domain.
 - A lenticular cloud over Longs Peak, Colorado, by Stepleton. [Wikimedia Commons](<https://commons.wikimedia.org/wiki/File:Lenticular_cloud_over_Longs_Peak,_Colorado_(time_lapse).ogv>), CC0.
 - Sunrise at Swiftcurrent Lake, Glacier National Park, by NPS / Jacob W. Frank. [Wikimedia Commons](<https://commons.wikimedia.org/wiki/File:Sunrise_at_Swiftcurrent_Lake_(26145798446).webm>), public domain.
-
-The gradients are {appName}'s own. Each background was cropped or trimmed to fit, and the moving ones loop.
 
 ## Finding you in the picture
 
