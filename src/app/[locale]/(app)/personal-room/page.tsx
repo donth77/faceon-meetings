@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
+import { PanelLoading } from "@/components/app-shell/loading";
 import { PersonalRoomView } from "@/components/personal-room/personal-room-view";
 import { requireSession } from "@/lib/auth/session";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
@@ -14,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function PersonalRoomPage() {
   return (
-    <Suspense fallback={<div className="flex-1" aria-busy="true" />}>
+    <Suspense fallback={<PanelLoading className="flex-1 p-6 md:p-10" />}>
       <PersonalRoom />
     </Suspense>
   );

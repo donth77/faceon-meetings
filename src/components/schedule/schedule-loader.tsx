@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import type { ComponentProps } from "react";
 
+import { PanelLoading } from "@/components/app-shell/loading";
+
 import type { ScheduleForm } from "./schedule-form";
 
 /**
@@ -13,7 +15,7 @@ const Form = dynamic(
   () => import("./schedule-form").then((module) => module.ScheduleForm),
   {
     ssr: false,
-    loading: () => <div className="min-h-[600px]" aria-busy="true" />,
+    loading: () => <PanelLoading height="h-[560px]" />,
   },
 );
 

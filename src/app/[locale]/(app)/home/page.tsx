@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
+import { CardsLoading } from "@/components/app-shell/loading";
 import { Clock } from "@/components/home/clock";
 import {
   PersonalRoomCard,
@@ -43,7 +44,7 @@ export default async function HomePage() {
           </div>
         </section>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
-          <Suspense fallback={<div className="min-h-48" aria-busy="true" />}>
+          <Suspense fallback={<CardsLoading rows={2} />}>
             <PersonalRoom />
           </Suspense>
           <ScheduleCard />

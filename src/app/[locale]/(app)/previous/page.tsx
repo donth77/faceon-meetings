@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
+import { CardsLoading } from "@/components/app-shell/loading";
 import { PreviousLoader } from "@/components/history/previous-loader";
 import { requireSession } from "@/lib/auth/session";
 import { previousMeetings } from "@/lib/meetings/history";
@@ -19,7 +20,7 @@ export default async function PreviousPage() {
         <h1 className="text-[32px] font-bold tracking-[-0.01em]">
           {t("title")}
         </h1>
-        <Suspense fallback={<div className="min-h-40" aria-busy="true" />}>
+        <Suspense fallback={<CardsLoading />}>
           <Meetings />
         </Suspense>
       </div>

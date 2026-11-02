@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
+import { CardsLoading } from "@/components/app-shell/loading";
 import type { UpcomingRow } from "@/components/schedule/upcoming-list";
 import { UpcomingLoader } from "@/components/schedule/upcoming-loader";
 import { LinkButton } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export default async function UpcomingPage() {
             {t("schedule")}
           </LinkButton>
         </div>
-        <Suspense fallback={<div className="min-h-40" aria-busy="true" />}>
+        <Suspense fallback={<CardsLoading />}>
           <Meetings />
         </Suspense>
       </div>

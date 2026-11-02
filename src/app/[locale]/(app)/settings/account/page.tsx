@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 
+import { PanelLoading } from "@/components/app-shell/loading";
 import {
   AccountSettings,
   type PhotoProvider,
@@ -39,7 +40,7 @@ export default function Page({
   searchParams,
 }: PageProps<"/[locale]/settings/account">) {
   return (
-    <Suspense fallback={<div className="min-h-60" aria-busy="true" />}>
+    <Suspense fallback={<PanelLoading height="h-96" />}>
       <Account searchParams={searchParams} />
     </Suspense>
   );

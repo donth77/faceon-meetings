@@ -2,7 +2,9 @@
 
 import dynamic from "next/dynamic";
 
-const loading = () => <div className="min-h-60" aria-busy="true" />;
+import { PanelLoading } from "@/components/app-shell/loading";
+
+const loading = () => <PanelLoading height="h-72" />;
 
 // These sections read this device's settings, devices and clock, so they render in the browser.
 const General = dynamic(
