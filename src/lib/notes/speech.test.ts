@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { speechLanguage, startTranscribing, type SpeechApi } from "./speech";
+import {
+  speechLanguage,
+  startTranscribing,
+  transcriptionStatus,
+  type SpeechApi,
+} from "./speech";
 
 describe("speechLanguage", () => {
   it("uses the browser's regional form of the app's language", () => {
@@ -142,5 +147,38 @@ describe("startTranscribing", () => {
     expect(second?.stopped).toBe("abort");
     second?.hear("late words");
     expect(lines).toEqual([]);
+  });
+});
+
+describe("transcriptionStatus", () => {
+  const on = { optedOut: false, failed: false } as const;
+
+  it("puts someone in the notes once their browser is ready", () => {
+    expect(transcriptionStatus({ ...on, support: "available" })).toBe("on");
+  });
+
+  it("says when the one-time download is still to do, or under way", () => {
+    expect(transcriptionStatus({ ...on, support: "downloadable" })).toBe(
+      "download",
+    );
+    expect(transcriptionStatus({ ...on, support: "downloading" })).toBe(
+      "downloading",
+    );
+  });
+
+  it("keeps can't for browsers that can't, or that stopped working", () => {
+    expect(transcriptionStatus({ ...on, support: "unavailable" })).toBe(
+      "unsupported",
+    );
+    expect(
+      transcriptionStatus({ ...on, support: "available", failed: true }),
+    ).toBe("unsupported");
+  });
+
+  it("puts choosing not to be transcribed first, and says nothing while checking", () => {
+    expect(
+      transcriptionStatus({ ...on, optedOut: true, support: "downloadable" }),
+    ).toBe("optedOut");
+    expect(transcriptionStatus({ ...on, support: "checking" })).toBeNull();
   });
 });

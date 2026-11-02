@@ -26,7 +26,7 @@ export const isInteractiveTarget = (target: EventTarget | null) =>
     "button, a[href], input, textarea, select, summary, [contenteditable=true], [role=button], [role=switch], [role=checkbox], [role=radio], [role=menuitem], [role=option], [role=tab], [role=slider], [role=link]",
   ) !== null;
 
-type UserAgentData = { brands: Array<{ brand: string }> };
+type UserAgentData = { brands: Array<{ brand: string }>; mobile?: boolean };
 
 /**
  * Chromium browsers (Chrome, Edge, …) take hints for the screen-share picker and can
@@ -37,3 +37,18 @@ export const isChromium = () =>
   (
     navigator as Navigator & { userAgentData?: UserAgentData }
   ).userAgentData?.brands.some((b) => b.brand === "Chromium") === true;
+
+/**
+ * Google Chrome on a computer: the browser behind AI notes' speech to text on the device.
+ * Other Chromium browsers have the same API without what's behind it, and asking them
+ * whether it's there can crash the page, so they're never asked.
+ */
+export const isDesktopChrome = () => {
+  if (typeof navigator === "undefined") return false;
+  const data = (navigator as Navigator & { userAgentData?: UserAgentData })
+    .userAgentData;
+  return (
+    data?.brands.some((b) => b.brand === "Google Chrome") === true &&
+    data.mobile !== true
+  );
+};

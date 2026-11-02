@@ -4,6 +4,9 @@
  * person's browser transcribes only their own mic, and only while they're unmuted.
  */
 
+import type { TranscriptionStatus } from "@/lib/meetings/events";
+import { isDesktopChrome } from "@/lib/platform";
+
 /** What of the Web Speech API this uses. It isn't in TypeScript's lib. */
 interface RecognitionAlternative {
   transcript: string;
@@ -46,8 +49,12 @@ export interface SpeechApi {
   install?(options: OnDevice): Promise<boolean>;
 }
 
-/** The browser's speech recognition, if it has one. */
+/**
+ * The browser's speech recognition, where it can work on the device: Chrome on a
+ * computer. Elsewhere there's none, without asking (see isDesktopChrome).
+ */
 export function speechApi(): SpeechApi | undefined {
+  if (!isDesktopChrome()) return undefined;
   return (globalThis as { SpeechRecognition?: SpeechApi }).SpeechRecognition;
 }
 
@@ -74,6 +81,24 @@ export async function speechSupport(
   } catch {
     return "unavailable";
   }
+}
+
+/**
+ * Whether you're in the notes, as the notetaker's list says it: in them (when you speak,
+ * unmuted), chose not to be, not yet (the one-time download, not started or under way),
+ * or this browser can't. Null while that's still being found out.
+ */
+export function transcriptionStatus(input: {
+  optedOut: boolean;
+  support: SpeechSupport | "checking";
+  failed: boolean;
+}): TranscriptionStatus | null {
+  if (input.optedOut) return "optedOut";
+  if (input.failed || input.support === "unavailable") return "unsupported";
+  if (input.support === "checking") return null;
+  if (input.support === "downloadable") return "download";
+  if (input.support === "downloading") return "downloading";
+  return "on";
 }
 
 /** Downloads the language for on-device use. True once it's ready. */

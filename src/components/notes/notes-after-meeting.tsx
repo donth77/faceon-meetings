@@ -4,13 +4,18 @@ import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { loadTranscript, saveTranscript } from "@/lib/notes/transcript";
+import {
+  loadTranscript,
+  notesTurnedOff,
+  saveTranscript,
+} from "@/lib/notes/transcript";
 
 import { NotesMaker } from "./notes-maker";
 
 /**
  * After the meeting, for whoever took AI notes in this tab: the notes, made from the
- * transcript (at once where nothing needs asking), with Copy and Download.
+ * transcript (at once where nothing needs asking, unless the meeting's host turned AI
+ * notes off), with Copy and Download.
  */
 export function NotesAfterMeeting({
   code,
@@ -27,6 +32,7 @@ export function NotesAfterMeeting({
 }) {
   const t = useTranslations("Notes");
   const [lines, setLines] = useState(() => loadTranscript(session.id));
+  const [askFirst] = useState(() => notesTurnedOff(session.id));
   if (lines.length === 0) return null;
   return (
     <section
@@ -47,7 +53,7 @@ export function NotesAfterMeeting({
         title={title}
         lines={lines}
         settings={{ href: "/settings/ai-notes" }}
-        autoStart
+        autoStart={!askFirst}
         autoShare={session.shareNotes}
         onDiscard={() => {
           saveTranscript(session.id, []);

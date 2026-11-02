@@ -1,8 +1,8 @@
 "use client";
 
-import { Download, Settings, Sparkles } from "lucide-react";
+import { Download, LoaderCircle, Settings, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
 
 import { NotesMaker } from "@/components/notes/notes-maker";
@@ -10,6 +10,7 @@ import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { NotesState } from "@/lib/media/types";
+import type { TranscriptionStatus } from "@/lib/meetings/events";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
 
@@ -25,8 +26,15 @@ const FOOTER_BUTTON =
 export type NotTranscribed = {
   userId: string;
   name: string;
-  reason: "optedOut" | "unsupported";
+  reason: Exclude<TranscriptionStatus, "on">;
 };
+
+const NOT_TRANSCRIBED = {
+  optedOut: "personOptedOut",
+  download: "personDownload",
+  downloading: "personDownloading",
+  unsupported: "personUnsupported",
+} as const satisfies Record<NotTranscribed["reason"], string>;
 
 /**
  * What's been said so far, newest at the bottom. While AI notes are on it scrolls by
@@ -186,9 +194,7 @@ export function NotesPanel({
           >
             {notTranscribed.map((person) => (
               <li key={person.userId}>
-                {person.reason === "optedOut"
-                  ? t("personOptedOut", { name: person.name })
-                  : t("personUnsupported", { name: person.name })}
+                {t(NOT_TRANSCRIBED[person.reason], { name: person.name })}
               </li>
             ))}
           </ul>
@@ -207,7 +213,10 @@ export function NotesPanel({
           title={title}
           lines={lines}
           settings={{ onPress: onOpenSettings }}
-          autoStart
+          autoStart={
+            // Turned off by the meeting's host, rather than stopped: only when asked.
+            allowed
+          }
           autoShare={shared}
           onDiscard={onDiscard}
         />
@@ -280,8 +289,9 @@ export function NotesPanel({
 
 /**
  * "AI notes on", in the top bar for everyone while they're on: who turned them on,
- * whether what you say goes into them, and Don't transcribe me. Hosts and co-hosts can
- * open the notes from it.
+ * whether what you say goes into them, and Don't transcribe me. Where this browser needs
+ * its one-time download first, the chip is marked and this is where it's done, with its
+ * progress. Hosts and co-hosts can open the notes from it.
  */
 export function NotesChip({
   notes,
@@ -300,17 +310,36 @@ export function NotesChip({
   onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting.notes");
+  /** Not in the notes until the one-time download is done. */
+  const notYet = self === "download" || self === "downloading";
+  // Once the download is done its box goes, with the focused button: focus stays in here.
+  const dialog = useRef<HTMLElement>(null);
+  const before = useRef(notYet);
+  useEffect(() => {
+    const was = before.current;
+    before.current = notYet;
+    if (!was || notYet) return;
+    const node = dialog.current;
+    if (node && !node.contains(document.activeElement)) node.focus();
+  }, [notYet]);
   return (
     <PopoverTrigger>
       <Button
-        aria-label={t("chip")}
-        className="bg-primary/25 hover:bg-primary/35 focus-visible:focus-ring flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-sm font-semibold outline-hidden"
+        aria-label={notYet ? t("chipNotYet") : t("chip")}
+        className="bg-primary/25 hover:bg-primary/35 focus-visible:focus-ring relative flex h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-sm font-semibold outline-hidden"
       >
         <Sparkles className="size-4" aria-hidden="true" />
         <span className="max-sm:hidden">{t("chip")}</span>
+        {notYet ? (
+          <span
+            aria-hidden="true"
+            className="ring-background absolute -top-1 -right-1 size-3 rounded-full bg-amber-400 ring-2"
+          />
+        ) : null}
       </Button>
       <Popover placement="bottom end" className="w-80">
         <Dialog
+          ref={dialog}
           aria-label={t("title")}
           className="flex flex-col gap-2 p-1.5 outline-none"
         >
@@ -319,23 +348,47 @@ export function NotesChip({
               <p className="text-sm leading-normal">
                 {t("banner", { name: notes.name })}
               </p>
-              {self === "off" || self === "checking" ? null : (
+              {notYet ? (
+                <div className="flex flex-col gap-2 rounded-[10px] bg-white/5 p-3">
+                  <p className="text-sm font-semibold">{t("notYetTitle")}</p>
+                  <p
+                    role="status"
+                    className="text-muted-foreground text-[13px] leading-normal"
+                  >
+                    {t(`self.${self}`)}
+                  </p>
+                  <Button
+                    isPending={self === "downloading"}
+                    onPress={onDownload}
+                    className={POPOVER_BUTTON}
+                  >
+                    {self === "downloading" ? (
+                      <LoaderCircle
+                        className="size-4 animate-spin motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <Download className="size-4" aria-hidden="true" />
+                    )}
+                    {self === "downloading"
+                      ? t("downloadingButton")
+                      : t("downloadNow")}
+                  </Button>
+                </div>
+              ) : self === "off" || self === "checking" ? null : (
                 <p role="status" className="text-muted-foreground text-[13px]">
                   {t(`self.${self}`)}
                 </p>
               )}
-              {self === "download" ? (
-                <Button onPress={onDownload} className={POPOVER_BUTTON}>
-                  <Download className="size-4" aria-hidden="true" />
-                  {t("download")}
-                </Button>
-              ) : null}
-              <SwitchRow
-                label={t("dontTranscribe")}
-                help={t("dontTranscribeHelp")}
-                isSelected={self === "optedOut"}
-                onChange={onOptOutChange}
-              />
+              {/* Nothing to leave out where this browser can't transcribe at all. */}
+              {self === "unsupported" ? null : (
+                <SwitchRow
+                  label={t("dontTranscribe")}
+                  help={t("dontTranscribeHelp")}
+                  isSelected={self === "optedOut"}
+                  onChange={onOptOutChange}
+                />
+              )}
               {onOpenNotes ? (
                 <Button
                   onPress={() => {

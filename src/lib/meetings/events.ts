@@ -37,10 +37,16 @@ export const MAX_CHAT_LENGTH = 1000;
 /** A transcript line is one stretch of speech; longer ones are cut. */
 export const MAX_NOTES_LINE = 1000;
 
-/** Whether what someone says goes into AI notes, and if not, why. */
+/**
+ * Whether what someone says goes into AI notes, and if not, why: they chose not to be
+ * transcribed, their browser needs the one-time download (not started, or under way), or
+ * it can't transcribe on the device at all.
+ */
 export const TRANSCRIPTION_STATUSES = [
   "on",
   "optedOut",
+  "download",
+  "downloading",
   "unsupported",
 ] as const;
 export type TranscriptionStatus = (typeof TRANSCRIPTION_STATUSES)[number];
@@ -72,11 +78,16 @@ export const RoomEvent = z.discriminatedUnion("type", [
     /** The language it was heard in (BCP 47). */
     lang: z.string().min(2).max(35),
   }),
-  /** AI notes: whether the sender is in them, sent when that changes. */
+  /** AI notes: whether the sender is in them, sent when that changes or when asked. */
   z.object({
     type: z.literal("notes.status"),
     status: z.enum(TRANSCRIPTION_STATUSES),
   }),
+  /**
+   * AI notes: the notetaker's tab asks everyone to say whether they're in them, as it
+   * starts listening (notes on, a rejoin, a reload), so none said before then is lost.
+   */
+  z.object({ type: z.literal("notes.statusRequest") }),
 ]);
 export type RoomEvent = z.infer<typeof RoomEvent>;
 

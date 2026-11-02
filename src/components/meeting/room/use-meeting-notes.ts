@@ -14,6 +14,7 @@ import type {
 import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
 import { canMakeNotes } from "@/lib/notes/engines";
 import { useNotesSettings } from "@/lib/notes/settings";
+import { markNotesTurnedOff } from "@/lib/notes/transcript";
 
 import { meetingApi } from "../api-client";
 import type { RoomMedia } from "../media";
@@ -66,7 +67,15 @@ export function useMeetingNotes({
     notes,
     onLine: transcript.addOwn,
   });
-  const { setOptedOut, download } = transcription;
+  const { setOptedOut } = transcription;
+  /** The one-time speech download, asked for from the toast or the chip. */
+  async function download() {
+    // The toast offering it has done its job; the chip shows the progress.
+    toast.dismiss("notes-banner");
+    if (!(await transcription.download())) {
+      toast.error(t("notes.downloadFailed"));
+    }
+  }
   /** More → AI notes: only where this meeting has them, or there's something to come back to. */
   const notesOffered = offersNotes({
     runsNotes: canRunNotes,
@@ -153,17 +162,46 @@ export function useMeetingNotes({
 
   // Said up front, so everyone knows where the notes go before they speak.
   const shared = shareNotes;
+  // One toast as AI notes go on, once this browser knows whether it can transcribe you:
+  // who turned them on and Don't transcribe me; or, where the one-time download is
+  // needed, that, with Download (the chip keeps it until it's done).
   const announced = useRef<string | null>(null);
+  const selfState = transcription.state;
   useEffect(() => {
     const key = notes ? `${notes.by}@${notes.startedAt}` : null;
     if (key === announced.current) return;
+    if (notes && selfState === "checking") return;
     const wasOn = announced.current !== null;
     announced.current = key;
     if (!notes) {
       if (wasOn) toast(t("notes.stopped"), { id: "notes-banner" });
       return;
     }
-    if (notes.by === self.id) return;
+    const yours = notes.by === self.id;
+    if (selfState === "download") {
+      toast(
+        yours
+          ? t("notes.downloadOffer")
+          : t("notes.bannerDownload", { name: notes.name }),
+        {
+          id: "notes-banner",
+          duration: 20_000,
+          action: {
+            label: t("notes.downloadNow"),
+            onClick: () => void download(),
+          },
+        },
+      );
+      return;
+    }
+    if (yours) return;
+    if (selfState === "unsupported") {
+      toast(t("notes.bannerUnsupported", { name: notes.name }), {
+        id: "notes-banner",
+        duration: 15_000,
+      });
+      return;
+    }
     toast(
       t(shared ? "notes.bannerShared" : "notes.banner", { name: notes.name }),
       {
@@ -175,19 +213,16 @@ export function useMeetingNotes({
         },
       },
     );
-  }, [notes, self.id, t, setOptedOut, shared]);
+  }, [notes, selfState, self.id, t, setOptedOut, download, shared]);
 
-  // Where this browser needs its one-time speech download, offer it once.
-  const offeredDownload = useRef(false);
+  // The meeting's host turned AI notes off: what this tab collected becomes notes only
+  // when asked, here or after the meeting.
+  const allowedNow = media.sessionState?.notesAllowed;
+  const collected = transcript.lines.length > 0;
   useEffect(() => {
-    if (transcription.state !== "download" || offeredDownload.current) return;
-    offeredDownload.current = true;
-    toast(t("notes.downloadOffer"), {
-      id: "notes-download",
-      duration: 20_000,
-      action: { label: t("notes.download"), onClick: () => void download() },
-    });
-  }, [transcription.state, t, download]);
+    if (allowedNow === undefined || !collected) return;
+    markNotesTurnedOff(session.id, !allowedNow);
+  }, [allowedNow, collected, session.id]);
 
   // Who isn't in the notes, for the notetaker; you see your own state in the chip.
   const notTranscribed: NotTranscribed[] = [];
@@ -196,7 +231,8 @@ export function useMeetingNotes({
     if (
       person.userId === self.id ||
       notTranscribed.some((p) => p.userId === person.userId) ||
-      (status !== "optedOut" && status !== "unsupported")
+      status === undefined ||
+      status === "on"
     ) {
       continue;
     }
@@ -229,5 +265,6 @@ export function useMeetingNotes({
     transcription,
     notTranscribed,
     setNotesOn,
+    downloadSpeech: download,
   };
 }

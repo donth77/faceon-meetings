@@ -136,6 +136,7 @@ function SaveControls({
 /** The notes, how and when they were made, saving, Copy and Download, and Make again. */
 function MadeNotesView({
   made,
+  outdated,
   title,
   lines,
   settings,
@@ -144,6 +145,8 @@ function MadeNotesView({
   onMakeAgain,
 }: {
   made: MadeNotes;
+  /** Made before the end of the transcript (AI notes went on again since). */
+  outdated: boolean;
   title: string;
   lines: readonly TranscriptLine[];
   /** To make them another way, again. */
@@ -192,6 +195,11 @@ function MadeNotesView({
             })
           : t("madeOnDevice", { time: time.format(made.madeAt) })}
       </p>
+      {outdated ? (
+        <p role="status" className="text-sm leading-normal font-semibold">
+          {t("outdated")}
+        </p>
+      ) : null}
       <NotesView notes={made.notes} />
       {save ? (
         <SaveControls
@@ -274,19 +282,20 @@ export function NotesMaker({
     if (!focused || focused === document.body) bodyRef.current?.focus();
   }, [state.step]);
 
-  // Stopping AI notes, or leaving, makes the notes at once where nothing needs asking:
-  // Chrome's model already downloaded, or a key.
+  // Stopping AI notes, or leaving, makes the notes at once where nothing needs asking
+  // (Chrome's model already on this computer, or a key), and makes them again when the
+  // transcript has grown since. Never a download nobody asked for.
   const started = useRef(false);
   const start = useEffectEvent(() => void maker.make());
   const instant =
     maker.engine === "onDevice" ? maker.onDevice === "ready" : maker.ready;
+  const due =
+    state.step === "ready" || (state.step === "done" && maker.outdated);
   useEffect(() => {
-    if (!autoStart || started.current || state.step !== "ready" || !instant) {
-      return;
-    }
+    if (!autoStart || started.current || !due || !instant) return;
     started.current = true;
     start();
-  }, [autoStart, state.step, instant]);
+  }, [autoStart, due, instant]);
 
   // Shared as soon as they're made, once; afterwards Stop sharing (here or in Previous)
   // is the notetaker's, as is saving notes made again.
@@ -311,6 +320,7 @@ export function NotesMaker({
       body = (
         <MadeNotesView
           made={state.made}
+          outdated={maker.outdated}
           title={title}
           lines={lines}
           settings={settings}
@@ -354,6 +364,9 @@ export function NotesMaker({
       break;
     default: {
       const { onDevice } = maker;
+      /** Making them starts Chrome's one-time model download, so the button says so. */
+      const downloadFirst =
+        maker.engine === "onDevice" && onDevice === "download";
       const notReady =
         maker.engine === "ownKey"
           ? maker.ready
@@ -388,9 +401,7 @@ export function NotesMaker({
             {maker.engine === "onDevice"
               ? t("engineOnDevice")
               : t("engineOwnKey", { provider })}
-            {maker.engine === "onDevice" && maker.onDevice === "download"
-              ? ` ${t("firstDownload")}`
-              : ""}
+            {downloadFirst ? ` ${t("firstDownload")}` : ""}
           </p>
           {notReady ? (
             <p className="text-muted-foreground">{notReady}</p>
@@ -402,7 +413,11 @@ export function NotesMaker({
               onPress={() => void maker.make()}
             >
               <Sparkles className="size-4" aria-hidden="true" />
-              {state.step === "failed" ? t("tryAgain") : t("make")}
+              {state.step === "failed"
+                ? t("tryAgain")
+                : downloadFirst
+                  ? t("downloadAndMake")
+                  : t("make")}
             </Button>
             <SettingsButton settings={settings} />
           </div>
