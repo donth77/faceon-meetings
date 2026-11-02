@@ -24,6 +24,7 @@ import {
 } from "react-aria-components";
 
 import { Button } from "@/components/ui/button";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import {
   ABOUT_MODEL,
   modelApi,
@@ -233,12 +234,13 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
   return (
     <section
       aria-labelledby={`${inputId}-title`}
-      className="bg-card flex flex-col gap-3 rounded-2xl p-4 ring-1 ring-[#e2e5ea] sm:p-5 dark:ring-white/10"
+      className="bg-card ring-border flex flex-col gap-3 rounded-2xl p-4 ring-1 sm:p-5"
     >
-      <h2 id={`${inputId}-title`} className="flex items-center gap-2 font-bold">
+      {/* It names the region; a heading here would come before the page's h1. */}
+      <p id={`${inputId}-title`} className="flex items-center gap-2 font-bold">
         <Sparkles className="text-primary size-[18px]" aria-hidden="true" />
         {t("heading")}
-      </h2>
+      </p>
       <form onSubmit={submit} className="flex gap-2">
         <label htmlFor={inputId} className="sr-only">
           {t("label")}
@@ -251,7 +253,7 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
           placeholder={t("placeholder", {
             appName: publicEnv.NEXT_PUBLIC_APP_NAME,
           })}
-          className="bg-background placeholder:text-muted-foreground focus-visible:ring-ring h-11 min-w-0 flex-1 rounded-[10px] border px-3 text-[15px] outline-none focus-visible:ring-2"
+          className="bg-background placeholder:text-muted-foreground border-input focus-visible:focus-ring h-11 min-w-0 flex-1 rounded-[10px] border px-3 text-[15px] outline-hidden"
         />
         <Button
           type="submit"
@@ -261,8 +263,23 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
           {t("send")}
         </Button>
       </form>
+      {/* Read out once per answer, when it's complete, not chunk by chunk. */}
+      <p role="status" className="sr-only">
+        {turn?.status === "thinking"
+          ? t("thinking")
+          : turn?.status === "noMatch"
+            ? t("noMatch")
+            : turn?.status === "failed" && !turn.answer
+              ? t("failed")
+              : turn?.status === "done"
+                ? turn.answer
+                : ""}
+      </p>
       {turn ? (
-        <div aria-live="polite" className="flex flex-col gap-2 pt-1">
+        <div
+          aria-busy={turn.status === "answering"}
+          className="flex flex-col gap-2 pt-1"
+        >
           <p className="text-muted-foreground text-sm font-semibold">
             {turn.question}
           </p>
@@ -311,6 +328,7 @@ function Callout({
   onDismiss: () => void;
 }) {
   const t = useTranslations("Help.assistant");
+  const titleId = useId();
   const [progress, setProgress] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
   const api = modelApi();
@@ -345,18 +363,21 @@ function Callout({
   }
 
   return (
-    <aside className="bg-secondary/50 relative flex flex-col gap-2.5 rounded-2xl p-4 pr-12 ring-1 ring-[#dbe4ff] sm:p-5 sm:pr-12 dark:ring-white/10">
+    <aside
+      aria-labelledby={titleId}
+      className="bg-secondary/50 relative flex flex-col gap-2.5 rounded-2xl p-4 pr-12 ring-1 ring-[#dbe4ff] sm:p-5 sm:pr-12 dark:ring-white/10"
+    >
       <AriaButton
         aria-label={t("dismiss")}
         onPress={onDismiss}
-        className="text-muted-foreground hover:bg-muted focus-visible:ring-ring absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
+        className="text-muted-foreground hover:bg-muted data-focus-visible:focus-ring absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-lg outline-hidden"
       >
         <X className="size-4" aria-hidden="true" />
       </AriaButton>
-      <h2 className="flex items-center gap-2 font-bold">
+      <p id={titleId} className="flex items-center gap-2 font-bold">
         <Sparkles className="text-primary size-[18px]" aria-hidden="true" />
         {t("installHeading", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-      </h2>
+      </p>
       <p className="text-[15px] leading-relaxed">
         {kind === "download"
           ? t("install")
@@ -382,9 +403,11 @@ function Callout({
         >
           {t("learnMore")}
           <ExternalLink className="size-3.5" aria-hidden="true" />
+          <NewTabNote />
         </a>
       </div>
-      <p role="status" className="text-muted-foreground text-sm empty:hidden">
+      {/* Kept in the page when empty (not display:none), so updates are announced. */}
+      <p role="status" className="text-muted-foreground text-sm empty:sr-only">
         {progress !== null
           ? t("downloading", { percent: progress })
           : failed

@@ -549,7 +549,10 @@ export function ScheduleForm({
               className="h-[46px] rounded-xl px-6 text-base"
             >
               {saving ? (
-                <LoaderCircle className="animate-spin" aria-hidden="true" />
+                <LoaderCircle
+                  className="animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
               ) : null}
               {t("save")}
             </Button>

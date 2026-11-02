@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { GitHubIcon } from "@/components/auth/provider-icons";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 
 import { PUBLIC_CONTAINER } from "./layout";
@@ -40,6 +41,7 @@ export async function SiteFooter() {
                 className="hover:text-foreground underline underline-offset-4"
               >
                 {chunks}
+                <NewTabNote />
               </a>
             ),
           })}
@@ -53,6 +55,7 @@ export async function SiteFooter() {
           >
             <GitHubIcon className="size-4" />
             {t("viewSource")}
+            <NewTabNote />
           </a>
         ) : null}
       </nav>

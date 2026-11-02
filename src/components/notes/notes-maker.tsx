@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { Button, LinkButton } from "@/components/ui/button";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import type { NotesProgress } from "@/lib/notes/engines";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import {
@@ -42,6 +43,7 @@ function SettingsButton({ settings }: { settings: SettingsLink }) {
       className={ACTION}
     >
       {content}
+      <NewTabNote />
     </LinkButton>
   ) : (
     <Button variant="outline" className={ACTION} onPress={settings.onPress}>
@@ -111,15 +113,16 @@ function SaveControls({
         {saveState === "failed" ? (
           <p className="text-destructive-text">{t("saveFailed")}</p>
         ) : made.saved ? (
-          <p className="text-muted-foreground">
-            {shared ? t("savedShared") : t("savedPrivate")}{" "}
-            {transcriptLeftOut ? `${t("transcriptLeftOut")} ` : ""}
+          <p className="text-muted-foreground flex flex-wrap gap-x-1">
+            <span>{shared ? t("savedShared") : t("savedPrivate")}</span>
+            {transcriptLeftOut ? <span>{t("transcriptLeftOut")}</span> : null}
             <Link
               href={`/previous/${sessionId}/notes`}
               target="_blank"
               className="text-primary font-semibold underline-offset-4 hover:underline"
             >
               {t("openSaved")}
+              <NewTabNote />
             </Link>
           </p>
         ) : null}
@@ -328,11 +331,19 @@ export function NotesMaker({
       body = (
         <div className="flex flex-col gap-3 text-sm leading-normal">
           {state.step === "failed" ? (
-            <p role="alert" className="text-destructive-text">
-              {t(`failed.${state.failure.kind}`, { provider })}
-              {"detail" in state.failure && state.failure.detail
-                ? ` ${t("providerSaid", { provider, detail: state.failure.detail })}`
-                : ""}
+            <p
+              role="alert"
+              className="text-destructive-text flex flex-wrap gap-x-1"
+            >
+              <span>{t(`failed.${state.failure.kind}`, { provider })}</span>
+              {"detail" in state.failure && state.failure.detail ? (
+                <span>
+                  {t("providerSaid", {
+                    provider,
+                    detail: state.failure.detail,
+                  })}
+                </span>
+              ) : null}
             </p>
           ) : (
             <p>{t("lineCount", { count: lines.length })}</p>

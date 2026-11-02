@@ -45,6 +45,7 @@
     "viewSource": "View source on GitHub",
     "avatarCredit": "Avatars: <link>Dylan</link> by Natalia Spivak (CC BY 4.0)",
     "language": "Language",
+    "languageCurrent": "Language: {language}",
     "homeLink": "{appName} home"
   },
   "Auth": {
@@ -145,6 +146,9 @@
   },
   "Toasts": {
     "region": "Notifications"
+  },
+  "Common": {
+    "newTab": "(opens in a new tab)"
   },
   "Account": {
     "menuLabel": "Account menu for {name}",
@@ -617,7 +621,6 @@
     "searchLabel": "Search help",
     "searchPlaceholder": "For example: share sound",
     "noResults": "Nothing matches “{query}”. Try other words.",
-    "resultCount": "{count, plural, one {# article} other {# articles}}",
     "categories": {
       "gettingStarted": "Getting started",
       "inAMeeting": "In a meeting",
@@ -967,7 +970,6 @@
       "speakerFixed": "Your browser plays sound through your device’s current speaker.",
       "noiseSuppression": "Noise suppression",
       "noiseSuppressionHelp": "Filters out typing, fans and traffic",
-      "micLevel": "Microphone level",
       "pushToTalk": "Push to talk",
       "pushToTalkHelp": "While you're muted, hold the Space bar to talk; let go to mute again"
     },

@@ -7,6 +7,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseMeetingInput } from "@/lib/meetings/codes";
+import { meetingPath } from "@/lib/routes";
 
 /**
  * "Enter a meeting ID or link" + Join. Accepts "123 456 7890" or a pasted invite link.
@@ -28,21 +29,23 @@ export function JoinForm({ label }: { label?: string }) {
       setInvalid(true);
       return;
     }
-    const fragment = parsed.passcode ? `#pwd=${parsed.passcode}` : "";
-    router.push(`/j/${parsed.code}${fragment}`);
+    router.push(meetingPath(parsed.code, parsed.passcode));
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2.5" noValidate>
-      {label ? (
-        <label htmlFor={inputId} className="text-[15px] font-semibold">
-          {label}
-        </label>
-      ) : null}
+      {/* Always visible: a placeholder disappears once you type. */}
+      <label
+        htmlFor={inputId}
+        className={
+          label ? "text-[15px] font-semibold" : "text-sm font-semibold"
+        }
+      >
+        {label ?? t("label")}
+      </label>
       <div className="flex gap-2">
         <Input
           id={inputId}
-          aria-label={label ? undefined : t("label")}
           placeholder={t("placeholder")}
           value={value}
           onChange={(event) => {

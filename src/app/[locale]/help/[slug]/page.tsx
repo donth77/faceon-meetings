@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { HelpNav, RepoLinks } from "@/components/help/help-center";
 import { HelpHeader } from "@/components/help/help-header";
 import { HelpMarkdown } from "@/components/help/help-markdown";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 import { helpArticles } from "@/lib/help/articles";
 import { helpSections } from "@/lib/help/sections";
@@ -132,6 +133,7 @@ export default async function HelpArticlePage({
                   className="text-primary font-semibold underline-offset-4 hover:underline"
                 >
                   {chunks}
+                  <NewTabNote />
                 </a>
               ),
             })}

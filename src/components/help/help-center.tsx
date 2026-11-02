@@ -135,7 +135,7 @@ export function RepoLinks({ repoUrl }: { repoUrl: string }) {
         href={repo}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={t("viewSource")}
+        aria-label={`${t("viewSource")} ${t("opensInNewTab")}`}
         title={t("viewSource")}
         className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex size-9 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
       >

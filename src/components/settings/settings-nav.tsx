@@ -130,8 +130,8 @@ export function SettingsCard({
     );
   }
   return (
-    <section className="bg-card flex flex-col gap-4 rounded-2xl px-6 py-5.5 ring-1 ring-[#e2e5ea] dark:ring-white/10">
-      <h2 className="text-lg font-bold">{title}</h2>
+    <section className="bg-card ring-border flex flex-col gap-4 rounded-2xl px-6 py-5.5 ring-1">
+      <h3 className="text-lg font-bold">{title}</h3>
       {children}
     </section>
   );

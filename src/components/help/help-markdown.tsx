@@ -3,6 +3,8 @@ import Link from "next/link";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { NewTabNote } from "@/components/ui/new-tab-note";
+
 /** "Share your screen" → "share-your-screen", for heading anchors. */
 const anchorFor = (text: string) =>
   text
@@ -71,6 +73,7 @@ const COMPONENTS: Components = {
       >
         {children}
         <ExternalLink className="size-3.5" aria-hidden="true" />
+        <NewTabNote />
       </a>
     ),
   // A quote is a tip or a note, set off in a box.

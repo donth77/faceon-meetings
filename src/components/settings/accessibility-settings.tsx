@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { use } from "react";
 
 import { ShortcutsList } from "@/components/shortcuts/shortcuts-list";
 import { SwitchRow } from "@/components/ui/form-fields";
@@ -11,7 +10,7 @@ import {
   withDefaults,
 } from "@/lib/preferences";
 
-import { SectionTitle, SettingsCard, SettingsChrome } from "./settings-nav";
+import { SectionTitle, SettingsCard } from "./settings-nav";
 
 /**
  * Settings → Accessibility: only what the device can't tell us (reduced motion, contrast
@@ -21,7 +20,6 @@ import { SectionTitle, SettingsCard, SettingsChrome } from "./settings-nav";
 export function AccessibilitySettings() {
   const t = useTranslations("Settings.accessibility");
   const ts = useTranslations("Shortcuts");
-  const chrome = use(SettingsChrome);
   const { singleKeyShortcuts } = withDefaults(usePreferences());
 
   return (
@@ -39,7 +37,8 @@ export function AccessibilitySettings() {
           />
         </div>
         <p className="text-muted-foreground text-sm">{ts("description")}</p>
-        <ShortcutsList headingLevel={chrome === "dialog" ? 4 : 3} />
+        {/* The card's heading is an h3, on the page and in the meeting's dialog. */}
+        <ShortcutsList headingLevel={4} />
       </SettingsCard>
     </>
   );

@@ -9,11 +9,19 @@ import { LinkButton } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { publicEnv } from "@/lib/env";
 import { firstName } from "@/lib/names";
-import { HOME_ROUTE, safeRedirectPath } from "@/lib/routes";
+import { HOME_ROUTE, safeRedirectPath, signInPath } from "@/lib/routes";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("Auth");
-  return { title: t("verified.title") };
+/** The title says what happened, as the card does: verified, or the link didn't work. */
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/[locale]/verify-email">): Promise<Metadata> {
+  const [params, session, t] = await Promise.all([
+    searchParams,
+    getSession(),
+    getTranslations("Auth"),
+  ]);
+  const failed = Boolean(single(params.error)) || !session;
+  return { title: t(failed ? "verified.failedTitle" : "verified.title") };
 }
 
 const bigButton = "h-[50px] rounded-xl text-base font-semibold";
@@ -51,10 +59,7 @@ async function VerifyEmailResult({
         title={t("verified.failedTitle")}
         subtitle={t("verified.failedBody")}
       >
-        <LinkButton
-          href={`/sign-in?next=${encodeURIComponent(destination)}`}
-          className={bigButton}
-        >
+        <LinkButton href={signInPath(destination)} className={bigButton}>
           {t("verified.signIn")}
         </LinkButton>
       </AuthCard>

@@ -23,6 +23,7 @@ import {
   RadioDot,
   SelectField,
 } from "@/components/ui/form-fields";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
 import { ENGINES, type EngineId } from "@/lib/notes/notes";
@@ -201,9 +202,10 @@ function KeyField({
         >
           {t("getKey", { provider: name })}
           <ExternalLink className="size-3.5" aria-hidden="true" />
+          <NewTabNote />
         </a>
       </div>
-      <p role="status" className="text-[13px] empty:hidden">
+      <p role="status" className="text-[13px] empty:sr-only">
         {test.state === "works" ? (
           <span className="text-live-text flex items-center gap-1.5 font-semibold">
             <Check className="size-4" aria-hidden="true" />

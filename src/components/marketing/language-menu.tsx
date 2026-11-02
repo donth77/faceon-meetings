@@ -40,7 +40,7 @@ export function LanguageMenu() {
   return (
     <DropdownMenuTrigger>
       <Button
-        aria-label={`${t("language")}: ${nativeName(locale)}`}
+        aria-label={t("languageCurrent", { language: nativeName(locale) })}
         className="border-border bg-card hover:bg-muted focus-visible:ring-ring flex h-10 items-center gap-2 rounded-[10px] border px-2.5 text-sm outline-none focus-visible:ring-2 sm:pr-2.5 sm:pl-3"
       >
         <Globe className="size-[18px]" aria-hidden="true" />
