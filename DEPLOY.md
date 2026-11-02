@@ -310,7 +310,9 @@ Turnstile checks there's a person behind the requests that send email (signing u
 
 1. Make a free [Cloudflare](https://dash.cloudflare.com/sign-up) account and open **Turnstile → Add widget**.
 2. Name it, add your domain (and `localhost` if you want the check in development), and choose **Managed**.
-3. Copy the **site key** into `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the **secret key** into `TURNSTILE_SECRET_KEY` in Vercel, and redeploy.
+3. Copy the **site key** into `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the **secret key** into `TURNSTILE_SECRET_KEY` in Vercel (Production only, unless the widget also lists your preview addresses), and redeploy.
+
+A guest's join accepts a token only when Cloudflare says it was passed on your site's own address (`NEXT_PUBLIC_APP_URL`); list any other domain the widget serves in `TURNSTILE_HOSTNAMES`.
 
 Without both keys there's no check.
 

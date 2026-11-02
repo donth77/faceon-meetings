@@ -25,8 +25,12 @@ describe("passedHumanCheck", () => {
     return passedHumanCheck({ token, action: "guest-join", ip: "203.0.113.4" });
   }
 
-  it("passes a genuine token made for this action", async () => {
-    const fetchMock = answer({ success: true, action: "guest-join" });
+  it("passes a genuine token made for this action on this site", async () => {
+    const fetchMock = answer({
+      success: true,
+      action: "guest-join",
+      hostname: "localhost",
+    });
     expect(await check(fetchMock, "tok")).toBe(true);
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
     const form = init.body as URLSearchParams;
@@ -41,6 +45,27 @@ describe("passedHumanCheck", () => {
     expect(await check(answer({ success: false }), "tok")).toBe(false);
     expect(await check(answer({}, 500), "tok")).toBe(false);
     expect(await check(answer({ success: true }), undefined)).toBe(false);
+  });
+
+  it("fails a token passed on another site, unless TURNSTILE_HOSTNAMES names it", async () => {
+    const elsewhere = {
+      success: true,
+      action: "guest-join",
+      hostname: "evil.example",
+    };
+    expect(await check(answer(elsewhere), "tok")).toBe(false);
+    expect(
+      await check(answer({ success: true, action: "guest-join" }), "tok"),
+    ).toBe(false);
+    vi.stubEnv("TURNSTILE_HOSTNAMES", "meet.example.org, evil.example");
+    expect(await check(answer(elsewhere), "tok")).toBe(true);
+  });
+
+  it("trusts Cloudflare's test secrets on any page", async () => {
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA");
+    expect(
+      await check(answer({ success: true, hostname: "example.com" }), "tok"),
+    ).toBe(true);
   });
 
   it("fails closed when Cloudflare can't be reached", async () => {
