@@ -25,6 +25,29 @@ The examples use `https://faceon.example.com` as the address. Use your own. [`.e
 
 Settings in `.env.example` for Turnstile, Sentry and LiveKit aren't read yet, so you can leave them empty.
 
+### How much the free plans cover
+
+Estimates for a copy with FaceOn's default limits ([step 9](#9-decide-who-hosts-and-set-limits)). Stream's credit is usually the first limit; the database's awake hours come first if meetings are spread across the day. After a busy week, compare with the Usage pages on Vercel and Neon and Stream's dashboard.
+
+| Service       | Free each month                                                                            | What FaceOn uses it for                                                        | Roughly supports                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Stream        | $100 credit, which is 333,000 participant-minutes at $0.30 per 1,000, at any video quality | Every minute each person is connected, camera on or off                        | About 5,550 participant-hours (below)                                                                                                 |
+| Neon          | 100 CU-hours; the database sleeps after 5 idle minutes                                     | Every page and API call that reads data                                        | About 400 hours awake at the smallest size, roughly 13 hours a day                                                                    |
+| Vercel        | 1M function calls, 4 hours of active CPU, 1M CDN requests, 100 GB of transfer              | Pages, API calls, the app's files, backgrounds, the effects and noise runtimes | Roughly 20,000–30,000 people joining a month; a first visit is about 1.5 MB, or 6–8 MB with a background, and later visits are cached |
+| Resend        | 3,000 emails, 100 a day                                                                    | Verification and password-reset emails                                         | About 100 email sign-ups a day                                                                                                        |
+| On the device | Nothing                                                                                    | Backgrounds, noise suppression, AI notes                                       | Unlimited                                                                                                                             |
+
+| Meeting                                | Participant-minutes | Meetings a month within Stream's credit |
+| -------------------------------------- | ------------------- | --------------------------------------- |
+| 4 people × 15 minutes (a demo meeting) | 60                  | About 5,550                             |
+| 6 people × 45 minutes                  | 270                 | About 1,230                             |
+| 10 people × 60 minutes                 | 600                 | About 555                               |
+| 20 people × 60 minutes                 | 1,200               | About 277                               |
+
+Going over Vercel's or Neon's free limits pauses your copy until the next month rather than billing you. Stream doesn't say what it does past the credit on its free plan, so keep the limits in step 9 and watch its dashboard.
+
+The database's sleep costs about a second, once, on the first request after five quiet minutes. FaceOn hides it by waking the database as soon as someone starts to sign in or join (`DATABASE_WAKE_ON_INTENT`, [step 3](#3-set-up-the-database-neon)). Don't add an uptime check or other ping that touches the database: keeping it awake around the clock takes about 180 CU-hours a month, past the free 100.
+
 ## 1. Get the code
 
 Fork this repository on GitHub, then clone your fork and install:
@@ -66,6 +89,8 @@ The first build needs settings from [step 8](#8-add-the-environment-variables-to
    ```
 
 To check both connections, run `pnpm db:check` with both strings set.
+
+Neon's database sleeps after five idle minutes, on every plan unless you turn that off, and takes about a second to wake. FaceOn wakes it when someone starts to sign in or join, so they don't wait. `DATABASE_WAKE_ON_INTENT` decides: `auto` (the default) does this for Neon only; set `off` if your database never sleeps, or `on` for another database that does.
 
 For local development, a second branch keeps test data apart: **Branches → New branch** (for example `dev`), with its strings in `.env.local`, and `pnpm db:migrate` on its own.
 

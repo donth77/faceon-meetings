@@ -2,12 +2,14 @@ import { Video } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
+import { WakeOnIntent } from "@/components/app-shell/wake-on-intent";
 import { LogoMark } from "@/components/brand/logo-lockup";
 import { Features } from "@/components/marketing/features";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { JoinForm } from "@/components/meetings/join-form";
 import { LinkButton } from "@/components/ui/button";
+import { wakesDatabase } from "@/lib/db/wake";
 import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/site";
 
@@ -78,6 +80,7 @@ export default async function LandingPage() {
         <Features />
       </main>
       <SiteFooter />
+      {wakesDatabase() ? <WakeOnIntent /> : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

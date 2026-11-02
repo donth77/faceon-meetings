@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
+import { WakeOnIntent } from "@/components/app-shell/wake-on-intent";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import {
   SiteHeader,
   type HeaderAccountLinks,
 } from "@/components/marketing/site-header";
+import { wakesDatabase } from "@/lib/db/wake";
 
 /** Account screens: the public header, a centered column of cards, the public footer. */
 export function AuthPage({
@@ -23,6 +25,8 @@ export function AuthPage({
         </div>
       </main>
       <SiteFooter />
+      {/* Signing in, signing up and resetting a password all need the database next. */}
+      {wakesDatabase() ? <WakeOnIntent /> : null}
     </div>
   );
 }

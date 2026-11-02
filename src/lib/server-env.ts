@@ -43,6 +43,11 @@ const ServerEnv = z.object({
   EMAIL_FROM: z.string().optional(),
   /** Google Calendar sync for hosts who connect it ("on" or "off"); off leaves the calendar links. */
   GOOGLE_CALENDAR_SYNC: z.enum(["on", "off"]).default("on"),
+  /**
+   * Wake a sleeping database as someone shows intent: "auto" (the default) for Neon only,
+   * "on" or "off" (lib/db/wake-rule.ts).
+   */
+  DATABASE_WAKE_ON_INTENT: z.enum(["auto", "on", "off"]).default("auto"),
   MAX_PARTICIPANTS_PER_MEETING: z.coerce.number().int().min(2).default(20),
   /** 0 means no time limit. */
   MAX_MEETING_MINUTES: z.coerce.number().int().min(0).default(0),
