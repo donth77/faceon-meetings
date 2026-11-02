@@ -112,7 +112,7 @@ These services may handle your information in the United States and other countr
 - **Attempt counters and sign-in limits** are deleted after a day.
 - **A guest's cookie** expires 90 days after its last use.
 
-When you **delete your account**, {appName} deletes your account, the meetings you host with their records, and the AI notes you saved. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar. Events already in your calendar stay there. Meetings other people host keep your name in who joined until that's deleted after 90 days.
+When you **delete your account**, {appName} deletes your account, the meetings you host with their records, and the AI notes you saved. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar. Before it does, it cancels your upcoming meetings there, so Google tells the people you invited; past events stay in your calendar. Meetings other people host keep your name in who joined until that's deleted after 90 days.
 
 ## Your choices and rights
 

@@ -34,6 +34,8 @@ const revokeGoogleCalendar = async (userId: string) =>
   (await googleCalendar()).revokeGoogleCalendar(userId);
 const disconnectGoogleCalendar = async (userId: string) =>
   (await googleCalendar()).disconnectGoogleCalendar(userId);
+const cancelUpcomingEvents = async (userId: string) =>
+  (await import("@/lib/google-calendar/sync")).cancelUpcomingEvents(userId);
 
 /** Sends an account email to a user, in their language, after the response. */
 function emailUser(
@@ -117,12 +119,13 @@ export const auth = betterAuth({
   },
   user: {
     // Settings → Account → Delete account; a recent sign-in (or the password) confirms it.
-    // Meetings go with the user (foreign keys); calls in progress end first, and Google
-    // Calendar access is revoked.
+    // Meetings go with the user (foreign keys). First, calls in progress end, upcoming
+    // meetings leave Google Calendar (Google tells the invitees), and access is revoked.
     deleteUser: {
       enabled: true,
       beforeDelete: async (deleted) => {
         await endHostedCalls(deleted.id);
+        await cancelUpcomingEvents(deleted.id);
         await revokeGoogleCalendar(deleted.id);
       },
       afterDelete: async (deleted) => forgetMediaUser(deleted.id),

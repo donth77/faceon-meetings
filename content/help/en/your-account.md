@@ -26,6 +26,6 @@ You can sign in with Google, GitHub, or your email and a password, and use more 
 
 ## Delete your account
 
-Select **Delete account**. This removes your meetings, notes and avatar for good, and people you invited can no longer join your meetings. {appName} also gives up its access to your Google Calendar, if you connected it. If you haven't signed in recently, you'll be asked to sign in again first.
+Select **Delete account**. This removes your meetings, notes and avatar for good, and people you invited can no longer join your meetings. If you connected Google Calendar, your upcoming meetings are cancelled there first, so Google lets the people you invited know, and then {appName} gives up its access to your calendar. Past meetings stay in it. If you haven't signed in recently, you'll be asked to sign in again first.
 
 The [privacy policy](/privacy) explains what's deleted with your account, and what's kept for a while.

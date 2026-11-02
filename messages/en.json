@@ -1136,6 +1136,7 @@
       "deleteBody": "Deleting your account removes your meetings, notes and avatar for good. People you invited can no longer join your meetings.",
       "deleteConfirmTitle": "Delete your account?",
       "deleteConfirmBody": "This can’t be undone. Your meetings, notes and avatar are removed for good, and people you invited can no longer join your meetings.",
+      "deleteCalendar": "Your upcoming meetings are also cancelled in your Google Calendar, and Google lets the people you invited know.",
       "deleteForGood": "Delete account",
       "signInFirst": "For your security, sign in again, then delete your account.",
       "legal": "The <privacy>Privacy Policy</privacy> explains what {appName} keeps about you and for how long, and the <terms>Terms</terms> cover using it.",

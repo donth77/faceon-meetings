@@ -10,6 +10,7 @@ import { formatMeetingCode } from "@/lib/meetings/codes";
 import {
   lastStartOf,
   localDateTime,
+  occurrencesBetween,
   type ExceptionRow,
   type RuleRow,
 } from "@/lib/meetings/occurrences";
@@ -393,4 +394,39 @@ export function eventDescription(
       ? [t("invitation.passcode", { passcode: meeting.passcode })]
       : []),
   ].join("\n");
+}
+
+/**
+ * What deleting the host's account does to a synced meeting, so the people they invited
+ * hear it's off: a meeting still to come is cancelled ("all"), and a series that has
+ * already met ends before its next meeting ("following", from that meeting). Null when
+ * nothing of it is still to come, so its past events stay in everyone's calendars.
+ */
+export function cancellationOnLeaving(input: {
+  startsAt: Date | null;
+  series: { rules: RuleRow[]; exceptions: ExceptionRow[] };
+  now: Date;
+}):
+  | { scope: "all"; occurrence: null }
+  | { scope: "following"; occurrence: Date }
+  | null {
+  const { startsAt, series, now } = input;
+  if (series.rules.length === 0) {
+    return startsAt && startsAt > now
+      ? { scope: "all", occurrence: null }
+      : null;
+  }
+  const next = occurrencesBetween({
+    ...series,
+    from: now,
+    to: new Date(now.getTime() + 3 * 366 * DAY_MS),
+    limit: 4,
+  }).find((occurrence) => occurrence.start > now);
+  if (!next) return null;
+  const first = Math.min(
+    ...series.rules.map((rule) => rule.firstStart.getTime()),
+  );
+  return next.originalStart.getTime() <= first
+    ? { scope: "all", occurrence: null }
+    : { scope: "following", occurrence: next.originalStart };
 }

@@ -9,13 +9,18 @@ import { db } from "@/lib/db";
 import { meeting, user } from "@/lib/db/schema";
 import { publicEnv } from "@/lib/env";
 import { loggable } from "@/lib/log";
-import { inviteesOf, seriesOf } from "@/lib/meetings/scheduling";
+import {
+  deleteSchedule,
+  inviteesOf,
+  seriesOf,
+} from "@/lib/meetings/scheduling";
 import { meetingPath } from "@/lib/routes";
 import { siteUrl } from "@/lib/site";
 
 import { calendarApi, GoogleCalendarError } from "./api";
 import { calendarAccess, forgetCalendarTokens } from "./connection";
 import {
+  cancellationOnLeaving,
   desiredEvents,
   eventDescription,
   guestsOf,
@@ -153,5 +158,47 @@ export async function syncGoogleCalendar(
     return "failed";
   } finally {
     await saveIds(meetingId, ids);
+  }
+}
+
+/**
+ * Before the host's account is deleted: cancels what's still to come of their synced
+ * meetings (events.ts, cancellationOnLeaving), so Google tells the people they invited.
+ * Past events stay. Best effort within `budgetMs`, since the account goes either way.
+ */
+export async function cancelUpcomingEvents(
+  hostId: string,
+  budgetMs = 20_000,
+): Promise<void> {
+  const now = new Date();
+  const deadline = Date.now() + budgetMs;
+  const synced = await db()
+    .select()
+    .from(meeting)
+    .where(
+      and(
+        eq(meeting.hostId, hostId),
+        eq(meeting.status, "active"),
+        isNotNull(meeting.googleEvents),
+      ),
+    );
+  for (const row of synced) {
+    if (Date.now() > deadline) return;
+    try {
+      const cancel = cancellationOnLeaving({
+        startsAt: row.startsAt,
+        series: await seriesOf(row.id),
+        now,
+      });
+      if (!cancel) continue;
+      await deleteSchedule({ row, ...cancel });
+      // Google no longer accepts the access: nothing else can be cancelled.
+      if ((await syncGoogleCalendar(row.id)) === "reconnect") return;
+    } catch (error) {
+      console.error(
+        "Could not cancel a deleted account's Google Calendar event.",
+        loggable(error),
+      );
+    }
   }
 }

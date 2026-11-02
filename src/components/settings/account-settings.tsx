@@ -67,6 +67,8 @@ export type AccountInfo = {
   methods: Array<{ id: string; providerId: string }>;
   /** Whether this deployment offers email-and-password sign-in. */
   passwordSignIn: boolean;
+  /** Whether Google Calendar sync is connected, so deleting cancels events there. */
+  onGoogleCalendar: boolean;
 };
 
 const OUTLINE =
@@ -538,7 +540,13 @@ function SignIn({
   );
 }
 
-function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
+function DeleteAccount({
+  hasPassword,
+  onGoogleCalendar,
+}: {
+  hasPassword: boolean;
+  onGoogleCalendar: boolean;
+}) {
   const t = useTranslations("Settings.account");
   const authT = useTranslations("Auth");
   const [open, setOpen] = useState(false);
@@ -615,7 +623,10 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
             <DialogTitle className="text-xl font-bold">
               {t("deleteConfirmTitle")}
             </DialogTitle>
-            <DialogDescription>{t("deleteConfirmBody")}</DialogDescription>
+            <DialogDescription>
+              {t("deleteConfirmBody")}
+              {onGoogleCalendar ? ` ${t("deleteCalendar")}` : null}
+            </DialogDescription>
           </DialogHeader>
           {problem === "signInAgain" ? (
             <FormNotice icon={Info}>{t("signInFirst")}</FormNotice>
@@ -681,6 +692,7 @@ export function AccountSettings({
         hasPassword={account.methods.some(
           (method) => method.providerId === "credential",
         )}
+        onGoogleCalendar={account.onGoogleCalendar}
       />
       <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
         {t.rich("legal", {

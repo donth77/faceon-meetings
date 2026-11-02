@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { GoogleEvent } from "./api";
 import {
+  cancellationOnLeaving,
   currentExceptions,
   desiredEvents,
   eventChanges,
@@ -439,5 +440,75 @@ describe("eventDescription", () => {
     }).split("\n");
     expect(lines).toHaveLength(3);
     expect(lines[0]).toMatch(/^invitation\.scheduledIntro/);
+  });
+});
+
+describe("cancellationOnLeaving", () => {
+  const none = { rules: [], exceptions: [] };
+  const series = (rules: CalendarRule[], exceptions = []) => ({
+    rules,
+    exceptions,
+  });
+
+  it("cancels a one-off meeting that's still to come", () => {
+    expect(
+      cancellationOnLeaving({
+        startsAt: at("2026-11-03T19:00:00Z"),
+        series: none,
+        now: at("2026-11-02T12:00:00Z"),
+      }),
+    ).toEqual({ scope: "all", occurrence: null });
+  });
+
+  it("leaves a one-off meeting that has happened, or is happening", () => {
+    for (const now of ["2026-11-03T19:00:00Z", "2026-11-04T12:00:00Z"]) {
+      expect(
+        cancellationOnLeaving({
+          startsAt: at("2026-11-03T19:00:00Z"),
+          series: none,
+          now: at(now),
+        }),
+      ).toBeNull();
+    }
+  });
+
+  it("ends a series that has met before its next meeting", () => {
+    expect(
+      cancellationOnLeaving({
+        startsAt: null,
+        series: series([weekly]),
+        now: at("2026-11-12T12:00:00Z"),
+      }),
+    ).toEqual({ scope: "following", occurrence: at("2026-11-17T19:00:00Z") });
+  });
+
+  it("skips a meeting under way: the next one is the first cancelled", () => {
+    expect(
+      cancellationOnLeaving({
+        startsAt: null,
+        series: series([weekly]),
+        now: at("2026-11-10T19:30:00Z"),
+      }),
+    ).toEqual({ scope: "following", occurrence: at("2026-11-17T19:00:00Z") });
+  });
+
+  it("cancels a series that hasn't met yet, whole", () => {
+    expect(
+      cancellationOnLeaving({
+        startsAt: null,
+        series: series([weekly]),
+        now: at("2026-11-01T12:00:00Z"),
+      }),
+    ).toEqual({ scope: "all", occurrence: null });
+  });
+
+  it("leaves a series that has ended", () => {
+    expect(
+      cancellationOnLeaving({
+        startsAt: null,
+        series: series([{ ...weekly, lastStart: at("2026-11-10T19:00:00Z") }]),
+        now: at("2026-11-12T12:00:00Z"),
+      }),
+    ).toBeNull();
   });
 });

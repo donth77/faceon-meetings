@@ -17,6 +17,7 @@ import {
   parseAvatarSeed,
 } from "@/lib/avatars/seed";
 import { emailPasswordEnabled } from "@/lib/email/send";
+import { calendarConnection } from "@/lib/google-calendar/connection";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Settings");
@@ -53,9 +54,10 @@ async function Account({
 }: Pick<PageProps<"/[locale]/settings/account">, "searchParams">) {
   const session = await requireSession("/settings/account");
   const { error } = await searchParams;
-  const accounts = await auth.api.listUserAccounts({
-    headers: await headers(),
-  });
+  const [accounts, calendar] = await Promise.all([
+    auth.api.listUserAccounts({ headers: await headers() }),
+    calendarConnection(session.user),
+  ]);
   const { user } = session;
   const seed = user.avatarSeed ?? fallbackAvatarSeed(user.id);
   const look = parseAvatarSeed(seed)?.look ?? lookForName(user.name);
@@ -71,6 +73,7 @@ async function Account({
         avatarSeed: seed,
         methods: accounts.map(({ id, providerId }) => ({ id, providerId })),
         passwordSignIn: emailPasswordEnabled(),
+        onGoogleCalendar: calendar.status === "connected",
       }}
       // Seven more avatars to pick from, made here so the page renders the same twice.
       avatarChoices={Array.from({ length: 7 }, () => createAvatarSeed(look))}
