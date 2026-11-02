@@ -13,6 +13,7 @@ import { hostingPlan, limitsFor } from "./hosting";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
+  countOpenSessions,
   countSessionsSince,
   endMeeting,
   findMeetingByCode,
@@ -35,9 +36,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Opens a session with the host's limits: full for allowlisted hosts, demo otherwise.
- * A demo host has a few sessions a day.
+ * A demo host has a few sessions a day, and only so many meetings run at once.
  */
 async function startSession(meeting: Meeting, host: MeetingHost, now: Date) {
+  if ((await countOpenSessions(now)) >= serverEnv().MAX_CONCURRENT_MEETINGS) {
+    throw new MeetingError("BUSY");
+  }
   const plan = hostingPlan(host);
   if (plan === "demo") {
     const today = await countSessionsSince(

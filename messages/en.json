@@ -317,7 +317,8 @@
       "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
       "BAD_REQUEST": "Enter your name, then try again.",
       "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
-      "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow."
+      "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow.",
+      "BUSY": "Too many meetings are running right now. Try again shortly."
     },
     "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account."
   },

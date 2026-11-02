@@ -52,6 +52,8 @@ export type JoinInput = {
 export type JoinErrorKind =
   | "BAD_PASSCODE"
   | "FULL"
+  | "BUSY"
+  | "DEMO_LIMIT"
   | "RATE_LIMITED"
   | "NETWORK"
   | "UNAVAILABLE"

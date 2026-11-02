@@ -42,6 +42,8 @@ const ServerEnv = z.object({
   MAX_PARTICIPANTS_PER_MEETING: z.coerce.number().int().min(2).default(20),
   /** 0 means no time limit. */
   MAX_MEETING_MINUTES: z.coerce.number().int().min(0).default(0),
+  /** Live meetings at once, across everyone; keeps usage inside the free tier. */
+  MAX_CONCURRENT_MEETINGS: z.coerce.number().int().min(1).default(10),
   /** Comma-separated emails: admins, who also host with full limits. */
   ADMIN_EMAILS: EmailList.default([]),
   /** Comma-separated emails that host with full limits; everyone else hosts demos. */

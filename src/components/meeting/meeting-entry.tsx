@@ -63,6 +63,8 @@ const NOTICES: Partial<Record<MeetingErrorCode, NoticeKind>> = {
 const RETRYABLE: ReadonlySet<string> = new Set<JoinErrorKind>([
   "BAD_PASSCODE",
   "FULL",
+  "BUSY",
+  "DEMO_LIMIT",
   "RATE_LIMITED",
   "NETWORK",
   "BAD_REQUEST",

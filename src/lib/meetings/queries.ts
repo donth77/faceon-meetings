@@ -218,6 +218,23 @@ export async function countSessionsSince(
   return row?.count ?? 0;
 }
 
+/**
+ * Sessions open now, across all meetings. Sessions open for more than 12 hours are left
+ * out: they're leftovers whose call ended unnoticed, which the next join closes.
+ */
+export async function countOpenSessions(now: Date): Promise<number> {
+  const [row] = await db()
+    .select({ count: count() })
+    .from(meetingSession)
+    .where(
+      and(
+        eq(meetingSession.status, "open"),
+        gte(meetingSession.startedAt, new Date(now.getTime() - 12 * 3_600_000)),
+      ),
+    );
+  return row?.count ?? 0;
+}
+
 /** Meetings a host created since a moment, for the daily creation cap. */
 export async function countMeetingsCreatedSince(
   hostId: string,
