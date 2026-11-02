@@ -19,6 +19,7 @@ import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
 import { SwitchRow } from "@/components/schedule/fields";
 import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
+import { AiNotesSettings } from "@/components/settings/ai-notes-settings";
 import { DeviceField } from "@/components/settings/device-fields";
 import { GeneralSettings } from "@/components/settings/general-settings";
 import { NotificationsSettings } from "@/components/settings/notifications-settings";
@@ -226,7 +227,7 @@ function VideoSection() {
   );
 }
 
-function ComingSoon({ section }: { section: "effects" | "aiNotes" }) {
+function ComingSoon({ section }: { section: "effects" }) {
   const t = useTranslations(`Settings.${section}`);
   return (
     <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
@@ -265,8 +266,13 @@ function SectionContent({ section }: { section: InCallSection }) {
           <AccessibilitySettings />
         </div>
       );
-    case "effects":
     case "aiNotes":
+      return (
+        <div className="flex flex-col gap-5">
+          <AiNotesSettings />
+        </div>
+      );
+    case "effects":
       return <ComingSoon section={section} />;
   }
 }

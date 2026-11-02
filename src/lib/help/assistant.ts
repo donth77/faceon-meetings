@@ -10,75 +10,7 @@
  * had, a callout with a button to get it; elsewhere nothing, because the help and its
  * search are all there is.
  */
-
-/** What of the Prompt API this uses. It isn't in TypeScript's lib yet. */
-export interface ModelSession {
-  promptStreaming(input: string): ReadableStream<string>;
-  destroy(): void;
-}
-export interface ModelOptions {
-  expectedInputs: Array<{ type: "text"; languages: string[] }>;
-  expectedOutputs: Array<{ type: "text"; languages: string[] }>;
-  initialPrompts?: Array<{ role: "system"; content: string }>;
-  monitor?: (monitor: EventTarget) => void;
-}
-export interface ModelApi {
-  availability(
-    options: Pick<ModelOptions, "expectedInputs" | "expectedOutputs">,
-  ): Promise<"unavailable" | "downloadable" | "downloading" | "available">;
-  create(options: ModelOptions): Promise<ModelSession>;
-}
-
-/** Where to read about the model and what it needs. */
-export const ABOUT_MODEL = "https://developer.chrome.com/docs/ai/built-in";
-
-/** The languages the model answers in. Anyone reading Help in another sees no chat. */
-const ANSWERS = new Set(["en", "es", "ja"]);
-
-/** What the box shows: the chat, a way to get the model, or nothing. */
-export type ChatState = "ready" | "download" | "update" | "enable" | "none";
-
-/** The browser's model, if it has one. */
-export function modelApi(): ModelApi | undefined {
-  return (globalThis as { LanguageModel?: ModelApi }).LanguageModel;
-}
-
-/** Whether this is Chrome itself, the browser that carries the model. */
-function isChrome(): boolean {
-  const brands = (
-    navigator as { userAgentData?: { brands?: Array<{ brand: string }> } }
-  ).userAgentData?.brands;
-  return Boolean(brands?.some((b) => b.brand === "Google Chrome"));
-}
-
-/** The language answers come in: Help's own, or null where the model can't write it. */
-export function answerLanguage(locale: string): string | null {
-  const language = locale.split("-")[0] ?? locale;
-  return ANSWERS.has(language) ? language : null;
-}
-
-export const optionsFor = (
-  language: string,
-): Pick<ModelOptions, "expectedInputs" | "expectedOutputs"> => ({
-  expectedInputs: [{ type: "text", languages: [...new Set(["en", language])] }],
-  expectedOutputs: [{ type: "text", languages: [language] }],
-});
-
-export async function chatState(
-  api: ModelApi | undefined,
-  language: string,
-): Promise<ChatState> {
-  if (!api) return isChrome() ? "update" : "none";
-  try {
-    const have = await api.availability(optionsFor(language));
-    if (have === "available") return "ready";
-    // Unavailable may only mean turned off, or not downloaded; Chrome can be told how.
-    if (have === "unavailable") return isChrome() ? "enable" : "none";
-    return "download";
-  } catch {
-    return "none";
-  }
-}
+import { optionsFor, type ModelApi } from "@/lib/ai/built-in";
 
 /** One thing the model may answer from: a help article. */
 export interface Doc {

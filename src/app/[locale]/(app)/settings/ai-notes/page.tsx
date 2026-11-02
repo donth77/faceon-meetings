@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-import { ComingSoonSection } from "@/components/settings/coming-soon-section";
+import { SettingsLoader } from "@/components/settings/settings-loader";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Settings");
@@ -9,5 +9,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <ComingSoonSection section="aiNotes" />;
+  return <SettingsLoader section="aiNotes" />;
 }

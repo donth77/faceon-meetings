@@ -9,6 +9,7 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 - Instant and scheduled meetings (including recurring ones), a personal room, and joining by link or meeting ID
 - Guests join with just a name; passcodes, a waiting room and host controls keep meetings safe
 - Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
+- Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key
 - Works on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app
 - Six languages: English, Spanish, Portuguese (Brazil), French, German and Japanese
 

@@ -11,6 +11,7 @@ import {
 } from "react";
 import { Button } from "react-aria-components";
 
+import { downloadFile } from "@/lib/download";
 import { MAX_CHAT_LENGTH } from "@/lib/meetings/events";
 import { useIntlLocale } from "@/lib/preferences";
 
@@ -87,15 +88,12 @@ function saveChat(
       (m) => `[${time.format(m.at)}] ${m.mine ? you : m.senderName}: ${m.text}`,
     )
     .join("\n");
-  const url = URL.createObjectURL(
-    new Blob([`${title}\n\n${text}\n`], { type: "text/plain;charset=utf-8" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  // File systems reject some characters; keep the name readable without them.
-  link.download = `${title.replace(/[\\/:*?"<>|]+/g, "-")}.txt`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile({
+    name: title,
+    extension: "txt",
+    content: `${title}\n\n${text}\n`,
+    type: "text/plain",
+  });
 }
 
 /** Chat: everyone sees it; nothing is saved after the meeting. */

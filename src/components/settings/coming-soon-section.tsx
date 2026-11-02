@@ -6,7 +6,7 @@ import { SettingsCard } from "./settings-nav";
 export async function ComingSoonSection({
   section,
 }: {
-  section: "calendar" | "effects" | "aiNotes";
+  section: "calendar" | "effects";
 }) {
   const t = await getTranslations(`Settings.${section}`);
   return (

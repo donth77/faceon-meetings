@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useOrigin } from "@/hooks/use-origin";
+import { downloadFile } from "@/lib/download";
 import { publicEnv } from "@/lib/env";
 import {
   googleCalendarLink,
@@ -110,14 +111,12 @@ export function useScheduledInvitation(meeting: ScheduledMeeting) {
   }
 
   function downloadIcs() {
-    const url = URL.createObjectURL(
-      new Blob([icsFile(event)], { type: "text/calendar;charset=utf-8" }),
-    );
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${meeting.title.replace(/[\\/:*?"<>|]+/g, "-")}.ics`;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadFile({
+      name: meeting.title,
+      extension: "ics",
+      content: icsFile(event),
+      type: "text/calendar",
+    });
   }
 
   return {

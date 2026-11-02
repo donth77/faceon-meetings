@@ -1,9 +1,14 @@
 /**
  * The AI notes transcript: lines from everyone's devices, collected in the notetaker's
- * browser. It stays in that tab (session storage), so a reload keeps it and closing the
- * tab forgets it; nothing is saved anywhere unless the host chooses.
+ * browser, and the notes made from it. Both stay in that tab (session storage), so a
+ * reload keeps them and closing the tab forgets them; nothing is saved anywhere unless
+ * the host chooses.
  */
 import { z } from "zod";
+
+import { MeetingNotes } from "./notes";
+import { PROVIDERS } from "./providers";
+import { ENGINES } from "./settings";
 
 export const TranscriptLine = z.object({
   id: z.string(),
@@ -99,6 +104,37 @@ export function saveTranscript(
   try {
     if (lines.length === 0) sessionStorage.removeItem(storageKey(code));
     else sessionStorage.setItem(storageKey(code), JSON.stringify(lines));
+  } catch {
+    // Kept in memory only.
+  }
+}
+
+/** Notes made from the transcript in this tab: what they say, how, and when. */
+export const MadeNotes = z.object({
+  notes: MeetingNotes,
+  engine: z.enum(ENGINES),
+  provider: z.enum(PROVIDERS).optional(),
+  /** When they were made (ms since epoch). */
+  madeAt: z.number(),
+});
+export type MadeNotes = z.infer<typeof MadeNotes>;
+
+const notesKey = (code: string) => `faceon.notes.${code}`;
+
+export function loadMadeNotes(code: string): MadeNotes | null {
+  try {
+    const raw = sessionStorage.getItem(notesKey(code));
+    const parsed = MadeNotes.safeParse(raw ? JSON.parse(raw) : null);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveMadeNotes(code: string, made: MadeNotes | null): void {
+  try {
+    if (made) sessionStorage.setItem(notesKey(code), JSON.stringify(made));
+    else sessionStorage.removeItem(notesKey(code));
   } catch {
     // Kept in memory only.
   }

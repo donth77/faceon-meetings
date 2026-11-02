@@ -528,12 +528,16 @@ export function MeetingShell({
       return (
         <NotesPanel
           key="notes"
+          code={meeting.code}
+          title={title}
           notes={notes}
           demo={session.demo}
           isNotetaker={isNotetaker}
           lines={transcript.lines}
           notTranscribed={notTranscribed}
           onChange={setNotesOn}
+          onOpenSettings={() => setSettings("aiNotes")}
+          onDiscard={transcript.clear}
           onClose={() => closePanel("notes")}
         />
       );
