@@ -4,6 +4,10 @@ import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 import { Effect } from "@/lib/effects/effects";
+import {
+  parseNoiseSuppression,
+  type NoiseSuppression,
+} from "@/lib/noise/noise";
 import { formattingLocale } from "@/lib/time";
 
 /**
@@ -19,8 +23,8 @@ export type Preferences = {
   timeFormat?: "12" | "24";
   /** A time zone other than the device's. */
   timeZone?: string;
-  /** The browser's noise suppression on the microphone. Default on. */
-  noiseSuppression?: boolean;
+  /** Noise suppression on the microphone (see lib/noise). Default strong. */
+  noiseSuppression?: NoiseSuppression;
   /** Your own camera shown mirrored, to you only. Default on. */
   mirrorVideo?: boolean;
   /** Sending 720p rather than 360p. Default on. */
@@ -69,7 +73,6 @@ export type Preferences = {
 const KEY = "faceon.prefs";
 const CHANGED = "faceon:prefs";
 const BOOLEANS = [
-  "noiseSuppression",
   "mirrorVideo",
   "hdVideo",
   "cameraOffOnJoin",
@@ -108,6 +111,8 @@ export function loadPreferences(): Preferences {
       if (minutes !== undefined) value.reminderMinutes = minutes;
       const effect = Effect.safeParse(p.effect);
       if (effect.success) value.effect = effect.data;
+      const noise = parseNoiseSuppression(p.noiseSuppression);
+      if (noise) value.noiseSuppression = noise;
       for (const key of BOOLEANS) {
         if (typeof p[key] === "boolean") value[key] = p[key];
       }
@@ -177,7 +182,7 @@ export type Settings = Required<
 
 /** Every setting's default: one place to change one. */
 export const DEFAULTS: Settings = {
-  noiseSuppression: true,
+  noiseSuppression: "strong",
   mirrorVideo: true,
   hdVideo: true,
   cameraOffOnJoin: false,

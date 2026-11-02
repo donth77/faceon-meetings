@@ -119,11 +119,7 @@ function AudioSection() {
         </p>
       )}
       <div className="divide-y divide-white/10 border-t border-white/10">
-        <AudioPreferenceRows
-          onNoiseSuppression={(on) =>
-            void mic.setNoiseSuppression(on).catch(() => {})
-          }
-        />
+        <AudioPreferenceRows />
       </div>
     </div>
   );

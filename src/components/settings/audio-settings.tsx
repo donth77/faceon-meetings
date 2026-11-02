@@ -7,11 +7,13 @@ import { DeviceProblemNote } from "@/components/device/device-problem-note";
 import { MicMeter } from "@/components/device/mic-meter";
 import { AudioPreferenceRows } from "@/components/device/preference-rows";
 import { useLocalTrack } from "@/components/device/use-local-track";
+import { useNoiseSuppression } from "@/components/device/use-noise-suppression";
+import { useNoiseTrack } from "@/components/device/use-noise-track";
 import { Button } from "@/components/ui/button";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import { playTestSound } from "@/lib/device/test-sound";
+import { browserSuppression } from "@/lib/noise/noise";
 import { canChooseSpeaker } from "@/lib/platform";
-import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import { DeviceField, useRememberedDevices } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
@@ -20,8 +22,15 @@ import { SectionTitle, SettingsCard } from "./settings-nav";
 export function AudioSettings() {
   const t = useTranslations("Settings.audio");
   const [devices, update] = useRememberedDevices();
-  const { noiseSuppression } = withDefaults(usePreferences());
-  const mic = useLocalTrack("audio", true, devices.micId, noiseSuppression);
+  const noise = useNoiseSuppression();
+  const mic = useLocalTrack(
+    "audio",
+    true,
+    devices.micId,
+    browserSuppression(noise.mode),
+  );
+  // The meter shows what others would hear, with strong suppression when it's on.
+  const heard = useNoiseTrack(mic.track, noise.mode);
   const lists = useMediaDevices(mic.track?.id ?? "");
   const chooseSpeaker = canChooseSpeaker() && lists.speakers.length > 0;
 
@@ -44,7 +53,7 @@ export function AudioSettings() {
               onRetry={mic.retry}
             />
           ) : (
-            <MicMeter track={mic.track} />
+            <MicMeter track={heard} />
           )}
         </div>
         <div className="flex flex-wrap items-end gap-2.5">

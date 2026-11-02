@@ -44,3 +44,5 @@ next-env.d.ts
 
 # MediaPipe's Wasm runtime, copied from node_modules by scripts/effects-assets.ts
 /public/effects/vision_wasm_internal.*
+# RNNoise's worklet and Wasm, copied from node_modules by scripts/noise-assets.ts
+/public/noise/rnnoise*

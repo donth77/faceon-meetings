@@ -26,7 +26,7 @@ order: 1
 
 ## People hear an echo
 
-Wear headphones, or move away from your speakers. Keep **Noise suppression** on.
+Wear headphones, or move away from your speakers. Keep **Noise suppression** on **Strong** or **Standard**.
 
 ## Video is choppy, or it says "Reconnecting"
 

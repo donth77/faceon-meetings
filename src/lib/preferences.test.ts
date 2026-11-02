@@ -60,8 +60,25 @@ describe("loadPreferences", () => {
       timeFormat: "36",
       pushToTalk: "yes",
       reactionAnnouncements: "loud",
+      noiseSuppression: "loud",
     });
     expect(loadPreferences()).toEqual({});
+  });
+
+  it("reads a noise suppression choice", () => {
+    stored({ noiseSuppression: "standard" });
+    expect(loadPreferences().noiseSuppression).toBe("standard");
+  });
+
+  it("keeps the earlier noise suppression switch's off", () => {
+    stored({ noiseSuppression: false });
+    expect(loadPreferences().noiseSuppression).toBe("off");
+  });
+
+  it("lets the earlier noise suppression switch's on follow today's default", () => {
+    stored({ noiseSuppression: true });
+    expect(loadPreferences().noiseSuppression).toBeUndefined();
+    expect(withDefaults(loadPreferences()).noiseSuppression).toBe("strong");
   });
 });
 

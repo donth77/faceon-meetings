@@ -2,29 +2,37 @@
 
 import { useTranslations } from "next-intl";
 
-import { SwitchRow } from "@/components/ui/form-fields";
+import { SelectRow, SwitchRow } from "@/components/ui/form-fields";
+import { NOISE_SUPPRESSION, parseNoiseSuppression } from "@/lib/noise/noise";
 import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
+import { useNoiseSuppression } from "./use-noise-suppression";
+
 /**
- * Settings → Audio's switches, also in the meeting's Settings: noise suppression and
- * push to talk. `onNoiseSuppression` applies the change to a live microphone too.
+ * Settings → Audio's choices, also in the meeting's Settings: noise suppression and push
+ * to talk. A meeting's microphone follows the noise suppression choice as it changes.
  */
-export function AudioPreferenceRows({
-  onNoiseSuppression,
-}: {
-  onNoiseSuppression?: (on: boolean) => void;
-}) {
+export function AudioPreferenceRows() {
   const t = useTranslations("Settings.audio");
-  const { noiseSuppression, pushToTalk } = withDefaults(usePreferences());
+  const { pushToTalk } = withDefaults(usePreferences());
+  const noise = useNoiseSuppression();
+  const options = NOISE_SUPPRESSION.filter(
+    (mode) => mode !== "strong" || noise.strongAvailable,
+  ).map((mode) => ({ id: mode, label: t(`noise.${mode}`) }));
   return (
     <>
-      <SwitchRow
+      <SelectRow
         label={t("noiseSuppression")}
-        help={t("noiseSuppressionHelp")}
-        isSelected={noiseSuppression}
-        onChange={(on) => {
-          setPreference("noiseSuppression", on);
-          onNoiseSuppression?.(on);
+        help={
+          noise.chosen === "strong" && !noise.strongAvailable
+            ? t("noiseStrongUnavailable")
+            : t(`noiseHelp.${noise.mode}`)
+        }
+        options={options}
+        value={noise.mode}
+        onChange={(mode) => {
+          const choice = parseNoiseSuppression(mode);
+          if (choice) setPreference("noiseSuppression", choice);
         }}
       />
       <SwitchRow

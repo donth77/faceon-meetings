@@ -40,7 +40,7 @@ export function useLocalTrack(
   kind: "audio" | "video",
   enabled: boolean,
   deviceId: string | undefined,
-  /** For a microphone: the browser's noise suppression (Settings → Audio). */
+  /** For a microphone: the browser's own noise suppression (standard, in Settings → Audio). */
   noiseSuppression = true,
 ): LocalTrack {
   const [attempt, setAttempt] = useState(0);

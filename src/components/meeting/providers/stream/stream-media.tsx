@@ -39,7 +39,7 @@ import {
   type RoomStatus,
   type ShareOptions,
 } from "../../media";
-import { setCameraProcessor } from "./camera-processor";
+import { setCameraProcessor, setMicrophoneProcessor } from "./processors";
 import { StreamTrackView } from "./stream-track-view";
 
 function connectionOf(p: StreamVideoParticipant): ConnectionQuality {
@@ -119,7 +119,7 @@ async function startScreenShare(call: Call, options: ShareOptions) {
   await manager.enable();
 }
 
-/** Noise suppression on the live microphone, and on any it restarts with. */
+/** The browser's own noise suppression on the live microphone, and on any it restarts with. */
 async function setNoiseSuppression(call: Call, on: boolean) {
   call.microphone.setDefaultConstraints({
     autoGainControl: true,
@@ -367,6 +367,7 @@ export function StreamMedia({
       track: micMuted ? null : firstTrack(micStream, "audio"),
       speakingWhileMuted: isSpeakingWhileMuted,
       setNoiseSuppression: (on) => setNoiseSuppression(call, on),
+      setProcessor: (processor) => setMicrophoneProcessor(call, processor),
       allowed: canSendAudio,
       problem: micError ? deviceProblem(micError) : null,
       devices: micDevices,

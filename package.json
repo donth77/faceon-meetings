@@ -8,8 +8,8 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "node scripts/effects-assets.ts && next dev",
-    "build": "node scripts/effects-assets.ts && next build",
+    "dev": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next dev",
+    "build": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next build",
     "start": "next start",
     "lint": "eslint src scripts *.ts *.mjs",
     "typecheck": "next typegen && tsc --noEmit",
@@ -29,6 +29,7 @@
     "@dicebear/styles": "^10.6.0",
     "@internationalized/date": "3.12.4",
     "@mediapipe/tasks-vision": "1.2.0",
+    "@sapphi-red/web-noise-suppressor": "0.4.1",
     "@stream-io/node-sdk": "^0.8.15",
     "@stream-io/video-react-sdk": "^1.45.0",
     "@vercel/functions": "^3.10.5",

@@ -36,6 +36,10 @@ The avatars are [Dylan](https://www.dicebear.com/styles/dylan/) by Natalia Spiva
 
 Backgrounds and blur use [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter)'s selfie segmentation model and vision runtime, by Google, under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
+## Noise suppression
+
+Strong noise suppression uses [RNNoise](https://github.com/xiph/rnnoise) by Jean-Marc Valin, Mozilla and the Xiph.Org Foundation, under the [BSD 3-Clause License](https://github.com/xiph/rnnoise/blob/main/COPYING), built for WebAssembly by [Shiguredo](https://github.com/shiguredo/rnnoise-wasm) under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) and run by [web-noise-suppressor](https://github.com/sapphi-red/web-noise-suppressor) by sapphi-red, under the [MIT License](https://github.com/sapphi-red/web-noise-suppressor/blob/main/LICENSE).
+
 ## Fonts and icons
 
 - [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) by Mathieu Triay and [Figtree](https://fonts.google.com/specimen/Figtree) by Erik Kennedy, under the [SIL Open Font License 1.1](https://openfontlicense.org/).

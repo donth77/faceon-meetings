@@ -40,8 +40,9 @@ export function MicMeter({ track }: { track: MediaStreamTrack | null }) {
       if (lit >= 3) setHeardTrack(track);
       frame = requestAnimationFrame(draw);
     };
-    // Capture permission counts as a user gesture for audio in most browsers; resume anyway.
-    void context.resume();
+    // Capture permission counts as a user gesture for audio in most browsers; resume
+    // anyway. Closing first (a new track) rejects the resume, which is fine.
+    context.resume().catch(() => {});
     frame = requestAnimationFrame(draw);
 
     return () => {

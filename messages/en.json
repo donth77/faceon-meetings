@@ -1047,7 +1047,18 @@
       "testSpeaker": "Test speaker",
       "speakerFixed": "Your browser plays sound through your device’s current speaker.",
       "noiseSuppression": "Noise suppression",
-      "noiseSuppressionHelp": "Filters out typing, fans and traffic",
+      "noise": {
+        "off": "Off",
+        "standard": "Standard",
+        "strong": "Strong"
+      },
+      "noiseHelp": {
+        "off": "Your microphone as it is, for music or a quiet room",
+        "standard": "Your browser's own: filters out steady noise like fans and hum",
+        "strong": "Also filters out typing, traffic and voices in the background, on your device"
+      },
+      "noiseStrongUnavailable": "Strong isn't available in this browser, so Standard is on",
+      "noiseStrongFailed": "Strong noise suppression stopped working here, so Standard is on.",
       "pushToTalk": "Push to talk",
       "pushToTalkHelp": "While you're muted, hold the Space bar to talk; let go to mute again"
     },

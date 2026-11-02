@@ -9,12 +9,12 @@ import {
 import { useEffect, useEffectEvent, useState } from "react";
 
 import type { DevicePreferences } from "@/lib/device/preferences";
-import type { CameraProcessor } from "@/lib/media/types";
+import type { CameraProcessor, MicrophoneProcessor } from "@/lib/media/types";
 import { loadPreferences, withDefaults } from "@/lib/preferences";
 import { CALL_TYPE } from "@/lib/stream/constants";
 
 import type { RoomAdapterProps } from "../../media";
-import { setCameraProcessor } from "./camera-processor";
+import { setCameraProcessor, setMicrophoneProcessor } from "./processors";
 import { StreamMedia } from "./stream-media";
 
 type Room = { client: StreamVideoClient; call: Call; joinedAt: number };
@@ -24,18 +24,23 @@ const SD = { width: 640, height: 360 };
 
 /**
  * Settings → Audio and Video first, then the remembered devices (a missing one falls
- * back to the default), then the camera's effect, then each on or off.
+ * back to the default), then the camera's effect and the microphone's noise
+ * suppression, then each on or off.
  */
 async function applyDevices(
   call: Call,
   devices: DevicePreferences,
-  cameraProcessor: CameraProcessor | undefined,
+  start: {
+    cameraProcessor: CameraProcessor | undefined;
+    browserNoiseSuppression: boolean;
+    microphoneProcessor: MicrophoneProcessor | undefined;
+  },
 ) {
   const settings = withDefaults(loadPreferences());
   call.microphone.setDefaultConstraints({
     autoGainControl: true,
     echoCancellation: true,
-    noiseSuppression: settings.noiseSuppression,
+    noiseSuppression: start.browserNoiseSuppression,
   });
   await Promise.allSettled([
     call.camera.selectTargetResolution(settings.hdVideo ? HD : SD),
@@ -46,7 +51,13 @@ async function applyDevices(
   ]);
   if (devices.speakerId) call.speaker.select(devices.speakerId);
   // Before the camera starts, so the unprocessed picture is never sent.
-  if (cameraProcessor) await setCameraProcessor(call, cameraProcessor);
+  if (start.cameraProcessor) {
+    await setCameraProcessor(call, start.cameraProcessor);
+  }
+  // Before the microphone starts, so it doesn't restart a moment after joining.
+  if (start.microphoneProcessor) {
+    await setMicrophoneProcessor(call, start.microphoneProcessor);
+  }
   // A device that fails to start leaves the call joined with it off; the room shows why.
   await Promise.allSettled([
     devices.cameraOn ? call.camera.enable() : call.camera.disable(),
@@ -62,6 +73,8 @@ export default function StreamRoom(props: RoomAdapterProps) {
     self: props.self,
     devices: props.devices,
     cameraProcessor: props.cameraProcessor,
+    browserNoiseSuppression: props.browserNoiseSuppression,
+    microphoneProcessor: props.microphoneProcessor,
   }));
   const [room, setRoom] = useState<Room>();
   const refreshToken = useEffectEvent(() => props.refreshToken());
@@ -84,7 +97,7 @@ export default function StreamRoom(props: RoomAdapterProps) {
       const call = client.call(CALL_TYPE, setup.connection.room);
       joined = { client, call };
       (async () => {
-        await applyDevices(call, setup.devices, setup.cameraProcessor);
+        await applyDevices(call, setup.devices, setup);
         await call.join();
         if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
       })().catch(() => {

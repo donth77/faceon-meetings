@@ -11,6 +11,7 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 - Guests join with just a name; passcodes, a waiting room and host controls keep meetings safe
 - Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
 - Background blur and backgrounds (paintings, places, moving backgrounds, or your own image or looping video), processed on your own device
+- Noise suppression that takes typing, traffic and background voices out of your microphone, on your own device (RNNoise)
 - Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key
 - Previous meetings with who came, keyboard shortcuts, and a searchable Help center
 - Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app (from Chrome or Edge, or Add to Home Screen and Add to Dock in Safari)

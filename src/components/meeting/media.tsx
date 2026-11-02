@@ -15,7 +15,11 @@ import {
 
 import type { DevicePreferences } from "@/lib/device/preferences";
 import type { DeviceProblem } from "@/lib/device/problems";
-import type { CameraProcessor, JoinInfo } from "@/lib/media/types";
+import type {
+  CameraProcessor,
+  JoinInfo,
+  MicrophoneProcessor,
+} from "@/lib/media/types";
 import type {
   EventSender,
   ReactionCode,
@@ -85,6 +89,8 @@ export type RoomMedia = {
     speakingWhileMuted: boolean;
     /** Turns the browser's noise suppression on or off, now and for the rest of the call. */
     setNoiseSuppression: (on: boolean) => Promise<void>;
+    /** Runs a processor on the microphone (strong noise suppression); null removes it. */
+    setProcessor: (processor: MicrophoneProcessor | null) => Promise<void>;
   };
   camera: InputDevice & {
     flip: () => Promise<void>;
@@ -149,6 +155,10 @@ export type RoomAdapterProps = {
   devices: DevicePreferences;
   /** A background or effect to apply before the camera first sends anything. */
   cameraProcessor?: CameraProcessor;
+  /** The browser's own noise suppression on the microphone, from the start. */
+  browserNoiseSuppression: boolean;
+  /** Strong noise suppression, on the microphone from the start. */
+  microphoneProcessor?: MicrophoneProcessor;
   refreshToken: () => Promise<string>;
   onLeft: (reason: LeaveReason) => void;
   /** Shown while connecting. */

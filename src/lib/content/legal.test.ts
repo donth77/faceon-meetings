@@ -87,4 +87,16 @@ describe("the credits", () => {
       expect(credits).toContain(`by ${background.by}`);
     }
   });
+
+  it("credit noise suppression's model and the code that runs it", async () => {
+    const credits = await readLegalSource("credits");
+    for (const name of [
+      "RNNoise",
+      "BSD 3-Clause",
+      "Shiguredo",
+      "web-noise-suppressor",
+    ]) {
+      expect(credits).toContain(name);
+    }
+  });
 });

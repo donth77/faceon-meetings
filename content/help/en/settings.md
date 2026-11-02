@@ -19,7 +19,7 @@ Dates follow your browser's region, so you'll see "Sunday 1 November" or "Sunday
 
 ## Audio
 
-Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** filters out typing, fans and traffic. **Push to talk** lets you hold `Space` to talk while muted; it's off unless you turn it on.
+Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** keeps typing, fans, traffic and background voices out of the meeting: **Strong** (the default, on your device), **Standard** (your browser's own, for steady noise) or **Off**. **Push to talk** lets you hold `Space` to talk while muted; it's off unless you turn it on.
 
 ## Video
 

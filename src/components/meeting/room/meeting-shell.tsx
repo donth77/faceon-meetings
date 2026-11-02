@@ -46,6 +46,7 @@ import { moderates, roleIn, roomRoleOf } from "./roles";
 import { RoomBadgesProvider } from "./room-badges";
 import { RoomControlsProvider, type RoomControls } from "./room-controls";
 import { useRoomEffects } from "./room-effects";
+import { useRoomNoise } from "./room-noise";
 import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
@@ -236,6 +237,7 @@ export function MeetingShell({
   useAutoPictureInPicture(pip, prefs.autoPictureInPicture);
   usePresenceSounds(media.participants);
   useRoomEffects();
+  useRoomNoise();
 
   // On a phone a panel is a sheet over the room: the room behind it is left alone by
   // the keyboard and screen readers until it closes (2.4.11). It's set on the header,

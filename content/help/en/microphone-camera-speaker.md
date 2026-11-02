@@ -30,7 +30,12 @@ Before you join, the preview has the same meter and a **Play a test sound** butt
 
 ## Useful settings
 
-- **Noise suppression** filters out typing, fans and traffic. It's on unless you turn it off.
+- **Noise suppression** keeps the noise around you out of the meeting:
+  - **Strong**, the default, filters out typing, traffic, fans and voices in the background. It runs on your device, so your audio isn't sent anywhere else for it.
+  - **Standard** is your browser's own. It mostly filters out steady noise like fans and hum.
+  - **Off** sends your microphone as it is, for music or a quiet room.
+
+  Where a browser can't run Strong, Standard is on instead, and {appName} tells you.
 - **Mirror my video** shows you mirrored, as in a mirror. Only you see it that way.
 - **Send HD video** looks sharper but uses more data.
 - **Turn off my camera when I join** starts every meeting with your camera off.

@@ -22,6 +22,8 @@ import { DeviceProblemNote } from "@/components/device/device-problem-note";
 import { MicMeter } from "@/components/device/mic-meter";
 import { MirroredVideo } from "@/components/device/mirrored-video";
 import { useLocalTrack } from "@/components/device/use-local-track";
+import { useNoiseSuppression } from "@/components/device/use-noise-suppression";
+import { useNoiseTrack } from "@/components/device/use-noise-track";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
 import { LegalConsent } from "@/components/legal/legal-links";
@@ -36,6 +38,7 @@ import {
 import { playTestSound } from "@/lib/device/test-sound";
 import { availableEffect, effectsSupported } from "@/lib/effects/support";
 import { formatMeetingCode } from "@/lib/meetings/codes";
+import { browserSuppression } from "@/lib/noise/noise";
 import { canChooseSpeaker } from "@/lib/platform";
 import {
   loadPreferences,
@@ -203,12 +206,15 @@ export function PreJoin({
   );
   const [passcode, setPasscode] = useState(initialPasscode ?? "");
   const video = useLocalTrack("video", devices.cameraOn, devices.cameraId);
+  const noise = useNoiseSuppression();
   const audio = useLocalTrack(
     "audio",
     devices.micOn,
     devices.micId,
-    settings.noiseSuppression,
+    browserSuppression(noise.mode),
   );
+  // The meter shows what others would hear, with strong suppression when it's on.
+  const heard = useNoiseTrack(audio.track, noise.mode);
   const lists = useMediaDevices(`${video.track?.id}|${audio.track?.id}`);
 
   // Only what you change here is remembered: "Join with camera off" in Settings turns
@@ -387,7 +393,7 @@ export function PreJoin({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2.5">
-            <MicMeter track={audio.track} />
+            <MicMeter track={heard} />
             <AriaButton
               onPress={() =>
                 void playTestSound(devices.speakerId).catch(() => {})

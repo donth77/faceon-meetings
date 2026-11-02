@@ -99,6 +99,7 @@ export type Option = {
 export function SelectField({
   label,
   hideLabel,
+  describedBy,
   options,
   value,
   isDisabled,
@@ -111,6 +112,8 @@ export function SelectField({
   label: string;
   /** The label is for screen readers only; something nearby says what it is. */
   hideLabel?: boolean;
+  /** The id of a helper line that describes the choice. */
+  describedBy?: string;
   options: Option[];
   value: string;
   isDisabled?: boolean;
@@ -124,6 +127,7 @@ export function SelectField({
     <Select
       selectedKey={value}
       isDisabled={isDisabled}
+      aria-describedby={describedBy}
       onSelectionChange={(key: Key | null) => {
         if (key !== null) onChange(String(key));
       }}
@@ -194,6 +198,47 @@ export function SelectField({
         </>
       )}
     </Select>
+  );
+}
+
+/** A setting with a label and helper on the left and a short list to pick from on the right. */
+export function SelectRow({
+  label,
+  help,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  help?: ReactNode;
+  options: Option[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const helpId = useId();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+      <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-0.5">
+        {/* The select carries the same name for screen readers. */}
+        <span aria-hidden="true" className="text-[15px] font-semibold">
+          {label}
+        </span>
+        {help ? (
+          <span id={helpId} className="text-muted-foreground text-[13px]">
+            {help}
+          </span>
+        ) : null}
+      </div>
+      <SelectField
+        label={label}
+        hideLabel
+        describedBy={help ? helpId : undefined}
+        options={options}
+        value={value}
+        onChange={onChange}
+        className="w-[11rem] shrink-0"
+      />
+    </div>
   );
 }
 
