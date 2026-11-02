@@ -1094,6 +1094,7 @@
       "deleteConfirmBody": "This can’t be undone. Your meetings, notes and avatar are removed for good, and people you invited can no longer join your meetings.",
       "deleteForGood": "Delete account",
       "signInFirst": "For your security, sign in again, then delete your account.",
+      "legal": "The <privacy>Privacy Policy</privacy> explains what {appName} keeps about you and for how long, and the <terms>Terms</terms> cover using it.",
       "signInAgain": "Sign in again"
     },
     "close": "Close settings",
@@ -1163,7 +1164,12 @@
     }
   },
   "Legal": {
-    "updated": "Last updated {date}"
+    "updated": "Last updated {date}",
+    "consent": {
+      "signUp": "By creating an account, you agree to the <terms>Terms</terms> and acknowledge the <privacy>Privacy Policy</privacy>.",
+      "signIn": "By continuing, you agree to the <terms>Terms</terms> and acknowledge the <privacy>Privacy Policy</privacy>.",
+      "join": "By joining, you agree to the <terms>Terms</terms> and acknowledge the <privacy>Privacy Policy</privacy>."
+    }
   },
   "Reminders": {
     "startsSoon": "{title} starts in {minutes, plural, one {# minute} other {# minutes}}",

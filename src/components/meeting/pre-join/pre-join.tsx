@@ -24,6 +24,7 @@ import { MirroredVideo } from "@/components/device/mirrored-video";
 import { useLocalTrack } from "@/components/device/use-local-track";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
+import { LegalConsent } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMediaDevices } from "@/hooks/use-media-devices";
@@ -575,18 +576,22 @@ export function PreJoin({
                 {t("joinWithout")}
               </Button>
               {viewer.kind === "guest" ? (
-                <p className="text-muted-foreground text-center text-[13px] leading-normal">
-                  {t.rich("guestNote", {
-                    link: (chunks) => (
-                      <Link
-                        href={signInHref}
-                        className="text-primary font-semibold underline-offset-4 hover:underline"
-                      >
-                        {chunks}
-                      </Link>
-                    ),
-                  })}
-                </p>
+                <>
+                  <p className="text-muted-foreground text-center text-[13px] leading-normal">
+                    {t.rich("guestNote", {
+                      link: (chunks) => (
+                        <Link
+                          href={signInHref}
+                          className="text-primary font-semibold underline-offset-4 hover:underline"
+                        >
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
+                  </p>
+                  {/* Guests have no account, so they agree here, as on Zoom's web client. */}
+                  <LegalConsent action="join" className="text-center" />
+                </>
               ) : null}
             </>
           )}

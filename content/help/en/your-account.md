@@ -26,3 +26,5 @@ You can sign in with Google, GitHub, or your email and a password, and use more 
 ## Delete your account
 
 Select **Delete account**. This removes your meetings, notes and avatar for good, and people you invited can no longer join your meetings. If you haven't signed in recently, you'll be asked to sign in again first.
+
+The [privacy policy](/privacy) explains what's deleted with your account, and what's kept for a while.

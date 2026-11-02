@@ -49,3 +49,5 @@ Useful scripts:
 FaceOn is designed to run on free tiers. A step-by-step guide to deploying your own copy (Vercel, Stream and Neon accounts, plus every environment variable) will be added here as the features land. `.env.example` lists every variable.
 
 Email and password accounts need email delivery: a free [Resend](https://resend.com) account with a verified sending domain (a subdomain of a domain you already own works), set as `RESEND_API_KEY` and `EMAIL_FROM`. Until both are set, production offers only Google and GitHub.
+
+The privacy policy and terms (`/privacy`, `/terms`, from `content/legal/`) speak for whoever runs the copy. Set `NEXT_PUBLIC_OPERATOR_NAME`, `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_OPERATOR_JURISDICTION` so they name you, and have them reviewed for where you are.

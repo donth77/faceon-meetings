@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { LegalConsent } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import { sendVerificationEmail, signUp } from "@/lib/auth/client";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
@@ -240,6 +241,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
           </form>
         </>
       ) : null}
+      <LegalConsent action="signUp" />
       <p className="border-t pt-3.5 text-[15px]">
         {t("haveAccount")}{" "}
         <Link

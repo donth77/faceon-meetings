@@ -1,6 +1,6 @@
 ---
 title: Common questions
-summary: Cost, accounts, recording, limits and browsers.
+summary: Cost, accounts, recording, privacy, limits and browsers.
 category: troubleshooting
 order: 2
 ---
@@ -16,6 +16,10 @@ You need one to host meetings. To join, you don't, as long as the host lets gues
 ## Are meetings recorded?
 
 No. {appName} doesn't record meetings, and chat isn't saved after a meeting ends.
+
+## What does {appName} keep about me?
+
+Only what it needs to run your meetings, such as your account and who joined each meeting, and most of it only for a while. The [privacy policy](/privacy) lists everything that's kept and for how long, and the [terms](/terms) cover using {appName}.
 
 ## How long can a meeting last, and how many people can join?
 

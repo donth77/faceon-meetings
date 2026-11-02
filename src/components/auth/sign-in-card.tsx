@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { LegalConsent } from "@/components/legal/legal-links";
 import { JoinForm } from "@/components/meetings/join-form";
 import { emailPasswordEnabled } from "@/lib/email/send";
 import { publicEnv } from "@/lib/env";
@@ -34,6 +35,8 @@ export async function SignInCard() {
           </Suspense>
         </>
       ) : null}
+      {/* A first sign-in with Google or GitHub creates the account. */}
+      <LegalConsent action="signIn" />
       <p className="border-t pt-3.5 text-[15px]">
         {t("newHere", { appName })}{" "}
         <Link

@@ -22,6 +22,7 @@ import {
   PasswordField,
 } from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
+import { LEGAL_LINKS } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,6 +43,7 @@ import {
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem } from "@/lib/auth/problems";
 import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
+import { publicEnv } from "@/lib/env";
 import { signInPath } from "@/lib/routes";
 
 import { SettingsCard } from "./settings-nav";
@@ -664,7 +666,10 @@ function DeleteAccount({ hasPassword }: { hasPassword: boolean }) {
   );
 }
 
-/** Settings → Account: profile and avatar, how you sign in, and deleting the account. */
+/**
+ * Settings → Account: profile and avatar, how you sign in, deleting the account, and
+ * where the privacy policy and the terms are.
+ */
 export function AccountSettings({
   account,
   avatarChoices,
@@ -687,6 +692,12 @@ export function AccountSettings({
           (method) => method.providerId === "credential",
         )}
       />
+      <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
+        {t.rich("legal", {
+          appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+          ...LEGAL_LINKS,
+        })}
+      </p>
     </>
   );
 }

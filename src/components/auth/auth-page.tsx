@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
+import { SiteFooter } from "@/components/marketing/site-footer";
 import {
   SiteHeader,
   type HeaderAccountLinks,
 } from "@/components/marketing/site-header";
 
-/** Account screens: the public header, then a centered column of cards. */
+/** Account screens: the public header, a centered column of cards, the public footer. */
 export function AuthPage({
   links,
   children,
@@ -21,6 +22,7 @@ export function AuthPage({
           {children}
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
