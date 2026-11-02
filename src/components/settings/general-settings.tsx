@@ -133,9 +133,6 @@ export function GeneralSettings({
               {t(value === "12" ? "hours12" : "hours24")}
             </Radio>
           ))}
-          <span className="text-muted-foreground text-[13px]">
-            {t("timeFormatHelp")}
-          </span>
         </RadioGroup>
         <div className="flex max-w-[440px] flex-col gap-1.5">
           <TimeZoneField

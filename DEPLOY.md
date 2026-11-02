@@ -53,8 +53,8 @@ The database's sleep costs about a second, once, on the first request after five
 Fork this repository on GitHub, then clone your fork and install:
 
 ```bash
-git clone https://github.com/<you>/face-on.git
-cd face-on
+git clone https://github.com/<you>/faceon-meetings.git
+cd faceon-meetings
 pnpm install
 cp .env.example .env.local
 ```

@@ -51,7 +51,7 @@ export function HelpIndex({
   const openShortcuts = useOpenShortcuts();
 
   return (
-    <main className="flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
+    <main className="mx-auto flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">

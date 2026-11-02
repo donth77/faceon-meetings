@@ -1186,7 +1186,6 @@
       "timeFormat": "Time format",
       "hours12": "12-hour (2:00 PM)",
       "hours24": "24-hour (14:00)",
-      "timeFormatHelp": "Starts on your region’s usual format.",
       "timeZone": "Time zone",
       "timeZoneChosen": "Chosen by you. Example: {example}",
       "useDeviceZone": "Use my device’s time zone",

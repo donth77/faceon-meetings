@@ -58,7 +58,7 @@ export default async function HelpArticlePage({
   const step =
     "group hover:bg-muted/60 focus-visible:ring-ring flex flex-col gap-1 rounded-xl p-3 ring-1 ring-[#e2e5ea] outline-none focus-visible:ring-2 dark:ring-white/10";
   return (
-    <div className="flex w-full max-w-[1120px] flex-1 gap-12 px-5 py-8 sm:px-10 sm:py-10">
+    <div className="mx-auto flex w-full max-w-[1120px] flex-1 gap-12 px-5 py-8 sm:px-10 sm:py-10">
       <aside className="hidden w-60 shrink-0 lg:block">
         <div className="sticky top-8">
           <HelpNav sections={sections} />
