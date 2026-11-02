@@ -123,6 +123,7 @@ export function NotesPanel({
   isOwner,
   hostName,
   isNotetaker,
+  canMake,
   lines,
   notTranscribed,
   onChange,
@@ -149,6 +150,8 @@ export function NotesPanel({
   hostName: string;
   /** You started them, so the transcript is in your browser. */
   isNotetaker: boolean;
+  /** This browser can make the notes (Chrome's model, or a key); else it says so first. */
+  canMake: boolean;
   /** This tab's transcript. */
   lines: readonly TranscriptLine[];
   notTranscribed: readonly NotTranscribed[];
@@ -236,6 +239,9 @@ export function NotesPanel({
       <div className="flex flex-col gap-3 px-5 pb-1 text-sm leading-normal">
         <p>{t("intro")}</p>
         <p className="text-muted-foreground">{note}</p>
+        {!demo && allowed && !canMake ? (
+          <p className="text-muted-foreground">{t("cantMakeHere")}</p>
+        ) : null}
       </div>
     );
   }

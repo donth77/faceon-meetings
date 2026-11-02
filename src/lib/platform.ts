@@ -28,11 +28,7 @@ export const isChromium = () =>
     navigator as Navigator & { userAgentData?: UserAgentData }
   ).userAgentData?.brands.some((b) => b.brand === "Chromium") === true;
 
-/**
- * Google Chrome on a computer: the browser behind AI notes' speech to text on the device.
- * Other Chromium browsers have the same API without what's behind it, and asking them
- * whether it's there can crash the page, so they're never asked.
- */
+/** Google Chrome on a computer (not Edge, other Chromium browsers or Chrome on a phone). */
 export const isDesktopChrome = () => {
   if (typeof navigator === "undefined") return false;
   const data = (navigator as Navigator & { userAgentData?: UserAgentData })

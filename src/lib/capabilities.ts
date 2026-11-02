@@ -1,4 +1,4 @@
-import { isChromium, isTypingTarget } from "./platform";
+import { isChromium, isDesktopChrome, isTypingTarget } from "./platform";
 
 /**
  * What this browser and device can do, worked out in one place. A feature that needs
@@ -38,6 +38,12 @@ export const CAPABILITIES = [
   "notificationsOnceInstalled",
   /** A keyboard: a mouse or trackpad is attached, or a key was pressed outside a text field. */
   "keyboard",
+  /**
+   * AI on the device, for AI notes (speech to text, and Chrome's built-in AI to make the
+   * notes): Google Chrome on a computer. Whether each is ready, or needs its one-time
+   * download, Chrome says when asked; other browsers aren't asked.
+   */
+  "onDeviceAi",
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
@@ -104,6 +110,7 @@ const CHECKS: Record<Exclude<Capability, "keyboard">, () => boolean> = {
   motionBackgrounds: () =>
     document.createElement("video").canPlayType(FOOTAGE_TYPE) !== "",
   notifications: () => typeof Notification !== "undefined",
+  onDeviceAi: isDesktopChrome,
   notificationsOnceInstalled: () =>
     !supports("notifications") && isAppleMobile() && !standalone(),
 };

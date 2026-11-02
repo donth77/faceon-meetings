@@ -4,8 +4,8 @@
  * person's browser transcribes only their own mic, and only while they're unmuted.
  */
 
+import { supports } from "@/lib/capabilities";
 import type { TranscriptionStatus } from "@/lib/meetings/events";
-import { isDesktopChrome } from "@/lib/platform";
 
 /** What of the Web Speech API this uses. It isn't in TypeScript's lib. */
 interface RecognitionAlternative {
@@ -51,10 +51,11 @@ export interface SpeechApi {
 
 /**
  * The browser's speech recognition, where it can work on the device: Chrome on a
- * computer. Elsewhere there's none, without asking (see isDesktopChrome).
+ * computer. Other Chromium browsers have it without what's behind it, and asking them
+ * whether it's there can crash the page, so elsewhere there's none, without asking.
  */
 export function speechApi(): SpeechApi | undefined {
-  if (!isDesktopChrome()) return undefined;
+  if (!supports("onDeviceAi")) return undefined;
   return (globalThis as { SpeechRecognition?: SpeechApi }).SpeechRecognition;
 }
 

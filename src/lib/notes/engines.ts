@@ -200,16 +200,23 @@ export function providerChoice(settings: NotesSettings) {
 }
 
 /**
- * How notes are made: what the host chose, else the first that works here, on this
- * computer before a key.
+ * Chrome's built-in AI can make notes in this browser: it's ready, or will be after its
+ * one-time download, which the person can start here. Elsewhere it isn't offered.
+ */
+export const onDeviceUsable = (onDevice: ModelState) =>
+  onDevice === "ready" || onDevice === "download";
+
+/**
+ * How notes are made: what the host chose (never switched for them, since it decides
+ * where the transcript goes), else this computer where Chrome's model can do it, else a
+ * key.
  */
 export function preferredEngine(
   settings: NotesSettings,
   onDevice: ModelState,
 ): EngineId {
   if (settings.engine) return settings.engine;
-  if (onDevice === "ready" || onDevice === "download") return "onDevice";
-  return providerChoice(settings).key ? "ownKey" : "onDevice";
+  return onDeviceUsable(onDevice) ? "onDevice" : "ownKey";
 }
 
 /**
@@ -221,6 +228,6 @@ export function canMakeNotes(
   onDevice: ModelState,
 ): boolean {
   return preferredEngine(settings, onDevice) === "onDevice"
-    ? onDevice === "ready" || onDevice === "download"
+    ? onDeviceUsable(onDevice)
     : providerChoice(settings).key !== "";
 }

@@ -678,6 +678,7 @@
       "chipNotYet": "AI notes on. You're not in them yet",
       "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
       "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
+      "cantMakeHere": "This browser can't make the notes yet: add your AI key in Settings first, or take notes from Chrome on a computer, which can make them itself.",
       "everyoneSeesShared": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed. The notes are shared with the participants as soon as they're made.",
       "willBeShared": "Once they're made, the notes are shared with everyone here who has an account.",
       "start": "Start AI notes",
@@ -1584,6 +1585,11 @@
       "update": "Chrome's built-in AI needs a newer Chrome. You can use your own AI key instead.",
       "enable": "Chrome's built-in AI is turned off in this browser. You can use your own AI key instead.",
       "none": "This browser doesn't have Chrome's built-in AI. You can use your own AI key instead."
+    },
+    "elsewhere": {
+      "update": "Making notes on this computer, for free, needs a newer Chrome.",
+      "enable": "Chrome's built-in AI, which makes notes on this computer for free, isn't available in this Chrome.",
+      "none": "Making notes on the computer itself, for free, works in Chrome on a computer."
     },
     "make": "Make notes",
     "downloadAndMake": "Download and make notes",

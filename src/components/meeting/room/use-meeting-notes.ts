@@ -265,6 +265,8 @@ export function useMeetingNotes({
     canRunNotes,
     notesAllowed,
     notesOffered,
+    /** This browser can make the notes from the transcript; true until that's known. */
+    canMake: onDevice === null || canMakeNotes(settings, onDevice),
     autoNotes,
     shareNotes,
     setShareNotes,

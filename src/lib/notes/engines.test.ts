@@ -126,9 +126,16 @@ describe("preferredEngine", () => {
     expect(preferredEngine({}, "download")).toBe("onDevice");
   });
 
-  it("uses a key where the model doesn't", () => {
+  it("uses a key where the model can't run, with or without one yet", () => {
     expect(preferredEngine({ keys: { openai: "sk" } }, "none")).toBe("ownKey");
-    expect(preferredEngine({}, "none")).toBe("onDevice");
+    expect(preferredEngine({}, "none")).toBe("ownKey");
+    expect(preferredEngine({}, "update")).toBe("ownKey");
+  });
+
+  it("never switches a host who chose this computer to their key", () => {
+    expect(
+      preferredEngine({ engine: "onDevice", keys: { openai: "sk" } }, "enable"),
+    ).toBe("onDevice");
   });
 });
 

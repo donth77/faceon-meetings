@@ -123,6 +123,22 @@ describe("capabilities", () => {
     expect(found.supports("shareOptions")).toBe(false);
   });
 
+  it("run AI on the device only in Google Chrome on a computer", async () => {
+    const chrome = { brands: [{ brand: "Google Chrome" }], mobile: false };
+    browser({ navigator: { userAgentData: chrome } });
+    expect((await load()).supports("onDeviceAi")).toBe(true);
+    for (const userAgentData of [
+      { brands: [{ brand: "Chromium" }], mobile: false },
+      { brands: [{ brand: "Microsoft Edge" }], mobile: false },
+      { ...chrome, mobile: true },
+      undefined,
+    ]) {
+      vi.resetModules();
+      browser({ navigator: { userAgentData } });
+      expect((await load()).supports("onDeviceAi")).toBe(false);
+    }
+  });
+
   it("choose a speaker only with setSinkId", async () => {
     browser();
     vi.stubGlobal(

@@ -3,6 +3,8 @@
  * AI notes use it, on the person's own device.
  */
 
+import { supports } from "@/lib/capabilities";
+
 /** What of the Prompt API this uses. It isn't in TypeScript's lib yet. */
 export interface ModelSession {
   prompt(
@@ -39,14 +41,6 @@ export function modelApi(): ModelApi | undefined {
   return (globalThis as { LanguageModel?: ModelApi }).LanguageModel;
 }
 
-/** Whether this is Chrome itself, the browser that carries the model. */
-function isChrome(): boolean {
-  const brands = (
-    navigator as { userAgentData?: { brands?: Array<{ brand: string }> } }
-  ).userAgentData?.brands;
-  return Boolean(brands?.some((b) => b.brand === "Google Chrome"));
-}
-
 /** The language the model writes for this locale, or null where it can't. */
 export function modelLanguage(locale: string): string | null {
   const language = locale.split("-")[0] ?? locale;
@@ -70,12 +64,16 @@ export async function modelState(
   api: ModelApi | undefined,
   language: string,
 ): Promise<ModelState> {
-  if (!api) return isChrome() ? "update" : "none";
+  // Chrome on a computer carries the model, so there it's a matter of updating or
+  // turning it on; anywhere else, it isn't there to be had.
+  if (!api) return supports("onDeviceAi") ? "update" : "none";
   try {
     const have = await api.availability(optionsFor(language));
     if (have === "available") return "ready";
     // Unavailable may only mean turned off, or not downloaded; Chrome can be told how.
-    if (have === "unavailable") return isChrome() ? "enable" : "none";
+    if (have === "unavailable") {
+      return supports("onDeviceAi") ? "enable" : "none";
+    }
     return "download";
   } catch {
     return "none";

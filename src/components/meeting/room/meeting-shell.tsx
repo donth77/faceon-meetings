@@ -313,6 +313,7 @@ export function MeetingShell({
           notes={notes.notes}
           demo={session.demo}
           allowed={notes.notesAllowed}
+          canMake={notes.canMake}
           shared={notes.shareNotes}
           isOwner={selfRole === "host"}
           hostName={meeting.hostName}

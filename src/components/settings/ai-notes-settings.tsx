@@ -28,9 +28,15 @@ import {
 } from "@/components/ui/form-fields";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
+import { useSpeechLanguage } from "@/hooks/use-speech-language";
 import { setNotesInMeetingsAction } from "@/lib/account/actions";
 import { publicEnv } from "@/lib/env";
-import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
+import {
+  onDeviceUsable,
+  preferredEngine,
+  providerChoice,
+  testKey,
+} from "@/lib/notes/engines";
 import { ENGINES, type EngineId } from "@/lib/notes/notes";
 import {
   defaultModel,
@@ -45,6 +51,7 @@ import {
   saveNotesSettings,
   useNotesSettings,
 } from "@/lib/notes/settings";
+import { useSpeechSetup } from "@/lib/notes/speech-setup";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
 
@@ -269,6 +276,21 @@ function NotesInMeetings({ allowed }: { allowed: boolean }) {
 }
 
 /**
+ * Transcription on this device, in browsers that can do it now or after the one-time
+ * download (which is done here); others never see it.
+ */
+function SpeechCard() {
+  const t = useTranslations("Settings.aiNotes");
+  const state = useSpeechSetup(useSpeechLanguage());
+  if (state === "checking" || state === "unavailable") return null;
+  return (
+    <SettingsCard title={t("speechTitle")}>
+      <SpeechDownload place="settings" />
+    </SettingsCard>
+  );
+}
+
+/**
  * Settings → AI notes. `notesInMeetings` is the account's switch for meetings you host:
  * left out where it doesn't apply (a meeting someone else hosts).
  */
@@ -278,9 +300,16 @@ export function AiNotesSettings({
   notesInMeetings?: boolean | undefined;
 }) {
   const t = useTranslations("Settings.aiNotes");
+  const tn = useTranslations("Notes");
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
   const engine = preferredEngine(settings, onDevice ?? "none");
+  // Chrome's built-in AI is a choice only where it can run (or download, here), or where
+  // it's the host's choice already, so they can change it.
+  const offersOnDevice =
+    onDevice === null ||
+    onDeviceUsable(onDevice) ||
+    settings.engine === "onDevice";
   const { provider, model, key } = providerChoice(settings);
 
   const choices: Record<EngineId, { title: string; help: string }> = {
@@ -297,44 +326,58 @@ export function AiNotesSettings({
       {notesInMeetings === undefined ? null : (
         <NotesInMeetings allowed={notesInMeetings} />
       )}
-      <SettingsCard title={t("speechTitle")}>
-        <SpeechDownload place="settings" />
-      </SettingsCard>
+      <SpeechCard />
       <SettingsCard title={t("how")}>
-        <RadioGroup
-          aria-label={t("how")}
-          value={engine}
-          onChange={(value) => {
-            const chosen = ENGINES.find((id) => id === value);
-            if (chosen) saveNotesSettings({ engine: chosen });
-          }}
-          className="flex flex-col gap-3"
-        >
-          {ENGINES.map((id) => (
-            <Radio
-              key={id}
-              value={id}
-              className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
-            >
-              <RadioDot className="mt-0.5" showFocus={false} />
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[15px] font-bold">
-                  {choices[id].title}
-                  {id === "onDevice" && onDevice ? (
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${onDevice === "ready" ? "bg-live/15 text-live-text" : "bg-black/5 dark:bg-white/10"}`}
-                    >
-                      {t(`onDeviceState.${onDevice}`)}
-                    </span>
-                  ) : null}
+        {offersOnDevice ? (
+          <RadioGroup
+            aria-label={t("how")}
+            value={engine}
+            onChange={(value) => {
+              const chosen = ENGINES.find((id) => id === value);
+              if (chosen) saveNotesSettings({ engine: chosen });
+            }}
+            className="flex flex-col gap-3"
+          >
+            {ENGINES.map((id) => (
+              <Radio
+                key={id}
+                value={id}
+                className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
+              >
+                <RadioDot className="mt-0.5" showFocus={false} />
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[15px] font-bold">
+                    {choices[id].title}
+                    {id === "onDevice" && onDevice ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${onDevice === "ready" ? "bg-live/15 text-live-text" : "bg-black/5 dark:bg-white/10"}`}
+                      >
+                        {t(`onDeviceState.${onDevice}`)}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-muted-foreground text-sm leading-normal">
+                    {choices[id].help}
+                  </span>
                 </span>
-                <span className="text-muted-foreground text-sm leading-normal">
-                  {choices[id].help}
-                </span>
-              </span>
-            </Radio>
-          ))}
-        </RadioGroup>
+              </Radio>
+            ))}
+          </RadioGroup>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="text-[15px] font-bold">{choices.ownKey.title}</p>
+            <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
+              {choices.ownKey.help}
+            </p>
+            {onDevice === "update" ||
+            onDevice === "enable" ||
+            onDevice === "none" ? (
+              <p className="text-muted-foreground mt-2 max-w-[64ch] text-[13px] leading-normal">
+                {tn(`elsewhere.${onDevice}`)}
+              </p>
+            ) : null}
+          </div>
+        )}
       </SettingsCard>
       {engine === "ownKey" ? (
         <SettingsCard title={t("yourKey")}>

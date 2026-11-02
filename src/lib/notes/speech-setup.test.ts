@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /** Chrome on a computer, whose language needs the one-time download, which takes a moment. */
 function stubSpeech(result: boolean) {
+  vi.stubGlobal("window", {});
   vi.stubGlobal("navigator", {
     userAgentData: { brands: [{ brand: "Google Chrome" }], mobile: false },
   });
@@ -42,6 +43,7 @@ describe("downloadSpeech", () => {
 describe("speech in other Chromium browsers", () => {
   it("never asks other Chromium browsers, where asking can crash the page", async () => {
     const available = vi.fn(async () => "available");
+    vi.stubGlobal("window", {});
     vi.stubGlobal("navigator", {
       userAgentData: { brands: [{ brand: "Chromium" }], mobile: false },
     });
