@@ -4,7 +4,7 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 
 > **Status:** early development. FaceOn is a working name.
 
-## What it does (planned)
+## What it does
 
 - Instant and scheduled meetings (including recurring ones), a personal room, and joining by link or meeting ID
 - Invitations through Google Calendar: connect it once, and Google emails the people you invite and keeps their calendars up to date. Links for Google Calendar, Outlook and any calendar app (.ics) work without connecting
@@ -12,14 +12,16 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 - Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
 - Background blur and backgrounds (paintings, places, moving backgrounds, or your own image or looping video), processed on your own device
 - Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key
-- Works on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app
-- Six languages: English, Spanish, Portuguese (Brazil), French, German and Japanese
+- Previous meetings with who came, keyboard shortcuts, and a searchable Help center
+- Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android
+
+On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), installing it as an app, and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
 
 ## Tech stack
 
 - [Next.js](https://nextjs.org) 16 (App Router, TypeScript) on [Vercel](https://vercel.com)
 - [Tailwind CSS](https://tailwindcss.com) 4 and [shadcn/ui](https://ui.shadcn.com), with [Lucide](https://lucide.dev) icons
-- [Stream Video](https://getstream.io/video/) for media, with self-hosted [LiveKit](https://livekit.io) as an open-source alternative
+- [Stream Video](https://getstream.io/video/) for media
 - [Better Auth](https://www.better-auth.com) for accounts, [Neon](https://neon.com) Postgres and [Drizzle ORM](https://orm.drizzle.team)
 
 ## Run it locally
@@ -47,10 +49,4 @@ Useful scripts:
 
 ## Deploy your own
 
-FaceOn is designed to run on free tiers. A step-by-step guide to deploying your own copy (Vercel, Stream and Neon accounts, plus every environment variable) will be added here as the features land. `.env.example` lists every variable.
-
-Google Calendar sync uses the same Google OAuth client as sign-in. Turn on the Google Calendar API in its Google Cloud project, and add the `https://www.googleapis.com/auth/calendar.events.owned` scope to its consent screen (Data access). The scope is sensitive: until Google verifies the app, only the test users listed on the consent screen can connect, and Google asks them to reconnect every 7 days. `GOOGLE_CALENDAR_SYNC=off` turns the feature off.
-
-Email and password accounts need email delivery: a free [Resend](https://resend.com) account with a verified sending domain (a subdomain of a domain you already own works), set as `RESEND_API_KEY` and `EMAIL_FROM`. Until both are set, production offers only Google and GitHub.
-
-The privacy policy and terms (`/privacy`, `/terms`, from `content/legal/`) speak for whoever runs the copy. Set `NEXT_PUBLIC_OPERATOR_NAME`, `NEXT_PUBLIC_CONTACT_EMAIL` and `NEXT_PUBLIC_OPERATOR_JURISDICTION` so they name you, and have them reviewed for where you are.
+FaceOn runs on free plans: [Vercel](https://vercel.com) for hosting, [Neon](https://neon.com) for the database and [Stream](https://getstream.io) for audio and video, with Google and GitHub for sign-in and [Resend](https://resend.com) if you want email-and-password accounts. [DEPLOY.md](DEPLOY.md) walks through it step by step: the accounts, every environment variable, the database and Stream setup, Google Calendar, your own domain, updating your copy and troubleshooting.

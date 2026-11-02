@@ -22,7 +22,7 @@ FaceOn is a free, open-source (MIT), browser-based video meeting app that should
 | `pnpm format`                                                 | Prettier (with the Tailwind class-sorting plugin)                                                                     |
 | `pnpm stream:setup` / `stream:check` / `stream:lockdown-test` | Configure Stream (call type, grants, system user), report drift, prove the permission boundary. They use `.env.local` |
 
-Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integration), never with `vercel deploy`.
+Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integration), never with `vercel deploy`. Setting up a copy of your own (accounts, environment variables, migrations, Stream, domains) is in `DEPLOY.md`.
 
 ## Architecture map
 
@@ -71,4 +71,4 @@ Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integr
 - Keyboard accessible, with visible focus, in light and dark themes.
 - All UI text comes from the message files.
 - No console errors.
-- README, AGENTS.md and `.env.example` are updated when behavior or configuration changes.
+- README, DEPLOY.md, AGENTS.md and `.env.example` are updated when behavior or configuration changes.
