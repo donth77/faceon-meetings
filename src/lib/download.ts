@@ -15,3 +15,13 @@ export function downloadFile(input: {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/** Saves a file the server made (a CSV or a zip, say) under the name it gave. */
+export function downloadBlob(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name.replace(/[\/:*?"<>|]+/g, "-");
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

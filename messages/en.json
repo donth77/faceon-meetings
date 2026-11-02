@@ -1213,6 +1213,7 @@
     "endsOn": "Ends {day}",
     "viewDetails": "View details",
     "scheduleAgain": "Schedule again",
+    "downloadAttendance": "Download attendance (CSV)",
     "closeDetails": "Close details",
     "hostedBy": "hosted by {name}",
     "attendance": "Attendance",
@@ -1426,6 +1427,9 @@
       "passwordAdded": "Password set",
       "passwordChanged": "Password changed",
       "cancel": "Cancel",
+      "dataTitle": "Download your data",
+      "dataBody": "A zip of your account, the meetings you host, who came to your meetings over the last {days} days, the AI notes you can read and your hosting requests, as JSON with spreadsheet and Markdown copies. Chat, audio and video aren’t in it: {appName} never stores them.",
+      "dataDownload": "Download your data",
       "deleteTitle": "Delete account",
       "deleteBody": "Deleting your account removes your meetings, notes and avatar for good. People you invited can no longer join your meetings.",
       "deleteConfirmTitle": "Delete your account?",
@@ -1920,5 +1924,64 @@
     "invalidTitle": "This link doesn’t work",
     "invalidBody": "It may not have been copied in full. You can turn reminder emails off in Settings → Notifications.",
     "failed": "Couldn’t turn them off. Try again."
+  },
+  "Exports": {
+    "failed": "Couldn’t download that. Try again.",
+    "tooMany": "You’ve downloaded your data a few times just now. Try again in a few minutes.",
+    "attendanceFile": "{title} {date} attendance",
+    "dataFile": "{appName} data {date}",
+    "attendance": {
+      "name": "Name",
+      "email": "Email",
+      "joinedAs": "Joined as",
+      "host": "Host",
+      "account": "Account",
+      "guest": "Guest",
+      "firstJoined": "First joined ({zone})",
+      "lastLeft": "Last left ({zone})",
+      "minutes": "Minutes",
+      "timesJoined": "Times joined"
+    },
+    "previous": {
+      "meetingId": "Meeting ID",
+      "title": "Title",
+      "host": "Host",
+      "started": "Started ({zone})"
+    },
+    "meetings": {
+      "meetingId": "Meeting ID",
+      "type": "Type",
+      "title": "Title",
+      "starts": "Starts ({zone})",
+      "minutes": "Minutes",
+      "repeats": "Repeats",
+      "passcode": "Passcode",
+      "waitingRoom": "Waiting room",
+      "guestsAllowed": "Guests allowed",
+      "invitees": "Invitees",
+      "cohosts": "Co-hosts",
+      "yes": "Yes",
+      "no": "No",
+      "instant": "Instant meeting",
+      "scheduled": "Scheduled meeting",
+      "personal": "Personal room"
+    },
+    "readme": {
+      "title": "Your {appName} data",
+      "downloaded": "Downloaded {date} for {name} ({email}).",
+      "inIt": "What’s in it",
+      "account": "`account.json`: your profile, the ways you sign in, your sign-in sessions and the settings kept with your account.",
+      "hosting": "`hosting.json`: whether you host full meetings, and your requests to.",
+      "meetings": "`meetings.json` and `meetings.csv`: the meetings you host, with their settings, invitees and co-hosts.",
+      "previous": "`previous.json` and `previous.csv`: the meetings you hosted or joined in the last {days} days, and who came. Email addresses appear only for you, and for the people you invited to meetings you host.",
+      "notes": "`notes.json` and the `notes` folder: the AI notes you can read, as data and as Markdown.",
+      "notIn": "What isn’t in it, and why",
+      "media": "Audio, video and screen sharing: they go between the people in a meeting, and {appName} never records them.",
+      "chat": "Chat messages and reactions: {appName} doesn’t store them.",
+      "device": "Settings kept on your device, such as your microphone, camera, time format and backgrounds: they stay in your browser.",
+      "secrets": "Your password and sign-in tokens: secrets that only sign you in.",
+      "older": "Meetings older than {days} days: they’re deleted by then, as the privacy policy says.",
+      "times": "Times in the JSON files are in UTC. The CSV files use {zone}."
+    }
   }
 }

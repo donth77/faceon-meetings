@@ -29,7 +29,7 @@ updated: 2026-11-02
 
 ### Meetings you join
 
-- **Who joined and left**, with the name and picture each person used and the times, so the host and the attendees with an account can see the meeting under **Previous**.
+- **Who joined and left**, with the name and picture each person used and the times, so the host and the attendees with an account can see the meeting under **Previous**. The host can download it as a spreadsheet, which shows email addresses only of the people they invited.
 - If you **ask to join** through the waiting room: your name, your picture and the host's answer.
 - If a host **removes** you: a note of it, so you can't rejoin that meeting or read its shared notes.
 
@@ -139,7 +139,8 @@ When you **delete your account**, {appName} deletes your account, the meetings y
 - **Disconnect Google Calendar** in **Settings**, under **Calendar**.
 - **Turn email reminders on or off** in **Settings**, under **Notifications**, or with the link in any reminder.
 - **Delete your account** and its data at any time, under **Account**.
-- **Ask** for a copy of your information, for a correction, or anything about this policy: {contact} {operator} answers within a month.
+- **Download a copy** of your information at any time, under **Account**: **Download your data** gives you your account, the meetings you host, who came to your meetings, the AI notes you can read and your requests to host, in formats other services can read. It's made when you ask, and nothing is kept afterwards.
+- **Ask** for anything else, such as a correction, or anything about this policy: {contact} {operator} answers within a month.
 
 Depending on where you live, for example in the European Economic Area, the United Kingdom or California, you may also have the right to object to or limit how your information is used, to get it in a format you can take elsewhere, and to complain to a data protection authority. {appName} doesn't sell or share personal information, as California's privacy law defines those words.
 

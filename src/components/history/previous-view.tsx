@@ -12,6 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useId, useState, type ReactNode } from "react";
 
+import { DownloadButton } from "@/components/exports/download-button";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Segment, Segments } from "@/components/ui/segments";
@@ -334,6 +335,16 @@ function Details({ meeting }: { meeting: PastMeeting }) {
         </tbody>
       </table>
       <div className="mt-auto flex flex-wrap justify-end gap-2 pt-4">
+        {meeting.hostedByYou ? (
+          // Like Meet's attendance report: for the meeting's host.
+          <DownloadButton
+            href={`/api/history/${meeting.sessionId}/attendance`}
+            fallbackName="attendance.csv"
+            className="h-[38px] rounded-[10px]"
+          >
+            {t("downloadAttendance")}
+          </DownloadButton>
+        ) : null}
         {meeting.notes ? (
           <LinkButton
             href={`/previous/${meeting.sessionId}/notes`}

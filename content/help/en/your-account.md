@@ -1,6 +1,6 @@
 ---
 title: Your account
-summary: Your picture and name, how you sign in, and deleting your account.
+summary: Your picture and name, how you sign in, downloading your data, and deleting your account.
 category: account
 order: 2
 ---
@@ -23,6 +23,10 @@ You can sign in with Google, GitHub, or your email and a password, and use more 
 - **Remove** a method you no longer use. You always keep at least one.
 - Connecting Google Calendar (**Settings**, then **Calendar**) also connects Google as a way to sign in. Removing Google disconnects Google Calendar too.
 - **Set a password** to sign in with your email, too, or **Change password**. Changing it signs you out on your other devices.
+
+## Download your data
+
+Select **Download your data** for a zip of what {appName} keeps about you that you can see: your account, the meetings you host with their settings and invitees, who came to the meetings you hosted or joined in the last 90 days, the AI notes you can read, and your requests to host full meetings. It's JSON, with spreadsheet (CSV) copies and your AI notes as Markdown, and a README that says what's in it. Chat, audio and video aren't in it, because {appName} never stores them. Settings kept on your device stay in your browser.
 
 ## Delete your account
 

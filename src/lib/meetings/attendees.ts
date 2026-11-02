@@ -29,21 +29,29 @@ export type Attendee = {
 export const minutesBetween = (from: Date, to: Date) =>
   Math.max(1, Math.round((to.getTime() - from.getTime()) / 60_000));
 
+/** One person's visits added up, by media ID: for Previous, and for exports. */
+export type PersonVisits = {
+  mediaUserId: string;
+  name: string;
+  image: string | null;
+  /** Their first join and last leave. */
+  joined: Date;
+  left: Date;
+  /** The time they were here, visits added up. */
+  minutes: number;
+  /** Each time they joined and left, in order. */
+  visits: Array<{ joinedAt: string; leftAt: string }>;
+};
+
 /**
- * One entry per person, first to arrive first, their visits added up. "You" and "Host"
- * come from media IDs, which last as long as the attendance (admission records don't).
- * Also returns when the first person came and the last one left (null with nobody).
+ * Everyone's visits added up per person (by media ID), first to arrive first. Joins and
+ * leaves come from different clocks, so a leave a few seconds before its join counts as
+ * the join.
  */
-export function attendeesOf(
-  visits: Visit[],
-  who: { viewerMediaId: string; hostMediaId: string },
-): { attendees: Attendee[]; start: Date | null; end: Date | null } {
-  const people = new Map<string, Attendee & { joined: Date; left: Date }>();
+export function groupVisits(visits: Visit[]): PersonVisits[] {
+  const people = new Map<string, PersonVisits>();
   for (const { mediaUserId, name, image, joinedAt: joined, leftAt } of visits) {
-    // Joins and leaves come from different clocks; a few seconds apart can't put the
-    // leave before the join.
     const left = leftAt < joined ? joined : leftAt;
-    const minutes = minutesBetween(joined, left);
     const visit = {
       joinedAt: joined.toISOString(),
       leftAt: left.toISOString(),
@@ -53,41 +61,66 @@ export function attendeesOf(
       current.visits.push(visit);
       if (joined < current.joined) current.joined = joined;
       if (left > current.left) current.left = left;
-      current.minutes += minutes;
+      current.minutes += minutesBetween(joined, left);
       continue;
     }
     people.set(mediaUserId, {
+      mediaUserId,
       name,
       image,
-      isHost: mediaUserId === who.hostMediaId,
-      isGuest: mediaUserId.startsWith("g_"),
-      isYou: mediaUserId === who.viewerMediaId,
-      visits: [visit],
-      joinedAt: "",
-      leftAt: "",
-      minutes,
       joined,
       left,
+      minutes: minutesBetween(joined, left),
+      visits: [visit],
     });
   }
+  return [...people.values()]
+    .map((person) => ({
+      ...person,
+      visits: person.visits.sort((a, b) =>
+        a.joinedAt.localeCompare(b.joinedAt),
+      ),
+    }))
+    .sort((a, b) => a.joined.getTime() - b.joined.getTime());
+}
 
-  const sorted = [...people.values()].sort(
-    (a, b) => a.joined.getTime() - b.joined.getTime(),
-  );
-  const attendees = sorted.map(({ joined, left, visits: own, ...person }) => ({
-    ...person,
-    // One visit says no more than joined and left do.
-    visits:
-      own.length > 1
-        ? own.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))
-        : [],
-    joinedAt: joined.toISOString(),
-    leftAt: left.toISOString(),
-  }));
-  if (sorted.length === 0) return { attendees, start: null, end: null };
+/** When the first person came and the last one left; null with nobody. */
+export function spanOf(people: PersonVisits[]): {
+  start: Date | null;
+  end: Date | null;
+} {
+  if (people.length === 0) return { start: null, end: null };
   return {
-    attendees,
-    start: new Date(Math.min(...sorted.map((p) => p.joined.getTime()))),
-    end: new Date(Math.max(...sorted.map((p) => p.left.getTime()))),
+    start: new Date(Math.min(...people.map((p) => p.joined.getTime()))),
+    end: new Date(Math.max(...people.map((p) => p.left.getTime()))),
   };
 }
+
+/**
+ * One entry per person, first to arrive first, their visits added up. "You" and "Host"
+ * come from media IDs, which last as long as the attendance (admission records don't).
+ * Also returns when the first person came and the last one left (null with nobody).
+ */
+export function attendeesOf(
+  visits: Visit[],
+  who: { viewerMediaId: string; hostMediaId: string },
+): { attendees: Attendee[]; start: Date | null; end: Date | null } {
+  const people = groupVisits(visits);
+  const attendees = people.map((person) => ({
+    name: person.name,
+    image: person.image,
+    // One visit says no more than joined and left do.
+    visits: person.visits.length > 1 ? person.visits : [],
+    isHost: person.mediaUserId === who.hostMediaId,
+    isGuest: isGuestMediaId(person.mediaUserId),
+    isYou: person.mediaUserId === who.viewerMediaId,
+    joinedAt: person.joined.toISOString(),
+    leftAt: person.left.toISOString(),
+    minutes: person.minutes,
+  }));
+  return { attendees, ...spanOf(people) };
+}
+
+/** Guests' media IDs start with "g_" (signed-in people's with "u_"). */
+export const isGuestMediaId = (mediaUserId: string) =>
+  mediaUserId.startsWith("g_");

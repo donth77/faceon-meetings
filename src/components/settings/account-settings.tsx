@@ -14,6 +14,7 @@ import {
 } from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { AvatarPicker } from "@/components/avatars/avatar-picker";
+import { DownloadButton } from "@/components/exports/download-button";
 import { LEGAL_LINKS } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,7 @@ import { authProblem, linkProblem } from "@/lib/auth/problems";
 import type { AccountAvatar } from "@/lib/avatars/account";
 import { avatarImage } from "@/lib/avatars/seed";
 import { publicEnv } from "@/lib/env";
+import { KEEP_DAYS } from "@/lib/meetings/retention";
 import { signInPath } from "@/lib/routes";
 
 import { SettingsCard } from "./settings-nav";
@@ -603,8 +605,35 @@ function DeleteAccount({
 }
 
 /**
- * Settings → Account: profile and avatar, how you sign in, deleting the account, and
- * where the privacy policy and the terms are.
+ * Download your data: everything kept about you that you may see, as a zip. What isn't
+ * in it is said here, so nobody looks for chat or recordings that were never kept.
+ */
+function YourData() {
+  const t = useTranslations("Settings.account");
+  return (
+    <SettingsCard title={t("dataTitle")}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground max-w-[60ch] text-sm leading-normal">
+          {t("dataBody", {
+            appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+            days: KEEP_DAYS.history,
+          })}
+        </p>
+        <DownloadButton
+          href="/api/account/export"
+          fallbackName="data.zip"
+          className={OUTLINE}
+        >
+          {t("dataDownload")}
+        </DownloadButton>
+      </div>
+    </SettingsCard>
+  );
+}
+
+/**
+ * Settings → Account: profile and avatar, how you sign in, downloading your data,
+ * deleting the account, and where the privacy policy and the terms are.
  */
 export function AccountSettings({
   account,
@@ -623,6 +652,7 @@ export function AccountSettings({
       <h2 className="text-[22px] font-bold">{t("title")}</h2>
       <Profile account={account} avatarChoices={avatarChoices} />
       <SignIn account={account} linkError={linkError} />
+      <YourData />
       <DeleteAccount
         hasPassword={account.methods.some(
           (method) => method.providerId === "credential",

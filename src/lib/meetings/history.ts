@@ -42,17 +42,29 @@ export type PastMeeting = {
   notes: { shared: boolean } | null;
 };
 
+/** A visit, with the account of whoever made it (null for guests). */
+export type AccountVisit = Visit & { userId: string | null };
+
+/** An ended session, its meeting and its host, and each visit to it. */
+export type PastSession = {
+  session: typeof meetingSession.$inferSelect;
+  meeting: typeof meeting.$inferSelect;
+  hostName: string;
+  visits: AccountVisit[];
+};
+
 /**
- * Previous: sessions from the last 90 days that someone hosted or attended, newest
- * first, with who came and for how long (from the media provider's webhooks, or from
- * admissions when no attendance arrived).
+ * Ended sessions from the last 90 days that the viewer hosted or attended, newest first,
+ * with who came: from the media provider's webhooks, or from admissions when no
+ * attendance arrived. One session with `sessionId`; every one with `limit: null`.
  */
-export async function previousMeetings(viewer: {
-  id: string;
-}): Promise<PastMeeting[]> {
+export async function pastSessions(
+  viewerId: string,
+  options: { limit: number | null; sessionId?: string },
+): Promise<PastSession[]> {
   const since = daysBefore(new Date(), KEEP_DAYS.history);
-  const attended = or(eq(meeting.hostId, viewer.id), attendedBy(viewer.id));
-  const sessions = await db()
+  const attended = or(eq(meeting.hostId, viewerId), attendedBy(viewerId));
+  const query = db()
     .select({
       session: meetingSession,
       meeting,
@@ -66,15 +78,18 @@ export async function previousMeetings(viewer: {
         eq(meetingSession.status, "ended"),
         gt(meetingSession.startedAt, since),
         attended,
+        options.sessionId
+          ? eq(meetingSession.id, options.sessionId)
+          : undefined,
       ),
     )
-    .orderBy(desc(meetingSession.startedAt))
-    .limit(200);
+    .orderBy(desc(meetingSession.startedAt));
+  const sessions =
+    options.limit === null ? await query : await query.limit(options.limit);
   if (sessions.length === 0) return [];
 
   const ids = sessions.map((s) => s.session.id);
-  const meetingIds = [...new Set(sessions.map((s) => s.meeting.id))];
-  const [connections, members, series, notes] = await Promise.all([
+  const [connections, members] = await Promise.all([
     db()
       .select()
       .from(participantSession)
@@ -83,6 +98,50 @@ export async function previousMeetings(viewer: {
       .select()
       .from(meetingMember)
       .where(inArray(meetingMember.sessionId, ids)),
+  ]);
+
+  return sessions.map(({ session, meeting: row, hostName }) => {
+    const sessionEnd = session.endedAt ?? session.startedAt;
+    const admitted = members.filter((m) => m.sessionId === session.id);
+    const own = connections.filter((c) => c.sessionId === session.id);
+    const visits: AccountVisit[] =
+      own.length > 0
+        ? own.map((c) => ({
+            mediaUserId: c.mediaUserId,
+            userId: c.userId,
+            name: c.displayName,
+            image:
+              c.image ??
+              admitted.find((m) => m.mediaUserId === c.mediaUserId)?.image ??
+              null,
+            joinedAt: c.joinedAt,
+            leftAt: c.leftAt ?? sessionEnd,
+          }))
+        : admitted.map((m) => ({
+            mediaUserId: m.mediaUserId,
+            userId: m.userId,
+            name: m.displayName,
+            image: m.image,
+            joinedAt: m.admittedAt,
+            leftAt: sessionEnd,
+          }));
+    return { session, meeting: row, hostName, visits };
+  });
+}
+
+/**
+ * Previous: sessions from the last 90 days that someone hosted or attended, newest
+ * first, with who came and for how long (from the media provider's webhooks, or from
+ * admissions when no attendance arrived).
+ */
+export async function previousMeetings(viewer: {
+  id: string;
+}): Promise<PastMeeting[]> {
+  const sessions = await pastSessions(viewer.id, { limit: 200 });
+  if (sessions.length === 0) return [];
+
+  const meetingIds = [...new Set(sessions.map((s) => s.meeting.id))];
+  const [series, notes] = await Promise.all([
     db()
       .select({ meetingId: meetingRule.meetingId })
       .from(meetingRule)
@@ -96,8 +155,8 @@ export async function previousMeetings(viewer: {
   // Signed-in people show their avatar as it is now; guests keep the one they had.
   const userIds = [
     ...new Set(
-      [...connections, ...members]
-        .map((row) => row.userId)
+      sessions
+        .flatMap((s) => s.visits.map((visit) => visit.userId))
         .filter((id): id is string => id !== null),
     ),
   ];
@@ -120,35 +179,15 @@ export async function previousMeetings(viewer: {
     (userId ? avatars.get(userId) : undefined) ?? stored;
   const viewerMediaId = userMediaId(viewer.id);
 
-  return sessions.map(({ session, meeting: row, hostName }) => {
+  return sessions.map(({ session, meeting: row, hostName, visits }) => {
     const sessionEnd = session.endedAt ?? session.startedAt;
-    const admitted = members.filter((m) => m.sessionId === session.id);
-    const own = connections.filter((c) => c.sessionId === session.id);
-    const visits: Visit[] =
-      own.length > 0
-        ? own.map((c) => ({
-            mediaUserId: c.mediaUserId,
-            name: c.displayName,
-            image: imageOf(
-              c.userId,
-              c.image ??
-                admitted.find((m) => m.mediaUserId === c.mediaUserId)?.image ??
-                null,
-            ),
-            joinedAt: c.joinedAt,
-            leftAt: c.leftAt ?? sessionEnd,
-          }))
-        : admitted.map((m) => ({
-            mediaUserId: m.mediaUserId,
-            name: m.displayName,
-            image: imageOf(m.userId, m.image),
-            joinedAt: m.admittedAt,
-            leftAt: sessionEnd,
-          }));
-    const { attendees, start, end } = attendeesOf(visits, {
-      viewerMediaId,
-      hostMediaId: userMediaId(row.hostId),
-    });
+    const { attendees, start, end } = attendeesOf(
+      visits.map((visit) => ({
+        ...visit,
+        image: imageOf(visit.userId, visit.image),
+      })),
+      { viewerMediaId, hostMediaId: userMediaId(row.hostId) },
+    );
     const from = start ?? session.startedAt;
     const to = end ?? sessionEnd;
 
