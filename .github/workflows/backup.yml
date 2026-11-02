@@ -81,6 +81,8 @@ jobs:
           sudo apt-get install -y -q postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y -q postgresql-client-18 age
+          # The runner has an older client too; Postgres 18's must come first.
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
 
       # A selftest stands in for your database with FaceOn's tables (the repository's
       # migrations) and a row, and makes its own key.
