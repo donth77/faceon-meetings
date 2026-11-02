@@ -111,9 +111,6 @@ export function GeneralSettings({
               value={locale}
               onChange={chooseLanguage}
             />
-            <span className="text-muted-foreground text-[13px]">
-              {t("languageHelp")}
-            </span>
           </div>
         )}
         <RadioGroup
@@ -151,11 +148,11 @@ export function GeneralSettings({
               })
             }
           />
-          <span className="text-muted-foreground text-[13px]">
-            {prefs.timeZone
-              ? t("timeZoneChosen", { example })
-              : t("timeZoneHelp", { example })}
-          </span>
+          {prefs.timeZone ? (
+            <span className="text-muted-foreground text-[13px]">
+              {t("timeZoneChosen", { example })}
+            </span>
+          ) : null}
           {prefs.timeZone ? (
             <Button
               variant="link"
@@ -196,9 +193,6 @@ export function GeneralSettings({
               </Radio>
             ))}
           </RadioGroup>
-          <span className="text-muted-foreground text-[13px]">
-            {t("themeNote")}
-          </span>
         </SettingsCard>
       )}
 

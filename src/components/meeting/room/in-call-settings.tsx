@@ -172,9 +172,6 @@ function VideoSection() {
               remember({ cameraId });
             }}
           />
-          <p className="text-muted-foreground text-sm leading-normal">
-            {t("othersSee")}
-          </p>
         </div>
       </div>
       <div className="divide-y divide-white/10 border-t border-white/10">

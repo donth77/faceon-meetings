@@ -70,9 +70,6 @@ export function VideoSettings() {
                 onRetry={camera.retry}
               />
             ) : null}
-            <p className="text-muted-foreground text-sm leading-normal">
-              {t("othersSee")}
-            </p>
           </div>
         </div>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
