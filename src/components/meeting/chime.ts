@@ -73,17 +73,30 @@ const SOUNDS = {
 
 export type MeetingSound = keyof typeof SOUNDS;
 
+/** Which setting turns each sound off (Settings → Notifications; reactions in Reactions). */
+const SETTING_FOR = {
+  youJoined: "soundPeople",
+  youLeft: "soundPeople",
+  someoneJoined: "soundPeople",
+  someoneLeft: "soundPeople",
+  admitted: "soundPeople",
+  handRaised: "soundHands",
+  reaction: "reactionSound",
+  message: "soundChat",
+  knock: "soundLobby",
+} as const satisfies Record<MeetingSound, string>;
+
 let audio: AudioContext | null = null;
 const lastPlayed = new Map<MeetingSound, number>();
 
 /**
- * Plays a meeting sound, unless Meeting sounds is off in Settings. Browsers allow sound
+ * Plays a meeting sound, unless its kind is turned off in Settings. Browsers allow sound
  * once someone has interacted with the page, which joining a meeting is. The same sound
  * twice within a moment plays once.
  */
 export function playSound(sound: MeetingSound): void {
   if (typeof AudioContext === "undefined") return;
-  if (!withDefaults(loadPreferences()).meetingSounds) return;
+  if (!withDefaults(loadPreferences())[SETTING_FOR[sound]]) return;
   const now = performance.now();
   if (now - (lastPlayed.get(sound) ?? -Infinity) < 400) return;
   lastPlayed.set(sound, now);

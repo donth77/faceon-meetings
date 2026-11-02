@@ -18,7 +18,7 @@ Dates follow your browser's region, so you'll see "Sunday 1 November" or "Sunday
 
 ## Audio
 
-Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** filters out typing, fans and traffic.
+Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** filters out typing, fans and traffic. **Push to talk** lets you hold `Space` to talk while muted; it's off unless you turn it on.
 
 ## Video
 
@@ -28,11 +28,15 @@ See your camera, choose which one to use, and decide whether to mirror your vide
 
 Choose whether others' reactions show (yours always do), whether reactions float up the screen, whether a soft sound plays with each, and what screen readers hear: nothing, a short summary at most every 10 seconds, or each reaction.
 
+## Notifications
+
+Choose which events make a sound (people joining and leaving, chat messages, raised hands, the waiting room) and which show a pop-up.
+
 ## Accessibility
 
 {appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know:
 
-- **Single-key shortcuts**, such as holding `Space` to talk and `?` for the list of shortcuts. Turn them off if you use speech input or a switch device.
+- **Single-key shortcuts**, such as `?` for the list of shortcuts, and holding `Space` to talk when Push to talk is on. Turn them off if you use speech input or a switch device.
 
 ## Account
 

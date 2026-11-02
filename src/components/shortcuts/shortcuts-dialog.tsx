@@ -99,11 +99,19 @@ function Keys({ combos }: { combos: string[][] }) {
   );
 }
 
-/** Without single-key shortcuts (Settings → Accessibility), only combinations are listed. */
-function shortcutsFor(apple: boolean, singleKeys: boolean) {
+/**
+ * Without single-key shortcuts (Settings → Accessibility), only combinations are listed;
+ * Space to talk only with Push to talk on (Settings → Audio).
+ */
+function shortcutsFor(
+  apple: boolean,
+  singleKeys: boolean,
+  pushToTalk: boolean,
+) {
   return GROUPS.map((group) => ({
     id: group.id,
     shortcuts: group.shortcuts
+      .filter((shortcut) => shortcut.id !== "talk" || pushToTalk)
       .map((shortcut) => ({
         id: shortcut.id,
         combos: (apple ? shortcut.keys.apple : shortcut.keys.other).filter(
@@ -126,11 +134,11 @@ export const useOpenShortcuts = () => use(OpenShortcutsContext);
 export function ShortcutsProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("Shortcuts");
   const [open, setOpen] = useState(false);
-  const [groups, setGroups] = useState(() => shortcutsFor(false, true));
+  const [groups, setGroups] = useState(() => shortcutsFor(false, true, false));
 
   function show() {
-    const { singleKeyShortcuts } = withDefaults(loadPreferences());
-    setGroups(shortcutsFor(isAppleDevice(), singleKeyShortcuts));
+    const { singleKeyShortcuts, pushToTalk } = withDefaults(loadPreferences());
+    setGroups(shortcutsFor(isAppleDevice(), singleKeyShortcuts, pushToTalk));
     setOpen(true);
   }
   const showOnKey = useEffectEvent(show);

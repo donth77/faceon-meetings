@@ -2,6 +2,7 @@
 
 import {
   Accessibility,
+  Bell,
   Mic,
   Settings,
   SmilePlus,
@@ -20,6 +21,7 @@ import { SwitchRow } from "@/components/schedule/fields";
 import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
 import { DeviceField } from "@/components/settings/device-fields";
 import { GeneralSettings } from "@/components/settings/general-settings";
+import { NotificationsSettings } from "@/components/settings/notifications-settings";
 import { ReactionsSettings } from "@/components/settings/reactions-settings";
 import { SettingsChrome } from "@/components/settings/settings-nav";
 import { MirroredVideo } from "@/components/settings/video-settings";
@@ -44,6 +46,7 @@ export type InCallSection =
   | "audio"
   | "video"
   | "reactions"
+  | "notifications"
   | "effects"
   | "general"
   | "accessibility"
@@ -53,6 +56,7 @@ const SECTIONS: Array<{ id: InCallSection; icon: LucideIcon }> = [
   { id: "audio", icon: Mic },
   { id: "video", icon: Video },
   { id: "reactions", icon: SmilePlus },
+  { id: "notifications", icon: Bell },
   { id: "effects", icon: WandSparkles },
   { id: "general", icon: Settings },
   { id: "accessibility", icon: Accessibility },
@@ -66,7 +70,7 @@ const remember = (patch: Partial<DevicePreferences>) =>
 function AudioSection() {
   const t = useTranslations("Settings.audio");
   const { mic, speaker } = useRoomMedia();
-  const { noiseSuppression, meetingSounds } = withDefaults(usePreferences());
+  const { noiseSuppression, pushToTalk } = withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
       <div className="flex max-w-[480px] flex-col gap-3">
@@ -120,11 +124,11 @@ function AudioSection() {
           }}
         />
         <SwitchRow
-          label={t("meetingSounds")}
-          help={t("meetingSoundsHelp")}
-          isSelected={meetingSounds}
+          label={t("pushToTalk")}
+          help={t("pushToTalkHelp")}
+          isSelected={pushToTalk}
           onChange={(on) =>
-            savePreferences({ meetingSounds: on ? undefined : false })
+            savePreferences({ pushToTalk: on ? true : undefined })
           }
         />
       </div>
@@ -239,6 +243,12 @@ function SectionContent({ section }: { section: InCallSection }) {
       return (
         <div className="flex flex-col gap-5">
           <ReactionsSettings />
+        </div>
+      );
+    case "notifications":
+      return (
+        <div className="flex flex-col gap-5">
+          <NotificationsSettings />
         </div>
       );
     case "accessibility":

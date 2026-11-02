@@ -32,8 +32,22 @@ export type Preferences = {
   reactionSound?: boolean;
   /** What screen readers hear about reactions. Default a summary. */
   reactionAnnouncements?: "off" | "summary" | "each";
-  /** Short sounds as people join and leave, hands go up and messages arrive. Default on. */
-  meetingSounds?: boolean;
+  /** Sounds as you and others join and leave, and as you're let in. Default on. */
+  soundPeople?: boolean;
+  /** A sound with a new chat message while Chat is closed. Default on. */
+  soundChat?: boolean;
+  /** A sound when a hand goes up (hosts). Default on. */
+  soundHands?: boolean;
+  /** A sound when someone asks to join (hosts). Default on. */
+  soundLobby?: boolean;
+  /** A pop-up with each new message while Chat is closed. Default on. */
+  popupChat?: boolean;
+  /** A pop-up when a hand goes up (hosts). Default on. */
+  popupHands?: boolean;
+  /** A pop-up when someone asks to join (hosts). Default on. */
+  popupLobby?: boolean;
+  /** Hold Space to talk while muted. Default off, as in Meet. */
+  pushToTalk?: boolean;
 };
 
 const KEY = "faceon.prefs";
@@ -47,7 +61,14 @@ const BOOLEANS = [
   "showOthersReactions",
   "reactionAnimation",
   "reactionSound",
-  "meetingSounds",
+  "soundPeople",
+  "soundChat",
+  "soundHands",
+  "soundLobby",
+  "popupChat",
+  "popupHands",
+  "popupLobby",
+  "pushToTalk",
 ] as const;
 
 let cached: { raw: string | null; value: Preferences } | null = null;
@@ -71,6 +92,16 @@ export function loadPreferences(): Preferences {
       const announce = p.reactionAnnouncements;
       if (announce === "off" || announce === "summary" || announce === "each") {
         value.reactionAnnouncements = announce;
+      }
+      // The earlier single "Meeting sounds" switch, turned off, turns every sound off.
+      if (p.meetingSounds === false) {
+        value.soundPeople ??= false;
+        value.soundChat ??= false;
+        value.soundHands ??= false;
+        value.soundLobby ??= false;
+      }
+      if (value.reactionAnnouncements !== undefined) {
+        // Already chosen.
       } else if (p.announceReactions === false) {
         // The earlier Accessibility switch, turned off.
         value.reactionAnnouncements = "off";
@@ -124,7 +155,14 @@ export function withDefaults(preferences: Preferences) {
     reactionAnimation: preferences.reactionAnimation ?? true,
     reactionSound: preferences.reactionSound ?? false,
     reactionAnnouncements: preferences.reactionAnnouncements ?? "summary",
-    meetingSounds: preferences.meetingSounds ?? true,
+    soundPeople: preferences.soundPeople ?? true,
+    soundChat: preferences.soundChat ?? true,
+    soundHands: preferences.soundHands ?? true,
+    soundLobby: preferences.soundLobby ?? true,
+    popupChat: preferences.popupChat ?? true,
+    popupHands: preferences.popupHands ?? true,
+    popupLobby: preferences.popupLobby ?? true,
+    pushToTalk: preferences.pushToTalk ?? false,
   };
 }
 

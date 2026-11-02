@@ -3,6 +3,7 @@
 import { cn } from "cn";
 import {
   Accessibility,
+  Bell,
   CalendarDays,
   Mic,
   Settings,
@@ -23,6 +24,7 @@ export const SETTINGS_SECTIONS = [
   { slug: "audio", key: "audio", icon: Mic },
   { slug: "video", key: "video", icon: Video },
   { slug: "reactions", key: "reactions", icon: SmilePlus },
+  { slug: "notifications", key: "notifications", icon: Bell },
   { slug: "effects", key: "effects", icon: WandSparkles },
   { slug: "calendar", key: "calendar", icon: CalendarDays },
   { slug: "ai-notes", key: "aiNotes", icon: Sparkles },

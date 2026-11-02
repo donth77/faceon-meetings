@@ -12,7 +12,7 @@ Press `?` anywhere to see these, or `Ctrl+/` (`⌘/` on a Mac).
 | Action | Windows and Linux | Mac |
 | --- | --- | --- |
 | Mute or unmute | `Ctrl+D` or `Alt+A` | `⌘D` or `⌥A` |
-| Talk while muted | Hold `Space` | Hold `Space` |
+| Talk while muted (with **Push to talk** on, in **Settings**, under **Audio**) | Hold `Space` | Hold `Space` |
 | Start or stop video | `Ctrl+E` or `Alt+V` | `⌘E` or `⌥V` |
 | Share your screen or stop sharing | `Alt+S` | `⌥S` |
 

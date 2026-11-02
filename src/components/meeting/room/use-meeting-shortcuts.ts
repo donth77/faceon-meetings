@@ -12,8 +12,9 @@ import { loadPreferences, withDefaults } from "@/lib/preferences";
 
 /**
  * Zoom's and Meet's shortcuts both work: Ctrl/⌘+D or Alt/⌥+A toggles the mic,
- * Ctrl/⌘+E or Alt/⌥+V the camera, and Alt/⌥+S screen sharing. Holding Space talks
- * while muted, as in Zoom, unless single-key shortcuts are off (Settings → Accessibility).
+ * Ctrl/⌘+E or Alt/⌥+V the camera, and Alt/⌥+S screen sharing. With Push to talk on
+ * (Settings → Audio, off by default as in Meet), holding Space talks while muted, unless
+ * single-key shortcuts are off (Settings → Accessibility).
  */
 export function useMeetingShortcuts(actions: {
   toggleMic: () => void;
@@ -47,7 +48,9 @@ export function useMeetingShortcuts(actions: {
       ) {
         return false;
       }
-      if (!withDefaults(loadPreferences()).singleKeyShortcuts) return false;
+      const { singleKeyShortcuts, pushToTalk } =
+        withDefaults(loadPreferences());
+      if (!pushToTalk || !singleKeyShortcuts) return false;
       event.preventDefault(); // no page scroll while held
       if (event.repeat || talking) return true;
       const { on, allowed } = micState();

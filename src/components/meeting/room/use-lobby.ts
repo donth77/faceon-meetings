@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 
 import type { LobbyAction, LobbyEntry } from "@/lib/meetings/api";
+import { loadPreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
 import { playSound } from "../chime";
@@ -69,6 +70,8 @@ export function useLobby({
   // someone decides it, or the person stops asking.
   const announce = useEffectEvent((fresh: LobbyEntry[]) => {
     playSound("knock");
+    // The list in Participants still shows them; the pop-up can be turned off.
+    if (!withDefaults(loadPreferences()).popupLobby) return;
     const [first] = fresh;
     if (fresh.length === 1 && first) {
       toast(t("wantsToJoin", { name: first.name }), {

@@ -16,7 +16,11 @@ import type {
   SessionInfo,
 } from "@/lib/meetings/api";
 import { reactionName } from "@/lib/meetings/events";
-import { usePreferences, withDefaults } from "@/lib/preferences";
+import {
+  loadPreferences,
+  usePreferences,
+  withDefaults,
+} from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
 import { playSound } from "../chime";
@@ -208,6 +212,7 @@ export function MeetingShell({
     // A preview of each new message while the chat panel is closed, as in both apps.
     onPreview: (message) => {
       playSound("message");
+      if (!withDefaults(loadPreferences()).popupChat) return;
       toast(message.senderName, {
         description: message.text,
         action: { label: t("chat.open"), onClick: () => openPanel("chat") },
@@ -226,12 +231,8 @@ export function MeetingShell({
     (userId) => (state?.reactions ?? true) || sentByHost(userId),
   );
   const sendReaction = useReactionSender(media.sendReaction);
-  const {
-    showOthersReactions,
-    reactionAnimation,
-    reactionSound,
-    reactionAnnouncements,
-  } = withDefaults(usePreferences());
+  const { showOthersReactions, reactionAnimation, reactionAnnouncements } =
+    withDefaults(usePreferences());
   // Settings → Reactions: others' can be hidden; yours always show.
   const shownReactions = useMemo(
     () =>
@@ -258,8 +259,8 @@ export function MeetingShell({
     const newest = shownReactions.at(-1);
     if (!newest || newest.id <= lastSounded.current) return;
     lastSounded.current = newest.id;
-    if (reactionSound) playSound("reaction");
-  }, [shownReactions, reactionSound]);
+    playSound("reaction");
+  }, [shownReactions]);
   const badges = useMemo(
     () => ({
       hands,
@@ -285,6 +286,7 @@ export function MeetingShell({
   const announceHand = useEffectEvent((userId: string) => {
     if (isHost && userId !== self.id) {
       playSound("handRaised");
+      if (!withDefaults(loadPreferences()).popupHands) return;
       toast(t("hand.someoneRaised", { name: nameOf(userId) }), {
         action: { label: t("hand.view"), onClick: () => openPanel("people") },
       });

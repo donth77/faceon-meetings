@@ -13,7 +13,7 @@ If you start talking while muted, {appName} reminds you that you're muted.
 
 ## Talk while muted
 
-Hold `Space` to talk, then let go to mute again. This works when you're not typing in a box. You can turn single-key shortcuts off in [Settings](/help/settings).
+Turn on **Push to talk** in **Settings**, under **Audio**. Then, while you're muted, hold `Space` to talk and let go to mute again. It works when you're not typing in a box.
 
 ## Choose a microphone, speaker or camera
 
@@ -41,6 +41,6 @@ Before you join, the preview has the same meter and a **Play a test sound** butt
 | --- | --- | --- |
 | Mute or unmute | `Ctrl+D` or `Alt+A` | `⌘D` or `⌥A` |
 | Start or stop video | `Ctrl+E` or `Alt+V` | `⌘E` or `⌥V` |
-| Talk while muted | Hold `Space` | Hold `Space` |
+| Talk while muted (with Push to talk on) | Hold `Space` | Hold `Space` |
 
 If a host has turned microphones off, raise your hand to ask to speak.

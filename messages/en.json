@@ -861,6 +861,7 @@
       "audio": "Audio",
       "video": "Video",
       "reactions": "Reactions",
+      "notifications": "Notifications",
       "effects": "Backgrounds and effects",
       "calendar": "Calendar",
       "aiNotes": "AI notes",
@@ -903,8 +904,8 @@
       "noiseSuppression": "Noise suppression",
       "noiseSuppressionHelp": "Filters out typing, fans and traffic",
       "micLevel": "Microphone level",
-      "meetingSounds": "Meeting sounds",
-      "meetingSoundsHelp": "Short sounds when people join or leave, hands go up, or messages arrive"
+      "pushToTalk": "Push to talk",
+      "pushToTalkHelp": "While you're muted, hold the Space bar to talk; let go to mute again"
     },
     "video": {
       "title": "Video",
@@ -1009,6 +1010,40 @@
         "off": "Don’t announce reactions",
         "summary": "A short summary, at most every 10 seconds",
         "each": "Each reaction as it comes"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "intro": "What gets your attention during a meeting. Reactions have their own section.",
+      "sounds": "Sounds",
+      "popups": "Pop-ups",
+      "soundPeople": {
+        "label": "People joining and leaving",
+        "help": "Including you, and when you're let in. In meetings of up to 8 people"
+      },
+      "soundChat": {
+        "label": "Chat messages",
+        "help": "While Chat is closed"
+      },
+      "soundHands": {
+        "label": "Raised hands",
+        "help": "When you're a host or co-host"
+      },
+      "soundLobby": {
+        "label": "Waiting room",
+        "help": "When someone asks to join, if you're a host or co-host"
+      },
+      "popupChat": {
+        "label": "Chat messages",
+        "help": "A preview of each new message while Chat is closed"
+      },
+      "popupHands": {
+        "label": "Raised hands",
+        "help": "Who raised their hand, when you're a host or co-host"
+      },
+      "popupLobby": {
+        "label": "Waiting room",
+        "help": "Who's asking to join, with Admit. Participants always lists them"
       }
     }
   },

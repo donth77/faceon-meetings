@@ -27,7 +27,7 @@ import { SectionTitle, SettingsCard } from "./settings-nav";
 export function AudioSettings() {
   const t = useTranslations("Settings.audio");
   const [devices, update] = useRememberedDevices();
-  const { noiseSuppression, meetingSounds } = withDefaults(usePreferences());
+  const { noiseSuppression, pushToTalk } = withDefaults(usePreferences());
   const mic = useLocalTrack("audio", true, devices.micId, noiseSuppression);
   const lists = useMediaDevices(mic.track?.id ?? "");
   const chooseSpeaker = canChooseSpeaker() && lists.speakers.length > 0;
@@ -91,11 +91,11 @@ export function AudioSettings() {
             }
           />
           <SwitchRow
-            label={t("meetingSounds")}
-            help={t("meetingSoundsHelp")}
-            isSelected={meetingSounds}
+            label={t("pushToTalk")}
+            help={t("pushToTalkHelp")}
+            isSelected={pushToTalk}
             onChange={(on) =>
-              savePreferences({ meetingSounds: on ? undefined : false })
+              savePreferences({ pushToTalk: on ? true : undefined })
             }
           />
         </div>
