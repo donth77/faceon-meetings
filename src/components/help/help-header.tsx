@@ -185,15 +185,17 @@ type Turn = {
   status: "thinking" | "answering" | "done" | "noMatch" | "failed";
 };
 
-/** The box: a question, and the answer written under it as it arrives. */
+/**
+ * The box: a question, and the answer written under it as it arrives. A new question
+ * replaces the last one: each is answered on its own, so an old answer left on screen
+ * would suggest a conversation the model doesn't remember.
+ */
 function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
   const t = useTranslations("Help.assistant");
   const inputId = useId();
   const [question, setQuestion] = useState("");
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const busy = turns.some(
-    (turn) => turn.status === "thinking" || turn.status === "answering",
-  );
+  const [turn, setTurn] = useState<Turn | null>(null);
+  const busy = turn?.status === "thinking" || turn?.status === "answering";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -203,21 +205,17 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
     const id = Date.now();
     const sources = relevant(docs, asked);
     const update = (patch: Partial<Turn>) =>
-      setTurns((all) =>
-        all.map((turn) => (turn.id === id ? { ...turn, ...patch } : turn)),
+      setTurn((current) =>
+        current?.id === id ? { ...current, ...patch } : current,
       );
     setQuestion("");
-    // The newest first; a few are enough to look back on.
-    setTurns((all) => [
-      {
-        id,
-        question: asked,
-        answer: "",
-        sources,
-        status: sources.length ? "thinking" : "noMatch",
-      },
-      ...all.slice(0, 3),
-    ]);
+    setTurn({
+      id,
+      question: asked,
+      answer: "",
+      sources,
+      status: sources.length ? "thinking" : "noMatch",
+    });
     if (!sources.length) return;
     try {
       let text = "";
@@ -262,43 +260,37 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
           {t("send")}
         </Button>
       </form>
-      {turns.length > 0 ? (
-        <div aria-live="polite" className="flex flex-col gap-5 pt-1">
-          {turns.map((turn) => (
-            <div key={turn.id} className="flex flex-col gap-2">
-              <p className="text-muted-foreground text-sm font-semibold">
-                {turn.question}
+      {turn ? (
+        <div aria-live="polite" className="flex flex-col gap-2 pt-1">
+          <p className="text-muted-foreground text-sm font-semibold">
+            {turn.question}
+          </p>
+          {turn.status === "thinking" ? (
+            <p className="text-muted-foreground text-[15px]">{t("thinking")}</p>
+          ) : turn.status === "noMatch" ? (
+            <p className="text-[15px]">{t("noMatch")}</p>
+          ) : turn.status === "failed" && !turn.answer ? (
+            <p className="text-destructive text-[15px]">{t("failed")}</p>
+          ) : (
+            <Answer text={turn.answer} />
+          )}
+          {turn.status === "done" ? (
+            <>
+              <p className="text-muted-foreground flex flex-wrap gap-x-2 gap-y-1 text-[13px]">
+                <span>{t("sources")}</span>
+                {turn.sources.map((source) => (
+                  <Link
+                    key={source.slug}
+                    href={`/help/${source.slug}`}
+                    className="text-primary font-medium hover:underline"
+                  >
+                    {source.title}
+                  </Link>
+                ))}
               </p>
-              {turn.status === "thinking" ? (
-                <p className="text-muted-foreground text-[15px]">
-                  {t("thinking")}
-                </p>
-              ) : turn.status === "noMatch" ? (
-                <p className="text-[15px]">{t("noMatch")}</p>
-              ) : turn.status === "failed" && !turn.answer ? (
-                <p className="text-destructive text-[15px]">{t("failed")}</p>
-              ) : (
-                <Answer text={turn.answer} />
-              )}
-              {turn.status === "done" ? (
-                <>
-                  <p className="text-muted-foreground flex flex-wrap gap-x-2 gap-y-1 text-[13px]">
-                    <span>{t("sources")}</span>
-                    {turn.sources.map((source) => (
-                      <Link
-                        key={source.slug}
-                        href={`/help/${source.slug}`}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        {source.title}
-                      </Link>
-                    ))}
-                  </p>
-                  <p className="text-muted-foreground text-xs">{t("note")}</p>
-                </>
-              ) : null}
-            </div>
-          ))}
+              <p className="text-muted-foreground text-xs">{t("note")}</p>
+            </>
+          ) : null}
         </div>
       ) : null}
     </section>
