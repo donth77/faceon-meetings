@@ -196,7 +196,7 @@ function SharingNotice() {
       <MonitorUp className="text-primary size-10" aria-hidden="true" />
       <p className="text-lg font-semibold">{t("youAreSharing")}</p>
       <Button
-        onPress={() => void screenShare.toggle()}
+        onPress={() => void screenShare.stop()}
         className="bg-destructive hover:bg-destructive/90 focus-visible:ring-ring h-10 rounded-full px-5 text-sm font-semibold text-white outline-none focus-visible:ring-2"
       >
         {t("stopSharing")}

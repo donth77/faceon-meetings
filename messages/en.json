@@ -319,7 +319,9 @@
       "send": "Send message",
       "you": "You",
       "open": "Open",
-      "off": "The host turned off chat. Only hosts can send messages."
+      "off": "The host turned off chat. Only hosts can send messages.",
+      "save": "Save chat",
+      "savedTitle": "Chat from {title}"
     },
     "reactions": {
       "label": "Reactions",
@@ -404,6 +406,21 @@
       "shareAll": "Everyone can share their screen now",
       "micsOff": "The host muted everyone. Raise your hand to ask to speak.",
       "micsOn": "You can turn your microphone on again"
+    },
+    "share": {
+      "what": "What to share",
+      "browser": "A tab",
+      "browserHint": "Best for video and sound",
+      "window": "A window",
+      "monitor": "Your entire screen",
+      "options": "Sharing options",
+      "sound": "Share sound",
+      "motion": "Optimize for video",
+      "someoneSharing": "{name} is sharing their screen",
+      "takeoverBody": "Share yours instead? {name}’s sharing will stop.",
+      "takeover": "Share instead",
+      "cancel": "Cancel",
+      "failed": "Couldn’t share your screen. Try again."
     }
   },
   "PreJoin": {

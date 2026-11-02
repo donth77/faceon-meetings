@@ -1,6 +1,6 @@
 "use client";
 
-import { SendHorizontal } from "lucide-react";
+import { Download, SendHorizontal } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   useCallback,
@@ -75,13 +75,38 @@ function Message({ message }: { message: ChatMessage }) {
   );
 }
 
+/** Save chat, as in Zoom: the conversation so far as a text file on this device. */
+function saveChat(
+  messages: ChatMessage[],
+  { title, you, locale }: { title: string; you: string; locale: string },
+) {
+  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
+  const text = messages
+    .map(
+      (m) => `[${time.format(m.at)}] ${m.mine ? you : m.senderName}: ${m.text}`,
+    )
+    .join("\n");
+  const url = URL.createObjectURL(
+    new Blob([`${title}\n\n${text}\n`], { type: "text/plain;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  // File systems reject some characters; keep the name readable without them.
+  link.download = `${title.replace(/[\\/:*?"<>|]+/g, "-")}.txt`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 /** Chat: everyone sees it; nothing is saved after the meeting. */
 export function ChatPanel({
+  title,
   messages,
   canSend,
   onSend,
   onClose,
 }: {
+  /** The meeting's title, which names a saved chat. */
+  title: string;
   messages: ChatMessage[];
   /** False when a host turned chat off for participants. */
   canSend: boolean;
@@ -89,6 +114,7 @@ export function ChatPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("Meeting.chat");
+  const locale = useLocale();
   const inputId = useId();
   const [draft, setDraft] = useState("");
 
@@ -125,7 +151,27 @@ export function ChatPanel({
   }
 
   return (
-    <SidePanel title={t("title")} closeLabel={t("close")} onClose={onClose}>
+    <SidePanel
+      title={t("title")}
+      closeLabel={t("close")}
+      onClose={onClose}
+      actions={
+        <Button
+          aria-label={t("save")}
+          isDisabled={messages.length === 0}
+          onPress={() =>
+            saveChat(messages, {
+              title: t("savedTitle", { title }),
+              you: t("you"),
+              locale,
+            })
+          }
+          className="text-foreground/80 focus-visible:ring-ring flex size-10 items-center justify-center rounded-xl outline-none hover:bg-white/10 focus-visible:ring-2 disabled:opacity-40"
+        >
+          <Download className="size-5" aria-hidden="true" />
+        </Button>
+      }
+    >
       <p className="bg-background text-muted-foreground mx-4 mb-2.5 shrink-0 rounded-[10px] px-3 py-2.5 text-[13px] leading-normal">
         {t("notice")}
       </p>

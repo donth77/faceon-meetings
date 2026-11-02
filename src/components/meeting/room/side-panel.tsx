@@ -12,12 +12,15 @@ export function SidePanel({
   title,
   closeLabel,
   onClose,
+  actions,
   footer,
   children,
 }: {
   title: string;
   closeLabel: string;
   onClose: () => void;
+  /** Buttons beside Close. */
+  actions?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
 }) {
@@ -47,13 +50,16 @@ export function SidePanel({
         />
         <div className="flex shrink-0 items-center justify-between py-2 pr-2 pl-5">
           <h2 className="text-lg font-bold">{title}</h2>
-          <Button
-            aria-label={closeLabel}
-            onPress={onClose}
-            className="text-foreground/80 focus-visible:ring-ring flex size-10 items-center justify-center rounded-xl outline-none hover:bg-white/10 focus-visible:ring-2"
-          >
-            <X className="size-5" aria-hidden="true" />
-          </Button>
+          <div className="flex items-center">
+            {actions}
+            <Button
+              aria-label={closeLabel}
+              onPress={onClose}
+              className="text-foreground/80 focus-visible:ring-ring flex size-10 items-center justify-center rounded-xl outline-none hover:bg-white/10 focus-visible:ring-2"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         {footer ? (

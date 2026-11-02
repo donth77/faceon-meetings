@@ -7,8 +7,6 @@ import {
   MessageSquare,
   Mic,
   MicOff,
-  MonitorUp,
-  MonitorX,
   PhoneOff,
   ShieldUser,
   SmilePlus,
@@ -32,10 +30,11 @@ import { useNow } from "@/hooks/use-now";
 import { REACTIONS, type ReactionCode } from "@/lib/meetings/events";
 import { canShareScreen } from "@/lib/platform";
 
-import { useRoomMedia } from "../media";
+import { useRoomMedia, type ShareOptions } from "../media";
 import { ControlButton } from "./control-button";
 import { DeviceMenu } from "./device-menu";
 import { EMOJI_FONT, ReactionsControl } from "./reactions";
+import { ShareControl } from "./share-control";
 import { shortcutLabel } from "./use-meeting-shortcuts";
 
 /** A round control with a tooltip that names its keyboard shortcut. */
@@ -267,7 +266,7 @@ export function ControlBar({
   onTogglePanel,
   unreadChat,
   onToggleMic,
-  onToggleScreenShare,
+  share,
   handRaised,
   onToggleHand,
   onReaction,
@@ -283,7 +282,12 @@ export function ControlBar({
   onTogglePanel: (panel: PanelName) => void;
   unreadChat: number;
   onToggleMic: () => void;
-  onToggleScreenShare: () => void;
+  share: {
+    /** Says why you can't share right now; null when you can. */
+    onBlocked: (() => void) | null;
+    onStart: (options: ShareOptions) => void;
+    onStop: () => void;
+  };
   handRaised: boolean;
   onToggleHand: () => void;
   /** Null when the host has turned reactions off. */
@@ -352,12 +356,7 @@ export function ControlBar({
           />
         </Control>
         {canShareScreen() ? (
-          <Control
-            icon={screenShare.enabled ? MonitorX : MonitorUp}
-            label={screenShare.enabled ? t("stopSharing") : t("shareScreen")}
-            tone={screenShare.enabled ? "danger" : "plain"}
-            onPress={onToggleScreenShare}
-          />
+          <ShareControl sharing={screenShare.enabled} {...share} />
         ) : null}
         {onReaction ? (
           <div className="flex max-md:hidden">

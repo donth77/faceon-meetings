@@ -34,6 +34,7 @@ import {
   type RoomMedia,
   type RoomParticipant,
   type RoomStatus,
+  type ShareOptions,
 } from "../../media";
 import { StreamTrackView } from "./stream-track-view";
 
@@ -78,6 +79,41 @@ function statusOf(state: CallingState): RoomStatus {
     return "reconnecting";
   }
   return "joined";
+}
+
+/** Chrome's picker hints, which TypeScript's DOM types don't list yet. */
+type DisplayMediaHints = DisplayMediaStreamOptions & {
+  selfBrowserSurface?: "include" | "exclude";
+  surfaceSwitching?: "include" | "exclude";
+};
+
+/**
+ * Shares the screen with the menu's choices: which list the browser's picker opens on,
+ * whether sound comes along, and smooth motion or sharp text.
+ */
+async function startScreenShare(call: Call, options: ShareOptions) {
+  const manager = call.screenShare;
+  if (options.audio) manager.enableScreenShareAudio();
+  else await manager.disableScreenShareAudio();
+  manager.setSettings({
+    contentHint: options.motion ? "motion" : "detail",
+    maxFramerate: options.motion ? 30 : 15,
+  });
+  const current = manager.state.defaultConstraints ?? {};
+  const video = typeof current.video === "object" ? { ...current.video } : {};
+  delete video.displaySurface;
+  const constraints: DisplayMediaHints = {
+    ...current,
+    video: options.surface
+      ? { ...video, displaySurface: options.surface }
+      : video,
+    // Leave FaceOn's own tab out of the picker (no hall of mirrors), and offer Chrome's
+    // "Share this tab instead".
+    selfBrowserSurface: "exclude",
+    surfaceSwitching: "include",
+  };
+  manager.setDefaultConstraints(constraints);
+  await manager.enable();
 }
 
 const supportsSpeakerSelection = () =>
@@ -270,7 +306,8 @@ export function StreamMedia({
       screenShare: {
         enabled: !screenShare.optionsAwareIsMute,
         allowed: canShare,
-        toggle: () => screenShare.screenShare.toggle(),
+        start: (options) => startScreenShare(call, options),
+        stop: () => screenShare.screenShare.disable(),
       },
       ...actions,
     }),

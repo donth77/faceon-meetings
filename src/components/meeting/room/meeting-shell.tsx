@@ -15,7 +15,12 @@ import type {
 } from "@/lib/meetings/api";
 
 import { meetingApi } from "../api-client";
-import { useRoomMedia, type RoomParticipant, type RoomStatus } from "../media";
+import {
+  useRoomMedia,
+  type RoomParticipant,
+  type RoomStatus,
+  type ShareOptions,
+} from "../media";
 import { useMeetingTitle } from "../meeting-title";
 import { AloneCard } from "./alone-card";
 import { AloneCheckDialog, useAloneCheck } from "./alone-check";
@@ -25,6 +30,7 @@ import { HostControlsPanel } from "./host-controls-panel";
 import {
   MuteAllDialog,
   RemoveDialog,
+  TakeoverDialog,
   UnmuteRequestDialog,
 } from "./host-dialogs";
 import { ParticipantsPanel } from "./participants-panel";
@@ -104,6 +110,10 @@ export function MeetingShell({
   const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RoomParticipant | null>(null);
   const [mutingAll, setMutingAll] = useState(false);
+  const [takeover, setTakeover] = useState<{
+    presenter: RoomParticipant;
+    options: ShareOptions;
+  } | null>(null);
 
   // Roles and policies come from the shared state our server publishes; until it
   // arrives, you have the role you were admitted with.
@@ -202,12 +212,51 @@ export function MeetingShell({
     }
     void media.mic.toggle();
   }
-  function toggleScreenShare() {
-    if (!media.screenShare.enabled && !media.screenShare.allowed) {
-      toast(t("hostActions.shareLocked"));
-      return;
+
+  // One person shares at a time. Hosts and co-hosts can take over; others wait.
+  const presenter = media.participants.find((p) => p.screen && !p.isLocal);
+  const shareBlocked = !media.screenShare.allowed
+    ? () => void toast(t("hostActions.shareLocked"))
+    : presenter && !isHost
+      ? () => void toast(t("share.someoneSharing", { name: presenter.name }))
+      : null;
+
+  /** Shares the screen; false when it didn't start (say, the picker was cancelled). */
+  async function share(options: ShareOptions): Promise<boolean> {
+    try {
+      await media.screenShare.start(options);
+      return true;
+    } catch (error) {
+      const cancelled =
+        error instanceof DOMException &&
+        (error.name === "NotAllowedError" || error.name === "AbortError");
+      if (!cancelled) toast.error(t("share.failed"));
+      return false;
     }
-    void media.screenShare.toggle();
+  }
+
+  function startShare(options: ShareOptions) {
+    if (shareBlocked) shareBlocked();
+    else if (presenter) setTakeover({ presenter, options });
+    else void share(options);
+  }
+
+  async function takeOver() {
+    if (!takeover) return;
+    setTakeover(null);
+    // The picker first, while the click still counts; their share stops once yours starts.
+    if (await share(takeover.options)) {
+      await moderate({
+        action: "mute",
+        target: takeover.presenter.userId,
+        kind: "screenshare",
+      });
+    }
+  }
+
+  function toggleScreenShare() {
+    if (media.screenShare.enabled) void media.screenShare.stop();
+    else startShare({ audio: true, motion: false });
   }
 
   function openPanel(next: PanelName) {
@@ -268,6 +317,7 @@ export function MeetingShell({
               />
             ) : panel === "chat" ? (
               <ChatPanel
+                title={title}
                 messages={chat.messages}
                 canSend={(state?.chat ?? true) || isHost}
                 onSend={chat.send}
@@ -298,6 +348,11 @@ export function MeetingShell({
             }
             onClose={() => setMutingAll(false)}
           />
+          <TakeoverDialog
+            presenterName={takeover?.presenter.name ?? null}
+            onConfirm={() => void takeOver()}
+            onClose={() => setTakeover(null)}
+          />
           <UnmuteRequestDialog
             isOpen={notices.unmuteAsked}
             onUnmute={toggleMic}
@@ -321,7 +376,11 @@ export function MeetingShell({
             onTogglePanel={togglePanel}
             unreadChat={chat.unread}
             onToggleMic={toggleMic}
-            onToggleScreenShare={toggleScreenShare}
+            share={{
+              onBlocked: shareBlocked,
+              onStart: startShare,
+              onStop: () => void media.screenShare.stop(),
+            }}
             handRaised={self.id in hands}
             onToggleHand={() =>
               void changeHand({ raised: !(self.id in hands) })

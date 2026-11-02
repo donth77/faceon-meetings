@@ -135,6 +135,46 @@ function MuteAllForm({
   );
 }
 
+/** One person shares at a time: a host taking over asks first, as in Meet. */
+export function TakeoverDialog({
+  presenterName,
+  onConfirm,
+  onClose,
+}: {
+  /** Who's sharing now; null keeps the dialog closed. */
+  presenterName: string | null;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("Meeting.share");
+  const name = presenterName ?? "";
+  return (
+    <Dialog
+      isOpen={presenterName !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      role="alertdialog"
+      showCloseButton={false}
+    >
+      <DialogHeader>
+        <DialogTitle className="text-lg font-semibold">
+          {t("someoneSharing", { name })}
+        </DialogTitle>
+        <DialogDescription>{t("takeoverBody", { name })}</DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="outline" onPress={onClose}>
+          {t("cancel")}
+        </Button>
+        <Button onPress={onConfirm} autoFocus>
+          {t("takeover")}
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  );
+}
+
 /** A host asked you to unmute: you decide, as in Zoom. */
 export function UnmuteRequestDialog({
   isOpen,

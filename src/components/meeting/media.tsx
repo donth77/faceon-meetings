@@ -49,6 +49,16 @@ export type InputDevice = {
 
 export type RoomStatus = "joined" | "reconnecting" | "offline";
 
+/** What the Share screen menu asks the browser for. */
+export type ShareOptions = {
+  /** The list the browser's picker opens on. Only Chromium browsers take the hint. */
+  surface?: "browser" | "window" | "monitor";
+  /** Share the tab's or the computer's sound too. */
+  audio: boolean;
+  /** Smooth motion for video clips, instead of sharp text at a low frame rate. */
+  motion: boolean;
+};
+
 /** Why the room closed; the left-meeting screen words its message from it. */
 export type LeaveReason =
   "left" | "ended" | "removed" | "timeLimit" | "connectionLost";
@@ -72,7 +82,9 @@ export type RoomMedia = {
     enabled: boolean;
     /** Whether you may share: hosts can keep sharing to themselves. */
     allowed: boolean;
-    toggle: () => Promise<void>;
+    /** Opens the browser's picker and shares what you choose. */
+    start: (options: ShareOptions) => Promise<void>;
+    stop: () => Promise<void>;
   };
   leave: () => Promise<void>;
 
