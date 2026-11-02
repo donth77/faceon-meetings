@@ -176,7 +176,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_APP_URL`  | `https://faceon.example.com`, for Production **and** Preview: preview deployments send sign-in through it               |
 | `BETTER_AUTH_URL`      | `https://faceon.example.com`, for Production only                                                                       |
-| `NEXT_PUBLIC_APP_NAME` | Optional: the name shown everywhere (FaceOn)                                                                            |
+| `NEXT_PUBLIC_APP_NAME` | Optional: the name shown everywhere (FaceOn). [Make it yours](#make-it-yours) changes the logo and colors to match      |
 | `NEXT_PUBLIC_REPO_URL` | Optional: your fork's address, for the "View source on GitHub" and "Found an issue?" links. Leave it empty to hide them |
 
 **Database**
@@ -288,6 +288,60 @@ In Vercel, open **Settings → Domains**, add your domain and follow the DNS ins
 5. If you set up Google Calendar, connect it in **Settings → Calendar**, schedule a meeting, and look for it in your calendar.
 6. Run the cleanup once ([step 11](#11-check-the-daily-cleanup)) and `pnpm stream:check`.
 
+## Make it yours
+
+Your copy can have its own name, logo and colors, and a public one should: [BRAND.md](BRAND.md) says why.
+
+- **Name:** `NEXT_PUBLIC_APP_NAME` ([step 8](#8-add-the-environment-variables-to-vercel)). Pages, Help, emails, the legal pages, calendar files and the installed app all use it.
+- **Logo, icons and colors:** `pnpm brand`, below.
+- **Email sender:** the name in `EMAIL_FROM`, such as `Acme Meet <no-reply@mail.example.com>` ([step 7](#7-set-up-account-emails-resend-optional)).
+- **Legal pages:** [step 10](#10-make-the-legal-pages-yours).
+- **Domain:** [step 12](#12-use-your-own-domain-optional).
+- **Source links:** `NEXT_PUBLIC_REPO_URL`, your fork's address. Every GitHub link in the app reads it: the footer's "View source on GitHub", Help's "Found an issue?", the legal pages' contact when there's no `NEXT_PUBLIC_CONTACT_EMAIL`, and `/llms.txt`. Leave it empty to hide them.
+
+### pnpm brand
+
+Edit [`brand/brand.json`](brand/brand.json), put your mark in `brand/` as SVG, then run:
+
+```bash
+pnpm brand
+```
+
+It writes the logo files in `public/brand/` (the mark, and the mark beside the name, for light and dark backgrounds and in one color), the browser tab icon (`src/app/icon.svg`, `favicon.ico`), the icons for phones and installed apps (`src/app/apple-icon.png`, `public/icons/`), the link preview (`src/app/opengraph-image.png`), and the brand colors for both themes (`src/app/brand.css`, with a copy in `src/lib/brand.ts` for emails and the offline page). Commit them and push. The smallest config:
+
+```json
+{
+  "name": "Acme Meet",
+  "color": "#0f766e",
+  "mark": "mark.svg",
+  "preview": { "title": "Video meetings for Acme" }
+}
+```
+
+| Key                                   | What it is                                                                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                                | The name in the logo. Use the same one as `NEXT_PUBLIC_APP_NAME`                                                                                                   |
+| `color`                               | Your brand color, for buttons, links, focus rings and what's selected. It has to be dark enough for text on white                                                  |
+| `mark`                                | Your mark, as SVG: shapes, not text, with holes cut out rather than drawn in white. Any size or shape                                                              |
+| `markDark`                            | Optional: your mark drawn for dark backgrounds, with the same `viewBox`. Without it, the parts in your brand color take the dark theme's version                   |
+| `wordmark.font`                       | Optional: a `.ttf` or `.otf` file for the name. It defaults to Bricolage Grotesque Bold, the display font in `brand/fonts/`                                        |
+| `wordmark.accent`                     | Optional: the end of the name to draw in your brand color, as "On" in FaceOn                                                                                       |
+| `wordmark.tracking`, `wordmark.pairs` | Optional: space after every letter, and between particular pairs (`{ "Fa": -22 }`), in the font's units                                                            |
+| `lockup`                              | Optional: `capHeight`, `gap` and `middle`, in your mark's own units, to place the name beside the mark. By default its capitals are about 3/5 of the mark's height |
+| `iconBackground`                      | Optional: the color behind icons that can't be transparent, as on phones' home screens. White by default                                                           |
+| `preview`                             | The link preview: a `title`, an optional `subtitle`, and optional `art`, an SVG drawn over the lower part of its 1200 × 630 canvas                                 |
+| `colors`                              | Optional: any of the worked-out colors below, to use as given                                                                                                      |
+
+The colors come from your one color. The light theme uses it as it is. The dark theme gets a lighter shade of it that reads on dark surfaces, and each theme gets a soft tint (for chips and the current item) and a shade for text on that tint. Every pair the app uses is checked for [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/) contrast: labels on buttons, brand-colored text and focus rings on each surface, and text and icons on the tint. If one fails, `pnpm brand` writes nothing and names the pair, its contrast and what to change; for a color too light to read on white, that's the nearest darker shade that passes. To try a color first:
+
+```bash
+pnpm brand --try "#0f766e"
+```
+
+FaceOn's own `brand/` uses every option: its mark and a version for dark backgrounds, the wordmark's spacing, the link preview's art and its hand-picked colors.
+
+The four abstract backgrounds are drawn in FaceOn's colors by `scripts/backgrounds.ts`. They're backgrounds, not branding, but you can change their colors and run it too.
+
 ## CI secrets (optional)
 
 GitHub Actions runs the browser tests on every push, against a database it throws away afterwards. The tests that join calls also need a **development** Stream app, never your production one. Add two repository secrets under **Settings → Secrets and variables → Actions → New repository secret**:
@@ -314,6 +368,7 @@ git push                                                 # Vercel deploys main
 Then:
 
 - Compare `.env.example` with what you have, and add any new settings in Vercel.
+- If you've [made it yours](#make-it-yours), keep your `brand/` folder and run `pnpm brand` again, so the files it writes stay yours.
 - Run `pnpm stream:check` with your production keys. If it reports a difference, run `pnpm stream:setup` again (with `STREAM_WEBHOOK_URL`, so the webhook stays).
 
 ## Moving to another domain

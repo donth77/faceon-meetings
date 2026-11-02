@@ -37,6 +37,7 @@ import {
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
 import { availableEffect, effectsSupported } from "@/lib/effects/support";
+import { publicEnv } from "@/lib/env";
 import type { MeetingLimits } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { browserSuppression } from "@/lib/noise/noise";
@@ -259,6 +260,7 @@ export function PreJoin({
         ? t("errors.demoLimitYou", { count: limits.demoPerDay })
         : t(
             `errors.${needsPasscode && passcode.trim() === "" ? "passcodeNeeded" : error}`,
+            { appName: publicEnv.NEXT_PUBLIC_APP_NAME },
           );
 
   function join(withDevices: DevicePreferences) {

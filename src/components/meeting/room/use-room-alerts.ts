@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "sonner";
 
 import type { DeviceProblem } from "@/lib/device/problems";
+import { publicEnv } from "@/lib/env";
 
 import { playSound } from "../chime";
 import type { RoomMedia, RoomParticipant } from "../media";
@@ -87,8 +88,11 @@ export function useDeviceProblemToast(
   const onRetry = useEffectEvent(() => void retry());
   useEffect(() => {
     if (!problem) return;
-    toast.error(t(`${device}.${problem}`), {
-      action: { label: tp("tryAgain"), onClick: () => onRetry() },
-    });
+    toast.error(
+      t(`${device}.${problem}`, { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
+      {
+        action: { label: tp("tryAgain"), onClick: () => onRetry() },
+      },
+    );
   }, [device, problem, t, tp]);
 }

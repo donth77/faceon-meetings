@@ -58,9 +58,9 @@ export function ScopeDialog({
           >
             <span
               aria-hidden="true"
-              className="group-data-focus-visible:ring-ring flex size-[18px] items-center justify-center rounded-full border-2 border-[#c9cfd8] group-data-focus-visible:ring-2 group-data-selected:border-[#1f5eff]"
+              className="group-data-focus-visible:ring-ring group-data-selected:border-primary flex size-[18px] items-center justify-center rounded-full border-2 border-[#c9cfd8] group-data-focus-visible:ring-2"
             >
-              <span className="hidden size-2 rounded-full bg-[#1f5eff] group-data-selected:block" />
+              <span className="bg-primary hidden size-2 rounded-full group-data-selected:block" />
             </span>
             {t(`scope.${value}`)}
           </Radio>

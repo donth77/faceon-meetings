@@ -1,6 +1,7 @@
 import { cn } from "cn";
 import Image from "next/image";
 
+import { LOCKUP_SIZE } from "@/lib/brand";
 import { publicEnv } from "@/lib/env";
 
 /**
@@ -14,16 +15,16 @@ export function LogoLockup({ className }: { className?: string }) {
       <Image
         src="/brand/logo-lockup.svg"
         alt={name}
-        width={979}
-        height={224}
+        width={LOCKUP_SIZE.width}
+        height={LOCKUP_SIZE.height}
         loading="eager"
         className={cn("w-auto dark:hidden", className)}
       />
       <Image
         src="/brand/logo-lockup-dark.svg"
         alt={name}
-        width={979}
-        height={224}
+        width={LOCKUP_SIZE.width}
+        height={LOCKUP_SIZE.height}
         loading="eager"
         className={cn("hidden w-auto dark:block", className)}
       />

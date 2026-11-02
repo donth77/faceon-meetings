@@ -4,6 +4,8 @@ import { LoaderCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
+import { publicEnv } from "@/lib/env";
+
 import type { RoomStatus } from "../media";
 import { useRoomTransition } from "./motion";
 
@@ -35,7 +37,9 @@ export function ConnectionBanner({ status }: { status: RoomStatus }) {
                 className="size-4 animate-spin motion-reduce:animate-none"
                 aria-hidden="true"
               />
-              {t(status === "offline" ? "offline" : "reconnecting")}
+              {t(status === "offline" ? "offline" : "reconnecting", {
+                appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+              })}
             </span>
           </motion.p>
         )}

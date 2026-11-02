@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
+import { publicEnv } from "@/lib/env";
 import {
   chosenSettings,
   REMINDER_MINUTES,
@@ -106,12 +107,16 @@ function Reminders({ paused }: { paused: boolean }) {
             if (minutes > 0) void allow();
           }}
         />
-        <span className="text-muted-foreground text-[13px]">{t("help")}</span>
+        <span className="text-muted-foreground text-[13px]">
+          {t("help", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+        </span>
       </div>
       {reminderMinutes > 0 && !paused ? (
         permission === "default" ? (
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm">{t("askBody")}</span>
+            <span className="text-sm">
+              {t("askBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+            </span>
             <Button
               variant="outline"
               className="h-9 rounded-[10px]"
@@ -121,7 +126,9 @@ function Reminders({ paused }: { paused: boolean }) {
             </Button>
           </div>
         ) : permission === "denied" ? (
-          <p className="text-muted-foreground text-sm">{t("blocked")}</p>
+          <p className="text-muted-foreground text-sm">
+            {t("blocked", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+          </p>
         ) : permission === "granted" ? (
           <p className="text-muted-foreground text-sm">{t("allowed")}</p>
         ) : null

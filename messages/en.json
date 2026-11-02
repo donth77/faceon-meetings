@@ -425,7 +425,7 @@
     "showControls": "Show meeting controls",
     "tapToShowControls": "Tap to show controls",
     "reconnecting": "Reconnecting…",
-    "offline": "You’re offline. FaceOn will reconnect when your connection is back.",
+    "offline": "You’re offline. {appName} will reconnect when your connection is back.",
     "joining": "Joining…",
     "left": {
       "left": "You left the meeting",
@@ -461,7 +461,7 @@
       },
       "signIn": {
         "title": "Sign in to join",
-        "body": "Sign in to your FaceOn account to join this meeting."
+        "body": "Sign in to your {appName} account to join this meeting."
       },
       "removed": {
         "title": "You can’t rejoin this meeting",
@@ -725,7 +725,7 @@
       "passcodeNeeded": "This meeting has a passcode. Enter it to join.",
       "FULL": "This meeting is full. Try again when someone leaves.",
       "demoFull": "This meeting is full. Demo meetings have up to {count, plural, one {# person} other {# people}}. Try again when someone leaves.",
-      "NETWORK": "Can’t reach FaceOn. Check your connection, then try again.",
+      "NETWORK": "Can’t reach {appName}. Check your connection, then try again.",
       "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
       "BAD_REQUEST": "Enter your name, then try again.",
       "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
@@ -751,14 +751,14 @@
       "blocked": "Your browser is blocking your microphone. Allow it in the site settings (the icon in the address bar), then select Try again.",
       "notFound": "No microphone found. Connect one, then select Try again.",
       "inUse": "Your microphone is being used by another app. Close that app, then select Try again.",
-      "unavailableSetting": "The microphone you chose isn’t available, so FaceOn is using another one.",
+      "unavailableSetting": "The microphone you chose isn’t available, so {appName} is using another one.",
       "unknown": "Your microphone didn’t start. Select Try again."
     },
     "camera": {
       "blocked": "Your browser is blocking your camera. Allow it in the site settings (the icon in the address bar), then select Try again.",
       "notFound": "No camera found. Connect one, then select Try again.",
       "inUse": "Your camera is being used by another app. Close that app, then select Try again.",
-      "unavailableSetting": "The camera you chose isn’t available, so FaceOn is using another one.",
+      "unavailableSetting": "The camera you chose isn’t available, so {appName} is using another one.",
       "unknown": "Your camera didn’t start. Select Try again."
     }
   },
@@ -1210,7 +1210,7 @@
     },
     "accessibility": {
       "title": "Accessibility",
-      "intro": "FaceOn follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
+      "intro": "{appName} follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
       "singleKeys": "Single-key shortcuts (Space to talk, ? for shortcuts)",
       "singleKeysHelp": "Turn this off if you use speech input or a switch device, so a single key never triggers an action by accident.",
       "shortcuts": "Keyboard shortcuts"
@@ -1220,14 +1220,14 @@
       "google": "Google Calendar",
       "unavailable": "Each meeting’s page has buttons to add it to Google Calendar, Outlook or any calendar app.",
       "connectTitle": "Add meetings to your Google Calendar",
-      "connectBody": "Connect once, and Google emails the people you invite. If you change or cancel a meeting, everyone’s calendar updates. FaceOn only touches the events it makes.",
+      "connectBody": "Connect once, and Google emails the people you invite. If you change or cancel a meeting, everyone’s calendar updates. {appName} only touches the events it makes.",
       "alsoSignIn": "Connecting also lets you sign in with that Google account.",
       "connectedBody": "When you schedule a meeting, leave “Add to my Google Calendar and send invitations” on. Google sends the invitations, and your changes reach everyone’s calendar.",
       "reconnectTitle": "Reconnect Google Calendar",
-      "reconnectBody": "Google stopped FaceOn’s access to your calendar. Until Google verifies FaceOn’s calendar access, it asks again every 7 days. Your meetings are still saved here.",
+      "reconnectBody": "Google stopped {appName}’s access to your calendar. Until Google verifies {appName}’s calendar access, it asks again every 7 days. Your meetings are still saved here.",
       "disconnect": "Disconnect",
       "disconnectTitle": "Disconnect Google Calendar?",
-      "disconnectBody": "Events already in your calendar stay there, but FaceOn stops updating them. You can connect again any time.",
+      "disconnectBody": "Events already in your calendar stay there, but {appName} stops updating them. You can connect again any time.",
       "cancel": "Cancel",
       "disconnected": "Google Calendar disconnected",
       "disconnectFailed": "Couldn’t disconnect Google Calendar. Try again.",
@@ -1257,7 +1257,7 @@
         "none": "Not in this browser"
       },
       "ownKey": "Your own AI key",
-      "ownKeyHelp": "Your AI provider writes the summary. They bill you, not FaceOn.",
+      "ownKeyHelp": "Your AI provider writes the summary. They bill you, not {appName}.",
       "yourKey": "Your AI provider",
       "provider": "Provider",
       "model": "Model",
@@ -1272,7 +1272,7 @@
       "works": "Key works",
       "getKey": "Get a key from {provider}",
       "providerSaid": "It said: “{detail}”",
-      "keyStays": "Your key stays in this browser. FaceOn never stores it, and it goes only to your provider.",
+      "keyStays": "Your key stays in this browser. {appName} never stores it, and it goes only to your provider.",
       "freeTiers": "Free plans may use what you send to improve their products. Google's free Gemini plan does, for example. Check your provider's terms before using a free key for private meetings."
     },
     "account": {
@@ -1302,7 +1302,7 @@
       "removeSignInFirst": "For your security, sign in again, then remove it.",
       "linkErrors": {
         "emailMismatch": "That account uses a different email. Connect one that uses {email}.",
-        "alreadyLinked": "That account is already connected to a different FaceOn account.",
+        "alreadyLinked": "That account is already connected to a different {appName} account.",
         "generic": "Couldn’t connect that account. Try again."
       },
       "emailPassword": "Email and password",
@@ -1390,10 +1390,10 @@
         "label": "Remind me before meetings",
         "off": "Don’t remind me",
         "before": "{minutes} minutes before",
-        "help": "While FaceOn is open in a tab, for meetings you host or are invited to. Calendar files you add get the same reminder.",
-        "askBody": "To be reminded when FaceOn isn’t the tab you’re in, let your browser show notifications.",
+        "help": "While {appName} is open in a tab, for meetings you host or are invited to. Calendar files you add get the same reminder.",
+        "askBody": "To be reminded when {appName} isn’t the tab you’re in, let your browser show notifications.",
         "allow": "Allow notifications",
-        "blocked": "Your browser blocks FaceOn’s notifications, so reminders show only in FaceOn’s tab. Allow them in the site settings (the icon in the address bar).",
+        "blocked": "Your browser blocks {appName}’s notifications, so reminders show only in {appName}’s tab. Allow them in the site settings (the icon in the address bar).",
         "allowed": "Reminders also show as notifications from your browser."
       }
     }
@@ -1407,7 +1407,7 @@
     "notNow": "Not now",
     "suggestionHidden": "Hidden. You can connect Google Calendar any time in Settings, under Calendar.",
     "reconnect": "Reconnect Google Calendar",
-    "reconnectHelp": "Google stopped FaceOn’s access to your calendar. Reconnect so FaceOn can keep it up to date.",
+    "reconnectHelp": "Google stopped {appName}’s access to your calendar. Reconnect so {appName} can keep it up to date.",
     "connected": "Google Calendar connected",
     "onCalendar": "On your Google Calendar",
     "onCalendarHelp": "Saving updates it, and Google emails everyone invited.",
@@ -1424,9 +1424,9 @@
     "retried": "Google Calendar updated",
     "problems": {
       "emailMismatch": "That Google account uses a different email. Connect the one that uses {email}.",
-      "alreadyLinked": "That Google account is connected to a different FaceOn account.",
+      "alreadyLinked": "That Google account is connected to a different {appName} account.",
       "denied": "Google Calendar wasn’t connected.",
-      "scope": "Google Calendar wasn’t connected: FaceOn needs permission to make events in your calendar. Try again and allow it.",
+      "scope": "Google Calendar wasn’t connected: {appName} needs permission to make events in your calendar. Try again and allow it.",
       "generic": "Couldn’t connect Google Calendar. Try again."
     }
   },
@@ -1583,7 +1583,7 @@
     "remove": "Remove {name}",
     "adding": "Adding your background",
     "rejected": {
-      "type": "That file isn’t an image or video FaceOn can use.",
+      "type": "That file isn’t an image or video {appName} can use.",
       "tooBig": "That file is too big.",
       "tooLong": "Videos can be up to {seconds} seconds long.",
       "unreadable": "That file couldn’t be read."

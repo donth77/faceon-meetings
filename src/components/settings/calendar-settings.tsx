@@ -21,6 +21,7 @@ import {
 } from "@/components/google-calendar/connect";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { publicEnv } from "@/lib/env";
 import {
   connectProblem,
   type CalendarConnection,
@@ -164,7 +165,10 @@ export function CalendarSettings({
       <SettingsCard title={t("google")}>
         {problem ? (
           <FormNotice icon={Info}>
-            {tc(`problems.${problem}`, { email })}
+            {tc(`problems.${problem}`, {
+              email,
+              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+            })}
           </FormNotice>
         ) : consent.returned && connection.status === "connected" ? (
           <FormNotice icon={CircleCheck} role="status">
@@ -191,7 +195,9 @@ export function CalendarSettings({
               </Button>
             }
           >
-            <p>{t("connectBody")}</p>
+            <p>
+              {t("connectBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+            </p>
             {googleSignIn ? null : <p>{t("alsoSignIn")}</p>}
           </ConnectionState>
         ) : null}
@@ -223,7 +229,9 @@ export function CalendarSettings({
               </>
             }
           >
-            <p>{t("reconnectBody")}</p>
+            <p>
+              {t("reconnectBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+            </p>
           </ConnectionState>
         ) : null}
         {connection.status !== "unavailable" ? (
@@ -236,7 +244,9 @@ export function CalendarSettings({
         isOpen={confirming}
         onClose={() => setConfirming(false)}
         title={t("disconnectTitle")}
-        description={t("disconnectBody")}
+        description={t("disconnectBody", {
+          appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+        })}
         confirmLabel={t("disconnect")}
         cancelLabel={t("cancel")}
         isPending={disconnecting}

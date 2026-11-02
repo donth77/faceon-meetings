@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { JoinForm } from "@/components/meetings/join-form";
 import { LinkButton } from "@/components/ui/button";
+import { publicEnv } from "@/lib/env";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import type { ClosedReason } from "@/lib/meetings/rules";
 import { meetingPath, signInPath } from "@/lib/routes";
@@ -36,7 +37,10 @@ export function MeetingNotice({
 
   return (
     <MeetingPageFrame>
-      <MeetingCard title={t(`${kind}.title`)} body={t(`${kind}.body`)}>
+      <MeetingCard
+        title={t(`${kind}.title`)}
+        body={t(`${kind}.body`, { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+      >
         {joinAnother ? (
           <div className="w-full text-left">
             <JoinForm

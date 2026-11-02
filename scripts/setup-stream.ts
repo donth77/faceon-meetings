@@ -101,7 +101,11 @@ for (const [name, grants] of Object.entries(expected)) {
 const systemUserId = process.env.STREAM_SYSTEM_USER_ID || "system";
 if (!checkOnly) {
   await client.upsertUsers([
-    { id: systemUserId, name: "FaceOn", role: "admin" },
+    {
+      id: systemUserId,
+      name: process.env.NEXT_PUBLIC_APP_NAME || "FaceOn",
+      role: "admin",
+    },
   ]);
   console.log(`ok       user "${systemUserId}"`);
 }

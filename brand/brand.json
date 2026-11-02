@@ -1,0 +1,29 @@
+{
+  "name": "FaceOn",
+  "color": "#1f5eff",
+  "mark": "mark.svg",
+  "markDark": "mark-dark.svg",
+  "wordmark": {
+    "font": "fonts/BricolageGrotesque_24pt-Bold.ttf",
+    "blendWith": "fonts/BricolageGrotesque_24pt-ExtraBold.ttf",
+    "blend": 0.5,
+    "accent": "On",
+    "tracking": -6,
+    "pairs": { "Fa": -22, "ac": -4, "ce": -2, "eO": -4, "On": -6 }
+  },
+  "lockup": { "middle": 136 },
+  "preview": {
+    "title": "Video meetings in your browser",
+    "subtitle": "Free and open source · No downloads · Up to 20 people",
+    "art": "preview-art.svg"
+  },
+  "colors": {
+    "light": { "brandSoft": "#e8eeff", "brandSoftForeground": "#1a4fd6" },
+    "dark": {
+      "brand": "#4d7eff",
+      "brandForeground": "#0b0f17",
+      "brandSoft": "#1b2440",
+      "brandSoftForeground": "#7499ff"
+    }
+  }
+}

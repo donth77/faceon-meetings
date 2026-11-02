@@ -11,6 +11,7 @@
  * search are all there is.
  */
 import { optionsFor, type ModelApi } from "@/lib/ai/built-in";
+import { publicEnv } from "@/lib/env";
 
 import { fold, QUESTION_WORDS } from "./text";
 
@@ -124,7 +125,7 @@ export function relevant(docs: readonly Doc[], question: string): Doc[] {
 const EACH = 1400;
 
 export const SYSTEM =
-  "You answer questions about FaceOn, a free, open-source video meeting app that runs " +
+  `You answer questions about ${publicEnv.NEXT_PUBLIC_APP_NAME}, a free, open-source video meeting app that runs ` +
   "in the browser, like Zoom or Google Meet. People start or schedule meetings, join " +
   "with a link or a meeting ID, share their screen, chat, react and raise their hand. " +
   "Hosts let people in from the waiting room and manage the meeting with host controls. " +

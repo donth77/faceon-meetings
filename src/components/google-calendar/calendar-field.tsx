@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { dismiss, useDismissed } from "@/lib/dismissals";
+import { publicEnv } from "@/lib/env";
 import {
   connectProblem,
   type CalendarConnection,
@@ -126,7 +127,12 @@ export function GoogleCalendarField({
       onChange(true);
       toast.success(t("connected"));
     } else {
-      toast.error(t(`problems.${connectProblem(report.error)}`, { email }));
+      toast.error(
+        t(`problems.${connectProblem(report.error)}`, {
+          email,
+          appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+        }),
+      );
     }
   }
 
@@ -150,7 +156,9 @@ export function GoogleCalendarField({
         title={t("onCalendar")}
         lines={[
           {
-            text: needsReconnect ? t("reconnectHelp") : t("onCalendarHelp"),
+            text: needsReconnect
+              ? t("reconnectHelp", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })
+              : t("onCalendarHelp"),
           },
         ]}
         action={needsReconnect ? connectButton(t("reconnect")) : null}
@@ -184,7 +192,13 @@ export function GoogleCalendarField({
         icon={<CalendarDays className="size-5" aria-hidden="true" />}
         titleId={titleId}
         title={t("add")}
-        lines={[{ text: t("reconnectHelp") }]}
+        lines={[
+          {
+            text: t("reconnectHelp", {
+              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+            }),
+          },
+        ]}
         action={connectButton(t("reconnect"))}
       />
     );

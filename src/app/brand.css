@@ -1,0 +1,17 @@
+/*
+ * The brand's colors, written by `pnpm brand` from brand/brand.json: change that and run
+ * it again rather than editing this file. src/app/globals.css gives them their roles.
+ */
+:root {
+  --brand: #1f5eff;
+  --brand-foreground: #ffffff;
+  --brand-soft: #e8eeff;
+  --brand-soft-foreground: #1a4fd6;
+}
+
+.dark {
+  --brand: #4d7eff;
+  --brand-foreground: #0b0f17;
+  --brand-soft: #1b2440;
+  --brand-soft-foreground: #7499ff;
+}

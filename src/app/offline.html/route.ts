@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 
 import { routing } from "@/i18n/routing";
+import { BRAND_COLORS } from "@/lib/brand";
 import { publicEnv } from "@/lib/env";
 
 const escape = (text: string) =>
@@ -26,6 +27,7 @@ export async function GET() {
   const t = await getTranslations({ locale, namespace: "Pwa.offline" });
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
   const title = escape(t("title"));
+  const { light, dark } = BRAND_COLORS;
 
   const html = `<!doctype html>
 <html lang="${locale}">
@@ -37,9 +39,9 @@ export async function GET() {
 <meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
 <title>${title} · ${escape(appName)}</title>
 <style>
-:root { --bg: #f5f6f8; --card: #ffffff; --fg: #12161c; --muted: #4f5966; --border: #e2e5ea; --primary: #1f5eff; --on-primary: #ffffff; --ring: #1f5eff; color-scheme: light; }
+:root { --bg: #f5f6f8; --card: #ffffff; --fg: #12161c; --muted: #4f5966; --border: #e2e5ea; --primary: ${light.brand}; --on-primary: ${light.brandForeground}; --ring: ${light.brand}; color-scheme: light; }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0e1116; --card: #161a21; --fg: #eef1f5; --muted: #a3acb9; --border: #262c36; --primary: #4d7eff; --on-primary: #0b0f17; --ring: #4d7eff; color-scheme: dark; }
+  :root { --bg: #0e1116; --card: #161a21; --fg: #eef1f5; --muted: #a3acb9; --border: #262c36; --primary: ${dark.brand}; --on-primary: ${dark.brandForeground}; --ring: ${dark.brand}; color-scheme: dark; }
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }

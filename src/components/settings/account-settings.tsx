@@ -426,7 +426,10 @@ function SignIn({
     <SettingsCard title={t("emailAndSignIn")}>
       {linkError ? (
         <FormNotice icon={Info}>
-          {t(`linkErrors.${linkProblem(linkError)}`, { email: account.email })}
+          {t(`linkErrors.${linkProblem(linkError)}`, {
+            email: account.email,
+            appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+          })}
         </FormNotice>
       ) : null}
       <div className="flex max-w-[420px] flex-col gap-1.5">

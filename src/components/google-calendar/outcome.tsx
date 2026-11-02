@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { publicEnv } from "@/lib/env";
 import {
   connectProblem,
   type CalendarOutcome,
@@ -30,7 +31,12 @@ function useReconnectAndRetry(email: string) {
     });
     if (!report) return null;
     if (report.connection.status !== "connected") {
-      toast.error(t(`problems.${connectProblem(report.error)}`, { email }));
+      toast.error(
+        t(`problems.${connectProblem(report.error)}`, {
+          email,
+          appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+        }),
+      );
       return null;
     }
     return retrySync(code);

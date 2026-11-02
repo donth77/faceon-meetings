@@ -17,6 +17,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { LOCKUP_SIZE } from "@/lib/brand";
 import { publicEnv } from "@/lib/env";
 
 import { AccountMenu, type AccountUser } from "./account-menu";
@@ -43,15 +44,15 @@ export function AppSidebar({ user }: { user: AccountUser }) {
           <Image
             src="/brand/logo-lockup.svg"
             alt={appName}
-            width={979}
-            height={224}
+            width={LOCKUP_SIZE.width}
+            height={LOCKUP_SIZE.height}
             className="h-6 w-auto group-data-[collapsible=icon]:hidden dark:hidden"
           />
           <Image
             src="/brand/logo-lockup-dark.svg"
             alt={appName}
-            width={979}
-            height={224}
+            width={LOCKUP_SIZE.width}
+            height={LOCKUP_SIZE.height}
             className="hidden h-6 w-auto dark:block dark:group-data-[collapsible=icon]:hidden"
           />
           <Image

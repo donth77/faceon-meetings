@@ -2,6 +2,7 @@
  * Adding a meeting to someone's calendar without any sign-in: Google and Outlook links,
  * and an iCalendar (.ics) file for Apple Calendar and everything else.
  */
+import { publicEnv } from "@/lib/env";
 
 export type CalendarEvent = {
   /** Stable across edits, so calendars update the event instead of adding another. */
@@ -130,7 +131,7 @@ export function icsFile(event: CalendarEvent, now = new Date()): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//FaceOn//Meetings//EN",
+    `PRODID:-//${escapeText(publicEnv.NEXT_PUBLIC_APP_NAME)}//Meetings//EN`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ];

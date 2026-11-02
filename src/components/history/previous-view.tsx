@@ -52,7 +52,7 @@ function PersonAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        "flex items-center justify-center rounded-full bg-[#dbe4ff] text-xs font-bold text-[#1f3d99] dark:bg-[#1f5eff]/25 dark:text-[#c9d6ff]",
+        "bg-chip text-chip-foreground flex items-center justify-center rounded-full text-xs font-bold",
         className,
       )}
     >

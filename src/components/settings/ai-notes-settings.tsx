@@ -28,6 +28,7 @@ import {
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { setNotesInMeetingsAction } from "@/lib/account/actions";
+import { publicEnv } from "@/lib/env";
 import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
 import { ENGINES, type EngineId } from "@/lib/notes/notes";
 import {
@@ -116,7 +117,7 @@ function ModelField({
             <ListBoxItem
               id={option.id}
               textValue={option.id}
-              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-primary flex min-h-10 items-center rounded-lg px-2.5 font-mono text-[15px] outline-hidden data-selected:font-semibold"
+              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-chip-foreground flex min-h-10 items-center rounded-lg px-2.5 font-mono text-[15px] outline-hidden data-selected:font-semibold"
             >
               {option.label}
             </ListBoxItem>
@@ -283,7 +284,10 @@ export function AiNotesSettings({
 
   const choices: Record<EngineId, { title: string; help: string }> = {
     onDevice: { title: t("onDevice"), help: t("onDeviceHelp") },
-    ownKey: { title: t("ownKey"), help: t("ownKeyHelp") },
+    ownKey: {
+      title: t("ownKey"),
+      help: t("ownKeyHelp", { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
+    },
   };
 
   return (
@@ -354,7 +358,7 @@ export function AiNotesSettings({
           <div className="text-muted-foreground flex max-w-[64ch] flex-col gap-2 text-[13px] leading-normal">
             <p className="flex items-start gap-2">
               <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-              {t("keyStays")}
+              {t("keyStays", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
             </p>
             <p>{t("freeTiers")}</p>
           </div>

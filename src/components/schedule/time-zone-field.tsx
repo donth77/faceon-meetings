@@ -67,7 +67,7 @@ export function TimeZoneField({
             <ListBoxItem
               id={option.id}
               textValue={option.label}
-              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-primary flex min-h-10 items-center rounded-lg px-2.5 text-[15px] outline-hidden data-selected:font-semibold"
+              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-chip-foreground flex min-h-10 items-center rounded-lg px-2.5 text-[15px] outline-hidden data-selected:font-semibold"
             >
               {option.label}
             </ListBoxItem>

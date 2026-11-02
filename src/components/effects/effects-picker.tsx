@@ -35,6 +35,7 @@ import {
   UPLOAD_TYPES,
   UploadRejected,
 } from "@/lib/effects/uploads";
+import { publicEnv } from "@/lib/env";
 
 import type { ShownUpload } from "./use-uploads";
 
@@ -182,7 +183,10 @@ export function EffectsPicker({
       const problem =
         error instanceof UploadRejected ? error.problem : "unreadable";
       toast.error(
-        t(`rejected.${problem}`, { seconds: UPLOAD_LIMITS.videoSeconds }),
+        t(`rejected.${problem}`, {
+          seconds: UPLOAD_LIMITS.videoSeconds,
+          appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+        }),
       );
     } finally {
       setAdding(false);

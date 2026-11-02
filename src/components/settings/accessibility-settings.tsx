@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { ShortcutsList } from "@/components/shortcuts/shortcuts-list";
 import { SwitchRow } from "@/components/ui/form-fields";
+import { publicEnv } from "@/lib/env";
 import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";
@@ -20,7 +21,10 @@ export function AccessibilitySettings() {
 
   return (
     <>
-      <SectionTitle title={t("title")} intro={t("intro")} />
+      <SectionTitle
+        title={t("title")}
+        intro={t("intro", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+      />
       <SettingsCard title={t("shortcuts")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           <SwitchRow
