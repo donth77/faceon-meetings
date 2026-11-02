@@ -10,6 +10,7 @@ import {
   MonitorUp,
   MonitorX,
   PhoneOff,
+  ShieldUser,
   SmilePlus,
   Users,
   Video,
@@ -74,19 +75,19 @@ function TimeOfDay() {
   );
 }
 
-/** Leave, in red. Hosts get a choice: Leave meeting, or End meeting for all. */
+/** Leave, in red. The host gets a choice: Leave meeting, or End meeting for all. */
 function LeaveControl({
-  isHost,
+  isOwner,
   onEndForAll,
 }: {
-  isHost: boolean;
+  isOwner: boolean;
   onEndForAll: () => void;
 }) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
   const pill = (
     <Button
-      onPress={isHost ? undefined : () => void media.leave()}
+      onPress={isOwner ? undefined : () => void media.leave()}
       aria-label={t("leave")}
       className="bg-destructive hover:bg-destructive/90 focus-visible:ring-ring flex h-14 items-center gap-2 rounded-full px-5 text-[15px] font-semibold whitespace-nowrap text-white outline-none focus-visible:ring-2 max-md:w-14 max-md:justify-center max-md:px-0 md:h-11"
     >
@@ -97,7 +98,7 @@ function LeaveControl({
 
   return (
     <div className="flex pt-1 md:pl-2.5">
-      {isHost ? (
+      {isOwner ? (
         <DropdownMenuTrigger>
           {pill}
           <DropdownMenu placement="top end" className="min-w-56">
@@ -121,7 +122,7 @@ function LeaveControl({
  * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
  * without labels.
  */
-export type PanelName = "people" | "chat";
+export type PanelName = "people" | "chat" | "host";
 
 /** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
 function PanelButton({
@@ -178,15 +179,17 @@ function PanelButton({
   );
 }
 
-/** On phones, Participants and Chat live in the More menu. */
+/** On phones, Participants, Chat and Host controls live in the More menu. */
 function MoreMenu({
   peopleCount,
   unreadChat,
+  isHost,
   onOpenPanel,
   onReaction,
 }: {
   peopleCount: number;
   unreadChat: number;
+  isHost: boolean;
   onOpenPanel: (panel: PanelName) => void;
   /** Null when the host has turned reactions off. */
   onReaction: ((code: ReactionCode) => void) | null;
@@ -243,6 +246,12 @@ function MoreMenu({
               ? t("chat.withUnread", { count: unreadChat })
               : t("chat.title")}
           </DropdownMenuItem>
+          {isHost ? (
+            <DropdownMenuItem onAction={() => onOpenPanel("host")}>
+              <ShieldUser aria-hidden="true" />
+              {t("hostControls.title")}
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenu>
       </DropdownMenuTrigger>
     </div>
@@ -251,22 +260,30 @@ function MoreMenu({
 
 export function ControlBar({
   title,
+  isOwner,
   isHost,
   onEndForAll,
   panel,
   onTogglePanel,
   unreadChat,
+  onToggleMic,
+  onToggleScreenShare,
   handRaised,
   onToggleHand,
   onReaction,
 }: {
   title: string;
+  /** The meeting's owner, who can end it for everyone. */
+  isOwner: boolean;
+  /** The owner or a co-host, who get Host controls. */
   isHost: boolean;
   onEndForAll: () => void;
   /** The side panel that's open, if any. */
   panel: PanelName | null;
   onTogglePanel: (panel: PanelName) => void;
   unreadChat: number;
+  onToggleMic: () => void;
+  onToggleScreenShare: () => void;
   handRaised: boolean;
   onToggleHand: () => void;
   /** Null when the host has turned reactions off. */
@@ -291,7 +308,7 @@ export function ControlBar({
           label={mic.enabled ? t("mute") : t("unmute")}
           shortcut={shortcutLabel("D")}
           tone={mic.enabled ? "plain" : "danger"}
-          onPress={() => void mic.toggle()}
+          onPress={onToggleMic}
         >
           <DeviceMenu
             label={t("audioSettings")}
@@ -339,7 +356,7 @@ export function ControlBar({
             icon={screenShare.enabled ? MonitorX : MonitorUp}
             label={screenShare.enabled ? t("stopSharing") : t("shareScreen")}
             tone={screenShare.enabled ? "danger" : "plain"}
-            onPress={() => void screenShare.toggle()}
+            onPress={onToggleScreenShare}
           />
         ) : null}
         {onReaction ? (
@@ -356,13 +373,24 @@ export function ControlBar({
         <MoreMenu
           peopleCount={count}
           unreadChat={unreadChat}
+          isHost={isHost}
           onOpenPanel={onTogglePanel}
           onReaction={onReaction}
         />
-        <LeaveControl isHost={isHost} onEndForAll={onEndForAll} />
+        <LeaveControl isOwner={isOwner} onEndForAll={onEndForAll} />
       </div>
 
       <div className="flex flex-1 items-start justify-end gap-0.5 max-md:hidden">
+        {isHost ? (
+          <PanelButton
+            icon={ShieldUser}
+            label={t("hostControls.button")}
+            accessibleLabel={t("hostControls.title")}
+            badge={null}
+            active={panel === "host"}
+            onPress={() => onTogglePanel("host")}
+          />
+        ) : null}
         <PanelButton
           icon={Users}
           label={t("people.button")}

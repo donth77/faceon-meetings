@@ -51,6 +51,7 @@ export type JoinInput = {
 /** Why the last join attempt failed, in the terms the error messages use. */
 export type JoinErrorKind =
   | "BAD_PASSCODE"
+  | "LOCKED"
   | "FULL"
   | "BUSY"
   | "DEMO_LIMIT"

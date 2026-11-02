@@ -26,7 +26,6 @@ export type RoomParticipant = {
   name: string;
   image: string | undefined;
   isLocal: boolean;
-  isHost: boolean;
   /** When they joined (ms since epoch); keeps the tile order stable. */
   joinedAt: number;
   audio: boolean;
@@ -39,6 +38,8 @@ export type RoomParticipant = {
 export type InputDevice = {
   /** On, optimistically while a toggle is in flight. */
   enabled: boolean;
+  /** Whether you may turn it on: a host's policy can take that away. */
+  allowed: boolean;
   problem: DeviceProblem | null;
   devices: MediaDeviceInfo[];
   selectedId: string | undefined;
@@ -67,14 +68,26 @@ export type RoomMedia = {
     selectedId: string | undefined;
     select: (deviceId: string) => void;
   };
-  screenShare: { enabled: boolean; toggle: () => Promise<void> };
+  screenShare: {
+    enabled: boolean;
+    /** Whether you may share: hosts can keep sharing to themselves. */
+    allowed: boolean;
+    toggle: () => Promise<void>;
+  };
   leave: () => Promise<void>;
 
   /** Sends a chat message or prompt to everyone in the meeting. */
   sendEvent: (event: RoomEvent) => Promise<void>;
-  /** Events from others, already validated. Returns the unsubscribe function. */
+  /**
+   * Events from others, already validated; the sender is null when our server sent the
+   * event. Returns the unsubscribe function.
+   */
   subscribeEvents: (
-    handler: (event: RoomEvent, sender: EventSender) => void,
+    handler: (event: RoomEvent, sender: EventSender | null) => void,
+  ) => () => void;
+  /** When a host turns off your mic, camera or screen share. Returns the unsubscribe function. */
+  subscribeHostMutes: (
+    handler: (kind: "audio" | "video" | "screen") => void,
   ) => () => void;
   sendReaction: (code: ReactionCode) => Promise<void>;
   /** Everyone's reactions, your own included. Returns the unsubscribe function. */

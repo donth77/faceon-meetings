@@ -33,13 +33,26 @@ export type TrackKind = "audio" | "video" | "screenshare" | "screenshare_audio";
 /** Shared session state every participant sees the same way. */
 export type SessionState = {
   rev: number;
+  /** Nobody new can join. */
   locked: boolean;
   chat: boolean;
   reactions: boolean;
   screenShare: "host" | "all";
+  /** Participants may turn their own mic on. */
+  selfUnmute: boolean;
+  /** The owner's user ID, and the people promoted to co-host. */
+  host: string;
+  cohosts: string[];
+  /** Shown large for everyone: a user ID. */
+  spotlight: string | null;
   /** userId → when the hand went up (ISO 8601). */
   hands: Record<string, string>;
 };
+
+/** What someone may publish; kinds left out of a change stay as they are. */
+export type PublishPermissions = Partial<
+  Record<"audio" | "video" | "screen", boolean>
+>;
 
 /** Events the server pushes into a session. They carry no names or other personal data. */
 export type ServerEvent =
@@ -95,10 +108,10 @@ export interface MediaProvider {
   setPublishPermissions(
     sessionId: string,
     userId: string,
-    allowed: { audio: boolean; video: boolean; screen: boolean },
+    changes: PublishPermissions,
   ): Promise<void>;
-  mute(sessionId: string, userId: string, kind: TrackKind): Promise<void>;
-  muteAll(sessionId: string, kind: "audio" | "video"): Promise<void>;
+  /** Turns these tracks off; people turn them back on themselves if they're allowed to. */
+  mute(sessionId: string, userIds: string[], kinds: TrackKind[]): Promise<void>;
   remove(
     sessionId: string,
     userId: string,

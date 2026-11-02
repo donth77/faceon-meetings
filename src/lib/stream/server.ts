@@ -158,29 +158,25 @@ export const streamProvider: MediaProvider = {
     });
   },
 
-  async setPublishPermissions(sessionId, userId, allowed) {
-    const grants = Object.entries(PUBLISH_GRANTS) as Array<
-      [keyof typeof PUBLISH_GRANTS, string]
+  async setPublishPermissions(sessionId, userId, changes) {
+    const kinds = Object.keys(PUBLISH_GRANTS) as Array<
+      keyof typeof PUBLISH_GRANTS
     >;
+    const grants = (allowed: boolean) =>
+      kinds.filter((k) => changes[k] === allowed).map((k) => PUBLISH_GRANTS[k]);
+    // Stream turns off whatever someone is no longer allowed to publish.
     await callOf(sessionId).updateUserPermissions({
       user_id: userId,
-      grant_permissions: grants.filter(([k]) => allowed[k]).map(([, g]) => g),
-      revoke_permissions: grants.filter(([k]) => !allowed[k]).map(([, g]) => g),
+      grant_permissions: grants(true),
+      revoke_permissions: grants(false),
     });
   },
 
-  async mute(sessionId, userId, kind: TrackKind) {
+  async mute(sessionId, userIds, kinds: TrackKind[]) {
+    if (userIds.length === 0) return;
     await callOf(sessionId).muteUsers({
-      user_ids: [userId],
-      [kind]: true,
-      muted_by_id: systemUserId(),
-    });
-  },
-
-  async muteAll(sessionId, kind) {
-    await callOf(sessionId).muteUsers({
-      mute_all_users: true,
-      [kind]: true,
+      user_ids: userIds,
+      ...Object.fromEntries(kinds.map((kind) => [kind, true])),
       muted_by_id: systemUserId(),
     });
   },

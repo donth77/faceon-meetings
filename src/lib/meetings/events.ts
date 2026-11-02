@@ -5,6 +5,8 @@
  */
 import { z } from "zod";
 
+import { SessionPolicy } from "./policy";
+
 /** The reaction set, in menu order. Receivers ignore any other code. */
 export const REACTIONS = [
   { code: ":like:", emoji: "👍", name: "thumbsUp" },
@@ -42,21 +44,35 @@ export const RoomEvent = z.discriminatedUnion("type", [
 ]);
 export type RoomEvent = z.infer<typeof RoomEvent>;
 
-/** Who sent an event, as the provider reports it. */
+/** Who sent an event, as the provider reports it; null when our server sent it. */
 export type EventSender = { userId: string; name: string; image?: string };
 
 /**
  * The session's shared state, which the server publishes (complete, with an increasing
- * `rev`) for every participant: raised hands and the host's policies.
+ * `rev`) for every participant: who hosts, raised hands, the spotlight and the hosts'
+ * policies.
  */
-export const SharedSessionState = z.object({
+export const SharedSessionState = SessionPolicy.extend({
   v: z.literal(1),
   rev: z.number().int(),
-  locked: z.boolean(),
-  chat: z.boolean(),
-  reactions: z.boolean(),
-  screenShare: z.enum(["host", "all"]),
+  // Defaults keep sessions that started before these existed readable. Stream stores an
+  // empty list as null, so lists and maps accept null too.
+  selfUnmute: z.boolean().default(true),
+  /** The owner's media user ID. */
+  host: z.string().default(""),
+  cohosts: z
+    .array(z.string())
+    .nullish()
+    .transform((ids) => ids ?? []),
+  /** Shown large for everyone: a media user ID. */
+  spotlight: z
+    .string()
+    .nullish()
+    .transform((id) => id ?? null),
   /** Media user ID → when the hand went up (ISO 8601). */
-  hands: z.record(z.string(), z.string()),
+  hands: z
+    .record(z.string(), z.string())
+    .nullish()
+    .transform((hands) => hands ?? {}),
 });
 export type SharedSessionState = z.infer<typeof SharedSessionState>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import type { ReactionCode } from "@/lib/meetings/events";
 
@@ -22,21 +22,23 @@ const MAX_FLOATING = 12;
 const PER_SENDER_PER_10S = 10;
 
 /**
- * Everyone's reactions over the last few seconds. Turned off when the host disallows
- * reactions; a sender who floods is cut off after a few per 10 seconds.
+ * Everyone's reactions over the last few seconds. With reactions off, only hosts' get
+ * through; a sender who floods is cut off after a few per 10 seconds.
  */
 export function useReactions(
   subscribe: RoomMedia["subscribeReactions"],
-  enabled: boolean,
+  /** Whether to show a reaction from this sender. */
+  accepts: (userId: string) => boolean,
 ) {
   const [reactions, setReactions] = useState<LiveReaction[]>([]);
   const nextId = useRef(0);
   const perSender = useRef(new Map<string, number[]>());
+  const accepted = useEffectEvent(accepts);
 
   useEffect(() => {
-    if (!enabled) return;
     const timers = new Set<ReturnType<typeof setTimeout>>();
     const unsubscribe = subscribe(({ userId, code }) => {
+      if (!accepted(userId)) return;
       const now = Date.now();
       const recent = (perSender.current.get(userId) ?? []).filter(
         (at) => now - at < 10_000,
@@ -57,7 +59,7 @@ export function useReactions(
       timers.forEach(clearTimeout);
       setReactions([]);
     };
-  }, [subscribe, enabled]);
+  }, [subscribe]);
 
   return reactions;
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import type { MeetingRole } from "@/lib/media/types";
+
 import {
+  canModerate,
   checkEntry,
   isSessionStale,
   passcodeMatches,
@@ -94,6 +97,7 @@ describe("checkEntry", () => {
     givenPasscode: "K7XQ2M",
     isMember: false,
     isBanned: false,
+    locked: false,
     hostPresent: true,
     connectedCount: 1,
     maxParticipants: 20,
@@ -134,9 +138,127 @@ describe("checkEntry", () => {
     expect(checkEntry({ ...facts, settings, hostPresent: true })).toBeNull();
   });
 
+  it("keeps newcomers out of a locked meeting, but lets members and hosts back in", () => {
+    const locked = { ...facts, locked: true };
+    expect(checkEntry(locked)).toBe("LOCKED");
+    expect(checkEntry({ ...locked, isMember: true })).toBeNull();
+    expect(
+      checkEntry({ ...locked, role: "host", givenPasscode: undefined }),
+    ).toBeNull();
+  });
+
   it("turns people away from a full meeting unless they're already in it", () => {
     const full = { ...facts, connectedCount: 20 };
     expect(checkEntry(full)).toBe("FULL");
     expect(checkEntry({ ...full, alreadyConnected: true })).toBeNull();
+  });
+});
+
+describe("canModerate", () => {
+  const someone = (role: MeetingRole, isSelf = false) => ({ role, isSelf });
+
+  it("lets only hosts and co-hosts moderate", () => {
+    for (const actor of ["participant", "guest"] as const) {
+      expect(canModerate({ actor, action: "muteAll", target: null })).toBe(
+        false,
+      );
+      expect(
+        canModerate({ actor, action: "mute", target: someone("guest") }),
+      ).toBe(false);
+      expect(canModerate({ actor, action: "setPolicy", target: null })).toBe(
+        false,
+      );
+    }
+    for (const actor of ["host", "cohost"] as const) {
+      expect(canModerate({ actor, action: "muteAll", target: null })).toBe(
+        true,
+      );
+      expect(canModerate({ actor, action: "setPolicy", target: null })).toBe(
+        true,
+      );
+      expect(canModerate({ actor, action: "spotlight", target: null })).toBe(
+        true,
+      );
+      expect(
+        canModerate({ actor, action: "mute", target: someone("host") }),
+      ).toBe(true);
+    }
+  });
+
+  it("asks others to unmute, not yourself", () => {
+    expect(
+      canModerate({
+        actor: "cohost",
+        action: "askToUnmute",
+        target: someone("guest"),
+      }),
+    ).toBe(true);
+    expect(
+      canModerate({
+        actor: "host",
+        action: "askToUnmute",
+        target: someone("host", true),
+      }),
+    ).toBe(false);
+  });
+
+  it("never removes the host or yourself; co-hosts don't remove co-hosts", () => {
+    const remove = (
+      actor: MeetingRole,
+      target: { role: MeetingRole; isSelf: boolean },
+    ) => canModerate({ actor, action: "remove", target });
+    expect(remove("host", someone("guest"))).toBe(true);
+    expect(remove("host", someone("cohost"))).toBe(true);
+    expect(remove("cohost", someone("participant"))).toBe(true);
+    expect(remove("cohost", someone("cohost"))).toBe(false);
+    expect(remove("cohost", someone("host"))).toBe(false);
+    expect(remove("host", someone("host", true))).toBe(false);
+  });
+
+  it("lets only the host make and unmake co-hosts", () => {
+    expect(
+      canModerate({
+        actor: "host",
+        action: "makeCohost",
+        target: someone("guest"),
+      }),
+    ).toBe(true);
+    expect(
+      canModerate({
+        actor: "cohost",
+        action: "makeCohost",
+        target: someone("participant"),
+      }),
+    ).toBe(false);
+    expect(
+      canModerate({
+        actor: "host",
+        action: "makeCohost",
+        target: someone("cohost"),
+      }),
+    ).toBe(false);
+    expect(
+      canModerate({
+        actor: "host",
+        action: "removeCohost",
+        target: someone("cohost"),
+      }),
+    ).toBe(true);
+    expect(
+      canModerate({
+        actor: "host",
+        action: "removeCohost",
+        target: someone("participant"),
+      }),
+    ).toBe(false);
+  });
+
+  it("needs someone to act on", () => {
+    expect(canModerate({ actor: "host", action: "mute", target: null })).toBe(
+      false,
+    );
+    expect(canModerate({ actor: "host", action: "remove", target: null })).toBe(
+      false,
+    );
   });
 });

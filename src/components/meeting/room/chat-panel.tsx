@@ -78,10 +78,13 @@ function Message({ message }: { message: ChatMessage }) {
 /** Chat: everyone sees it; nothing is saved after the meeting. */
 export function ChatPanel({
   messages,
+  canSend,
   onSend,
   onClose,
 }: {
   messages: ChatMessage[];
+  /** False when a host turned chat off for participants. */
+  canSend: boolean;
   onSend: (text: string) => Promise<void>;
   onClose: () => void;
 }) {
@@ -136,8 +139,17 @@ export function ChatPanel({
           <Message key={message.id} message={message} />
         ))}
       </ol>
+      {canSend ? null : (
+        <p
+          role="status"
+          className="text-muted-foreground shrink-0 border-t px-5 py-4 text-center text-sm"
+        >
+          {t("off")}
+        </p>
+      )}
       <form
         onSubmit={handleSubmit}
+        hidden={!canSend}
         className="flex shrink-0 items-end gap-2 border-t px-3.5 pt-2.5 pb-3.5"
       >
         <label htmlFor={inputId} className="sr-only">

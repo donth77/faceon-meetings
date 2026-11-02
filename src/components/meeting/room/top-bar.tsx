@@ -6,6 +6,7 @@ import {
   Copy,
   LayoutGrid,
   Link2,
+  Lock,
   ShieldCheck,
   SwitchCamera,
 } from "lucide-react";
@@ -221,6 +222,21 @@ function FlipCamera() {
   );
 }
 
+/** A lock beside the title while a host has locked the meeting. */
+function LockedMark() {
+  const t = useTranslations("Meeting");
+  const locked = useRoomMedia().sessionState?.locked ?? false;
+  if (!locked) return null;
+  return (
+    <TooltipTrigger delay={300}>
+      <Button className="text-muted-foreground focus-visible:ring-ring flex size-7 items-center justify-center rounded-lg outline-none hover:bg-white/10 focus-visible:ring-2">
+        <Lock className="size-4" aria-label={t("locked")} />
+      </Button>
+      <Tooltip>{t("lockedHelp")}</Tooltip>
+    </TooltipTrigger>
+  );
+}
+
 /** Meeting name and info on the left; switch camera, timer and Layout on the right. */
 export function TopBar({
   title,
@@ -245,6 +261,7 @@ export function TopBar({
         <span className="text-muted-foreground font-mono text-[13px] whitespace-nowrap max-sm:hidden">
           {formatMeetingCode(meeting.code)}
         </span>
+        <LockedMark />
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
         <FlipCamera />

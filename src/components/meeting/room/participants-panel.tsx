@@ -2,19 +2,25 @@
 
 import { Hand, Link2, Mic, MicOff, Search, VideoOff } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
 import type { AdmittedMeetingInfo } from "@/lib/meetings/api";
 
 import { useInvitation } from "../invitation";
 import { useRoomMedia, type RoomParticipant } from "../media";
+import { ParticipantMenu } from "./participant-menu";
+import { moderates } from "./roles";
+import { useRoomControls } from "./room-controls";
 import { SidePanel } from "./side-panel";
 import { orderParticipants } from "./stage";
 
 /** Guests' media identities start with "g_" (signed-in people have "u_"). */
 const isGuest = (participant: RoomParticipant) =>
   participant.userId.startsWith("g_");
+
+const FOOTER_BUTTON =
+  "focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2";
 
 function ParticipantRow({
   participant,
@@ -29,14 +35,16 @@ function ParticipantRow({
 }) {
   const t = useTranslations("Meeting.people");
   const th = useTranslations("Meeting.hand");
+  const { roleOf } = useRoomControls();
+  const role = roleOf(participant.userId);
   const tags = [
     participant.isLocal ? t("you") : null,
-    participant.isHost ? t("host") : null,
+    role === "host" ? t("host") : role === "cohost" ? t("cohost") : null,
     isGuest(participant) ? t("guest") : null,
   ].filter(Boolean);
 
   return (
-    <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
+    <li className="group/row flex items-center gap-2.5 py-1.5 pr-3 pl-5 hover:bg-white/[0.04]">
       {participant.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -81,35 +89,60 @@ function ParticipantRow({
             aria-label={t("muted")}
           />
         )}
+        <ParticipantMenu
+          participant={participant}
+          className="text-foreground opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 hover:bg-white/10 aria-expanded:opacity-100 pointer-coarse:opacity-100"
+        />
       </span>
     </li>
   );
 }
 
-/** Participants: everyone in the meeting, searchable, with an Invite button. */
+function SectionHeading({
+  children,
+  action,
+}: {
+  children: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between pr-3 pb-1.5 pl-5">
+      <h3 className="text-muted-foreground text-xs font-bold tracking-[0.06em] uppercase">
+        {children}
+      </h3>
+      {action}
+    </div>
+  );
+}
+
+/**
+ * Participants: everyone in the meeting, searchable, with raised hands on top in the
+ * order they went up. Hosts get Mute all and each person's ⋯ menu of host actions.
+ */
 export function ParticipantsPanel({
   meeting,
   hands,
-  isHost,
   onLowerHand,
   onLowerAll,
+  onMuteAll,
   onClose,
 }: {
   meeting: AdmittedMeetingInfo;
   hands: Record<string, string>;
-  isHost: boolean;
   onLowerHand: (userId: string) => void;
   onLowerAll: () => void;
+  onMuteAll: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations("Meeting.people");
   const th = useTranslations("Meeting.hand");
   const media = useRoomMedia();
+  const { selfRole } = useRoomControls();
+  const isHost = moderates(selfRole);
   const { copyInvitation } = useInvitation(meeting);
   const searchId = useId();
   const [query, setQuery] = useState("");
 
-  // Raised hands first, in the order they went up, then everyone else.
   const queue = Object.entries(hands)
     .sort(([, a], [, b]) => a.localeCompare(b))
     .map(([userId]) => userId);
@@ -117,13 +150,24 @@ export function ParticipantsPanel({
     const index = queue.indexOf(p.userId);
     return index === -1 ? null : index + 1;
   };
-  const everyone = orderParticipants(media.participants).sort(
-    (a, b) => (handNumber(a) ?? Infinity) - (handNumber(b) ?? Infinity),
-  );
+  const everyone = orderParticipants(media.participants);
   const q = query.trim().toLocaleLowerCase();
   const shown = q
     ? everyone.filter((p) => p.name.toLocaleLowerCase().includes(q))
     : everyone;
+  const raised = shown
+    .filter((p) => handNumber(p) !== null)
+    .sort((a, b) => (handNumber(a) ?? 0) - (handNumber(b) ?? 0));
+  const rest = shown.filter((p) => handNumber(p) === null);
+
+  const row = (participant: RoomParticipant) => (
+    <ParticipantRow
+      key={participant.key}
+      participant={participant}
+      handNumber={handNumber(participant)}
+      onLowerHand={isHost ? () => onLowerHand(participant.userId) : null}
+    />
+  );
 
   return (
     <SidePanel
@@ -132,18 +176,15 @@ export function ParticipantsPanel({
       onClose={onClose}
       footer={
         <>
-          {isHost && queue.length > 0 ? (
-            <Button
-              onPress={onLowerAll}
-              className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
-            >
-              <Hand className="size-[18px]" aria-hidden="true" />
-              {th("lowerAll")}
+          {isHost ? (
+            <Button onPress={onMuteAll} className={FOOTER_BUTTON}>
+              <MicOff className="size-[18px]" aria-hidden="true" />
+              {t("muteAll")}
             </Button>
           ) : null}
           <Button
             onPress={() => void copyInvitation()}
-            className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+            className={FOOTER_BUTTON}
           >
             <Link2 className="size-[18px]" aria-hidden="true" />
             {t("invite")}
@@ -169,27 +210,37 @@ export function ParticipantsPanel({
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-2">
-        <h3 className="text-muted-foreground px-5 pb-1.5 text-xs font-bold tracking-[0.06em] uppercase">
-          {t("inMeeting")}
-        </h3>
-        {shown.length > 0 ? (
-          <ul>
-            {shown.map((participant) => (
-              <ParticipantRow
-                key={participant.key}
-                participant={participant}
-                handNumber={handNumber(participant)}
-                onLowerHand={
-                  isHost ? () => onLowerHand(participant.userId) : null
-                }
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted-foreground px-5 py-3 text-sm">
-            {t("noMatch")}
-          </p>
-        )}
+        {raised.length > 0 ? (
+          <section className="pb-3">
+            <SectionHeading
+              action={
+                isHost ? (
+                  <Button
+                    onPress={onLowerAll}
+                    className="text-primary focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+                  >
+                    {th("lowerAll")}
+                  </Button>
+                ) : undefined
+              }
+            >
+              {t("raisedHands", { count: raised.length })}
+            </SectionHeading>
+            <ul>{raised.map(row)}</ul>
+          </section>
+        ) : null}
+        {rest.length > 0 || raised.length === 0 ? (
+          <section>
+            <SectionHeading>{t("inMeeting")}</SectionHeading>
+            {rest.length > 0 ? (
+              <ul>{rest.map(row)}</ul>
+            ) : (
+              <p className="text-muted-foreground px-5 py-3 text-sm">
+                {t("noMatch")}
+              </p>
+            )}
+          </section>
+        ) : null}
       </div>
     </SidePanel>
   );

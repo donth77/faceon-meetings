@@ -5,6 +5,7 @@ import {
   hasAudio,
   hasScreenShare,
   hasVideo,
+  OwnCapability,
   ParticipantsAudio,
   SfuModels,
   useCallStateHooks,
@@ -36,8 +37,6 @@ import {
 } from "../../media";
 import { StreamTrackView } from "./stream-track-view";
 
-const HOST_ROLES = new Set(["host", "cohost"]);
-
 function connectionOf(p: StreamVideoParticipant): ConnectionQuality {
   switch (p.connectionQuality) {
     case SfuModels.ConnectionQuality.POOR:
@@ -64,7 +63,6 @@ function toRoomParticipant(
     name: p.name || p.userId,
     image: p.image || undefined,
     isLocal: p.isLocalParticipant === true,
-    isHost: p.roles.some((role) => HOST_ROLES.has(role)),
     joinedAt: joinedAt > 0 ? joinedAt - clockSkew : 0,
     audio: hasAudio(p),
     video: hasVideo(p),
@@ -108,6 +106,7 @@ export function StreamMedia({
     useSpeakerState,
     useScreenShareState,
     useCallCustomData,
+    useHasPermissions,
   } = useCallStateHooks();
   const participants = useParticipants();
   const callingState = useCallCallingState();
@@ -116,6 +115,10 @@ export function StreamMedia({
   const camera = useCameraState({ optimisticUpdates: true });
   const speaker = useSpeakerState();
   const screenShare = useScreenShareState({ optimisticUpdates: true });
+  // Hosts' policies revoke these; Stream stops the track when one is taken away.
+  const canSendAudio = useHasPermissions(OwnCapability.SEND_AUDIO);
+  const canSendVideo = useHasPermissions(OwnCapability.SEND_VIDEO);
+  const canShare = useHasPermissions(OwnCapability.SCREENSHARE);
   // Our server writes the complete state in order, so the latest custom data is current.
   const customData = useCallCustomData();
   const sessionState = useMemo(() => {
@@ -176,6 +179,7 @@ export function StreamMedia({
       | "subscribeEvents"
       | "sendReaction"
       | "subscribeReactions"
+      | "subscribeHostMutes"
     >
   >(
     () => ({
@@ -190,6 +194,12 @@ export function StreamMedia({
         call.on("custom", (event) => {
           const parsed = RoomEvent.safeParse(event.custom);
           if (!parsed.success) return;
+          // Our server sends as its own user, the only one with Stream's admin role.
+          // Only server-side code can give a user that role.
+          if (event.user.role === "admin") {
+            handler(parsed.data, null);
+            return;
+          }
           handler(parsed.data, {
             userId: event.user.id,
             name: event.user.name || event.user.id,
@@ -206,6 +216,21 @@ export function StreamMedia({
             handler({ userId: event.reaction.user.id, code });
           }
         }),
+      subscribeHostMutes: (handler) =>
+        call.on("trackUnpublished", (event) => {
+          const self = call.state.localParticipant;
+          if (
+            event.cause !== SfuModels.TrackUnpublishReason.MODERATION ||
+            !self ||
+            event.sessionId !== self.sessionId
+          ) {
+            return;
+          }
+          const { TrackType } = SfuModels;
+          if (event.type === TrackType.AUDIO) handler("audio");
+          else if (event.type === TrackType.VIDEO) handler("video");
+          else if (event.type === TrackType.SCREEN_SHARE) handler("screen");
+        }),
     }),
     [call],
   );
@@ -218,6 +243,7 @@ export function StreamMedia({
       dominantSpeakerKey: dominantSpeaker?.sessionId,
       mic: {
         enabled: !mic.optionsAwareIsMute,
+        allowed: canSendAudio,
         problem: mic.error ? deviceProblem(mic.error) : null,
         devices: mic.devices,
         selectedId: mic.selectedDevice,
@@ -226,6 +252,7 @@ export function StreamMedia({
       },
       camera: {
         enabled: !camera.optionsAwareIsMute,
+        allowed: canSendVideo,
         problem: camera.error ? deviceProblem(camera.error) : null,
         devices: camera.devices,
         selectedId: camera.selectedDevice,
@@ -242,6 +269,7 @@ export function StreamMedia({
       },
       screenShare: {
         enabled: !screenShare.optionsAwareIsMute,
+        allowed: canShare,
         toggle: () => screenShare.screenShare.toggle(),
       },
       ...actions,
@@ -249,6 +277,9 @@ export function StreamMedia({
     [
       actions,
       callingState,
+      canSendAudio,
+      canSendVideo,
+      canShare,
       clockSkew,
       participants,
       dominantSpeaker,

@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useRoomMedia, type RoomParticipant } from "../media";
 import { fitGrid } from "./grid";
+import { useRoomControls } from "./room-controls";
 import { Tile } from "./tile";
 
 export type LayoutChoice = "auto" | "gallery" | "speaker";
@@ -43,24 +44,55 @@ function useSteadyValue<T>(value: T, delayMs: number): T {
 
 const tileKey = (tile: StageTile) => `${tile.participant.key}:${tile.kind}`;
 
+const videoOf = (participant: RoomParticipant): StageTile => ({
+  participant,
+  kind: "video",
+});
+
 /**
- * The video area. Auto shows a shared screen large, a one-on-one call as the other
- * person with you floating in the corner, and anything bigger as a gallery.
+ * The video area. Someone you pinned comes first, then a shared screen, then whoever a
+ * host spotlighted. Otherwise Auto shows a one-on-one call as the other person with
+ * you floating in the corner, and anything bigger as a gallery.
  */
 export function Stage({ layout }: { layout: LayoutChoice }) {
   const media = useRoomMedia();
+  const { pinnedKey, spotlight } = useRoomControls();
   const people = orderParticipants(media.participants);
   const presenter = people.find((p) => p.screen);
+  const screen: StageTile[] = presenter
+    ? [{ participant: presenter, kind: "screen" }]
+    : [];
   const speakerKey = useSteadyValue(
     media.dominantSpeakerKey,
     SPEAKER_SWITCH_MS,
   );
 
+  const pinned = people.find((p) => p.key === pinnedKey);
+  if (pinned) {
+    return (
+      <FocusLayout
+        main={videoOf(pinned)}
+        strip={[...screen, ...people.filter((p) => p !== pinned).map(videoOf)]}
+      />
+    );
+  }
   if (presenter && layout !== "gallery") {
     return (
       <FocusLayout
         main={{ participant: presenter, kind: "screen" }}
-        strip={people}
+        strip={people.map(videoOf)}
+      />
+    );
+  }
+  const spotlighted = people.find((p) => p.userId === spotlight);
+  if (spotlighted) {
+    return (
+      <FocusLayout
+        main={videoOf(spotlighted)}
+        strip={[
+          ...screen,
+          ...people.filter((p) => p !== spotlighted).map(videoOf),
+        ]}
       />
     );
   }
@@ -75,8 +107,8 @@ export function Stage({ layout }: { layout: LayoutChoice }) {
   if (layout === "speaker" && speaker) {
     return (
       <FocusLayout
-        main={{ participant: speaker, kind: "video" }}
-        strip={people.filter((p) => p !== speaker)}
+        main={videoOf(speaker)}
+        strip={people.filter((p) => p !== speaker).map(videoOf)}
       />
     );
   }
@@ -181,13 +213,7 @@ function MainTile({ tile }: { tile: StageTile }) {
 }
 
 /** One tile large (a shared screen or the speaker), everyone else in a strip beside it. */
-function FocusLayout({
-  main,
-  strip,
-}: {
-  main: StageTile;
-  strip: RoomParticipant[];
-}) {
+function FocusLayout({ main, strip }: { main: StageTile; strip: StageTile[] }) {
   const t = useTranslations("Meeting");
   return (
     <div className="flex size-full flex-col gap-2.5 lg:flex-row">
@@ -201,12 +227,12 @@ function FocusLayout({
           aria-label={t("stageLabel")}
           className="flex shrink-0 gap-2.5 overflow-x-auto lg:w-56 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto"
         >
-          {strip.map((participant) => (
+          {strip.map((tile) => (
             <li
-              key={participant.key}
+              key={tileKey(tile)}
               className="aspect-video h-24 shrink-0 lg:h-auto lg:w-full"
             >
-              <Tile participant={participant} />
+              <MainTile tile={tile} />
             </li>
           ))}
         </ul>

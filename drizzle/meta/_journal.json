@@ -29,6 +29,13 @@
       "when": 1793578801292,
       "tag": "0003_session_hands",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793580183071,
+      "tag": "0004_session_policy",
+      "breakpoints": true
     }
   ]
 }

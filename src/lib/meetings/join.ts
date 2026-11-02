@@ -8,6 +8,7 @@ import { serverEnv } from "@/lib/server-env";
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import type { JoinResponse } from "./api";
 import { MeetingError } from "./errors";
+import { withheldFrom } from "./moderation";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
@@ -18,8 +19,8 @@ import {
   upsertMember,
   type MeetingHost,
 } from "./queries";
-import { checkEntry, isJoinable, resolveRole } from "./rules";
-import { sessionState } from "./session-state";
+import { checkEntry, isHostRole, isJoinable, resolveRole } from "./rules";
+import { sessionPolicy, sessionState } from "./session-state";
 import { currentSession, secondsLeft, startSession } from "./sessions";
 
 const hostMediaUser = (host: MeetingHost) => ({
@@ -75,6 +76,7 @@ export async function joinMeeting(input: {
     givenPasscode: input.passcode,
     isMember: member !== null,
     isBanned: member?.bannedAt != null,
+    locked: live ? sessionPolicy(meeting, live.row).locked : false,
     hostPresent: connected.some((id) => hostIds.includes(id)),
     connectedCount: connected.length,
     maxParticipants: live?.row.limits.maxParticipants ?? Infinity,
@@ -94,7 +96,7 @@ export async function joinMeeting(input: {
       sessionId: session.row.id,
       host: hostMediaUser(host),
       limits: session.row.limits,
-      state: sessionState(meeting, session.row),
+      state: sessionState(meeting, session.row, []),
     });
   }
 
@@ -116,6 +118,13 @@ export async function joinMeeting(input: {
     user: self,
     role,
   });
+  // Before they connect: what the hosts' policies withhold from participants.
+  const withheld = isHostRole(role)
+    ? null
+    : withheldFrom(sessionPolicy(meeting, session.row));
+  if (withheld) {
+    await provider.setPublishPermissions(session.row.id, self.id, withheld);
+  }
 
   return {
     state: "admitted",

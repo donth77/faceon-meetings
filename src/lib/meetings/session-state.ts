@@ -1,49 +1,87 @@
 import "server-only";
 
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { meetingSession } from "@/lib/db/schema";
+import { meetingMember, meetingSession } from "@/lib/db/schema";
 import { mediaProvider } from "@/lib/media";
 import type { SessionState } from "@/lib/media/types";
 
+import { policyFromSettings, type SessionPolicy } from "./policy";
+import { userMediaId } from "./principal";
 import type { Meeting, MeetingSession } from "./queries";
+
+/** The session's policies: the meeting's settings, with the hosts' changes on top. */
+export function sessionPolicy(
+  meeting: Meeting,
+  session: Pick<MeetingSession, "policy">,
+): SessionPolicy {
+  return { ...policyFromSettings(meeting.settings), ...session.policy };
+}
 
 /** The complete shared state of a session, as every participant receives it. */
 export function sessionState(
   meeting: Meeting,
-  session: Pick<MeetingSession, "hands" | "rev">,
+  session: Pick<MeetingSession, "hands" | "rev" | "policy" | "spotlight">,
+  cohosts: string[],
 ): SessionState {
   return {
     rev: session.rev,
-    locked: false,
-    chat: meeting.settings.chat,
-    reactions: meeting.settings.reactions,
-    screenShare: meeting.settings.screenShare,
+    ...sessionPolicy(meeting, session),
+    host: userMediaId(meeting.hostId),
+    cohosts,
+    spotlight: session.spotlight,
     hands: session.hands,
   };
 }
 
-export type HandChange =
-  { raise: string } | { lower: string } | { lowerAll: true };
+export type SessionChange =
+  | { raise: string }
+  | { lower: string }
+  | { lowerAll: true }
+  | { policy: Partial<SessionPolicy> }
+  | { spotlight: string | null }
+  /** Someone was removed: their hand goes down and their spotlight ends. */
+  | { forget: string }
+  /** Someone became, or stopped being, a co-host. */
+  | { roles: true };
 
-function handsAfter(change: HandChange, now: Date) {
-  const hands = meetingSession.hands;
-  if ("lowerAll" in change) return sql`'{}'::jsonb`;
-  if ("lower" in change) return sql`${hands} - ${change.lower}::text`;
-  // A hand that's already up keeps its place in the queue.
-  return sql`case when jsonb_exists(${hands}, ${change.raise}::text) then ${hands}
-    else ${hands} || jsonb_build_object(${change.raise}::text, ${now.toISOString()}::text) end`;
+function updatesFor(change: SessionChange, now: Date) {
+  const { hands, policy, spotlight } = meetingSession;
+  if ("lowerAll" in change) return { hands: sql`'{}'::jsonb` };
+  if ("lower" in change) {
+    return { hands: sql`${hands} - ${change.lower}::text` };
+  }
+  if ("raise" in change) {
+    // A hand that's already up keeps its place in the queue.
+    return {
+      hands: sql`case when jsonb_exists(${hands}, ${change.raise}::text) then ${hands}
+        else ${hands} || jsonb_build_object(${change.raise}::text, ${now.toISOString()}::text) end`,
+    };
+  }
+  if ("policy" in change) {
+    return {
+      policy: sql`${policy} || ${JSON.stringify(change.policy)}::jsonb`,
+    };
+  }
+  if ("spotlight" in change) return { spotlight: change.spotlight };
+  if ("forget" in change) {
+    return {
+      hands: sql`${hands} - ${change.forget}::text`,
+      spotlight: sql`nullif(${spotlight}, ${change.forget}::text)`,
+    };
+  }
+  return {};
 }
 
 /**
- * Raises or lowers hands, then publishes the session's state. One writer per session at
+ * Changes the session's shared state, then publishes all of it. One writer per session at
  * a time (an advisory lock), so updates reach the provider in order and none is lost.
  */
-export async function changeHands(
+export async function changeSession(
   meeting: Meeting,
   session: MeetingSession,
-  change: HandChange,
+  change: SessionChange,
 ): Promise<SessionState> {
   return db().transaction(async (tx) => {
     await tx.execute(
@@ -52,13 +90,27 @@ export async function changeHands(
     const [row] = await tx
       .update(meetingSession)
       .set({
-        hands: handsAfter(change, new Date()),
+        ...updatesFor(change, new Date()),
         rev: sql`${meetingSession.rev} + 1`,
       })
       .where(eq(meetingSession.id, session.id))
-      .returning({ hands: meetingSession.hands, rev: meetingSession.rev });
+      .returning();
     if (!row) throw new Error("The session is gone.");
-    const state = sessionState(meeting, row);
+    const cohosts = await tx
+      .select({ id: meetingMember.mediaUserId })
+      .from(meetingMember)
+      .where(
+        and(
+          eq(meetingMember.sessionId, session.id),
+          eq(meetingMember.role, "cohost"),
+          isNull(meetingMember.bannedAt),
+        ),
+      );
+    const state = sessionState(
+      meeting,
+      row,
+      cohosts.map((c) => c.id),
+    );
     await mediaProvider(session.provider).setSessionState(session.id, state);
     return state;
   });

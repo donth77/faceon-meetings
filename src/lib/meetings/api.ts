@@ -6,11 +6,14 @@ import { z } from "zod";
 
 import type { JoinInfo, MeetingRole } from "@/lib/media/types";
 
+import { SessionPolicy } from "./policy";
+
 /** Error codes with their HTTP status. The client shows a message for each code. */
 export const MEETING_ERRORS = {
   BAD_REQUEST: 400,
   SIGN_IN_REQUIRED: 401,
   BAD_PASSCODE: 403,
+  LOCKED: 403,
   REMOVED: 403,
   NOT_ALLOWED: 403,
   NOT_FOUND: 404,
@@ -83,9 +86,37 @@ export const TokenRequest = z.object({ room: z.uuid() });
 export type TokenRequest = z.infer<typeof TokenRequest>;
 export type TokenResponse = { token: string };
 
+/** Someone's identity in the meeting (a media user ID). */
+const MemberId = z.string().min(1).max(128);
+
 /** Raise or lower your hand; hosts can lower anyone's, or everyone's. */
 export const HandRequest = z.union([
-  z.object({ raised: z.boolean(), target: z.string().max(128).optional() }),
+  z.object({ raised: z.boolean(), target: MemberId.optional() }),
   z.object({ lowerAll: z.literal(true) }),
 ]);
 export type HandRequest = z.infer<typeof HandRequest>;
+
+/** What hosts and co-hosts can do to others, and to the meeting. */
+export const ModerateRequest = z.discriminatedUnion("action", [
+  /** Turn off someone's mic, camera or screen share. */
+  z.object({
+    action: z.literal("mute"),
+    target: MemberId,
+    kind: z.enum(["audio", "video", "screenshare"]),
+  }),
+  /** Mute everyone but hosts and co-hosts, and say whether they may unmute. */
+  z.object({ action: z.literal("muteAll"), selfUnmute: z.boolean() }),
+  z.object({ action: z.literal("askToUnmute"), target: MemberId }),
+  /** Show someone large for everyone; null ends the spotlight. */
+  z.object({ action: z.literal("spotlight"), target: MemberId.nullable() }),
+  z.object({ action: z.literal("remove"), target: MemberId }),
+  z.object({ action: z.literal("makeCohost"), target: MemberId }),
+  z.object({ action: z.literal("removeCohost"), target: MemberId }),
+  z.object({
+    action: z.literal("setPolicy"),
+    policy: SessionPolicy.partial().refine(
+      (policy) => Object.keys(policy).length > 0,
+    ),
+  }),
+]);
+export type ModerateRequest = z.infer<typeof ModerateRequest>;

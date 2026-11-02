@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { MediaProviderId, SessionLimits } from "@/lib/media/types";
+import type { SessionPolicy } from "@/lib/meetings/policy";
 import type { MeetingSettings } from "@/lib/meetings/settings";
 
 import { user } from "./auth-schema";
@@ -85,6 +86,13 @@ export const meetingSession = pgTable(
       .$type<Record<string, string>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    /** What hosts changed during the session (lock, chat, …); the rest follows the meeting's settings. */
+    policy: jsonb("policy")
+      .$type<Partial<SessionPolicy>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    /** Shown large for everyone: a media user ID. */
+    spotlight: text("spotlight"),
     /** Bumped on every change to the session's shared state; clients ignore older ones. */
     rev: integer("rev").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true })

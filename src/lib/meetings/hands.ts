@@ -5,7 +5,7 @@ import type { HandRequest } from "./api";
 import { MeetingError } from "./errors";
 import type { Principal } from "./principal";
 import { isHostRole } from "./rules";
-import { changeHands, type HandChange } from "./session-state";
+import { changeSession, type SessionChange } from "./session-state";
 
 /**
  * Raise hand: anyone admitted raises or lowers their own; hosts and co-hosts can lower
@@ -22,7 +22,7 @@ export async function updateHand(input: {
   const isHost = isHostRole(member.role);
   const { request } = input;
 
-  let change: HandChange;
+  let change: SessionChange;
   if ("lowerAll" in request) {
     if (!isHost) throw new MeetingError("NOT_ALLOWED");
     change = { lowerAll: true };
@@ -34,5 +34,5 @@ export async function updateHand(input: {
     }
     change = request.raised ? { raise: subject } : { lower: subject };
   }
-  await changeHands(meeting, session, change);
+  await changeSession(meeting, session, change);
 }

@@ -4,6 +4,7 @@ import {
   type JoinRequest,
   type JoinResponse,
   type MeetingErrorCode,
+  type ModerateRequest,
   type TokenResponse,
 } from "@/lib/meetings/api";
 
@@ -58,4 +59,6 @@ export const meetingApi = {
   end: (code: string) => post<void>(`/api/meetings/${code}/end`),
   hand: (code: string, request: HandRequest) =>
     post<void>(`/api/meetings/${code}/hand`, request),
+  moderate: (code: string, request: ModerateRequest) =>
+    post<void>(`/api/meetings/${code}/moderate`, request),
 };

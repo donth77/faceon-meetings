@@ -6,7 +6,7 @@ import { timingSafeEqual } from "node:crypto";
 
 import type { MeetingRole, SessionSnapshot } from "@/lib/media/types";
 
-import type { MeetingErrorCode } from "./api";
+import type { MeetingErrorCode, ModerateRequest } from "./api";
 import type { MeetingSettings } from "./settings";
 
 /**
@@ -79,6 +79,8 @@ export type EntryFacts = {
   /** Already admitted to the open session (a rejoin): no passcode needed again. */
   isMember: boolean;
   isBanned: boolean;
+  /** A host locked the session: nobody new gets in. */
+  locked: boolean;
   hostPresent: boolean;
   /** Connected now, against the session's limit. */
   connectedCount: number;
@@ -93,6 +95,7 @@ export function checkEntry(
 ): MeetingErrorCode | "waiting_for_host" | null {
   if (facts.isBanned) return "REMOVED";
   if (isHostRole(facts.role)) return null;
+  if (facts.locked && !facts.isMember) return "LOCKED";
   if (
     !facts.isMember &&
     facts.passcode !== null &&
@@ -110,4 +113,44 @@ export function checkEntry(
     return "FULL";
   }
   return null;
+}
+
+export type ModerationAction = ModerateRequest["action"];
+
+/**
+ * Who may do what to whom (the permission matrix). Hosts and co-hosts moderate; only the
+ * host makes or unmakes co-hosts; nobody removes the host, and co-hosts don't remove
+ * each other. `target` is null for actions on everyone, or clearing a spotlight.
+ */
+export function canModerate(input: {
+  actor: MeetingRole;
+  action: ModerationAction;
+  target: { role: MeetingRole; isSelf: boolean } | null;
+}): boolean {
+  const { actor, action, target } = input;
+  if (!isHostRole(actor)) return false;
+  switch (action) {
+    case "muteAll":
+    case "setPolicy":
+    case "spotlight":
+      return true;
+    case "mute":
+      return target !== null;
+    case "askToUnmute":
+      return target !== null && !target.isSelf;
+    case "remove":
+      return (
+        target !== null &&
+        !target.isSelf &&
+        target.role !== "host" &&
+        (actor === "host" || target.role !== "cohost")
+      );
+    case "makeCohost":
+      return (
+        actor === "host" &&
+        (target?.role === "participant" || target?.role === "guest")
+      );
+    case "removeCohost":
+      return actor === "host" && target?.role === "cohost";
+  }
 }

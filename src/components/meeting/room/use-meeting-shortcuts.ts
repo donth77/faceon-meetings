@@ -4,16 +4,18 @@ import { useEffect, useEffectEvent } from "react";
 
 import { canShareScreen, isAppleDevice, isTypingTarget } from "@/lib/platform";
 
-import type { RoomMedia } from "../media";
-
 /**
  * Zoom's and Meet's shortcuts both work: Ctrl/⌘+D or Alt/⌥+A toggles the mic,
  * Ctrl/⌘+E or Alt/⌥+V the camera, and Alt/⌥+S screen sharing.
  */
-export function useMeetingShortcuts(media: RoomMedia) {
-  const toggleMic = useEffectEvent(() => void media.mic.toggle());
-  const toggleCamera = useEffectEvent(() => void media.camera.toggle());
-  const toggleShare = useEffectEvent(() => void media.screenShare.toggle());
+export function useMeetingShortcuts(actions: {
+  toggleMic: () => void;
+  toggleCamera: () => void;
+  toggleScreenShare: () => void;
+}) {
+  const toggleMic = useEffectEvent(actions.toggleMic);
+  const toggleCamera = useEffectEvent(actions.toggleCamera);
+  const toggleShare = useEffectEvent(actions.toggleScreenShare);
 
   useEffect(() => {
     const apple = isAppleDevice();

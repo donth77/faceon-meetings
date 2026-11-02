@@ -361,6 +361,53 @@ export async function hostMemberIds(sessionId: string): Promise<string[]> {
   return rows.map((row) => row.id);
 }
 
+/** Everyone admitted to a session who hasn't been removed. */
+export async function sessionMembers(
+  sessionId: string,
+): Promise<MeetingMember[]> {
+  return db()
+    .select()
+    .from(meetingMember)
+    .where(
+      and(
+        eq(meetingMember.sessionId, sessionId),
+        isNull(meetingMember.bannedAt),
+      ),
+    );
+}
+
+export async function setMemberRole(
+  sessionId: string,
+  mediaUserId: string,
+  role: MeetingRole,
+): Promise<void> {
+  await db()
+    .update(meetingMember)
+    .set({ role })
+    .where(
+      and(
+        eq(meetingMember.sessionId, sessionId),
+        eq(meetingMember.mediaUserId, mediaUserId),
+      ),
+    );
+}
+
+/** Removes someone from a session for good: they can't rejoin it. */
+export async function banMember(
+  sessionId: string,
+  mediaUserId: string,
+): Promise<void> {
+  await db()
+    .update(meetingMember)
+    .set({ bannedAt: new Date() })
+    .where(
+      and(
+        eq(meetingMember.sessionId, sessionId),
+        eq(meetingMember.mediaUserId, mediaUserId),
+      ),
+    );
+}
+
 /** Open sessions started before a moment, with their meetings: candidates for closing. */
 export async function openSessionsStartedBefore(
   before: Date,

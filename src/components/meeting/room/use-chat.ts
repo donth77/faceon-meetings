@@ -29,24 +29,29 @@ export function useChat({
   media,
   self,
   isOpen,
+  accepts,
   onPreview,
 }: {
   media: Pick<RoomMedia, "sendEvent" | "subscribeEvents">;
   self: { id: string; name: string; image?: string };
   isOpen: boolean;
+  /** Whether to show a message from this sender: with chat off, only hosts'. */
+  accepts: (senderId: string) => boolean;
   onPreview: (message: ChatMessage) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [unread, setUnread] = useState(0);
   const seen = useRef(new Set<string>());
   const panelOpen = useEffectEvent(() => isOpen);
+  const accepted = useEffectEvent(accepts);
   const preview = useEffectEvent(onPreview);
   const { subscribeEvents, sendEvent } = media;
 
   useEffect(
     () =>
       subscribeEvents((event, sender) => {
-        if (event.type !== "chat.message" || sender.userId === self.id) return;
+        if (event.type !== "chat.message" || !sender) return;
+        if (sender.userId === self.id || !accepted(sender.userId)) return;
         const message: ChatMessage = {
           id: event.id,
           senderId: sender.userId,

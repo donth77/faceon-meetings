@@ -305,7 +305,10 @@
       "guest": "Guest",
       "videoOff": "Camera off",
       "micOn": "Mic on",
-      "muted": "Muted"
+      "muted": "Muted",
+      "cohost": "Co-host",
+      "raisedHands": "Raised hands ({count})",
+      "muteAll": "Mute all"
     },
     "chat": {
       "title": "Chat",
@@ -315,7 +318,8 @@
       "placeholder": "Message everyone",
       "send": "Send message",
       "you": "You",
-      "open": "Open"
+      "open": "Open",
+      "off": "The host turned off chat. Only hosts can send messages."
     },
     "reactions": {
       "label": "Reactions",
@@ -336,6 +340,70 @@
       "someoneRaised": "{name} raised their hand",
       "lowerAll": "Lower all hands",
       "failed": "Couldn’t change the hand. Try again."
+    },
+    "locked": "Meeting locked",
+    "lockedHelp": "This meeting is locked. Nobody new can join.",
+    "pinned": "Pinned",
+    "spotlighted": "Spotlighted",
+    "hostControls": {
+      "button": "Host controls",
+      "title": "Host controls",
+      "close": "Close host controls",
+      "meeting": "Meeting",
+      "lock": "Lock meeting",
+      "lockHelp": "Nobody new can join, even with the link.",
+      "letEveryone": "Let everyone",
+      "shareScreen": "Share their screen",
+      "chat": "Send chat messages",
+      "reactions": "Send reactions",
+      "unmute": "Turn on their microphone",
+      "unmuteHelp": "When this is off, everyone else is muted until a host asks them to unmute."
+    },
+    "moderation": {
+      "optionsFor": "More options for {name}",
+      "pin": "Pin for me",
+      "unpin": "Unpin",
+      "spotlight": "Spotlight for everyone",
+      "endSpotlight": "Remove spotlight",
+      "mute": "Mute",
+      "askToUnmute": "Ask to unmute",
+      "stopVideo": "Stop video",
+      "stopSharing": "Stop sharing",
+      "makeCohost": "Make co-host",
+      "removeCohost": "Remove as co-host",
+      "remove": "Remove from meeting",
+      "removeTitle": "Remove {name}?",
+      "removeBody": "They’ll leave the meeting right away and can’t rejoin it.",
+      "removeConfirm": "Remove",
+      "cancel": "Cancel",
+      "muteAllTitle": "Mute everyone?",
+      "muteAllBody": "Everyone except hosts and co-hosts will be muted.",
+      "muteAllLetUnmute": "Let them unmute themselves",
+      "muteAllConfirm": "Mute all",
+      "askedToUnmute": "Asked {name} to unmute",
+      "failed": "Couldn’t do that. Try again."
+    },
+    "hostActions": {
+      "mutedYou": "The host muted you",
+      "stoppedVideo": "The host stopped your video",
+      "stoppedShare": "The host stopped your screen share",
+      "nowCohost": "You’re now a co-host",
+      "noLongerCohost": "You’re no longer a co-host",
+      "spotlightedYou": "The host spotlighted you for everyone",
+      "unmuteRequestTitle": "Unmute?",
+      "unmuteRequestBody": "The host is asking you to turn on your microphone.",
+      "stayMuted": "Stay muted",
+      "unmute": "Unmute",
+      "micLocked": "The host has turned off microphones. Raise your hand to ask to speak.",
+      "shareLocked": "Only hosts can share their screen in this meeting.",
+      "chatOff": "The host turned off chat",
+      "chatOn": "The host turned chat back on",
+      "reactionsOff": "The host turned off reactions",
+      "reactionsOn": "The host turned reactions back on",
+      "shareHostOnly": "Only hosts can share their screen now",
+      "shareAll": "Everyone can share their screen now",
+      "micsOff": "The host muted everyone. Raise your hand to ask to speak.",
+      "micsOn": "You can turn your microphone on again"
     }
   },
   "PreJoin": {
@@ -365,7 +433,8 @@
       "BAD_REQUEST": "Enter your name, then try again.",
       "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
       "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow.",
-      "BUSY": "Too many meetings are running right now. Try again shortly."
+      "BUSY": "Too many meetings are running right now. Try again shortly.",
+      "LOCKED": "The host has locked this meeting. Ask them to unlock it, then try again."
     },
     "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account."
   },
