@@ -23,7 +23,7 @@ Only what it needs to run your meetings, such as your account and who joined eac
 
 ## How long can a meeting last, and how many people can join?
 
-It depends on how {appName} is set up for the host. Demo meetings have limits, and **Home** shows them to the host.
+It depends on how {appName} is set up for the host. Demo meetings have limits, and **Home** shows them to the host, with **Ask for full meetings** to ask this site's admins for more.
 
 ## Which browsers work?
 

@@ -1,11 +1,12 @@
 import "server-only";
 
+import { hostingPlanOf } from "@/lib/hosting/access";
 import { mediaProvider, pickProvider } from "@/lib/media";
 import type { SessionSnapshot } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
 
 import { MeetingError } from "./errors";
-import { hostingPlan, limitsFor } from "./hosting";
+import { limitsFor } from "./hosting";
 import {
   closeSession,
   countOpenSessions,
@@ -46,7 +47,7 @@ export async function startSession(
   if ((await countOpenSessions(now)) >= serverEnv().MAX_CONCURRENT_MEETINGS) {
     throw new MeetingError("BUSY");
   }
-  const plan = hostingPlan(host);
+  const plan = await hostingPlanOf(host);
   if (plan === "demo") {
     const today = await countSessionsSince(
       host.id,

@@ -19,6 +19,7 @@ import {
 import { publicEnv } from "@/lib/env";
 import { refreshGoogleToken } from "@/lib/google-calendar/refresh";
 import { hasCalendarScope } from "@/lib/google-calendar/shared";
+import { forgetApprovedHost } from "@/lib/hosting/allowlist";
 import { siteUrl } from "@/lib/site";
 
 import { dropUnverifiedPassword } from "./linking";
@@ -128,7 +129,11 @@ export const auth = betterAuth({
         await cancelUpcomingEvents(deleted.id);
         await revokeGoogleCalendar(deleted.id);
       },
-      afterDelete: async (deleted) => forgetMediaUser(deleted.id),
+      afterDelete: async (deleted) => {
+        await forgetMediaUser(deleted.id);
+        // Off the list of approved hosts too, if an admin had added them.
+        await forgetApprovedHost(deleted.email);
+      },
     },
     additionalFields: {
       locale: { type: "string", required: false, input: false },

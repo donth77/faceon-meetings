@@ -9,11 +9,13 @@ import {
   ScheduleCard,
   TodayList,
 } from "@/components/home/home-cards";
+import { HostingNote } from "@/components/home/hosting-note";
 import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { JoinForm } from "@/components/meetings/join-form";
 import { InstallCard } from "@/components/pwa/install-app";
 import { requireSession } from "@/lib/auth/session";
-import { demoTerms, hostingPlan } from "@/lib/meetings/hosting";
+import { hostingAccessOf } from "@/lib/hosting/access";
+import { demoTerms, fullTerms } from "@/lib/meetings/hosting";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
 import { upcomingSoon } from "@/lib/meetings/scheduling";
 import { HOME_ROUTE } from "@/lib/routes";
@@ -32,7 +34,7 @@ export default async function HomePage() {
       <div className="flex w-full max-w-[1040px] flex-col gap-9">
         <h1 className="sr-only">{t("title")}</h1>
         <Suspense fallback={null}>
-          <DemoNote />
+          <Hosting />
         </Suspense>
         <Clock />
         <section
@@ -59,15 +61,22 @@ export default async function HomePage() {
   );
 }
 
-/** Hosts who aren't allowlisted host demo meetings; say so up front. */
-async function DemoNote() {
+/**
+ * Demo hosts see their limits up front, with Ask for full meetings (or where their
+ * request stands); someone an admin just approved sees that once.
+ */
+async function Hosting() {
   const session = await requireSession(HOME_ROUTE);
-  if (hostingPlan(session.user) === "full") return null;
-  const t = await getTranslations("Home");
+  const access = await hostingAccessOf(session.user);
   return (
-    <p className="rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-950 dark:bg-amber-400/15 dark:text-amber-100">
-      {t("demoNote", demoTerms())}
-    </p>
+    <HostingNote
+      state={
+        access.plan === "demo" && access.ask === "declined"
+          ? { ...access, askAgainAt: access.askAgainAt.toISOString() }
+          : access
+      }
+      terms={{ demo: demoTerms(), full: fullTerms() }}
+    />
   );
 }
 

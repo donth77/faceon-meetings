@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { hostingPlan, limitsFor } from "./hosting";
+import { approvedBySettings, hostingPlan, isAdmin, limitsFor } from "./hosting";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -30,6 +30,43 @@ describe("hostingPlan", () => {
     expect(
       hostingPlan({ email: "host@example.com", emailVerified: false }),
     ).toBe("demo");
+  });
+
+  it("gives an address an admin approved full meetings, and demos once removed", () => {
+    vi.stubEnv("HOST_ALLOWLIST", "");
+    vi.stubEnv("ADMIN_EMAILS", "admin@example.com");
+    const maya = { email: "maya@example.com", emailVerified: true };
+    expect(hostingPlan(maya, true)).toBe("full");
+    // Moved back to demo on /admin: the next meeting is a demo.
+    expect(hostingPlan(maya, false)).toBe("demo");
+    expect(hostingPlan({ ...maya, emailVerified: false }, true)).toBe("demo");
+  });
+});
+
+describe("approvedBySettings", () => {
+  it("covers ADMIN_EMAILS and HOST_ALLOWLIST, in any case", () => {
+    vi.stubEnv("HOST_ALLOWLIST", "host@example.com");
+    vi.stubEnv("ADMIN_EMAILS", "admin@example.com");
+    expect(approvedBySettings("Host@Example.com")).toBe(true);
+    expect(approvedBySettings("admin@example.com")).toBe(true);
+    expect(approvedBySettings("maya@example.com")).toBe(false);
+  });
+});
+
+describe("isAdmin", () => {
+  it("is only ADMIN_EMAILS, with a verified address", () => {
+    vi.stubEnv("ADMIN_EMAILS", "Admin@Example.com");
+    vi.stubEnv("HOST_ALLOWLIST", "host@example.com");
+    expect(isAdmin({ email: "admin@example.com", emailVerified: true })).toBe(
+      true,
+    );
+    expect(isAdmin({ email: "admin@example.com", emailVerified: false })).toBe(
+      false,
+    );
+    // Approved hosts host full meetings but aren't admins.
+    expect(isAdmin({ email: "host@example.com", emailVerified: true })).toBe(
+      false,
+    );
   });
 });
 

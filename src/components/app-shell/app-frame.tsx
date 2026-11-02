@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import type { Session } from "@/lib/auth/server";
 import { avatarUrl } from "@/lib/avatars/seed";
+import { isAdmin } from "@/lib/meetings/hosting";
 
 import { AppSidebar } from "./app-sidebar";
 import { MeetingReminders } from "./meeting-reminders";
@@ -36,7 +37,14 @@ export async function AppFrame({
       >
         {t("skipToMain")}
       </a>
-      <AppSidebar user={{ name, email, image: avatarUrl(session.user) }} />
+      <AppSidebar
+        user={{
+          name,
+          email,
+          image: avatarUrl(session.user),
+          admin: isAdmin(session.user),
+        }}
+      />
       <SidebarInset
         id="main"
         tabIndex={-1}

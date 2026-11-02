@@ -1,6 +1,12 @@
 "use client";
 
-import { ChevronsUpDown, Keyboard, LogOut, UserRound } from "lucide-react";
+import {
+  ChevronsUpDown,
+  Keyboard,
+  LogOut,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
@@ -25,13 +31,15 @@ export type AccountUser = {
   name: string;
   email: string;
   image?: string | null;
+  /** An admin (ADMIN_EMAILS): the menu links to /admin. */
+  admin?: boolean;
 };
 
 const THEMES = ["system", "light", "dark"] as const;
 
 /**
- * The account row at the bottom of the sidebar, with Profile, Theme, Install app (where
- * the browser offers it), Keyboard shortcuts and Sign out.
+ * The account row at the bottom of the sidebar, with Profile, Admin (for admins), Theme,
+ * Install app (where the browser offers it), Keyboard shortcuts and Sign out.
  */
 export function AccountMenu({ user }: { user: AccountUser }) {
   const t = useTranslations("Account");
@@ -72,6 +80,12 @@ export function AccountMenu({ user }: { user: AccountUser }) {
           <UserRound aria-hidden="true" />
           {t("profile")}
         </DropdownMenuItem>
+        {user.admin ? (
+          <DropdownMenuItem href="/admin">
+            <ShieldCheck aria-hidden="true" />
+            {t("admin")}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuGroup
           aria-label={t("theme")}

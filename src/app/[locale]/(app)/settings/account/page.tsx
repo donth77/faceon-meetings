@@ -18,6 +18,7 @@ import {
 } from "@/lib/avatars/seed";
 import { emailPasswordEnabled } from "@/lib/email/send";
 import { calendarConnection } from "@/lib/google-calendar/connection";
+import { isAdmin } from "@/lib/meetings/hosting";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Settings");
@@ -74,6 +75,7 @@ async function Account({
         methods: accounts.map(({ id, providerId }) => ({ id, providerId })),
         passwordSignIn: emailPasswordEnabled(),
         onGoogleCalendar: calendar.status === "connected",
+        admin: isAdmin(user),
       }}
       // Seven more avatars to pick from, made here so the page renders the same twice.
       avatarChoices={Array.from({ length: 7 }, () => createAvatarSeed(look))}

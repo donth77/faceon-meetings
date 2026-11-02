@@ -14,6 +14,8 @@ export const KEEP_DAYS = {
   webhookDeliveries: 7,
   /** Failed-attempt counters and sign-in rate limits. */
   counters: 1,
+  /** Requests to host full meetings, after an admin answered them. */
+  hostingRequests: 90,
 } as const;
 
 /** The moment `days` days before `now`. */

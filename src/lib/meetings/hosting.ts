@@ -3,19 +3,40 @@ import "server-only";
 import type { SessionLimits } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
 
-/** Allowlisted accounts host full meetings; every other account hosts demos. */
+/**
+ * Approved hosts host full meetings; every other account hosts demos. A host is approved
+ * by `ADMIN_EMAILS` or `HOST_ALLOWLIST` (the operator's settings), or by an admin on
+ * /admin (`approved`: the address is on the database's list, which lib/hosting reads).
+ */
 export type HostingPlan = "full" | "demo";
 
-/** Only a verified email counts, so nobody can claim an allowlisted address. */
-export function hostingPlan(host: {
-  email: string;
-  emailVerified: boolean;
-}): HostingPlan {
+type Account = { email: string; emailVerified: boolean };
+
+/** Only a verified email counts, so nobody can claim an approved address. */
+export function hostingPlan(host: Account, approved = false): HostingPlan {
+  return host.emailVerified && (approved || approvedBySettings(host.email))
+    ? "full"
+    : "demo";
+}
+
+/** Approved by the operator's settings, which the app can't change. */
+export function approvedBySettings(email: string): boolean {
   const env = serverEnv();
-  const email = host.email.toLowerCase();
-  const listed =
-    env.ADMIN_EMAILS.includes(email) || env.HOST_ALLOWLIST.includes(email);
-  return host.emailVerified && listed ? "full" : "demo";
+  const address = email.toLowerCase();
+  return (
+    env.ADMIN_EMAILS.includes(address) || env.HOST_ALLOWLIST.includes(address)
+  );
+}
+
+/**
+ * Admins (`ADMIN_EMAILS`, with a verified address) open /admin and decide who hosts full
+ * meetings. Nothing else: no admin can change, delete or see into anyone's account.
+ */
+export function isAdmin(account: Account): boolean {
+  return (
+    account.emailVerified &&
+    serverEnv().ADMIN_EMAILS.includes(account.email.toLowerCase())
+  );
 }
 
 /** Limits for a new session; the media provider enforces them. */
@@ -42,5 +63,15 @@ export function demoTerms() {
   return {
     minutes: env.DEMO_MAX_MINUTES,
     people: env.DEMO_MAX_PARTICIPANTS,
+  };
+}
+
+/** What a full meeting allows, for the note and email that say a host was approved. */
+export function fullTerms() {
+  const env = serverEnv();
+  return {
+    people: env.MAX_PARTICIPANTS_PER_MEETING,
+    /** 0: no time limit. */
+    minutes: env.MAX_MEETING_MINUTES,
   };
 }

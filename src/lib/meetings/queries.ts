@@ -24,6 +24,7 @@ import {
   user,
 } from "@/lib/db/schema";
 import { aiNotesEnabled } from "@/lib/env";
+import { hostingPlanOf } from "@/lib/hosting/access";
 import type {
   MediaProviderId,
   MeetingRole,
@@ -32,7 +33,6 @@ import type {
 
 import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
-import { hostingPlan } from "./hosting";
 import { daysBefore, KEEP_DAYS } from "./retention";
 import {
   closedReason,
@@ -246,7 +246,7 @@ export async function getMeetingSummary(code: string): Promise<{
         allowed: open ? open.notesAllowed : found.host.aiNotes,
         demo: open
           ? open.limits.demo === true
-          : hostingPlan(found.host) === "demo",
+          : (await hostingPlanOf(found.host)) === "demo",
         stopped: open?.notesStopped ?? false,
       }),
   };

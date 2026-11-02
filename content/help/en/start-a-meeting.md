@@ -31,4 +31,4 @@ Select **Schedule** on **Home** to pick a date and time, make it repeat, and inv
 
 Your personal room has a link that never changes, which is handy for regular calls. See [Your personal room](/help/personal-room).
 
-> **Demo meetings.** Some accounts host demo meetings, with a limit on time and people. When yours are demos, **Home** shows the limits.
+> **Demo meetings.** Some accounts host demo meetings, with a limit on time and people. When yours are demos, **Home** shows the limits. Select **Ask for full meetings** there to ask this site's admins to let you host full meetings; you can add a note, and you'll get an email with the answer. If it's approved, your meetings are full from the next one.

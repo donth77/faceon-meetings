@@ -16,6 +16,8 @@ updated: 2026-11-02
 - Which **sign-in methods** you've connected. When you sign in with Google or GitHub, {appName} receives your name, email address and photo from them, and keeps the sign-in tokens they send, encrypted.
 - Your **sign-in sessions**, with the IP address and browser each came from, so you stay signed in and sessions can be checked and ended.
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
+- If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
+- If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when.
 
 ### Meetings you host
 
@@ -110,9 +112,10 @@ These services may handle your information in the United States and other countr
 - **Who joined and left**, and **saved AI notes**, are deleted after 90 days. Whoever saved notes, or the meeting's host, can delete them sooner.
 - **Waiting room requests and admission records** are deleted a week after the meeting. That someone was removed is kept as long as who joined (90 days).
 - **Attempt counters and sign-in limits** are deleted after a day.
+- **Requests to host full meetings** are deleted 90 days after they're answered. An approved address stays approved until an admin moves it back to demo meetings, or you delete your account.
 - **A guest's cookie** expires 90 days after its last use.
 
-When you **delete your account**, {appName} deletes your account, the meetings you host with their records, and the AI notes you saved. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar. Before it does, it cancels your upcoming meetings there, so Google tells the people you invited; past events stay in your calendar. Meetings other people host keep your name in who joined until that's deleted after 90 days.
+When you **delete your account**, {appName} deletes your account, the meetings you host with their records, the AI notes you saved, your requests to host full meetings, and your address on the list of approved hosts. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar. Before it does, it cancels your upcoming meetings there, so Google tells the people you invited; past events stay in your calendar. Meetings other people host keep your name in who joined until that's deleted after 90 days.
 
 ## Your choices and rights
 

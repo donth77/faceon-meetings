@@ -23,7 +23,7 @@ import {
 } from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { LEGAL_LINKS } from "@/components/legal/legal-links";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import {
   Dialog,
   DialogDescription,
@@ -69,6 +69,8 @@ export type AccountInfo = {
   passwordSignIn: boolean;
   /** Whether Google Calendar sync is connected, so deleting cancels events there. */
   onGoogleCalendar: boolean;
+  /** An admin (ADMIN_EMAILS): a way to /admin, which phones can't reach from a menu. */
+  admin: boolean;
 };
 
 const OUTLINE =
@@ -688,6 +690,18 @@ export function AccountSettings({
       <h2 className="text-[22px] font-bold">{t("title")}</h2>
       <Profile account={account} avatarChoices={avatarChoices} />
       <SignIn account={account} linkError={linkError} />
+      {account.admin ? (
+        <SettingsCard title={t("adminTitle")}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-muted-foreground max-w-[56ch] text-sm leading-normal">
+              {t("adminBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+            </span>
+            <LinkButton href="/admin" variant="outline" className={OUTLINE}>
+              {t("adminOpen")}
+            </LinkButton>
+          </div>
+        </SettingsCard>
+      ) : null}
       <DeleteAccount
         hasPassword={account.methods.some(
           (method) => method.providerId === "credential",

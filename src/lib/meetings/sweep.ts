@@ -1,6 +1,7 @@
 import "server-only";
 
 import { pruneExpiredSessions } from "@/lib/account/sessions";
+import { pruneAnsweredRequests } from "@/lib/hosting/requests";
 import { loggable } from "@/lib/log";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 
@@ -23,8 +24,9 @@ import { pruneEndedSessionRequests } from "./waiting-room";
  * - deletes expired meetings once nothing of theirs is left in Previous;
  * - drops admission records and waiting-room requests a week after their session ended
  *   (removals after 90 days), attendance and saved AI notes after 90 days, attempt
- *   counters and sign-in rate limits after a day, and sign-in sessions once they expire.
- *   The privacy policy promises these (retention.ts).
+ *   counters and sign-in rate limits after a day, sign-in sessions once they expire, and
+ *   answered requests to host full meetings after 90 days. The privacy policy promises
+ *   these (retention.ts).
  */
 export async function sweep(now = new Date()) {
   let closedSessions = 0;
@@ -57,6 +59,9 @@ export async function sweep(now = new Date()) {
     prunedSavedNotes: await pruneSavedNotes(history),
     prunedWebhookEvents: await pruneWebhookEvents(
       daysBefore(now, KEEP_DAYS.webhookDeliveries),
+    ),
+    prunedHostingRequests: await pruneAnsweredRequests(
+      daysBefore(now, KEEP_DAYS.hostingRequests),
     ),
   };
 }

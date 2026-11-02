@@ -5,4 +5,5 @@
  */
 export * from "./attempts-schema";
 export * from "./auth-schema";
+export * from "./hosting-schema";
 export * from "./meetings-schema";
