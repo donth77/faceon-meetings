@@ -4,9 +4,10 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { HelpNav } from "@/components/help/help-center";
+import { HelpNav, ReportLinks } from "@/components/help/help-center";
 import { HelpHeader } from "@/components/help/help-header";
 import { HelpMarkdown } from "@/components/help/help-markdown";
+import { publicEnv } from "@/lib/env";
 import { helpArticles } from "@/lib/help/articles";
 import { helpSections } from "@/lib/help/sections";
 
@@ -115,6 +116,11 @@ export default async function HelpArticlePage({
             </Link>
           ) : null}
         </nav>
+        {publicEnv.NEXT_PUBLIC_REPO_URL ? (
+          <div className="mt-10">
+            <ReportLinks repoUrl={publicEnv.NEXT_PUBLIC_REPO_URL} />
+          </div>
+        ) : null}
       </main>
     </div>
   );
