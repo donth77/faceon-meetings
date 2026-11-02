@@ -158,7 +158,7 @@ function CustomDialog({
                     <ListBoxItem
                       key={freq}
                       id={freq}
-                      className="data-focused:bg-accent flex min-h-9 cursor-default items-center rounded-lg px-2.5 text-[15px] outline-none"
+                      className="data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-9 cursor-default items-center rounded-lg px-2.5 text-[15px] outline-hidden"
                     >
                       {t(`unit${freq}`, { count: draft.interval })}
                     </ListBoxItem>
@@ -400,7 +400,7 @@ export function RepeatField({
                 id={item.id}
                 textValue={item.label}
                 className={cn(
-                  "flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-none data-focused:bg-[#f3f6ff] dark:data-focused:bg-white/10",
+                  "data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-hidden",
                   item.id === "custom" &&
                     "mt-1 rounded-t-none border-t border-[#e2e5ea] dark:border-white/10",
                 )}

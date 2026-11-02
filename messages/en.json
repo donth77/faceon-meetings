@@ -134,12 +134,17 @@
   "Nav": {
     "label": "Main",
     "toggle": "Toggle sidebar",
+    "skipToMain": "Skip to main content",
+    "close": "Close navigation",
     "home": "Home",
     "upcoming": "Upcoming",
     "previous": "Previous",
     "personalRoom": "Personal room",
     "help": "Help",
     "settings": "Settings"
+  },
+  "Toasts": {
+    "region": "Notifications"
   },
   "Account": {
     "menuLabel": "Account menu for {name}",

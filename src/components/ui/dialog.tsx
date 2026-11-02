@@ -9,6 +9,7 @@ import {
   Heading,
   ModalOverlay as ModalOverlayPrimitive,
   Modal as ModalPrimitive,
+  Text,
   type DialogProps as DialogPrimitiveProps,
   type DialogTriggerProps as DialogTriggerPrimitiveProps,
   type ModalOverlayProps as ModalOverlayPrimitiveProps,
@@ -60,24 +61,31 @@ function DialogOverlay({
   );
 }
 
+/** A close button needs a name in the person's language; without one, say so. */
+export type CloseButtonProps =
+  | {
+      showCloseButton?: true;
+      /** The close button's accessible name, translated by the caller. */
+      closeLabel: string;
+    }
+  | { showCloseButton: false; closeLabel?: string };
+
 function Dialog({
   className,
   bodyClassName,
   children,
   showCloseButton = true,
-  closeLabel = "Close",
+  closeLabel,
   isDismissable = true,
   role,
   ...props
 }: Omit<ModalOverlayPrimitiveProps, "className" | "children"> &
-  Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> & {
+  Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> &
+  CloseButtonProps & {
     className?: string;
     /** Classes for the dialog element inside the modal, for custom layouts. */
     bodyClassName?: string;
     children: React.ReactNode;
-    showCloseButton?: boolean;
-    /** The close button's accessible name, translated by the caller. */
-    closeLabel?: string;
     /** "alertdialog" for questions that need an answer. */
     role?: DialogPrimitiveProps["role"];
   }) {
@@ -127,12 +135,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function DialogFooter({
   className,
-  showCloseButton = false,
   children,
   ...props
-}: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean;
-}) {
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
@@ -143,7 +148,6 @@ function DialogFooter({
       {...props}
     >
       {children}
-      {showCloseButton && <DialogClose variant="outline">Close</DialogClose>}
     </div>
   );
 }
@@ -162,12 +166,15 @@ function DialogTitle({
   );
 }
 
+/** The dialog's description; an alert dialog's is read out with its title. */
 function DialogDescription({
   className,
   ...props
-}: Omit<React.ComponentProps<"div">, "slot">) {
+}: Omit<React.ComponentProps<typeof Text>, "slot" | "elementType">) {
   return (
-    <div
+    <Text
+      slot="description"
+      elementType="div"
       data-slot="dialog-description"
       className={cn(
         "text-muted-foreground *:[a]:hover:text-foreground text-sm *:[a]:underline *:[a]:underline-offset-3",

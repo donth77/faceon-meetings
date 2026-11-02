@@ -9,12 +9,14 @@ import {
   Modal as ModalPrimitive,
   Dialog as SheetPrimitive,
   DialogTrigger as SheetTriggerPrimitive,
+  Text,
   type ModalOverlayProps as ModalOverlayPrimitiveProps,
   type DialogProps as SheetPrimitiveProps,
   type DialogTriggerProps as SheetTriggerPrimitiveProps,
 } from "react-aria-components";
 
 import { Button } from "@/components/ui/button";
+import type { CloseButtonProps } from "@/components/ui/dialog";
 
 function SheetTrigger({ ...props }: SheetTriggerPrimitiveProps) {
   return <SheetTriggerPrimitive data-slot="sheet-trigger" {...props} />;
@@ -66,13 +68,14 @@ function Sheet({
   children,
   side = "right",
   showCloseButton = true,
+  closeLabel,
   ...props
 }: Omit<ModalOverlayPrimitiveProps, "className" | "children"> &
-  Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> & {
+  Pick<React.ComponentProps<typeof ModalPrimitive>, "isDismissable"> &
+  CloseButtonProps & {
     className?: string;
     children: React.ReactNode;
     side?: "top" | "right" | "bottom" | "left";
-    showCloseButton?: boolean;
   }) {
   return (
     <SheetOverlay {...props}>
@@ -96,34 +99,12 @@ function Sheet({
               size="icon-sm"
             >
               <XIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{closeLabel}</span>
             </SheetClose>
           )}
         </SheetPrimitive>
       </ModalPrimitive>
     </SheetOverlay>
-  );
-}
-
-function SheetContent({
-  className,
-  children,
-  side = "right",
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof Sheet> & {
-  side?: "top" | "right" | "bottom" | "left";
-  showCloseButton?: boolean;
-}) {
-  return (
-    <Sheet
-      className={className}
-      side={side}
-      showCloseButton={showCloseButton}
-      {...props}
-    >
-      {children}
-    </Sheet>
   );
 }
 
@@ -164,9 +145,11 @@ function SheetTitle({
 function SheetDescription({
   className,
   ...props
-}: Omit<React.ComponentProps<"div">, "slot">) {
+}: Omit<React.ComponentProps<typeof Text>, "slot" | "elementType">) {
   return (
-    <div
+    <Text
+      slot="description"
+      elementType="div"
       data-slot="sheet-description"
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
@@ -180,7 +163,6 @@ export {
   Sheet,
   SheetTrigger,
   SheetClose,
-  SheetContent,
   SheetHeader,
   SheetFooter,
   SheetTitle,

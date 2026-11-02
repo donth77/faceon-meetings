@@ -21,14 +21,25 @@
   --muted-foreground: #4f5966;
   --accent: #e8eeff;
   --accent-foreground: #12161c;
-  --destructive: #d92d20;
+  /* Solid red with white text (6.6:1), and red text on light surfaces. */
+  --destructive: #b42318;
+  --destructive-text: #b42318;
   --border: #e2e5ea;
-  --input: #c9cfd8;
+  /* Field and switch outlines: 3:1 or more against white and the page (1.4.11). */
+  --input: #7d8794;
   --ring: #1f5eff;
   --radius: 0.75rem;
   --brand: #1f5eff;
   --live: #1db46b;
+  /* Green text: --live itself is too light on white. */
+  --live-text: #13804b;
   --ai: #5b4db3;
+  /* Tinted chips and badges: brand text on a soft brand fill (5.8:1). */
+  --chip: #e8eeff;
+  --chip-foreground: #1a4fd6;
+  /* A raised hand, as in Meet. */
+  --hand: #f2b200;
+  --hand-foreground: #1b1500;
   --sidebar: #ffffff;
   --sidebar-foreground: #12161c;
   --sidebar-primary: #1f5eff;
@@ -55,13 +66,20 @@
   --muted-foreground: #a3acb9;
   --accent: #1b2440;
   --accent-foreground: #eef1f5;
+  /* Solid red for icons and fills; red text uses the lighter --destructive-text. */
   --destructive: #f04438;
+  --destructive-text: #ff8a8a;
   --border: #262c36;
-  --input: #333a46;
+  --input: #6b7482;
   --ring: #4d7eff;
   --brand: #4d7eff;
   --live: #2bc77a;
+  --live-text: #2bc77a;
   --ai: #d9d2ff;
+  --chip: #1b2440;
+  --chip-foreground: #7499ff;
+  --hand: #f2b200;
+  --hand-foreground: #1b1500;
   --sidebar: #12161c;
   --sidebar-foreground: #eef1f5;
   --sidebar-primary: #4d7eff;
@@ -171,6 +189,12 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-destructive-text: var(--destructive-text);
+  --color-live-text: var(--live-text);
+  --color-chip: var(--chip);
+  --color-chip-foreground: var(--chip-foreground);
+  --color-hand: var(--hand);
+  --color-hand-foreground: var(--hand-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -206,9 +230,38 @@
     scrollbar-gutter: auto;
   }
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Phones: keep what Tab reaches clear of the bottom tab bar (2.4.11). */
+  @media (width < 48rem) {
+    html:has([data-tab-bar]) {
+      scroll-padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
+
+/* The focus indicator: a 2px outline in the ring colour, 3:1 or more against every
+   surface in both themes, and still drawn in Windows contrast themes, which drop
+   box-shadow rings. */
+@utility focus-ring {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* Inside lists and menus, where an outer outline would overlap the neighbours. */
+@utility focus-ring-inset {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* Overlays (dialogs, sheets, menus, popovers, tooltips) appear without zooming or
+   sliding when the device asks for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  [data-entering],
+  [data-exiting] {
+    animation: none !important;
+    transition: none !important;
   }
 }

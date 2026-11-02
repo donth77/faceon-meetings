@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 
@@ -24,11 +25,25 @@ export async function AppFrame({
   // The sidebar remembers whether it was collapsed (shadcn's sidebar_state cookie).
   const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false";
   const { name, email } = session.user;
+  const t = await getTranslations("Nav");
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
+      {/* The first thing Tab reaches: past the sidebar, straight to the page. */}
+      <a
+        href="#main"
+        className="bg-background text-foreground focus:focus-ring sr-only z-[60] rounded-lg px-3 py-2 text-sm font-semibold focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        {t("skipToMain")}
+      </a>
       <AppSidebar user={{ name, email, image: avatarUrl(session.user) }} />
-      <SidebarInset className="pb-16 md:pb-0">{children}</SidebarInset>
+      <SidebarInset
+        id="main"
+        tabIndex={-1}
+        className="pb-16 outline-none md:pb-0"
+      >
+        {children}
+      </SidebarInset>
       <MobileTabBar />
       <MeetingReminders />
       <Toaster position="bottom-center" />

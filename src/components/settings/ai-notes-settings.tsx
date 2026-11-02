@@ -103,7 +103,7 @@ function ModelField({
             <ListBoxItem
               id={option.id}
               textValue={option.id}
-              className="data-focused:bg-accent data-selected:text-primary flex min-h-10 cursor-default items-center rounded-lg px-2.5 font-mono text-[15px] outline-none data-selected:font-semibold"
+              className="data-focused:bg-accent data-focus-visible:focus-ring-inset data-selected:text-primary flex min-h-10 cursor-default items-center rounded-lg px-2.5 font-mono text-[15px] outline-hidden data-selected:font-semibold"
             >
               {option.label}
             </ListBoxItem>

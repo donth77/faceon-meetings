@@ -121,7 +121,7 @@ export function SelectField({
                 <ListBoxItem
                   id={option.id}
                   textValue={option.label}
-                  className="data-focused:bg-accent flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-none"
+                  className="data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-hidden"
                 >
                   {({ isSelected }) => (
                     <>

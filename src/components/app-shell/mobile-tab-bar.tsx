@@ -17,6 +17,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label={t("label")}
+      data-tab-bar
       className="bg-background/95 supports-[backdrop-filter]:bg-background/80 fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
     >
       <ul className="grid grid-cols-5">
@@ -28,11 +29,21 @@ export function MobileTabBar() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
-                  active ? "text-primary" : "text-muted-foreground",
+                  "focus-visible:focus-ring-inset flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-[11px] outline-hidden",
+                  active
+                    ? "text-primary font-bold"
+                    : "text-muted-foreground font-medium",
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
+                {/* The current tab has a pill behind its icon, not just a colour. */}
+                <span
+                  className={cn(
+                    "flex h-6 w-11 items-center justify-center rounded-full",
+                    active && "bg-chip text-chip-foreground",
+                  )}
+                >
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
                 <span className="max-w-full truncate">{t(label)}</span>
               </Link>
             </li>

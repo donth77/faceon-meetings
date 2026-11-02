@@ -37,7 +37,7 @@ export function AppSidebar({ user }: { user: AccountUser }) {
   const t = useTranslations("Nav");
 
   return (
-    <Sidebar collapsible="icon" aria-label={t("label")}>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="flex-row items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
         <Link href="/home" className="rounded-md px-1 py-1.5">
           <Image
@@ -62,10 +62,10 @@ export function AppSidebar({ user }: { user: AccountUser }) {
             className="hidden size-6 group-data-[collapsible=icon]:block"
           />
         </Link>
-        <SidebarTrigger aria-label={t("toggle")} />
+        <SidebarTrigger />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent role="navigation" aria-label={t("label")}>
         <SidebarGroup>
           <NavList items={PRIMARY_NAV} />
         </SidebarGroup>
