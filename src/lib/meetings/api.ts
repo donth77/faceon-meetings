@@ -82,3 +82,10 @@ export type JoinResponse =
 export const TokenRequest = z.object({ room: z.uuid() });
 export type TokenRequest = z.infer<typeof TokenRequest>;
 export type TokenResponse = { token: string };
+
+/** Raise or lower your hand; hosts can lower anyone's, or everyone's. */
+export const HandRequest = z.union([
+  z.object({ raised: z.boolean(), target: z.string().max(128).optional() }),
+  z.object({ lowerAll: z.literal(true) }),
+]);
+export type HandRequest = z.infer<typeof HandRequest>;

@@ -83,13 +83,14 @@ export const streamProvider: MediaProvider = {
     pinForEveryone: true,
   },
 
-  async createSession({ sessionId, host, limits }) {
+  async createSession({ sessionId, host, limits, state }) {
     // The call's creator and first member must exist before the call does.
     await stream().upsertUsers([toStreamUser(host)]);
     await callOf(sessionId).getOrCreate({
       data: {
         created_by_id: host.id,
         members: [{ user_id: host.id, role: MEMBER_ROLE.host }],
+        custom: { v: 1, ...state },
         settings_override: {
           limits: {
             max_participants: limits.maxParticipants,

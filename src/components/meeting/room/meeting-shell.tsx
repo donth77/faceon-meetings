@@ -2,7 +2,7 @@
 
 import { LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import type { DeviceProblem } from "@/lib/device/problems";
@@ -12,6 +12,7 @@ import type {
   SessionInfo,
 } from "@/lib/meetings/api";
 
+import { meetingApi } from "../api-client";
 import { useRoomMedia, type RoomStatus } from "../media";
 import { useMeetingTitle } from "../meeting-title";
 import { AloneCard } from "./alone-card";
@@ -19,10 +20,13 @@ import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ChatPanel } from "./chat-panel";
 import { ControlBar, type PanelName } from "./control-bar";
 import { ParticipantsPanel } from "./participants-panel";
+import { FloatingReactions } from "./reactions";
+import { RoomBadgesProvider } from "./room-badges";
 import { Stage, type LayoutChoice } from "./stage";
 import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
 import { useMeetingShortcuts } from "./use-meeting-shortcuts";
+import { useReactions, useReactionSender } from "./use-reactions";
 
 /** Says when the connection drops and while it comes back. */
 function ConnectionBanner({ status }: { status: RoomStatus }) {
@@ -97,6 +101,50 @@ export function MeetingShell({
       }),
   });
 
+  // Raised hands and reactions.
+  const isHost = self.role === "host" || self.role === "cohost";
+  const hands = useMemo(
+    () => media.sessionState?.hands ?? {},
+    [media.sessionState],
+  );
+  const reactionsAllowed = media.sessionState?.reactions ?? true;
+  const reactions = useReactions(media.subscribeReactions, reactionsAllowed);
+  const sendReaction = useReactionSender(media.sendReaction);
+  const badges = useMemo(
+    () => ({
+      hands,
+      reactions: new Map(reactions.map((r) => [r.userId, r.code] as const)),
+    }),
+    [hands, reactions],
+  );
+  const nameOf = (userId: string) =>
+    media.participants.find((p) => p.userId === userId)?.name ?? "";
+
+  async function changeHand(
+    request: Parameters<typeof meetingApi.hand>[1],
+  ): Promise<void> {
+    try {
+      await meetingApi.hand(meeting.code, request);
+    } catch {
+      toast.error(t("hand.failed"));
+    }
+  }
+
+  // Hosts hear about each hand that goes up.
+  const previousHands = useRef(hands);
+  const announceHand = useEffectEvent((userId: string) => {
+    if (isHost && userId !== self.id) {
+      toast(t("hand.someoneRaised", { name: nameOf(userId) }));
+    }
+  });
+  useEffect(() => {
+    const before = previousHands.current;
+    previousHands.current = hands;
+    for (const userId of Object.keys(hands)) {
+      if (!(userId in before)) announceHand(userId);
+    }
+  }, [hands]);
+
   function openPanel(next: PanelName) {
     setPanel(next);
     if (next === "chat") chat.markRead();
@@ -128,11 +176,23 @@ export function MeetingShell({
       <ConnectionBanner status={media.status} />
       <div className="flex min-h-0 flex-1 gap-3 px-3">
         <main className="relative min-h-0 min-w-0 flex-1">
-          <Stage layout={layout} />
+          <RoomBadgesProvider value={badges}>
+            <Stage layout={layout} />
+          </RoomBadgesProvider>
+          <FloatingReactions reactions={reactions} nameOf={nameOf} />
           {alone ? <AloneCard meeting={meeting} /> : null}
         </main>
         {panel === "people" ? (
-          <ParticipantsPanel meeting={meeting} onClose={() => setPanel(null)} />
+          <ParticipantsPanel
+            meeting={meeting}
+            hands={hands}
+            isHost={isHost}
+            onLowerHand={(userId) =>
+              void changeHand({ raised: false, target: userId })
+            }
+            onLowerAll={() => void changeHand({ lowerAll: true })}
+            onClose={() => setPanel(null)}
+          />
         ) : panel === "chat" ? (
           <ChatPanel
             messages={chat.messages}
@@ -157,6 +217,9 @@ export function MeetingShell({
         panel={panel}
         onTogglePanel={togglePanel}
         unreadChat={chat.unread}
+        handRaised={self.id in hands}
+        onToggleHand={() => void changeHand({ raised: !(self.id in hands) })}
+        onReaction={reactionsAllowed ? (code) => void sendReaction(code) : null}
       />
     </div>
   );

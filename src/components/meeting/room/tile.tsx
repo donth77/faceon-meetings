@@ -1,10 +1,14 @@
 "use client";
 
 import { cn } from "cn";
-import { MicOff, SignalLow } from "lucide-react";
+import { Hand, MicOff, SignalLow } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { emojiFor } from "@/lib/meetings/events";
+
 import { TrackView, type RoomParticipant } from "../media";
+import { EMOJI_FONT } from "./reactions";
+import { useRoomBadges } from "./room-badges";
 
 /**
  * One person (or their shared screen) on the stage: video or their avatar, the name
@@ -21,7 +25,12 @@ export function Tile({
   className?: string;
 }) {
   const t = useTranslations("Meeting");
+  const badges = useRoomBadges();
   const isScreen = kind === "screen";
+  const handUp = !isScreen && participant.userId in badges.hands;
+  const reaction = isScreen
+    ? undefined
+    : badges.reactions.get(participant.userId);
   const showVideo = isScreen || participant.video;
   const name = isScreen
     ? t("screenOf", { name: participant.name })
@@ -58,6 +67,24 @@ export function Tile({
           ) : null}
         </div>
       )}
+
+      {handUp || reaction ? (
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+          {handUp ? (
+            <span className="flex size-[30px] items-center justify-center rounded-full bg-[#f2b200] text-[#1b1500]">
+              <Hand className="size-[18px]" aria-label={t("hand.raised")} />
+            </span>
+          ) : null}
+          {reaction ? (
+            <span
+              aria-hidden="true"
+              className={`${EMOJI_FONT} flex size-[34px] items-center justify-center rounded-full bg-white/95 text-[19px] leading-none shadow-[0_4px_12px_rgba(0,0,0,0.35)]`}
+            >
+              {emojiFor(reaction)}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="absolute bottom-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] items-center gap-1.5 rounded-lg bg-black/65 px-2 py-1 text-[13px] leading-[18px] font-medium text-white">
         {!isScreen && !participant.audio ? (

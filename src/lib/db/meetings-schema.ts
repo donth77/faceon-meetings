@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -79,6 +80,13 @@ export const meetingSession = pgTable(
     provider: text("provider").$type<MediaProviderId>().notNull(),
     status: sessionStatus("status").notNull().default("open"),
     limits: jsonb("limits").$type<SessionLimits>().notNull(),
+    /** Raised hands: media user ID → when it went up (ISO 8601). */
+    hands: jsonb("hands")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    /** Bumped on every change to the session's shared state; clients ignore older ones. */
+    rev: integer("rev").notNull().default(0),
     startedAt: timestamp("started_at", { withTimezone: true })
       .defaultNow()
       .notNull(),

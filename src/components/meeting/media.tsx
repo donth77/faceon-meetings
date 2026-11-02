@@ -14,6 +14,7 @@ import type {
   EventSender,
   ReactionCode,
   RoomEvent,
+  SharedSessionState,
 } from "@/lib/meetings/events";
 
 export type ConnectionQuality = "good" | "poor" | "unknown";
@@ -53,6 +54,8 @@ export type LeaveReason =
 
 export type RoomMedia = {
   status: RoomStatus;
+  /** Raised hands and the host's policies; null until the provider has delivered them. */
+  sessionState: SharedSessionState | null;
   participants: RoomParticipant[];
   dominantSpeakerKey: string | undefined;
   mic: InputDevice;

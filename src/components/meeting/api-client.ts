@@ -1,5 +1,6 @@
 import {
   MEETING_ERRORS,
+  type HandRequest,
   type JoinRequest,
   type JoinResponse,
   type MeetingErrorCode,
@@ -55,4 +56,6 @@ export const meetingApi = {
   token: async (code: string, room: string) =>
     (await post<TokenResponse>(`/api/meetings/${code}/token`, { room })).token,
   end: (code: string) => post<void>(`/api/meetings/${code}/end`),
+  hand: (code: string, request: HandRequest) =>
+    post<void>(`/api/meetings/${code}/hand`, request),
 };

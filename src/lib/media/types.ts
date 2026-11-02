@@ -72,6 +72,8 @@ export interface MediaProvider {
     sessionId: string;
     host: MediaUser;
     limits: SessionLimits;
+    /** The shared state everyone starts with. */
+    state: SessionState;
   }): Promise<void>;
   /** Ends the call for everyone. Safe to call again on an ended or unknown session. */
   endSession(sessionId: string): Promise<void>;

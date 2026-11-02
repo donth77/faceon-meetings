@@ -17,7 +17,15 @@ export function db(): NodePgDatabase<typeof schema> {
   if (database) return database;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not set.");
-  const pool = new Pool({ connectionString, max: 5 });
+  // Neon's URLs say sslmode=require, which node-postgres already treats as verify-full
+  // (and warns about); naming it verify-full keeps the same checks without the warning.
+  const pool = new Pool({
+    connectionString: connectionString.replace(
+      "sslmode=require",
+      "sslmode=verify-full",
+    ),
+    max: 5,
+  });
   // On Vercel, lets idle connections close cleanly before a function instance is suspended.
   attachDatabasePool(pool);
   database = drizzle(pool, { schema });

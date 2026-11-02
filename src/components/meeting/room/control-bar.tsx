@@ -3,12 +3,14 @@
 import { cn } from "cn";
 import {
   Ellipsis,
+  Hand,
   MessageSquare,
   Mic,
   MicOff,
   MonitorUp,
   MonitorX,
   PhoneOff,
+  SmilePlus,
   Users,
   Video,
   VideoOff,
@@ -21,58 +23,36 @@ import { Button } from "react-aria-components";
 import {
   DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuSub,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNow } from "@/hooks/use-now";
+import { REACTIONS, type ReactionCode } from "@/lib/meetings/events";
 import { canShareScreen } from "@/lib/platform";
 
 import { useRoomMedia } from "../media";
+import { ControlButton } from "./control-button";
 import { DeviceMenu } from "./device-menu";
+import { EMOJI_FONT, ReactionsControl } from "./reactions";
 import { shortcutLabel } from "./use-meeting-shortcuts";
 
-/** A round control with its label underneath (hidden on phones) and a tooltip. */
+/** A round control with a tooltip that names its keyboard shortcut. */
 function Control({
-  icon: Icon,
-  label,
   shortcut,
-  danger = false,
-  onPress,
   children,
-}: {
-  icon: LucideIcon;
-  label: string;
+  ...button
+}: Parameters<typeof ControlButton>[0] & {
   shortcut?: string;
-  /** Red, as for a muted mic or a stopped camera. */
-  danger?: boolean;
-  onPress: () => void;
   /** Extra controls positioned over this one (the device caret). */
   children?: ReactNode;
 }) {
   return (
     <div className="relative flex">
       <TooltipTrigger delay={500}>
-        <Button
-          aria-label={label}
-          onPress={onPress}
-          className="group flex flex-col items-center gap-1.5 rounded-xl px-0.5 py-1 outline-none md:w-[88px]"
-        >
-          <span
-            className={cn(
-              "group-focus-visible:ring-ring flex size-14 items-center justify-center rounded-full transition-colors group-focus-visible:ring-2 md:size-11",
-              danger
-                ? "bg-destructive group-hover:bg-destructive/90 text-white"
-                : "text-foreground bg-white/10 group-hover:bg-white/15",
-            )}
-          >
-            <Icon className="size-6 md:size-[22px]" aria-hidden="true" />
-          </span>
-          <span className="text-foreground/80 max-w-[86px] text-center text-xs leading-[15px] max-md:hidden">
-            {label}
-          </span>
-        </Button>
+        <ControlButton {...button} />
         <Tooltip>
-          {label}
+          {button.label}
           {shortcut ? (
             <kbd className="font-sans opacity-70">({shortcut})</kbd>
           ) : null}
@@ -203,10 +183,13 @@ function MoreMenu({
   peopleCount,
   unreadChat,
   onOpenPanel,
+  onReaction,
 }: {
   peopleCount: number;
   unreadChat: number;
   onOpenPanel: (panel: PanelName) => void;
+  /** Null when the host has turned reactions off. */
+  onReaction: ((code: ReactionCode) => void) | null;
 }) {
   const t = useTranslations("Meeting");
   return (
@@ -225,6 +208,31 @@ function MoreMenu({
           ) : null}
         </Button>
         <DropdownMenu placement="top end" className="min-w-56">
+          {onReaction ? (
+            <DropdownMenuSub>
+              <DropdownMenuItem>
+                <SmilePlus aria-hidden="true" />
+                {t("reactions.send")}
+              </DropdownMenuItem>
+              <DropdownMenu placement="top end" className="min-w-44">
+                {REACTIONS.map((reaction) => (
+                  <DropdownMenuItem
+                    key={reaction.code}
+                    textValue={t(`reactions.names.${reaction.name}`)}
+                    onAction={() => onReaction(reaction.code)}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`${EMOJI_FONT} text-xl`}
+                    >
+                      {reaction.emoji}
+                    </span>
+                    {t(`reactions.names.${reaction.name}`)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenu>
+            </DropdownMenuSub>
+          ) : null}
           <DropdownMenuItem onAction={() => onOpenPanel("people")}>
             <Users aria-hidden="true" />
             {t("people.withCount", { count: peopleCount })}
@@ -248,6 +256,9 @@ export function ControlBar({
   panel,
   onTogglePanel,
   unreadChat,
+  handRaised,
+  onToggleHand,
+  onReaction,
 }: {
   title: string;
   isHost: boolean;
@@ -256,6 +267,10 @@ export function ControlBar({
   panel: PanelName | null;
   onTogglePanel: (panel: PanelName) => void;
   unreadChat: number;
+  handRaised: boolean;
+  onToggleHand: () => void;
+  /** Null when the host has turned reactions off. */
+  onReaction: ((code: ReactionCode) => void) | null;
 }) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
@@ -275,7 +290,7 @@ export function ControlBar({
           icon={mic.enabled ? Mic : MicOff}
           label={mic.enabled ? t("mute") : t("unmute")}
           shortcut={shortcutLabel("D")}
-          danger={!mic.enabled}
+          tone={mic.enabled ? "plain" : "danger"}
           onPress={() => void mic.toggle()}
         >
           <DeviceMenu
@@ -304,7 +319,7 @@ export function ControlBar({
           icon={camera.enabled ? Video : VideoOff}
           label={camera.enabled ? t("stopVideo") : t("startVideo")}
           shortcut={shortcutLabel("E")}
-          danger={!camera.enabled}
+          tone={camera.enabled ? "plain" : "danger"}
           onPress={() => void camera.toggle()}
         >
           <DeviceMenu
@@ -323,14 +338,26 @@ export function ControlBar({
           <Control
             icon={screenShare.enabled ? MonitorX : MonitorUp}
             label={screenShare.enabled ? t("stopSharing") : t("shareScreen")}
-            danger={screenShare.enabled}
+            tone={screenShare.enabled ? "danger" : "plain"}
             onPress={() => void screenShare.toggle()}
           />
         ) : null}
+        {onReaction ? (
+          <div className="flex max-md:hidden">
+            <ReactionsControl onSend={onReaction} />
+          </div>
+        ) : null}
+        <Control
+          icon={Hand}
+          label={handRaised ? t("hand.lower") : t("hand.raise")}
+          tone={handRaised ? "amber" : "plain"}
+          onPress={onToggleHand}
+        />
         <MoreMenu
           peopleCount={count}
           unreadChat={unreadChat}
           onOpenPanel={onTogglePanel}
+          onReaction={onReaction}
         />
         <LeaveControl isHost={isHost} onEndForAll={onEndForAll} />
       </div>

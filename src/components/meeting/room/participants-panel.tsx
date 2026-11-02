@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, Mic, MicOff, Search, VideoOff } from "lucide-react";
+import { Hand, Link2, Mic, MicOff, Search, VideoOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { Button } from "react-aria-components";
@@ -16,8 +16,19 @@ import { orderParticipants } from "./stage";
 const isGuest = (participant: RoomParticipant) =>
   participant.userId.startsWith("g_");
 
-function ParticipantRow({ participant }: { participant: RoomParticipant }) {
+function ParticipantRow({
+  participant,
+  handNumber,
+  onLowerHand,
+}: {
+  participant: RoomParticipant;
+  /** Their place in the queue of raised hands, if their hand is up. */
+  handNumber: number | null;
+  /** Hosts can lower someone's hand. */
+  onLowerHand: (() => void) | null;
+}) {
   const t = useTranslations("Meeting.people");
+  const th = useTranslations("Meeting.hand");
   const tags = [
     participant.isLocal ? t("you") : null,
     participant.isHost ? t("host") : null,
@@ -45,6 +56,20 @@ function ParticipantRow({ participant }: { participant: RoomParticipant }) {
         ) : null}
       </span>
       <span className="text-muted-foreground flex items-center gap-2">
+        {handNumber !== null ? (
+          <span className="flex items-center gap-0.5 text-[#f2b200]">
+            <Hand className="size-[18px]" aria-label={th("raised")} />
+            <span className="text-xs font-bold">{handNumber}</span>
+          </span>
+        ) : null}
+        {handNumber !== null && onLowerHand ? (
+          <Button
+            onPress={onLowerHand}
+            className="text-foreground focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+          >
+            {th("lower")}
+          </Button>
+        ) : null}
         {participant.video ? null : (
           <VideoOff className="size-[18px]" aria-label={t("videoOff")} />
         )}
@@ -64,18 +89,37 @@ function ParticipantRow({ participant }: { participant: RoomParticipant }) {
 /** Participants: everyone in the meeting, searchable, with an Invite button. */
 export function ParticipantsPanel({
   meeting,
+  hands,
+  isHost,
+  onLowerHand,
+  onLowerAll,
   onClose,
 }: {
   meeting: AdmittedMeetingInfo;
+  hands: Record<string, string>;
+  isHost: boolean;
+  onLowerHand: (userId: string) => void;
+  onLowerAll: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations("Meeting.people");
+  const th = useTranslations("Meeting.hand");
   const media = useRoomMedia();
   const { copyInvitation } = useInvitation(meeting);
   const searchId = useId();
   const [query, setQuery] = useState("");
 
-  const everyone = orderParticipants(media.participants);
+  // Raised hands first, in the order they went up, then everyone else.
+  const queue = Object.entries(hands)
+    .sort(([, a], [, b]) => a.localeCompare(b))
+    .map(([userId]) => userId);
+  const handNumber = (p: RoomParticipant) => {
+    const index = queue.indexOf(p.userId);
+    return index === -1 ? null : index + 1;
+  };
+  const everyone = orderParticipants(media.participants).sort(
+    (a, b) => (handNumber(a) ?? Infinity) - (handNumber(b) ?? Infinity),
+  );
   const q = query.trim().toLocaleLowerCase();
   const shown = q
     ? everyone.filter((p) => p.name.toLocaleLowerCase().includes(q))
@@ -87,13 +131,24 @@ export function ParticipantsPanel({
       closeLabel={t("close")}
       onClose={onClose}
       footer={
-        <Button
-          onPress={() => void copyInvitation()}
-          className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
-        >
-          <Link2 className="size-[18px]" aria-hidden="true" />
-          {t("invite")}
-        </Button>
+        <>
+          {isHost && queue.length > 0 ? (
+            <Button
+              onPress={onLowerAll}
+              className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+            >
+              <Hand className="size-[18px]" aria-hidden="true" />
+              {th("lowerAll")}
+            </Button>
+          ) : null}
+          <Button
+            onPress={() => void copyInvitation()}
+            className="focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2"
+          >
+            <Link2 className="size-[18px]" aria-hidden="true" />
+            {t("invite")}
+          </Button>
+        </>
       }
     >
       <div className="relative shrink-0 px-4 pb-3">
@@ -120,7 +175,14 @@ export function ParticipantsPanel({
         {shown.length > 0 ? (
           <ul>
             {shown.map((participant) => (
-              <ParticipantRow key={participant.key} participant={participant} />
+              <ParticipantRow
+                key={participant.key}
+                participant={participant}
+                handNumber={handNumber(participant)}
+                onLowerHand={
+                  isHost ? () => onLowerHand(participant.userId) : null
+                }
+              />
             ))}
           </ul>
         ) : (

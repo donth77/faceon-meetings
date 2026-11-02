@@ -20,7 +20,11 @@ import {
 } from "react";
 
 import { deviceProblem } from "@/lib/device/problems";
-import { isReactionCode, RoomEvent } from "@/lib/meetings/events";
+import {
+  isReactionCode,
+  RoomEvent,
+  SharedSessionState,
+} from "@/lib/meetings/events";
 
 import {
   RoomMediaProvider,
@@ -103,6 +107,7 @@ export function StreamMedia({
     useCameraState,
     useSpeakerState,
     useScreenShareState,
+    useCallCustomData,
   } = useCallStateHooks();
   const participants = useParticipants();
   const callingState = useCallCallingState();
@@ -111,6 +116,12 @@ export function StreamMedia({
   const camera = useCameraState({ optimisticUpdates: true });
   const speaker = useSpeakerState();
   const screenShare = useScreenShareState({ optimisticUpdates: true });
+  // Our server writes the complete state in order, so the latest custom data is current.
+  const customData = useCallCustomData();
+  const sessionState = useMemo(() => {
+    const parsed = SharedSessionState.safeParse(customData);
+    return parsed.success ? parsed.data : null;
+  }, [customData]);
 
   // Why the call is closing, noted by the events that close it.
   const leaveReason = useRef<LeaveReason | null>(null);
@@ -202,6 +213,7 @@ export function StreamMedia({
   const media = useMemo<RoomMedia>(
     () => ({
       status: statusOf(callingState),
+      sessionState,
       participants: participants.map((p) => toRoomParticipant(p, clockSkew)),
       dominantSpeakerKey: dominantSpeaker?.sessionId,
       mic: {
@@ -244,6 +256,7 @@ export function StreamMedia({
       camera,
       speaker,
       screenShare,
+      sessionState,
     ],
   );
 

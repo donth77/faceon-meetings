@@ -316,6 +316,26 @@
       "send": "Send message",
       "you": "You",
       "open": "Open"
+    },
+    "reactions": {
+      "label": "Reactions",
+      "send": "Send a reaction",
+      "names": {
+        "thumbsUp": "Thumbs up",
+        "heart": "Heart",
+        "laugh": "Laugh",
+        "wow": "Wow",
+        "clap": "Clap",
+        "celebrate": "Celebrate"
+      }
+    },
+    "hand": {
+      "raise": "Raise hand",
+      "lower": "Lower hand",
+      "raised": "Hand raised",
+      "someoneRaised": "{name} raised their hand",
+      "lowerAll": "Lower all hands",
+      "failed": "Couldn’t change the hand. Try again."
     }
   },
   "PreJoin": {

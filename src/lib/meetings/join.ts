@@ -5,14 +5,13 @@ import { guestsEnabled } from "@/lib/guest-session";
 import { mediaProvider } from "@/lib/media";
 import { serverEnv } from "@/lib/server-env";
 
+import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import type { JoinResponse } from "./api";
-import { MEETING_CODE_PATTERN } from "./codes";
 import { MeetingError } from "./errors";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
   endMeeting,
-  findMeetingByCode,
   findMember,
   findOpenSession,
   hostMemberIds,
@@ -20,6 +19,7 @@ import {
   type MeetingHost,
 } from "./queries";
 import { checkEntry, isJoinable, resolveRole } from "./rules";
+import { sessionState } from "./session-state";
 import { currentSession, secondsLeft, startSession } from "./sessions";
 
 const hostMediaUser = (host: MeetingHost) => ({
@@ -27,19 +27,6 @@ const hostMediaUser = (host: MeetingHost) => ({
   name: host.name,
   image: avatarUrl(host),
 });
-
-async function requireMeeting(code: string) {
-  const found = MEETING_CODE_PATTERN.test(code)
-    ? await findMeetingByCode(code)
-    : null;
-  if (!found) throw new MeetingError("NOT_FOUND");
-  return found;
-}
-
-function requirePrincipal(principal: Principal | null): Principal {
-  if (!principal) throw new MeetingError("SIGN_IN_REQUIRED");
-  return principal;
-}
 
 /**
  * Decides whether someone may join a meeting now and, if so, admits them: opens a session
@@ -107,6 +94,7 @@ export async function joinMeeting(input: {
       sessionId: session.row.id,
       host: hostMediaUser(host),
       limits: session.row.limits,
+      state: sessionState(meeting, session.row),
     });
   }
 
@@ -161,13 +149,11 @@ export async function refreshMeetingToken(input: {
 }): Promise<string> {
   const { meeting } = await requireMeeting(input.code);
   const principal = requirePrincipal(input.principal);
-
-  const session = await findOpenSession(meeting.id);
-  if (!session || session.id !== input.room) {
-    throw new MeetingError("SESSION_ENDED");
-  }
-  const member = await findMember(session.id, principal.mediaUserId);
-  if (!member || member.bannedAt) throw new MeetingError("NOT_ALLOWED");
+  const { session, member } = await requireMember(
+    meeting.id,
+    principal,
+    input.room,
+  );
 
   return mediaProvider(session.provider).refreshToken({
     sessionId: session.id,

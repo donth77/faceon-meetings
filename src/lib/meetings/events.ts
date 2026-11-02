@@ -44,3 +44,19 @@ export type RoomEvent = z.infer<typeof RoomEvent>;
 
 /** Who sent an event, as the provider reports it. */
 export type EventSender = { userId: string; name: string; image?: string };
+
+/**
+ * The session's shared state, which the server publishes (complete, with an increasing
+ * `rev`) for every participant: raised hands and the host's policies.
+ */
+export const SharedSessionState = z.object({
+  v: z.literal(1),
+  rev: z.number().int(),
+  locked: z.boolean(),
+  chat: z.boolean(),
+  reactions: z.boolean(),
+  screenShare: z.enum(["host", "all"]),
+  /** Media user ID → when the hand went up (ISO 8601). */
+  hands: z.record(z.string(), z.string()),
+});
+export type SharedSessionState = z.infer<typeof SharedSessionState>;
