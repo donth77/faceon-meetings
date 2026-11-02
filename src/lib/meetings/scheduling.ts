@@ -630,3 +630,17 @@ export function upcomingSoon(
     to: new Date(now + days * DAY_MS),
   });
 }
+
+/**
+ * A series that never ends stays reachable for a year after its latest session, like
+ * Zoom's recurring meeting IDs. Called when a session opens.
+ */
+export async function keepOpenSeriesAlive(row: Meeting, now: Date) {
+  if (row.type !== "scheduled") return;
+  const { rules } = await seriesOf(row.id);
+  if (!rules.some((rule) => lastStartOf(rule) === null)) return;
+  await db()
+    .update(meeting)
+    .set({ expiresAt: new Date(now.getTime() + OPEN_SERIES_MS) })
+    .where(eq(meeting.id, row.id));
+}

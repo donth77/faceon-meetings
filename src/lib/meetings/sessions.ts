@@ -18,6 +18,7 @@ import {
   type MeetingSession,
 } from "./queries";
 import { isSessionStale } from "./rules";
+import { keepOpenSeriesAlive } from "./scheduling";
 
 /**
  * Meeting sessions: opening one (with the host's limits and the platform's caps), and
@@ -55,11 +56,13 @@ export async function startSession(
       throw new MeetingError("DEMO_LIMIT");
     }
   }
-  return openSession({
+  const session = await openSession({
     meeting,
     provider: pickProvider().id,
     limits: limitsFor(plan),
   });
+  await keepOpenSeriesAlive(meeting, now);
+  return session;
 }
 
 /** Seconds until the session's time limit, from its start; null without a limit. */
