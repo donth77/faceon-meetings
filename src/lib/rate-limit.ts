@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
-import { and, gte, inArray, sql } from "drizzle-orm";
+import { and, gte, inArray, lt, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { attemptCounter } from "@/lib/db/schema";
@@ -59,4 +59,13 @@ export async function recordAttempt(limits: AttemptLimit[]): Promise<void> {
         windowStart: sql`case when ${expired} then excluded.window_start else ${attemptCounter.windowStart} end`,
       },
     });
+}
+
+/** Deletes counters whose window ended long ago. Returns how many. */
+export async function pruneAttempts(before: Date): Promise<number> {
+  const deleted = await db()
+    .delete(attemptCounter)
+    .where(lt(attemptCounter.windowStart, before))
+    .returning({ key: attemptCounter.key });
+  return deleted.length;
 }

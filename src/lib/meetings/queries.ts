@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, eq, gte, inArray, isNull } from "drizzle-orm";
+import { and, count, eq, gte, inArray, isNull, lt } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meeting, meetingMember, meetingSession, user } from "@/lib/db/schema";
@@ -359,4 +359,48 @@ export async function hostMemberIds(sessionId: string): Promise<string[]> {
       ),
     );
   return rows.map((row) => row.id);
+}
+
+/** Open sessions started before a moment, with their meetings: candidates for closing. */
+export async function openSessionsStartedBefore(
+  before: Date,
+): Promise<Meeting[]> {
+  const rows = await db()
+    .select({ meeting })
+    .from(meetingSession)
+    .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
+    .where(
+      and(
+        eq(meetingSession.status, "open"),
+        lt(meetingSession.startedAt, before),
+      ),
+    );
+  return rows.map((row) => readMeeting(row.meeting));
+}
+
+/** Deletes meetings past their expiry (unused instant meetings), with their sessions. */
+export async function deleteExpiredMeetings(now: Date): Promise<number> {
+  const deleted = await db()
+    .delete(meeting)
+    .where(lt(meeting.expiresAt, now))
+    .returning({ id: meeting.id });
+  return deleted.length;
+}
+
+/** Deletes admission records of sessions that ended before a moment. */
+export async function pruneEndedSessionMembers(before: Date): Promise<number> {
+  const ended = db()
+    .select({ id: meetingSession.id })
+    .from(meetingSession)
+    .where(
+      and(
+        eq(meetingSession.status, "ended"),
+        lt(meetingSession.endedAt, before),
+      ),
+    );
+  const deleted = await db()
+    .delete(meetingMember)
+    .where(inArray(meetingMember.sessionId, ended))
+    .returning({ sessionId: meetingMember.sessionId });
+  return deleted.length;
 }

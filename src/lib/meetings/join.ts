@@ -2,98 +2,25 @@ import "server-only";
 
 import { avatarUrl } from "@/lib/avatars/seed";
 import { guestsEnabled } from "@/lib/guest-session";
-import { mediaProvider, pickProvider } from "@/lib/media";
-import type { SessionSnapshot } from "@/lib/media/types";
+import { mediaProvider } from "@/lib/media";
 import { serverEnv } from "@/lib/server-env";
 
 import type { JoinResponse } from "./api";
 import { MEETING_CODE_PATTERN } from "./codes";
 import { MeetingError } from "./errors";
-import { hostingPlan, limitsFor } from "./hosting";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
-  countOpenSessions,
-  countSessionsSince,
   endMeeting,
   findMeetingByCode,
   findMember,
   findOpenSession,
   hostMemberIds,
-  openSession,
   upsertMember,
-  type Meeting,
   type MeetingHost,
-  type MeetingSession,
 } from "./queries";
-import { checkEntry, isJoinable, isSessionStale, resolveRole } from "./rules";
-
-/** An open session with what its provider reported (null: its call isn't there yet). */
-type LiveSession = { row: MeetingSession; snapshot: SessionSnapshot | null };
-
-/** A day, for the daily caps. */
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/**
- * Opens a session with the host's limits: full for allowlisted hosts, demo otherwise.
- * A demo host has a few sessions a day, and only so many meetings run at once.
- */
-async function startSession(meeting: Meeting, host: MeetingHost, now: Date) {
-  if ((await countOpenSessions(now)) >= serverEnv().MAX_CONCURRENT_MEETINGS) {
-    throw new MeetingError("BUSY");
-  }
-  const plan = hostingPlan(host);
-  if (plan === "demo") {
-    const today = await countSessionsSince(
-      host.id,
-      new Date(now.getTime() - DAY_MS),
-    );
-    if (today >= serverEnv().DEMO_MEETINGS_PER_DAY) {
-      throw new MeetingError("DEMO_LIMIT");
-    }
-  }
-  return openSession({
-    meeting,
-    provider: pickProvider().id,
-    limits: limitsFor(plan),
-  });
-}
-
-/** Seconds until the session's time limit, from its start; null without a limit. */
-function secondsLeft(session: MeetingSession, now: Date): number | null {
-  const max = session.limits.maxDurationSeconds;
-  if (!max) return null;
-  const elapsed = (now.getTime() - session.startedAt.getTime()) / 1000;
-  return Math.max(0, Math.round(max - elapsed));
-}
-
-/**
- * The meeting's open session, if it's still usable. A session whose call ended or sat
- * empty past the grace period is closed here (lazy expiry), and an instant meeting whose
- * call ended is over.
- */
-async function currentSession(
-  meeting: Meeting,
-  now: Date,
-): Promise<LiveSession | "meeting-ended" | null> {
-  const row = await findOpenSession(meeting.id);
-  if (!row) return null;
-  const provider = mediaProvider(row.provider);
-  const snapshot = await provider.inspectSession(row.id);
-  if (!isSessionStale(row.startedAt, snapshot, now)) return { row, snapshot };
-
-  await closeSession(row.id);
-  if (snapshot?.ended) {
-    if (meeting.type === "instant") {
-      await endMeeting(meeting.id);
-      return "meeting-ended";
-    }
-  } else if (snapshot) {
-    // End the old call, so tokens issued for it can't rejoin it.
-    await provider.endSession(row.id);
-  }
-  return null;
-}
+import { checkEntry, isJoinable, resolveRole } from "./rules";
+import { currentSession, secondsLeft, startSession } from "./sessions";
 
 const hostMediaUser = (host: MeetingHost) => ({
   id: userMediaId(host.id),
