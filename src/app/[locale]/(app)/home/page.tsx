@@ -36,10 +36,10 @@ export default async function HomePage() {
         <Clock />
         <section
           aria-label={t("actionsLabel")}
-          className="flex flex-wrap items-start gap-3"
+          className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start"
         >
           <NewMeetingMenu />
-          <div className="max-w-[540px] min-w-0 flex-[1_1_360px]">
+          <div className="max-w-[540px] min-w-0 sm:flex-[1_1_360px]">
             <JoinForm />
           </div>
         </section>

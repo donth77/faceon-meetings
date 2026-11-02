@@ -1,3 +1,4 @@
+import { Video } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { Features } from "@/components/marketing/features";
@@ -42,7 +43,12 @@ export default async function LandingPage() {
             </h1>
             <p className="text-muted-foreground text-lg">{t("subline")}</p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-              <LinkButton href="/sign-up" size="lg">
+              <LinkButton
+                href="/sign-up"
+                size="lg"
+                className="h-12 gap-2.5 rounded-xl px-5 text-base font-semibold [&_svg:not([class*='size-'])]:size-5"
+              >
+                <Video aria-hidden="true" />
                 {t("startMeeting")}
               </LinkButton>
               <div className="min-w-0 flex-1">

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
@@ -11,7 +12,11 @@ import { meetingPath } from "@/lib/routes";
 
 /**
  * "Enter a meeting ID or link" + Join. Accepts "123 456 7890" or a pasted invite link.
- * With a `label`, it shows as a visible label above the field and Join is the primary
+ *
+ * Without a `label` it's the row on Home and the landing page, laid out as in Meet: one
+ * line with the button beside it. The field's label is for screen readers; on screen the
+ * placeholder says what to enter and the Join button next to it names the field's purpose
+ * (WCAG technique G167). With a `label`, it shows above the field and Join is the primary
  * button (the sign-in page's "Joining a meeting?" card).
  */
 export function JoinForm({ label }: { label?: string }) {
@@ -34,12 +39,9 @@ export function JoinForm({ label }: { label?: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2.5" noValidate>
-      {/* Always visible: a placeholder disappears once you type. */}
       <label
         htmlFor={inputId}
-        className={
-          label ? "text-[15px] font-semibold" : "text-sm font-semibold"
-        }
+        className={label ? "text-[15px] font-semibold" : "sr-only"}
       >
         {label ?? t("label")}
       </label>
@@ -56,14 +58,19 @@ export function JoinForm({ label }: { label?: string }) {
           aria-describedby={invalid ? errorId : undefined}
           inputMode="text"
           autoComplete="off"
-          className="h-11 min-w-0 flex-1"
+          className={cn(
+            "min-w-0 flex-1",
+            label ? "h-11" : "bg-card h-12 rounded-xl px-4 md:text-base",
+          )}
         />
         <Button
           type="submit"
-          variant={label ? "default" : "outline"}
+          variant={label ? "default" : "secondary"}
           size="lg"
           isDisabled={value.trim() === ""}
-          className={label ? "h-11 px-5" : undefined}
+          className={
+            label ? "h-11 px-5" : "h-12 rounded-xl px-5 text-base font-semibold"
+          }
         >
           {t("submit")}
         </Button>

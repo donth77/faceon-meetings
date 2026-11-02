@@ -1,6 +1,13 @@
 "use client";
 
-import { CalendarPlus, Link2, LoaderCircle, Plus, Video } from "lucide-react";
+import {
+  CalendarPlus,
+  ChevronDown,
+  Link2,
+  LoaderCircle,
+  Plus,
+  Video,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type Key } from "react";
@@ -110,7 +117,11 @@ export function NewMeetingMenu() {
   return (
     <>
       <DropdownMenuTrigger>
-        <Button size="lg" className="gap-2" isPending={pending}>
+        <Button
+          size="lg"
+          className="h-12 w-full gap-2.5 rounded-xl px-4 text-base font-semibold sm:w-auto [&_svg:not([class*='size-'])]:size-5"
+          isPending={pending}
+        >
           {pending ? (
             <LoaderCircle
               className="animate-spin motion-reduce:animate-none"
@@ -120,6 +131,7 @@ export function NewMeetingMenu() {
             <Plus aria-hidden="true" />
           )}
           {pending ? t("starting") : t("newMeeting")}
+          <ChevronDown aria-hidden="true" className="-ml-0.5 size-4" />
         </Button>
         <DropdownMenu
           placement="bottom start"
