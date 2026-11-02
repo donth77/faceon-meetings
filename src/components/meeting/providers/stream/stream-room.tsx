@@ -59,28 +59,38 @@ export default function StreamRoom(props: RoomAdapterProps) {
   const leftUnexpectedly = useEffectEvent(() => props.onLeft("connectionLost"));
 
   useEffect(() => {
-    const client = new StreamVideoClient({
-      apiKey: setup.connection.endpoint,
-      user: setup.self,
-      token: setup.connection.token,
-      tokenProvider: () => refreshToken(),
-    });
-    const call = client.call(CALL_TYPE, setup.connection.room);
     let cancelled = false;
+    let joined: { client: StreamVideoClient; call: Call } | undefined;
 
-    (async () => {
-      await applyDevices(call, setup.devices);
-      await call.join();
-      if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
-    })().catch(() => {
-      if (!cancelled) leftUnexpectedly();
-    });
+    // Start on the next tick. React's development double run mounts, unmounts and
+    // mounts again at once; only the mount that stays gets this far, so the call never
+    // sees two of you for a moment.
+    const start = setTimeout(() => {
+      const client = new StreamVideoClient({
+        apiKey: setup.connection.endpoint,
+        user: setup.self,
+        token: setup.connection.token,
+        tokenProvider: () => refreshToken(),
+      });
+      const call = client.call(CALL_TYPE, setup.connection.room);
+      joined = { client, call };
+      (async () => {
+        await applyDevices(call, setup.devices);
+        await call.join();
+        if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
+      })().catch(() => {
+        if (!cancelled) leftUnexpectedly();
+      });
+    }, 0);
 
-    // Create, join and tear down in one effect, so a remount (or React's development
-    // double run) never reuses a disconnected client.
+    // Create, join and tear down in one effect, so a remount never reuses a
+    // disconnected client.
     return () => {
       cancelled = true;
+      clearTimeout(start);
       setRoom(undefined);
+      if (!joined) return;
+      const { client, call } = joined;
       void call
         .leave()
         .catch(() => {}) // already left or ended
