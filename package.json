@@ -35,6 +35,8 @@
     "@internationalized/date": "3.12.4",
     "@mediapipe/tasks-vision": "1.2.0",
     "@sapphi-red/web-noise-suppressor": "0.4.1",
+    "@sentry/browser": "11.10.0",
+    "@sentry/nextjs": "11.10.0",
     "@stream-io/node-sdk": "^0.8.15",
     "@stream-io/video-react-sdk": "^1.45.0",
     "@vercel/functions": "^3.10.5",

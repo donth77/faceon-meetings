@@ -33,9 +33,37 @@ function quietStartupNotice() {
   };
 }
 
+/** Where MediaPipe sends Google its reports of how it's used. */
+const USAGE_REPORTS = "https://odml.pa.googleapis.com/";
+let reportsStopped = false;
+
+/**
+ * MediaPipe 1.2 reports to Google every minute how it's used (the task, the platform,
+ * timings), with fetch. Backgrounds are made on the device and nobody hears about them,
+ * so that one request is answered here before it leaves; anything but a 200 also makes
+ * MediaPipe stop trying. The Content Security Policy doesn't allow that host either.
+ */
+function stopUsageReports() {
+  if (reportsStopped) return;
+  reportsStopped = true;
+  const send = globalThis.fetch.bind(globalThis);
+  globalThis.fetch = (input, init) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url;
+    return url.startsWith(USAGE_REPORTS)
+      ? Promise.resolve(new Response(null, { status: 204 }))
+      : send(input, init);
+  };
+}
+
 /** Loads the segmenter once, when an effect first needs it; a failure can be retried. */
 export function loadSegmenter(): Promise<ImageSegmenter> {
   quietStartupNotice();
+  stopUsageReports();
   if (!loading) {
     loading = ImageSegmenter.createFromOptions(
       {
