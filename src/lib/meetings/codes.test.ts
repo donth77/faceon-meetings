@@ -107,17 +107,11 @@ describe("readMeetingInput", () => {
 });
 
 describe("passcodes", () => {
-  it("are 4 to 10 letters, numbers or @ - _ *", () => {
-    for (const passcode of ["K7XQ", "abcd1234@-", "team_*", "K7XQ2M"]) {
+  it("are 2 to 10 letters, numbers or @ - _ *", () => {
+    for (const passcode of ["FF", "K7XQ", "abcd1234@-", "team_*", "K7XQ2M"]) {
       expect(Passcode.safeParse(passcode).success).toBe(true);
     }
-    for (const passcode of [
-      "abc",
-      "abcdefghijk",
-      "two words",
-      "pass!",
-      "é123",
-    ]) {
+    for (const passcode of ["F", "abcdefghijk", "two words", "pass!", "é123"]) {
       expect(Passcode.safeParse(passcode).success).toBe(false);
     }
     expect(Passcode.parse("  K7XQ  ")).toBe("K7XQ");
@@ -125,7 +119,8 @@ describe("passcodes", () => {
 
   it("say what's wrong with one, for its field", () => {
     expect(passcodeProblem("K7XQ2M")).toBeNull();
-    expect(passcodeProblem("abc")).toBe("length");
+    expect(passcodeProblem("FF")).toBeNull();
+    expect(passcodeProblem("F")).toBe("length");
     expect(passcodeProblem("abcdefghijk")).toBe("length");
     expect(passcodeProblem("pass!")).toBe("characters");
     expect(passcodeProblem("")).toBe("length");

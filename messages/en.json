@@ -935,8 +935,8 @@
   },
   "Passcode": {
     "label": "Passcode",
-    "rules": "4 to 10 letters, numbers or @ - _ *. Capital letters don't matter.",
-    "length": "Use 4 to 10 characters.",
+    "rules": "2 to 10 letters, numbers or @ - _ *. Capital letters don't matter.",
+    "length": "Use 2 to 10 characters.",
     "characters": "Use only letters, numbers and @ - _ *.",
     "generate": "Generate",
     "generateLabel": "Generate a new passcode",

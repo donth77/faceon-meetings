@@ -4,11 +4,11 @@ import { z } from "zod";
 export const MEETING_CODE_PATTERN = /^[1-9]\d{9}$/;
 
 /**
- * Passcodes, as Zoom allows them: letters, digits and @ - _ *, from 4 (ours: guesses are
- * rate-limited, but length still helps) to 10 characters. Capital letters don't matter
- * when someone types one (passcodeMatches).
+ * Passcodes, as Zoom allows them: letters, digits and @ - _ *, from 2 (a short one like
+ * "FF" is the host's choice; wrong guesses are rate-limited, and generated ones have 6)
+ * to 10 characters. Capital letters don't matter when someone types one (passcodeMatches).
  */
-export const PASSCODE_MIN = 4;
+export const PASSCODE_MIN = 2;
 export const PASSCODE_MAX = 10;
 const PASSCODE_CHARS = "A-Za-z0-9@_*-";
 export const PASSCODE_PATTERN = new RegExp(
