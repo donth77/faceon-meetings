@@ -9,11 +9,16 @@ import { isUuid } from "@/lib/uuid";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import { admit } from "./admission";
-import type { AdmissionResponse, LobbyAction, LobbyEntry } from "./api";
+import type {
+  AdmissionResponse,
+  LobbyAction,
+  LobbyDecision,
+  LobbyEntry,
+} from "./api";
 import { MeetingError } from "./errors";
 import type { Principal } from "./principal";
 import { findMember, findOpenSession, type MeetingSession } from "./queries";
-import { isHostRole } from "./rules";
+import { ARRIVING_MS, isHostRole, seatsLeft } from "./rules";
 
 /**
  * A request lives this long without a poll. Phones pause background tabs, so someone
@@ -138,6 +143,17 @@ export async function pollAdmission(input: {
       // as what they are now (a co-host stays one). Someone removed stays out.
       const member = await findMember(session.id, principal.mediaUserId);
       if (member?.bannedAt) return { state: "denied" };
+      // Their seat may have gone meanwhile (someone rejoined): wait for the next one.
+      const snapshot = await mediaProvider(session.provider).inspectSession(
+        session.id,
+      );
+      const connected = snapshot?.connectedUserIds ?? [];
+      if (
+        !connected.includes(principal.mediaUserId) &&
+        connected.length >= session.limits.maxParticipants
+      ) {
+        return { state: "waiting" };
+      }
       return admit({
         meeting,
         host,
@@ -228,38 +244,85 @@ export async function decide(input: {
   code: string;
   principal: Principal | null;
   action: LobbyAction;
-}): Promise<void> {
+}): Promise<LobbyDecision> {
   const session = await hostedSession(input.code, input.principal);
-  await settle(session, input.action);
+  return settle(session, input.action);
 }
 
-/** Lets everyone waiting in: the waiting room was turned off. */
+/** Lets everyone waiting in, as seats allow: the waiting room was turned off. */
 export async function admitEveryone(session: MeetingSession): Promise<void> {
   await settle(session, { action: "admitAll" });
 }
 
+/**
+ * Turns people away, or lets them in, oldest first, into the seats left. One decision
+ * per session at a time (an advisory lock), so two hosts can't both fill the last seat.
+ */
 async function settle(
   session: MeetingSession,
   action: LobbyAction,
-): Promise<void> {
+): Promise<LobbyDecision> {
   const now = new Date();
-  await db()
-    .update(admissionRequest)
-    .set({
-      status: action.action === "deny" ? "denied" : "admitted",
-      decidedAt: now,
-    })
-    .where(
-      and(
-        eq(admissionRequest.sessionId, session.id),
-        eq(admissionRequest.status, "pending"),
-        gt(admissionRequest.lastSeenAt, freshSince(now)),
-        action.action === "admitAll"
-          ? undefined
-          : inArray(admissionRequest.id, action.ids),
-      ),
+  const asked = and(
+    eq(admissionRequest.sessionId, session.id),
+    eq(admissionRequest.status, "pending"),
+    gt(admissionRequest.lastSeenAt, freshSince(now)),
+    action.action === "admitAll"
+      ? undefined
+      : inArray(admissionRequest.id, action.ids),
+  );
+  if (action.action === "deny") {
+    await db()
+      .update(admissionRequest)
+      .set({ status: "denied", decidedAt: now })
+      .where(asked);
+    await notifyHosts(session, now);
+    return { admitted: 0, full: null };
+  }
+
+  const max = session.limits.maxParticipants;
+  const lockKey = `admit:${session.id}`;
+  const decision = await db().transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`);
+    const waiting = await tx
+      .select({ id: admissionRequest.id })
+      .from(admissionRequest)
+      .where(asked)
+      .orderBy(admissionRequest.createdAt);
+    const snapshot = await mediaProvider(session.provider).inspectSession(
+      session.id,
     );
+    const connected = snapshot?.connectedUserIds ?? [];
+    const letIn = await tx
+      .select({ mediaUserId: admissionRequest.mediaUserId })
+      .from(admissionRequest)
+      .where(
+        and(
+          eq(admissionRequest.sessionId, session.id),
+          eq(admissionRequest.status, "admitted"),
+          gt(admissionRequest.decidedAt, new Date(now.getTime() - ARRIVING_MS)),
+        ),
+      );
+    const seats = seatsLeft({
+      maxParticipants: max,
+      connected: connected.length,
+      arriving: letIn.filter((row) => !connected.includes(row.mediaUserId))
+        .length,
+    });
+    const chosen = waiting.slice(0, seats).map((row) => row.id);
+    if (chosen.length > 0) {
+      await tx
+        .update(admissionRequest)
+        .set({ status: "admitted", decidedAt: now })
+        .where(inArray(admissionRequest.id, chosen));
+    }
+    return {
+      admitted: chosen.length,
+      full: chosen.length < waiting.length ? { max } : null,
+    };
+  });
   await notifyHosts(session, now);
+  return decision;
 }
 
 /** Drops waiting-room records a while after their session ended. */

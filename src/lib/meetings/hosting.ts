@@ -63,6 +63,7 @@ export function demoTerms() {
   return {
     minutes: env.DEMO_MAX_MINUTES,
     people: env.DEMO_MAX_PARTICIPANTS,
+    perDay: env.DEMO_MEETINGS_PER_DAY,
   };
 }
 

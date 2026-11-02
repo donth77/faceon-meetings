@@ -41,15 +41,18 @@ import {
   SelectField,
   SwitchRow,
 } from "@/components/ui/form-fields";
+import { LengthHint } from "@/components/ui/length-hint";
 import type {
   CalendarConnection,
   CalendarOutcome,
 } from "@/lib/google-calendar/shared";
 import type { Recurrence } from "@/lib/meetings/recurrence";
-import type {
-  ScheduleDraft,
-  ScheduleInput,
-  SeriesScope,
+import {
+  MAX_DESCRIPTION,
+  MAX_TITLE,
+  type ScheduleDraft,
+  type ScheduleInput,
+  type SeriesScope,
 } from "@/lib/meetings/schedule";
 import {
   scheduleMeetingAction,
@@ -484,10 +487,16 @@ export function ScheduleForm({
             <input
               id={ids.title}
               required
-              maxLength={200}
+              maxLength={MAX_TITLE}
               value={values.title}
               onChange={(event) => set({ title: event.target.value })}
+              aria-describedby={`${ids.title}-length`}
               className={INPUT}
+            />
+            <LengthHint
+              id={`${ids.title}-length`}
+              length={values.title.length}
+              max={MAX_TITLE}
             />
           </Field>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
@@ -531,10 +540,16 @@ export function ScheduleForm({
             <textarea
               id={ids.description}
               rows={3}
-              maxLength={2000}
+              maxLength={MAX_DESCRIPTION}
               value={values.description}
               onChange={(event) => set({ description: event.target.value })}
+              aria-describedby={`${ids.description}-length`}
               className={`${INPUT} h-auto resize-y py-2.5`}
+            />
+            <LengthHint
+              id={`${ids.description}-length`}
+              length={values.description.length}
+              max={MAX_DESCRIPTION}
             />
           </Field>
           <InviteesField

@@ -1,4 +1,8 @@
-import { LobbyAction, type LobbyResponse } from "@/lib/meetings/api";
+import {
+  LobbyAction,
+  type LobbyDecision,
+  type LobbyResponse,
+} from "@/lib/meetings/api";
 import { handleMeetingRequest, readJson } from "@/lib/meetings/http";
 import { getPrincipal } from "@/lib/meetings/principal";
 import { decide, lobby } from "@/lib/meetings/waiting-room";
@@ -24,11 +28,11 @@ export async function POST(
 ) {
   return handleMeetingRequest(request, async () => {
     const { code } = await params;
-    await decide({
+    const body: LobbyDecision = await decide({
       code,
       principal: await getPrincipal(request),
       action: await readJson(request, LobbyAction),
     });
-    return new Response(null, { status: 204 });
+    return Response.json(body, { headers: { "Cache-Control": "no-store" } });
   });
 }

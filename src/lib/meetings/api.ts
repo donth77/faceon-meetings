@@ -120,6 +120,23 @@ export type LobbyEntry = {
 };
 export type LobbyResponse = { requests: LobbyEntry[] };
 
+/** A meeting's limits, for the messages people see before and after they join. */
+export type MeetingLimits = {
+  /** A demo meeting, hosted by someone not on the hosting list. */
+  demo: boolean;
+  people: number;
+  /** Null without a time limit. */
+  minutes: number | null;
+  /** Demo meetings a host can start in a day. */
+  demoPerDay: number;
+};
+
+/**
+ * What a host's decision did: how many were let in, and, when the meeting is full, its
+ * cap (the others keep waiting).
+ */
+export type LobbyDecision = { admitted: number; full: { max: number } | null };
+
 /** Hosts let people in, or turn them away. */
 export const LobbyAction = z.discriminatedUnion("action", [
   z.object({

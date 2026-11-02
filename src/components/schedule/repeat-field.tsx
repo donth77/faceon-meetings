@@ -22,6 +22,8 @@ import {
 import { describeRecurrence, presetLabel } from "@/lib/meetings/describe";
 import {
   latestSeriesEnd,
+  MAX_SERIES_COUNT,
+  MAX_SERIES_YEARS,
   presetOf,
   presetRecurrence,
   REPEAT_PRESETS,
@@ -232,7 +234,7 @@ function CustomDialog({
               <input
                 type="number"
                 min={1}
-                max={730}
+                max={MAX_SERIES_COUNT}
                 aria-label={t("occurrencesLabel")}
                 value={count}
                 onChange={(event) =>
@@ -240,7 +242,7 @@ function CustomDialog({
                     end: {
                       kind: "after",
                       count: Math.min(
-                        730,
+                        MAX_SERIES_COUNT,
                         Math.max(1, Number(event.target.value) || 1),
                       ),
                     },
@@ -254,6 +256,12 @@ function CustomDialog({
             </span>
           </div>
         </RadioGroup>
+        <p className="text-muted-foreground text-sm">
+          {t("seriesLimit", {
+            years: MAX_SERIES_YEARS,
+            count: MAX_SERIES_COUNT,
+          })}
+        </p>
 
         <p className="bg-muted text-muted-foreground rounded-[10px] px-3 py-2.5 text-sm">
           {describeRecurrence(

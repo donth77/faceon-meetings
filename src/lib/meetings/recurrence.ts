@@ -4,6 +4,9 @@
  */
 import { z } from "zod";
 
+/** The most meetings a series can have when it ends after a number of them. */
+export const MAX_SERIES_COUNT = 730;
+
 export const WEEKDAYS = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] as const;
 export const Weekday = z.enum(WEEKDAYS);
 export type Weekday = z.infer<typeof Weekday>;
@@ -17,7 +20,7 @@ export const RecurrenceEnd = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("on"), date: LocalDate }),
   z.object({
     kind: z.literal("after"),
-    count: z.number().int().min(1).max(730),
+    count: z.number().int().min(1).max(MAX_SERIES_COUNT),
   }),
 ]);
 export type RecurrenceEnd = z.infer<typeof RecurrenceEnd>;

@@ -37,6 +37,7 @@ import {
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
 import { availableEffect, effectsSupported } from "@/lib/effects/support";
+import type { MeetingLimits } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { browserSuppression } from "@/lib/noise/noise";
 import { canChooseSpeaker } from "@/lib/platform";
@@ -62,6 +63,9 @@ export type MeetingSummary = {
   notesOn: boolean;
   /** AI notes start by themselves once a host or co-host is in: told in advance too. */
   notesAuto: boolean;
+  limits: MeetingLimits;
+  /** You're the meeting's host. */
+  youHost: boolean;
 };
 
 /** Who is about to join: signed in, or a guest (whose name we remember on this device). */
@@ -246,11 +250,16 @@ export function PreJoin({
   const busy = status !== "idle";
   const signInHref = signInPath(meetingPath(meeting.code));
   const needsPasscode = error === "BAD_PASSCODE";
-  const errorMessage = error
-    ? t(
-        `errors.${needsPasscode && passcode.trim() === "" ? "passcodeNeeded" : error}`,
-      )
-    : null;
+  const { limits } = meeting;
+  const errorMessage = !error
+    ? null
+    : error === "FULL" && limits.demo
+      ? t("errors.demoFull", { count: limits.people })
+      : error === "DEMO_LIMIT" && meeting.youHost
+        ? t("errors.demoLimitYou", { count: limits.demoPerDay })
+        : t(
+            `errors.${needsPasscode && passcode.trim() === "" ? "passcodeNeeded" : error}`,
+          );
 
   function join(withDevices: DevicePreferences) {
     if (viewer.kind === "guest") saveGuestName(name.trim());
@@ -460,6 +469,14 @@ export function PreJoin({
                   {formatMeetingCode(meeting.code)}
                 </span>
               </p>
+              {limits.demo && limits.minutes !== null ? (
+                <p className="text-muted-foreground text-sm">
+                  {t("demoMeeting", {
+                    minutes: limits.minutes,
+                    people: limits.people,
+                  })}
+                </p>
+              ) : null}
             </div>
           )}
 

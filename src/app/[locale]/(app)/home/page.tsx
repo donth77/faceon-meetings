@@ -18,6 +18,7 @@ import { hostingAccessOf } from "@/lib/hosting/access";
 import { demoTerms, fullTerms } from "@/lib/meetings/hosting";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
 import { upcomingSoon } from "@/lib/meetings/scheduling";
+import { demoMeetingsLeft } from "@/lib/meetings/sessions";
 import { HOME_ROUTE } from "@/lib/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -75,7 +76,13 @@ async function Hosting() {
           ? { ...access, askAgainAt: access.askAgainAt.toISOString() }
           : access
       }
-      terms={{ demo: demoTerms(), full: fullTerms() }}
+      terms={{
+        demo: {
+          ...demoTerms(),
+          left: (await demoMeetingsLeft(session.user, new Date())) ?? 0,
+        },
+        full: fullTerms(),
+      }}
     />
   );
 }

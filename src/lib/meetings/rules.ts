@@ -135,13 +135,16 @@ export const MAX_DENIALS = 3;
 /**
  * Whether someone may be admitted now. Null means yes; "waiting_room" means they ask
  * the hosts first. People already admitted to the session (a refresh, a second device)
- * skip the passcode and the waiting room.
+ * skip the passcode and the waiting room. The meeting's own host is never turned away,
+ * even from a full meeting; co-hosts skip everything but the cap, since they take a
+ * seat like anyone else.
  */
 export function checkEntry(
   facts: EntryFacts,
 ): MeetingErrorCode | "waiting_for_host" | "waiting_room" | null {
   if (facts.isBanned) return "REMOVED";
-  if (isHostRole(facts.role)) return null;
+  if (facts.role === "host") return null;
+  if (isHostRole(facts.role)) return isFull(facts) ? "FULL" : null;
   if (facts.locked && !facts.isMember) return "LOCKED";
   if (
     !facts.isMember &&
@@ -156,13 +159,47 @@ export function checkEntry(
   if (!facts.hostPresent && (!facts.settings.joinBeforeHost || asks)) {
     return "waiting_for_host";
   }
-  if (
-    !facts.alreadyConnected &&
-    facts.connectedCount >= facts.maxParticipants
-  ) {
-    return "FULL";
-  }
+  if (isFull(facts)) return "FULL";
   return asks ? "waiting_room" : null;
+}
+
+/** No seat for this person: the meeting is at its cap, and they aren't in it already. */
+function isFull(
+  facts: Pick<
+    EntryFacts,
+    "alreadyConnected" | "connectedCount" | "maxParticipants"
+  >,
+): boolean {
+  return (
+    !facts.alreadyConnected && facts.connectedCount >= facts.maxParticipants
+  );
+}
+
+/**
+ * Seats left for people let in from the waiting room: the cap, less everyone connected
+ * and everyone let in moments ago who hasn't connected yet (`arriving`).
+ */
+export function seatsLeft(input: {
+  maxParticipants: number;
+  connected: number;
+  arriving: number;
+}): number {
+  return Math.max(0, input.maxParticipants - input.connected - input.arriving);
+}
+
+/**
+ * Let in this long ago and not connected yet, someone still holds their seat; after
+ * that, a host may give it to someone else (they wait again if it's taken).
+ */
+export const ARRIVING_MS = 60_000;
+
+/**
+ * The cap the media provider enforces, behind ours: room above it for the meeting's
+ * host, who is never turned away, and for someone joining on a second device, so the
+ * provider refuses only joins that slipped past our check at the same moment.
+ */
+export function providerParticipantCap(maxParticipants: number): number {
+  return maxParticipants + 2;
 }
 
 export type ModerationAction = ModerateRequest["action"];

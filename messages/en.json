@@ -195,6 +195,8 @@
     "region": "Notifications"
   },
   "Common": {
+    "lengthLeft": "{count, plural, one {# character} other {# characters}} left",
+    "lengthReached": "That’s the limit: {max, number} characters.",
     "newTab": "(opens in a new tab)"
   },
   "Account": {
@@ -305,8 +307,9 @@
     "startNow": "Start now",
     "close": "Close",
     "createFailed": "Couldn’t create the meeting. Try again.",
-    "dailyLimit": "You’ve created a lot of meetings today. Try again tomorrow.",
-    "demoNote": "Your meetings are demos for now: up to {minutes} minutes and {people} people.",
+    "dailyLimit": "You’ve made {count, plural, one {the # meeting} other {the # meetings}} you can make in a day. Try again tomorrow.",
+    "demoLimit": "You’ve started {count, plural, one {your # demo meeting} other {your # demo meetings}} for today. Try again tomorrow, or create a meeting for later.",
+    "demoNote": "Your meetings are demos for now: up to {minutes, plural, one {# minute} other {# minutes}} and {people, plural, one {# person} other {# people}}, {left, plural, =0 {and you’ve used today’s {perDay}} one {with # of {perDay} left today} other {with # of {perDay} left today}}. <link>Meeting limits</link>",
     "personalRoom": "Personal room",
     "personalRoomBody": "Your always-available link. {passcode, select, on {Passcode on} other {No passcode}}, {waitingRoom, select, on {waiting room on} other {no waiting room}}.",
     "start": "Start",
@@ -420,7 +423,10 @@
       "removed": "You were removed from the meeting",
       "timeLimit": "The meeting reached its time limit",
       "connectionLost": "You lost your connection to the meeting",
-      "alone": "You left because nobody else was here"
+      "alone": "You left because nobody else was here",
+      "full": "The meeting is full",
+      "timeLimitMinutes": "The meeting reached its {minutes}-minute limit",
+      "timeLimitDemo": "Demo meetings last up to {minutes, plural, one {# minute} other {# minutes}}. The host can start another one."
     },
     "rejoin": "Rejoin",
     "returnHome": "Return home",
@@ -597,6 +603,7 @@
       "wantsToJoin": "{name} wants to join",
       "manyWantToJoin": "{count} people want to join",
       "participantsWaiting": "{count, plural, one {# participant} other {# participants}}, {waiting} waiting to join",
+      "full": "The meeting is full ({count} of {count}). Someone needs to leave before you can admit more.",
       "failed": "Couldn’t do that. Try again."
     },
     "meetingSettings": {
@@ -688,6 +695,7 @@
     "readyToJoin": "Ready to join?",
     "waitingEyebrow": "Waiting for the host",
     "hostedBy": "Hosted by {name}",
+    "demoMeeting": "Demo meeting: up to {minutes, plural, one {# minute} other {# minutes}} and {people, plural, one {# person} other {# people}}.",
     "waitingForHost": "The host hasn’t started this meeting yet. You’ll join as soon as they do.",
     "yourName": "Your name",
     "passcode": "Passcode",
@@ -706,11 +714,13 @@
       "BAD_PASSCODE": "That passcode isn’t right. Check the invite and try again.",
       "passcodeNeeded": "This meeting has a passcode. Enter it to join.",
       "FULL": "This meeting is full. Try again when someone leaves.",
+      "demoFull": "This meeting is full. Demo meetings have up to {count, plural, one {# person} other {# people}}. Try again when someone leaves.",
       "NETWORK": "Can’t reach FaceOn. Check your connection, then try again.",
       "UNAVAILABLE": "Something went wrong on our side. Try again in a moment.",
       "BAD_REQUEST": "Enter your name, then try again.",
       "RATE_LIMITED": "Too many tries. Wait a few minutes, then try again.",
       "DEMO_LIMIT": "This host has used today’s demo meetings. Try again tomorrow.",
+      "demoLimitYou": "You’ve started {count, plural, one {your # demo meeting} other {your # demo meetings}} for today. Try again tomorrow.",
       "BUSY": "Too many meetings are running right now. Try again shortly.",
       "LOCKED": "The host has locked this meeting. Ask them to unlock it, then try again.",
       "DENIED": "You can’t ask to join this meeting again.",
@@ -993,6 +1003,8 @@
     "endsAfter": "After",
     "occurrences": "{count, plural, one {occurrence} other {occurrences}}",
     "occurrencesLabel": "Number of meetings",
+    "seriesLimit": "A series can run for up to {years} years, or {count} meetings.",
+    "inviteesFull": "You can invite up to {count} people.",
     "previousMonth": "Previous month",
     "nextMonth": "Next month"
   },

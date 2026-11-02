@@ -66,6 +66,22 @@ export async function startSession(
   return session;
 }
 
+/**
+ * Demo meetings the host can still start in the last day's window; null for hosts with
+ * full meetings, who aren't counted.
+ */
+export async function demoMeetingsLeft(
+  host: { id: string; email: string; emailVerified: boolean },
+  now: Date,
+): Promise<number | null> {
+  if ((await hostingPlanOf(host)) === "full") return null;
+  const today = await countSessionsSince(
+    host.id,
+    new Date(now.getTime() - DAY_MS),
+  );
+  return Math.max(0, serverEnv().DEMO_MEETINGS_PER_DAY - today);
+}
+
 /** Seconds until the session's time limit, from its start; null without a limit. */
 export function secondsLeft(session: MeetingSession, now: Date): number | null {
   const max = session.limits.maxDurationSeconds;

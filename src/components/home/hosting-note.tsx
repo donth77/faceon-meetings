@@ -2,6 +2,7 @@
 
 import { CircleCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -30,7 +31,8 @@ export type HostingNoteState =
   | { plan: "demo"; ask: "declined"; askAgainAt: string };
 
 type Terms = {
-  demo: { minutes: number; people: number };
+  /** `left`: demo meetings the host can still start today, of `perDay`. */
+  demo: { minutes: number; people: number; perDay: number; left: number };
   full: { minutes: number; people: number };
 };
 
@@ -87,7 +89,17 @@ export function HostingNote({
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-950 dark:bg-amber-400/15 dark:text-amber-100">
       <p className="min-w-0 flex-1">
-        {home("demoNote", terms.demo)}{" "}
+        {home.rich("demoNote", {
+          ...terms.demo,
+          link: (chunks) => (
+            <Link
+              href="/help/meeting-limits"
+              className="focus-visible:focus-ring rounded-[2px] font-semibold underline underline-offset-4 outline-hidden"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}{" "}
         {state.ask === "pending"
           ? t("pending")
           : state.ask === "declined"

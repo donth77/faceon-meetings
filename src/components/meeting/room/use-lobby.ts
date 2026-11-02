@@ -57,7 +57,11 @@ export function useLobby({
         setRequests((list) => list.filter((r) => !ids.has(r.id)));
       }
       try {
-        await meetingApi.decide(code, action);
+        const { full } = await meetingApi.decide(code, action);
+        if (full) {
+          toast.error(t("full", { count: full.max }), { id: "lobby-full" });
+          void refresh();
+        }
       } catch {
         toast.error(t("failed"));
         void refresh();

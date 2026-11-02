@@ -60,6 +60,8 @@ type Step =
       reason: LeftReason;
       /** The session you were in, for AI notes taken in it. */
       session: { id: string; signedIn: boolean } | null;
+      /** Its time limit, named when that's what ended it. */
+      limit: { minutes: number; demo: boolean } | null;
     }
   | { name: "notice"; kind: NoticeKind };
 
@@ -162,6 +164,8 @@ export default function MeetingEntry({
   const endsAt = useRef<number | null>(null);
   const leftAlone = useRef(false);
   const lastSession = useRef<{ id: string; signedIn: boolean } | null>(null);
+  /** The session's time limit, for the end screen when it's reached. */
+  const lastLimit = useRef<{ minutes: number; demo: boolean } | null>(null);
   const inRoom = step.name === "room";
 
   useEffect(() => scrubLinkPasscode(), []);
@@ -192,6 +196,13 @@ export default function MeetingEntry({
         id: admission.session.id,
         signedIn: admission.self.signedIn,
       };
+      lastLimit.current =
+        admission.session.maxMinutes === null
+          ? null
+          : {
+              minutes: admission.session.maxMinutes,
+              demo: admission.session.demo,
+            };
       const { secondsLeft } = admission.session;
       endsAt.current =
         secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
@@ -317,6 +328,11 @@ export default function MeetingEntry({
   const handleLeft = useCallback(
     (reason: LeaveReason) => {
       void meetingApi.seen(code).catch(() => {});
+      // It filled up as you came in: pre-join says so, and Join tries again.
+      if (reason === "full") {
+        setStep({ name: "prejoin", error: "FULL" });
+        return;
+      }
       // Once this host has asked to end the meeting, however the room closes, they ended it.
       // A call that ends as its time runs out reached its limit, whatever the notice said.
       const timeUp =
@@ -324,6 +340,7 @@ export default function MeetingEntry({
       setStep({
         name: "left",
         session: lastSession.current,
+        limit: lastLimit.current,
         reason: endingForAll.current
           ? "endedByYou"
           : reason === "ended" && timeUp
@@ -344,6 +361,7 @@ export default function MeetingEntry({
       name: "left",
       reason: "endedByYou",
       session: lastSession.current,
+      limit: null,
     });
     const end = async () => {
       try {
@@ -376,6 +394,7 @@ export default function MeetingEntry({
           title={title}
           code={code}
           session={step.session}
+          limit={step.limit}
           onRejoin={rejoin}
         />
       );

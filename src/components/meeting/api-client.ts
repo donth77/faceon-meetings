@@ -6,6 +6,7 @@ import {
   type JoinRequest,
   type JoinResponse,
   type LobbyAction,
+  type LobbyDecision,
   type LobbyResponse,
   type MeetingErrorCode,
   type ModerateRequest,
@@ -106,5 +107,5 @@ export const meetingApi = {
   lobby: (code: string) =>
     send<LobbyResponse>("GET", `/api/meetings/${code}/lobby`),
   decide: (code: string, action: LobbyAction) =>
-    post<void>(`/api/meetings/${code}/lobby`, action),
+    post<LobbyDecision>(`/api/meetings/${code}/lobby`, action),
 };

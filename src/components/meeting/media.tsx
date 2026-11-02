@@ -77,7 +77,13 @@ export type ShareOptions = {
 
 /** Why the room closed; the left-meeting screen words its message from it. */
 export type LeaveReason =
-  "left" | "ended" | "removed" | "timeLimit" | "connectionLost";
+  | "left"
+  | "ended"
+  | "removed"
+  | "timeLimit"
+  | "connectionLost"
+  /** Turned away as you joined: the meeting filled up meanwhile. */
+  | "full";
 
 export type RoomMedia = {
   status: RoomStatus;

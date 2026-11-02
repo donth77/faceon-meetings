@@ -19,7 +19,13 @@ import {
   markSessionSeen,
   type MeetingHost,
 } from "./queries";
-import { checkEntry, CLOSED_ERRORS, closedReason, resolveRole } from "./rules";
+import {
+  checkEntry,
+  CLOSED_ERRORS,
+  closedReason,
+  providerParticipantCap,
+  resolveRole,
+} from "./rules";
 import { sessionPolicy, sessionState } from "./session-state";
 import { currentSession, startSession } from "./sessions";
 import { askToJoin, timesDenied } from "./waiting-room";
@@ -116,10 +122,15 @@ export async function joinMeeting(input: {
   };
   if (!session.snapshot) {
     // Creating the call is idempotent, so a concurrent join creating it too is fine.
+    const { limits } = session.row;
     await mediaProvider(session.row.provider).createSession({
       sessionId: session.row.id,
       host: hostMediaUser(host),
-      limits: session.row.limits,
+      // Our check holds the real cap; the provider's sits above it as a backstop.
+      limits: {
+        ...limits,
+        maxParticipants: providerParticipantCap(limits.maxParticipants),
+      },
       state: sessionState(meeting, session.row, []),
     });
   }

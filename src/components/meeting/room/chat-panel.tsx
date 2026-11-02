@@ -12,6 +12,7 @@ import {
 } from "react";
 import { Button } from "react-aria-components";
 
+import { LengthHint } from "@/components/ui/length-hint";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { downloadFile } from "@/lib/download";
 import { MAX_CHAT_LENGTH } from "@/lib/meetings/events";
@@ -219,6 +220,12 @@ export function ChatPanel({
           {t("off")}
         </p>
       )}
+      <LengthHint
+        id={`${inputId}-length`}
+        length={draft.length}
+        max={MAX_CHAT_LENGTH}
+        className="shrink-0 border-t px-5 pt-2"
+      />
       <form
         onSubmit={handleSubmit}
         hidden={!canSend}
@@ -233,6 +240,7 @@ export function ChatPanel({
           rows={1}
           value={draft}
           maxLength={MAX_CHAT_LENGTH}
+          aria-describedby={`${inputId}-length`}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}

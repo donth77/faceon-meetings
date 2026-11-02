@@ -225,18 +225,18 @@ Then add the variables from [step 9](#9-decide-who-hosts-and-set-limits) and [st
 
 Limits keep usage inside Stream's free credit. Everyone who signs in can host, but only approved hosts host full meetings; everyone else hosts demo meetings. Approve people in your settings below, or on `/admin` once you're signed in (see [Admins and `/admin`](#admins-and-admin)):
 
-| Variable                       | Default | What it does                                                                                    |
-| ------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
-| `ADMIN_EMAILS`                 |         | Your own addresses, separated by commas. They host full meetings and can open `/admin`          |
-| `HOST_ALLOWLIST`               |         | Other addresses that host full meetings. `/admin` lists them but can't change them              |
-| `MAX_PARTICIPANTS_PER_MEETING` | 20      | People in a full meeting                                                                        |
-| `MAX_MEETING_MINUTES`          | 0       | How long a full meeting can last; 0 for no limit                                                |
-| `DEMO_MAX_MINUTES`             | 15      | How long a demo meeting can last. Everyone not listed above hosts demo meetings                 |
-| `DEMO_MAX_PARTICIPANTS`        | 4       | People in a demo meeting                                                                        |
-| `DEMO_MEETINGS_PER_DAY`        | 3       | Demo meetings a host can start in a day                                                         |
-| `MAX_CONCURRENT_MEETINGS`      | 10      | Meetings running at once across your whole copy. Past it, people are asked to try again shortly |
-| `MEETINGS_PER_USER_PER_DAY`    | 20      | Meetings one account can create in a day                                                        |
-| `ALONE_TIMEOUT_MINUTES`        | 10      | Ask "Are you still there?" after someone has been alone in a meeting this long; 0 turns it off  |
+| Variable                       | Default | What it does                                                                                              |
+| ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------- |
+| `ADMIN_EMAILS`                 |         | Your own addresses, separated by commas. They host full meetings and can open `/admin`                    |
+| `HOST_ALLOWLIST`               |         | Other addresses that host full meetings. `/admin` lists them but can't change them                        |
+| `MAX_PARTICIPANTS_PER_MEETING` | 20      | People in a full meeting. The meeting's host always gets in; Stream's own cap sits 2 above, as a backstop |
+| `MAX_MEETING_MINUTES`          | 0       | How long a full meeting can last; 0 for no limit                                                          |
+| `DEMO_MAX_MINUTES`             | 15      | How long a demo meeting can last. Everyone not listed above hosts demo meetings                           |
+| `DEMO_MAX_PARTICIPANTS`        | 4       | People in a demo meeting                                                                                  |
+| `DEMO_MEETINGS_PER_DAY`        | 3       | Demo meetings a host can start in a day                                                                   |
+| `MAX_CONCURRENT_MEETINGS`      | 10      | Meetings running at once across your whole copy. Past it, people are asked to try again shortly           |
+| `MEETINGS_PER_USER_PER_DAY`    | 20      | Meetings one account can create in a day                                                                  |
+| `ALONE_TIMEOUT_MINUTES`        | 10      | Ask "Are you still there?" after someone has been alone in a meeting this long; 0 turns it off            |
 
 A listed address counts only once it's verified. Google and GitHub sign-ins are; an email account is once its owner follows the link FaceOn sends.
 

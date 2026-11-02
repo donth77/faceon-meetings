@@ -5,6 +5,9 @@ import path from "node:path";
 
 import { parseFrontMatter } from "@/lib/content/front-matter";
 import { publicEnv } from "@/lib/env";
+import { serverEnv } from "@/lib/server-env";
+
+import { fillHelpPlaceholders, type HelpLimits } from "./placeholders";
 
 /** Help's categories, in the order the index and the sidebar show them. */
 export const HELP_CATEGORIES = [
@@ -42,9 +45,12 @@ export type HelpArticle = {
 const helpPath = (...parts: string[]) =>
   path.join(process.cwd(), "content", "help", ...parts);
 function parse(slug: string, raw: string): HelpArticle {
-  // Articles say {appName}; a self-hosted copy may go by another name.
+  // Articles say {appName} and the limits by name; a self-hosted copy sets its own.
   const { fields, body } = parseFrontMatter(
-    raw.replaceAll("{appName}", publicEnv.NEXT_PUBLIC_APP_NAME),
+    fillHelpPlaceholders(raw, {
+      appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+      ...meetingLimits(),
+    }),
   );
   const category = CATEGORY_IDS[fields.get("category") ?? ""];
   if (!category) {
@@ -57,6 +63,20 @@ function parse(slug: string, raw: string): HelpArticle {
     category,
     order: Number(fields.get("order")) || 0,
     body,
+  };
+}
+
+/** The meeting limits this copy is set to, for the articles that name them. */
+function meetingLimits(): HelpLimits {
+  const env = serverEnv();
+  return {
+    demoMinutes: env.DEMO_MAX_MINUTES,
+    demoPeople: env.DEMO_MAX_PARTICIPANTS,
+    demoPerDay: env.DEMO_MEETINGS_PER_DAY,
+    fullPeople: env.MAX_PARTICIPANTS_PER_MEETING,
+    fullMinutes: env.MAX_MEETING_MINUTES,
+    meetingsPerDay: env.MEETINGS_PER_USER_PER_DAY,
+    aloneMinutes: env.ALONE_TIMEOUT_MINUTES,
   };
 }
 

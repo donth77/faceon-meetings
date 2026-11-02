@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  SfuJoinError,
+  SfuModels,
   StreamCall,
   StreamVideo,
   StreamVideoClient,
@@ -65,6 +67,19 @@ async function applyDevices(
   ]);
 }
 
+/**
+ * Stream turned the join away because the call is at its participant cap: two people
+ * took the last seat at once, and our check let both through. Stream says so with an
+ * SfuJoinError, code 301 (CALL_PARTICIPANT_LIMIT_REACHED), after which it won't retry.
+ */
+function isCallFull(error: unknown): boolean {
+  return (
+    error instanceof SfuJoinError &&
+    error.errorEvent.error?.code ===
+      SfuModels.ErrorCode.CALL_PARTICIPANT_LIMIT_REACHED
+  );
+}
+
 /** The Stream adapter's room: connects, joins the session's call, and provides room media. */
 export default function StreamRoom(props: RoomAdapterProps) {
   // The connection and starting devices set up the room once; a new admission remounts it.
@@ -79,6 +94,7 @@ export default function StreamRoom(props: RoomAdapterProps) {
   const [room, setRoom] = useState<Room>();
   const refreshToken = useEffectEvent(() => props.refreshToken());
   const leftUnexpectedly = useEffectEvent(() => props.onLeft("connectionLost"));
+  const turnedAway = useEffectEvent(() => props.onLeft("full"));
 
   useEffect(() => {
     let cancelled = false;
@@ -100,8 +116,10 @@ export default function StreamRoom(props: RoomAdapterProps) {
         await applyDevices(call, setup.devices, setup);
         await call.join();
         if (!cancelled) setRoom({ client, call, joinedAt: Date.now() });
-      })().catch(() => {
-        if (!cancelled) leftUnexpectedly();
+      })().catch((error: unknown) => {
+        if (cancelled) return;
+        if (isCallFull(error)) turnedAway();
+        else leftUnexpectedly();
       });
     }, 0);
 

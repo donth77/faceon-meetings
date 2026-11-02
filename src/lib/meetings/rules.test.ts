@@ -14,7 +14,9 @@ import {
   notesOnJoin,
   notesStartAutomatically,
   passcodeMatches,
+  providerParticipantCap,
   resolveRole,
+  seatsLeft,
   SESSION_GRACE_MS,
   sessionEndedAt,
   type EntryFacts,
@@ -289,6 +291,38 @@ describe("checkEntry", () => {
     ).toBeNull();
   });
 
+  it("turns people away from a full meeting, but not someone already in it", () => {
+    const full = { ...facts, connectedCount: 20 };
+    expect(checkEntry(full)).toBe("FULL");
+    expect(checkEntry({ ...full, alreadyConnected: true })).toBeNull();
+    expect(checkEntry({ ...full, isMember: true })).toBe("FULL");
+    expect(checkEntry({ ...facts, connectedCount: 19 })).toBeNull();
+  });
+
+  it("always lets the meeting's host in, even when it's full", () => {
+    expect(
+      checkEntry({
+        ...facts,
+        role: "host",
+        connectedCount: 20,
+        givenPasscode: undefined,
+      }),
+    ).toBeNull();
+  });
+
+  it("gives co-hosts a seat like anyone else, but no passcode or waiting room", () => {
+    const cohost = {
+      ...facts,
+      role: "cohost" as const,
+      givenPasscode: undefined,
+    };
+    expect(checkEntry({ ...cohost, waitingRoom: true })).toBeNull();
+    expect(checkEntry({ ...cohost, connectedCount: 20 })).toBe("FULL");
+    expect(
+      checkEntry({ ...cohost, connectedCount: 20, alreadyConnected: true }),
+    ).toBeNull();
+  });
+
   it("stops someone asking after being turned away three times", () => {
     expect(checkEntry({ ...facts, waitingRoom: true, timesDenied: 2 })).toBe(
       "waiting_room",
@@ -531,5 +565,29 @@ describe("saved AI notes", () => {
     expect(canManageNotes({ ...notes, viewer: "saver" })).toBe(true);
     expect(canManageNotes({ ...notes, viewer: "host" })).toBe(true);
     expect(canManageNotes({ ...notes, viewer: "ana" })).toBe(false);
+  });
+});
+
+describe("seatsLeft", () => {
+  it("leaves the cap less everyone connected and arriving", () => {
+    expect(seatsLeft({ maxParticipants: 4, connected: 2, arriving: 1 })).toBe(
+      1,
+    );
+    expect(seatsLeft({ maxParticipants: 4, connected: 4, arriving: 0 })).toBe(
+      0,
+    );
+  });
+
+  it("never goes below zero, when the host came in over the cap", () => {
+    expect(seatsLeft({ maxParticipants: 4, connected: 5, arriving: 1 })).toBe(
+      0,
+    );
+  });
+});
+
+describe("providerParticipantCap", () => {
+  it("leaves the provider room for the host and a second device", () => {
+    expect(providerParticipantCap(4)).toBe(6);
+    expect(providerParticipantCap(20)).toBe(22);
   });
 });

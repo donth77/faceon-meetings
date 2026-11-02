@@ -34,6 +34,7 @@ export function LeftMeeting({
   title,
   code,
   session,
+  limit,
   onRejoin,
 }: {
   reason: LeftReason;
@@ -41,6 +42,8 @@ export function LeftMeeting({
   code: string;
   /** The session you were in; null if you never got in. */
   session: { id: string; signedIn: boolean } | null;
+  /** The session's time limit, named when it's what ended the meeting. */
+  limit: { minutes: number; demo: boolean } | null;
   onRejoin: () => void;
 }) {
   const t = useTranslations("Meeting");
@@ -54,8 +57,16 @@ export function LeftMeeting({
     <MeetingPageFrame>
       <div className="flex w-full flex-col items-center gap-6">
         <MeetingCard
-          title={t(`left.${reason}`)}
-          body={title}
+          title={
+            reason === "timeLimit" && limit
+              ? t("left.timeLimitMinutes", { minutes: limit.minutes })
+              : t(`left.${reason}`)
+          }
+          body={
+            reason === "timeLimit" && limit?.demo
+              ? `${title}. ${t("left.timeLimitDemo", { minutes: limit.minutes })}`
+              : title
+          }
           footer={t("meetingIdLine", { code: formatMeetingCode(code) })}
         >
           {CAN_REJOIN.has(reason) ? (

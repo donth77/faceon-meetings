@@ -138,6 +138,12 @@ export function InviteesField({
           {t("invalidEmail", { email: invalid })}
         </p>
       ) : null}
+      {/* At the cap the field stops taking addresses; say why, as it happens. */}
+      <p role="status" className="text-muted-foreground text-sm empty:hidden">
+        {value.length >= MAX_INVITEES
+          ? t("inviteesFull", { count: MAX_INVITEES })
+          : ""}
+      </p>
     </div>
   );
 }

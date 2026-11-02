@@ -30,9 +30,12 @@ import type {
   MeetingRole,
   SessionLimits,
 } from "@/lib/media/types";
+import { serverEnv } from "@/lib/server-env";
 
+import type { MeetingLimits } from "./api";
 import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
+import { limitsFor } from "./hosting";
 import { daysBefore, KEEP_DAYS } from "./retention";
 import {
   closedReason,
@@ -224,13 +227,24 @@ export async function getMeetingSummary(code: string): Promise<{
   notesOn: boolean;
   /** AI notes start by themselves once a host or co-host is in. */
   notesAuto: boolean;
+  limits: MeetingLimits;
 } | null> {
   if (!MEETING_CODE_PATTERN.test(code)) return null;
   const found = await findMeetingByCode(code);
   if (!found) return null;
   const open = await findOpenSession(found.meeting.id);
+  // As the session running now has them; before one opens, as its host's plan would.
+  const limits = open?.limits ?? limitsFor(await hostingPlanOf(found.host));
   return {
     code,
+    limits: {
+      demo: limits.demo === true,
+      people: limits.maxParticipants,
+      minutes: limits.maxDurationSeconds
+        ? Math.round(limits.maxDurationSeconds / 60)
+        : null,
+      demoPerDay: serverEnv().DEMO_MEETINGS_PER_DAY,
+    },
     title: found.meeting.title,
     hostId: found.host.id,
     hostName: found.host.name,

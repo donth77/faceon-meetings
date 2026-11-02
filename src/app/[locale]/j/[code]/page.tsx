@@ -71,6 +71,8 @@ async function MeetingGate({
         askToJoin: summary.waitingRoom && session?.user.id !== summary.hostId,
         notesOn: summary.notesOn,
         notesAuto: summary.notesAuto,
+        limits: summary.limits,
+        youHost: session?.user.id === summary.hostId,
       }}
       viewer={
         session

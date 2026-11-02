@@ -10,11 +10,14 @@ import { latestSeriesEnd, Recurrence } from "./recurrence";
 
 /** Invite up to this many people by email. */
 export const MAX_INVITEES = 50;
+/** The longest title and description a meeting can have, in characters. */
+export const MAX_TITLE = 200;
+export const MAX_DESCRIPTION = 2000;
 
 export const ScheduleInput = z
   .object({
-    title: z.string().trim().min(1).max(200),
-    description: z.string().trim().max(2000).default(""),
+    title: z.string().trim().min(1).max(MAX_TITLE),
+    description: z.string().trim().max(MAX_DESCRIPTION).default(""),
     /** Local wall-clock start, "YYYY-MM-DDTHH:mm", in `timeZone`. */
     start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
     timeZone: z.string().min(1).max(64),
