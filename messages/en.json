@@ -130,7 +130,19 @@
     "label": "Meeting ID or link",
     "placeholder": "Enter a meeting ID or link",
     "submit": "Join",
-    "error": "Enter a 10-digit meeting ID or a meeting link."
+    "problems": {
+      "digits": "A meeting ID has 10 digits, like 123 456 7890.",
+      "notAnId": "Enter a meeting ID, like 123 456 7890, or paste a meeting link.",
+      "otherSite": "That link is for another site, not {appName}. Open it in your browser instead.",
+      "notMeetingLink": "That link isn’t to a meeting. Meeting links end in /j/ and a meeting ID.",
+      "brokenLink": "That link’s meeting ID isn’t complete. Copy the whole link and try again.",
+      "notFound": "There’s no meeting with that ID. Check it and try again.",
+      "ended": "That meeting has ended. Ask the host for a new link.",
+      "cancelled": "The host cancelled that meeting. Ask them for a new link.",
+      "expired": "That meeting’s link has expired. Ask the host for a new one.",
+      "tooManyTries": "Too many tries. Wait a few minutes, then try again.",
+      "network": "Can’t reach {appName}. Check your connection, then try again."
+    }
   },
   "Nav": {
     "label": "Main",
@@ -307,6 +319,14 @@
         "title": "This meeting has ended",
         "body": "Ask the host for a new link if you still need to meet."
       },
+      "cancelled": {
+        "title": "This meeting was cancelled",
+        "body": "The host cancelled it. Ask them for a new link if you still need to meet."
+      },
+      "expired": {
+        "title": "This link has expired",
+        "body": "Meeting links stop working a while after their meeting. Ask the host for a new one."
+      },
       "signIn": {
         "title": "Sign in to join",
         "body": "Sign in to your FaceOn account to join this meeting."
@@ -320,7 +340,9 @@
         "body": "Wait a few minutes, then open the link again."
       },
       "signInAction": "Sign in",
-      "returnHome": "Return home"
+      "returnHome": "Return home",
+      "retry": "Meeting ID or link",
+      "joinAnother": "Join a different meeting"
     },
     "more": "More",
     "moreWithUnread": "More, {count, plural, one {# new message} other {# new messages}}",

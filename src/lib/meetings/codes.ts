@@ -7,24 +7,88 @@ export function formatMeetingCode(code: string): string {
   return `${code.slice(0, 3)} ${code.slice(3, 6)} ${code.slice(6)}`;
 }
 
-export type ParsedMeetingInput = { code: string; passcode?: string };
+/** Why what someone entered in the Join field isn't a meeting to open. */
+export type MeetingInputProblem =
+  /** Only digits, but not the 10 a meeting ID has. */
+  | "digits"
+  /** Neither a meeting ID nor a link. */
+  | "notAnId"
+  /** A link to another site: another meeting app, or another copy of this one. */
+  | "otherSite"
+  /** A link to this site that isn't a meeting's. */
+  | "notMeetingLink"
+  /** A meeting link whose ID is cut short or mangled. */
+  | "brokenLink"
+  /** Ten digits no meeting can have: IDs never start with 0. */
+  | "notFound";
+
+export type MeetingInput =
+  | { ok: true; code: string; passcode?: string }
+  | { ok: false; problem: MeetingInputProblem };
+
+const problem = (reason: MeetingInputProblem): MeetingInput => ({
+  ok: false,
+  problem: reason,
+});
+
+/** An ID written the way people do: grouped 3-3-4 with spaces, dashes or dots, or not. */
+const WRITTEN_ID = /(?<!\d)\d{3}[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)/g;
 
 /**
- * Reads a meeting ID from what someone typed or pasted into the Join field:
- * "123 456 7890", "123-456-7890", or an invite link such as
- * https://example.com/j/1234567890#pwd=K7XQ2M (the passcode rides in the fragment).
- * Returns null when there's no valid meeting ID.
+ * Reads a meeting from what someone typed or pasted into the Join field: an ID ("123 456
+ * 7890", "123-456-7890"), a meeting link (https://example.com/j/1234567890#pwd=K7XQ2M,
+ * the passcode riding in the fragment), or a pasted invitation with either in it.
+ *
+ * `hosts` are this site's hosts ("example.com", "localhost:3000"). A link anywhere else
+ * belongs to another site, even with a meeting-like path: its ID means nothing here.
  */
-export function parseMeetingInput(input: string): ParsedMeetingInput | null {
+export function readMeetingInput(
+  input: string,
+  hosts: readonly string[],
+): MeetingInput {
   const text = input.trim();
-  if (!text) return null;
+  const compact = text.replace(/[\s().-]/g, "");
+  if (/^\d+$/.test(compact)) return readId(compact);
 
-  const linkCode = /\/j\/([1-9]\d{9})(?!\d)/.exec(text)?.[1];
-  if (linkCode) {
-    const passcode = /[#&]pwd=([A-Za-z0-9]+)/.exec(text)?.[1];
-    return passcode ? { code: linkCode, passcode } : { code: linkCode };
-  }
+  const link = findLink(text);
+  if (link) return readLink(link, hosts);
 
-  const digits = text.replace(/[\s-]/g, "");
-  return MEETING_CODE_PATTERN.test(digits) ? { code: digits } : null;
+  // Pasted text around one ID, such as an invitation's "Meeting ID: 123 456 7890".
+  const ids = new Set(
+    [...text.matchAll(WRITTEN_ID)].map((match) => match[0].replace(/\D/g, "")),
+  );
+  const [only] = ids;
+  return ids.size === 1 && only ? readId(only) : problem("notAnId");
+}
+
+function readId(digits: string): MeetingInput {
+  if (digits.length !== 10) return problem("digits");
+  return MEETING_CODE_PATTERN.test(digits)
+    ? { ok: true, code: digits }
+    : problem("notFound");
+}
+
+/** The first link in the text: with its scheme, or a bare "example.com/j/…". */
+function findLink(text: string): URL | null {
+  const written =
+    /https?:\/\/\S+/i.exec(text)?.[0] ??
+    (/^[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}(?::\d+)?(?:\/\S*)?$/i.test(text) ||
+    /^localhost:\d+(?:\/\S*)?$/i.test(text)
+      ? `https://${text}`
+      : null);
+  if (!written) return null;
+  // A link at the end of a sentence keeps its punctuation; drop it.
+  const cleaned = written.replace(/[)\]>.,;:!?'"]+$/, "");
+  return URL.canParse(cleaned) ? new URL(cleaned) : null;
+}
+
+function readLink(link: URL, hosts: readonly string[]): MeetingInput {
+  if (!hosts.includes(link.host)) return problem("otherSite");
+  const id = /^\/j\/([^/]*)\/?$/.exec(link.pathname)?.[1];
+  if (id === undefined) return problem("notMeetingLink");
+  if (!MEETING_CODE_PATTERN.test(id)) return problem("brokenLink");
+  const passcode =
+    /(?:^#|&)pwd=([A-Za-z0-9]+)/.exec(link.hash)?.[1] ??
+    /^[A-Za-z0-9]+$/.exec(link.searchParams.get("pwd") ?? "")?.[0];
+  return passcode ? { ok: true, code: id, passcode } : { ok: true, code: id };
 }

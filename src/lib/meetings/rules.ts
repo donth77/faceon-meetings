@@ -28,16 +28,29 @@ export function resolveRole(input: {
   return input.isGuest ? "guest" : "participant";
 }
 
-/** Whether a meeting's link still works: not ended, cancelled or expired. */
-export function isJoinable(
-  meeting: { status: string; expiresAt: Date | null },
+/** Why a meeting's link no longer works. */
+export type ClosedReason = "ended" | "cancelled" | "expired";
+
+/**
+ * Why a meeting's link stopped working, or null while it works: an instant meeting
+ * ended, a scheduled one was cancelled, or the link outlived its meeting (or series).
+ */
+export function closedReason(
+  meeting: { status: "active" | "ended" | "cancelled"; expiresAt: Date | null },
   now: Date,
-): boolean {
-  return (
-    meeting.status === "active" &&
-    (meeting.expiresAt === null || meeting.expiresAt > now)
-  );
+): ClosedReason | null {
+  if (meeting.status !== "active") return meeting.status;
+  return meeting.expiresAt !== null && meeting.expiresAt <= now
+    ? "expired"
+    : null;
 }
+
+/** What the join API answers for a meeting whose link no longer works. */
+export const CLOSED_ERRORS = {
+  ended: "ENDED",
+  cancelled: "CANCELLED",
+  expired: "LINK_EXPIRED",
+} as const satisfies Record<ClosedReason, MeetingErrorCode>;
 
 export const isHostRole = (role: MeetingRole) =>
   role === "host" || role === "cohost";

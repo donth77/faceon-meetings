@@ -32,7 +32,7 @@ import type {
 import { MEETING_CODE_PATTERN } from "./codes";
 import { generateMeetingCode, generatePasscode } from "./generate";
 import { daysBefore, KEEP_DAYS } from "./retention";
-import { isJoinable } from "./rules";
+import { closedReason, type ClosedReason } from "./rules";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
 
 export type Meeting = Omit<typeof meeting.$inferSelect, "settings"> & {
@@ -201,15 +201,15 @@ export async function findMeetingByCode(
 }
 
 /**
- * What the meeting page shows before joining: the title and host, and whether the link
- * still works. Null for an unknown meeting ID.
+ * What the meeting page shows before joining: the title and host, and why the link no
+ * longer works, if it doesn't. Null for an unknown meeting ID.
  */
 export async function getMeetingSummary(code: string): Promise<{
   code: string;
   title: string | null;
   hostId: string;
   hostName: string;
-  joinable: boolean;
+  closed: ClosedReason | null;
   allowGuests: boolean;
   waitingRoom: boolean;
   /** AI notes are on in the session running now. */
@@ -224,11 +224,24 @@ export async function getMeetingSummary(code: string): Promise<{
     title: found.meeting.title,
     hostId: found.host.id,
     hostName: found.host.name,
-    joinable: isJoinable(found.meeting, new Date()),
+    closed: closedReason(found.meeting, new Date()),
     allowGuests: found.meeting.settings.allowGuests,
     waitingRoom: found.meeting.settings.waitingRoom,
     notesOn: open?.notes != null,
   };
+}
+
+/**
+ * Whether a meeting ID leads to a meeting that can be joined: "open", why its link
+ * stopped working, or null when there's no such meeting. No more than its page shows.
+ */
+export async function meetingAvailability(
+  code: string,
+): Promise<"open" | ClosedReason | null> {
+  if (!MEETING_CODE_PATTERN.test(code)) return null;
+  const found = await findMeetingByCode(code);
+  if (!found) return null;
+  return closedReason(found.meeting, new Date()) ?? "open";
 }
 
 /** Sessions opened in a host's meetings since a moment, for the demo daily cap. */
@@ -479,7 +492,7 @@ export async function openSessionsStartedBefore(
 /**
  * Deletes meetings past their expiry, with their sessions: unused instant meetings, and
  * scheduled ones a month after their last meeting. The link stops working at expiry
- * (isJoinable); the meeting itself stays until its last session leaves Previous, so
+ * (closedReason); the meeting itself stays until its last session leaves Previous, so
  * history and saved AI notes last as long as promised.
  */
 export async function deleteExpiredMeetings(now: Date): Promise<number> {

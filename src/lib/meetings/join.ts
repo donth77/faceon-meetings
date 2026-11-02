@@ -18,7 +18,7 @@ import {
   hostMemberIds,
   type MeetingHost,
 } from "./queries";
-import { checkEntry, isJoinable, resolveRole } from "./rules";
+import { checkEntry, CLOSED_ERRORS, closedReason, resolveRole } from "./rules";
 import { sessionPolicy, sessionState } from "./session-state";
 import { currentSession, startSession } from "./sessions";
 import { askToJoin, timesDenied } from "./waiting-room";
@@ -45,7 +45,8 @@ export async function joinMeeting(input: {
 }): Promise<JoinResponse> {
   const now = new Date();
   const { meeting, host } = await requireMeeting(input.code);
-  if (!isJoinable(meeting, now)) throw new MeetingError("ENDED");
+  const closed = closedReason(meeting, now);
+  if (closed) throw new MeetingError(CLOSED_ERRORS[closed]);
   const principal = requirePrincipal(input.principal);
   const isOwner =
     principal.kind === "user" && principal.userId === meeting.hostId;

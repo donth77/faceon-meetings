@@ -20,9 +20,22 @@ To join without turning anything on, select **Join without audio and video**.
 
 ## Join with a meeting ID
 
-On **Home**, or on the sign-in page if you don't have an account, enter the 10-digit meeting ID or paste the link under **Meeting ID or link**, then select **Join**.
+On **Home** (or, without an account, on {appName}'s front page or the sign-in page), enter the 10-digit meeting ID or paste the link (or the whole invitation) in **Meeting ID or link**, then select **Join**.
 
 If the meeting has a passcode, you'll be asked for it. Links usually include the passcode, so you won't need to type it.
+
+## If it says something's wrong
+
+{appName} checks the meeting before opening it, and says what's wrong right under the field:
+
+- **A meeting ID has 10 digits.** Check you have all of them. Spaces and dashes don't matter.
+- **There's no meeting with that ID.** A digit may be off. Check the invitation, or ask the host to send the link.
+- **That link is for another site.** It's a link to another meeting app, or to another copy of {appName}. Open it in your browser instead.
+- **That link's meeting ID isn't complete.** Some of the link was cut off. Copy the whole link again.
+- **The meeting has ended, was cancelled, or its link has expired.** Ask the host for a new link.
+- **Too many tries.** After a few wrong IDs, wait a few minutes before trying again.
+
+Opening a link that doesn't work shows the same explanation, with a field to try another meeting ID or link.
 
 ## If you have to wait
 

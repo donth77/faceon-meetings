@@ -1,12 +1,24 @@
 import { useTranslations } from "next-intl";
 
+import { JoinForm } from "@/components/meetings/join-form";
 import { LinkButton } from "@/components/ui/button";
+import { formatMeetingCode } from "@/lib/meetings/codes";
+import type { ClosedReason } from "@/lib/meetings/rules";
 import { meetingPath, signInPath } from "@/lib/routes";
 
 import { MeetingCard, MeetingPageFrame } from "./page-frame";
 
 export type NoticeKind =
-  "notFound" | "ended" | "signIn" | "removed" | "tooManyTries";
+  "notFound" | ClosedReason | "signIn" | "removed" | "tooManyTries";
+
+/** Notices where the way on is another meeting ID or link, right here. */
+const JOIN_ANOTHER: ReadonlySet<NoticeKind> = new Set([
+  "notFound",
+  "ended",
+  "cancelled",
+  "expired",
+  "removed",
+]);
 
 const bigButton = "h-12 px-6 text-base";
 
@@ -20,10 +32,24 @@ export function MeetingNotice({
 }) {
   const t = useTranslations("Meeting.notices");
   const signIn = kind === "signIn";
+  const joinAnother = JOIN_ANOTHER.has(kind);
 
   return (
     <MeetingPageFrame>
       <MeetingCard title={t(`${kind}.title`)} body={t(`${kind}.body`)}>
+        {joinAnother ? (
+          <div className="w-full text-left">
+            <JoinForm
+              label={kind === "notFound" ? t("retry") : t("joinAnother")}
+              // The ID that led nowhere, ready to correct (a typo in a link, say).
+              defaultValue={
+                kind === "notFound" && /^\d{1,15}$/.test(code)
+                  ? formatMeetingCode(code)
+                  : ""
+              }
+            />
+          </div>
+        ) : null}
         {signIn ? (
           <LinkButton
             href={signInPath(meetingPath(code))}
@@ -34,7 +60,7 @@ export function MeetingNotice({
         ) : null}
         <LinkButton
           href="/"
-          variant={signIn ? "outline" : "default"}
+          variant={signIn || joinAnother ? "outline" : "default"}
           className={bigButton}
         >
           {t("returnHome")}

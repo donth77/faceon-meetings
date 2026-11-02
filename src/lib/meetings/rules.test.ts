@@ -9,6 +9,7 @@ import {
   canSaveNotes,
   canSetNotes,
   checkEntry,
+  closedReason,
   isSessionStale,
   passcodeMatches,
   resolveRole,
@@ -47,6 +48,40 @@ describe("resolveRole", () => {
         memberRole: "participant",
       }),
     ).toBe("participant");
+  });
+});
+
+describe("closedReason", () => {
+  const now = new Date("2026-11-02T12:00:00Z");
+  const later = new Date("2026-11-03T12:00:00Z");
+  const earlier = new Date("2026-11-01T12:00:00Z");
+
+  it("leaves an active meeting open until it expires", () => {
+    expect(closedReason({ status: "active", expiresAt: null }, now)).toBeNull();
+    expect(
+      closedReason({ status: "active", expiresAt: later }, now),
+    ).toBeNull();
+  });
+
+  it("says why a link stopped working", () => {
+    expect(closedReason({ status: "ended", expiresAt: later }, now)).toBe(
+      "ended",
+    );
+    expect(closedReason({ status: "cancelled", expiresAt: null }, now)).toBe(
+      "cancelled",
+    );
+    expect(closedReason({ status: "active", expiresAt: earlier }, now)).toBe(
+      "expired",
+    );
+    expect(closedReason({ status: "active", expiresAt: now }, now)).toBe(
+      "expired",
+    );
+  });
+
+  it("puts ending and cancelling before expiry", () => {
+    expect(closedReason({ status: "cancelled", expiresAt: earlier }, now)).toBe(
+      "cancelled",
+    );
   });
 });
 

@@ -28,8 +28,8 @@ export async function readJson<T extends z.ZodType>(
 }
 
 /**
- * Runs a state-changing meeting API handler: rejects cross-site requests and turns a
- * MeetingError into its JSON error. Anything unexpected is logged and reported as
+ * Runs a meeting API handler: rejects cross-site requests and turns a MeetingError into
+ * its JSON error. Anything unexpected is logged and reported as
  * UNAVAILABLE, without details.
  */
 export async function handleMeetingRequest(

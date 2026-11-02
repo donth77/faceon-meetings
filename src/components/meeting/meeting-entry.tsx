@@ -67,6 +67,8 @@ type Step =
 const NOTICES: Partial<Record<MeetingErrorCode, NoticeKind>> = {
   NOT_FOUND: "notFound",
   ENDED: "ended",
+  CANCELLED: "cancelled",
+  LINK_EXPIRED: "expired",
   SIGN_IN_REQUIRED: "signIn",
   REMOVED: "removed",
 };

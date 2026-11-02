@@ -55,7 +55,8 @@ async function MeetingGate({
     await recordDistinctAttempt(attempts.limits, attempts.seen);
     return <MeetingNotice kind="notFound" code={code} />;
   }
-  if (!summary.joinable) return <MeetingNotice kind="ended" code={code} />;
+  if (summary.closed)
+    return <MeetingNotice kind={summary.closed} code={code} />;
   if (!session && !(guestsEnabled() && summary.allowGuests)) {
     return <MeetingNotice kind="signIn" code={code} />;
   }
