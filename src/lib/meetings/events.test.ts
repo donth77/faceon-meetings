@@ -105,19 +105,4 @@ describe("RoomEvent", () => {
       RoomEvent.safeParse({ type: "notes.status", status: "maybe" }).success,
     ).toBe(false);
   });
-
-  it("reads a browser that's still to download, or downloading, what it needs", () => {
-    for (const status of ["download", "downloading"]) {
-      expect(RoomEvent.parse({ type: "notes.status", status })).toEqual({
-        type: "notes.status",
-        status,
-      });
-    }
-  });
-
-  it("reads the notetaker asking everyone to say whether they're in the notes", () => {
-    expect(RoomEvent.parse({ type: "notes.statusRequest" })).toEqual({
-      type: "notes.statusRequest",
-    });
-  });
 });

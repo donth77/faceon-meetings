@@ -666,7 +666,6 @@
       "title": "AI notes",
       "close": "Close AI notes",
       "chip": "AI notes on",
-      "chipNotYet": "AI notes on. You're not in them yet",
       "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
       "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
       "everyoneSeesShared": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed. The notes are shared with the participants as soon as they're made.",
@@ -675,8 +674,6 @@
       "stop": "Stop AI notes",
       "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
       "bannerShared": "{name} turned on AI notes. A summary will be made from what's said and shared with the participants, and you can choose not to be transcribed.",
-      "bannerDownload": "{name} turned on AI notes. To put what you say in them, your browser needs a one-time download first.",
-      "bannerUnsupported": "{name} turned on AI notes. This browser can't transcribe on your device, so what you say isn't in them.",
       "stopped": "AI notes are off.",
       "dontTranscribe": "Don't transcribe me",
       "dontTranscribeHelp": "What you say stays out of the notes",
@@ -696,20 +693,15 @@
       "transcriptEmpty": "Nothing said yet.",
       "notTranscribed": "Not in the notes",
       "personOptedOut": "{name} chose not to be transcribed.",
-      "personDownload": "{name}'s browser needs a one-time download before what they say goes into the notes.",
-      "personDownloading": "{name}'s browser is downloading what it needs to transcribe them.",
       "personUnsupported": "{name}'s browser can't transcribe on their device.",
-      "downloadOffer": "AI notes are on. To put what you say in them, your browser needs a one-time download first.",
-      "downloadNow": "Download now",
-      "downloadingButton": "Downloading…",
-      "downloadFailed": "The download didn't finish. Try again from AI notes on.",
-      "notYetTitle": "You're not in the notes yet",
+      "download": "Download",
+      "downloadOffer": "To put what you say in the AI notes, your browser needs a one-time download for transcribing on this device.",
       "self": {
         "listening": "What you say goes into the notes. It's transcribed on this device.",
         "muted": "What you say goes into the notes when you unmute.",
         "optedOut": "What you say stays out of the notes.",
-        "download": "Your browser turns what you say into text on this device, so your voice never leaves it. It needs a one-time download first: a few hundred MB, which Chrome keeps. What's said before it's done isn't in the notes.",
-        "downloading": "Downloading what your browser needs. What you say goes into the notes as soon as it's done.",
+        "download": "Your browser needs a one-time download to transcribe what you say on this device.",
+        "downloading": "Downloading what your browser needs to transcribe on this device…",
         "unsupported": "This browser can't transcribe on your device, so what you say isn't in the notes. Chrome on a computer can."
       },
       "startAgain": "Start AI notes again"
@@ -1283,7 +1275,6 @@
       "inMeetings": "AI notes in meetings you host",
       "inMeetingsHelp": "You and your co-hosts can start them in a meeting. Each meeting starts with them off, and turning this off stops any that are on.",
       "inMeetingsFailed": "Couldn't change AI notes for your meetings. Try again.",
-      "speechTitle": "Transcription on this device",
       "how": "How notes are made",
       "onDevice": "On this computer",
       "onDeviceHelp": "Free. Speech and summaries stay on each person's device. Needs a recent Chrome on a computer.",
@@ -1490,7 +1481,7 @@
     "lineCount": "{count, plural, one {# line} other {# lines}} in the transcript.",
     "engineOnDevice": "Notes are made on this computer, with Chrome's built-in AI.",
     "engineOwnKey": "Notes are made by {provider}, with your key.",
-    "firstDownload": "Chrome downloads it the first time: a few gigabytes, which can take a while. Nothing downloads until you select Download and make notes.",
+    "firstDownload": "Chrome downloads its built-in AI the first time, which can take a few minutes.",
     "notReady": {
       "noKey": "Add your {provider} key in AI notes settings.",
       "update": "Chrome's built-in AI needs a newer Chrome. You can use your own AI key instead.",
@@ -1498,7 +1489,6 @@
       "none": "This browser doesn't have Chrome's built-in AI. You can use your own AI key instead."
     },
     "make": "Make notes",
-    "downloadAndMake": "Download and make notes",
     "makeAgain": "Make again",
     "settings": "AI notes settings",
     "making": "Making notes…",
@@ -1520,7 +1510,6 @@
     "providerSaid": "{provider} said: “{detail}”",
     "madeOnDevice": "Made on this computer at {time}",
     "madeWith": "Made by {provider} at {time}",
-    "outdated": "Made before the rest of the transcript. Select Make again to include it.",
     "copy": "Copy",
     "copied": "Notes copied",
     "copyFailed": "Couldn't copy. Try Download instead.",
@@ -1548,17 +1537,6 @@
     "autoShare": {
       "label": "Share AI notes with participants automatically",
       "help": "As soon as they're made, they're saved with the meeting, and everyone who was in it with an account can see them under Previous meetings."
-    },
-    "speech": {
-      "ready": "Ready. In meetings with AI notes on, what you say is turned into text on this device, so your voice never leaves it.",
-      "needed": "In meetings with AI notes on, what you say is turned into text on this device, so your voice never leaves it. This browser needs a one-time download for that first: a few hundred MB, which Chrome keeps.",
-      "neededPreJoin": "To put what you say in the notes, this browser needs a one-time download first: a few hundred MB, which Chrome keeps. Start it now and it can finish while you join.",
-      "downloading": "Downloading. You can carry on meanwhile.",
-      "downloadingPreJoin": "Downloading. You can join meanwhile: what you say goes into the notes once it's done.",
-      "downloadingButton": "Downloading…",
-      "unavailable": "This browser can't turn speech into text on your device, so what you say isn't in AI notes. Chrome on a computer can.",
-      "download": "Download",
-      "failed": "The download didn't finish. Try again."
     }
   },
   "SavedNotes": {

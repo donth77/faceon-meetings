@@ -4,8 +4,6 @@
  * person's browser transcribes only their own mic, and only while they're unmuted.
  */
 
-import type { TranscriptionStatus } from "@/lib/meetings/events";
-
 /** What of the Web Speech API this uses. It isn't in TypeScript's lib. */
 interface RecognitionAlternative {
   transcript: string;
@@ -76,24 +74,6 @@ export async function speechSupport(
   } catch {
     return "unavailable";
   }
-}
-
-/**
- * Whether you're in the notes, as the notetaker's list says it: in them (when you speak,
- * unmuted), chose not to be, not yet (the one-time download, not started or under way),
- * or this browser can't. Null while that's still being found out.
- */
-export function transcriptionStatus(input: {
-  optedOut: boolean;
-  support: SpeechSupport | "checking";
-  failed: boolean;
-}): TranscriptionStatus | null {
-  if (input.optedOut) return "optedOut";
-  if (input.failed || input.support === "unavailable") return "unsupported";
-  if (input.support === "checking") return null;
-  if (input.support === "downloadable") return "download";
-  if (input.support === "downloading") return "downloading";
-  return "on";
 }
 
 /** Downloads the language for on-device use. True once it's ready. */

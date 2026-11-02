@@ -37,7 +37,6 @@ import { useNoiseTrack } from "@/components/device/use-noise-track";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
 import { LegalConsent } from "@/components/legal/legal-links";
-import { SpeechDownload } from "@/components/notes/speech-download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
@@ -592,7 +591,7 @@ export function PreJoin({
             </p>
 
             {meeting.notesOn || meeting.notesAuto ? (
-              <div
+              <p
                 role="note"
                 className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal"
               >
@@ -600,18 +599,10 @@ export function PreJoin({
                   className="text-primary mt-px size-5 shrink-0"
                   aria-hidden="true"
                 />
-                <div className="flex min-w-0 flex-col gap-3">
-                  <p>
-                    {meeting.notesOn
-                      ? t(meeting.notesShared ? "notesOnShared" : "notesOn")
-                      : t(
-                          meeting.notesShared ? "notesAutoShared" : "notesAuto",
-                        )}
-                  </p>
-                  {/* The one-time download, before joining rather than in the meeting. */}
-                  <SpeechDownload place="preJoin" />
-                </div>
-              </div>
+                {meeting.notesOn
+                  ? t(meeting.notesShared ? "notesOnShared" : "notesOn")
+                  : t(meeting.notesShared ? "notesAutoShared" : "notesAuto")}
+              </p>
             ) : null}
 
             {meeting.youCohost ? (
