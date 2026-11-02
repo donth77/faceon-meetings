@@ -30,3 +30,28 @@ export function LogoLockup({ className }: { className?: string }) {
     </>
   );
 }
+
+/** Just the mark, for where the name doesn't fit (the public header on small phones). */
+export function LogoMark({ className }: { className?: string }) {
+  const name = publicEnv.NEXT_PUBLIC_APP_NAME;
+  return (
+    <>
+      <Image
+        src="/brand/logo-mark.svg"
+        alt={name}
+        width={256}
+        height={256}
+        loading="eager"
+        className={cn("dark:hidden", className)}
+      />
+      <Image
+        src="/brand/logo-mark-dark.svg"
+        alt={name}
+        width={256}
+        height={256}
+        loading="eager"
+        className={cn("hidden dark:block", className)}
+      />
+    </>
+  );
+}

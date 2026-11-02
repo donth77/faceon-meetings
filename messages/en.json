@@ -875,11 +875,14 @@
     "nextWeek": "Next week",
     "weekOf": "Week of {date}",
     "now": "Now, {time}",
+    "time": "Time",
     "more": "+{count} more",
     "close": "Close",
     "youHost": "You’re the host · {count} invited",
     "dayWithMeetings": "{date}, has meetings",
     "nothingThatDay": "No meetings this day.",
+    "calendarFailed": "Couldn’t load your meetings.",
+    "retry": "Try again",
     "todayButton": "Today"
   },
   "Previous": {

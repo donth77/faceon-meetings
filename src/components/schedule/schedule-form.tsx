@@ -46,7 +46,7 @@ import {
   updateScheduleAction,
 } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
-import { deviceTimeZone, zonedToUtc } from "@/lib/time";
+import { localParts, viewerTimeZone, zonedToUtc } from "@/lib/time";
 
 import { DateField } from "./date-field";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
@@ -78,30 +78,12 @@ const TIMES = Array.from({ length: 96 }, (_, i) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 });
 
-/** The next half hour, in this device's time zone: a sensible start for a new meeting. */
-function nextHalfHour(timeZone: string): { date: string; time: string } {
-  const at = new Date(Math.ceil(Date.now() / 1_800_000) * 1_800_000);
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(at)
-      .map((part) => [part.type, part.value]),
-  );
-  return {
-    date: `${parts.year}-${parts.month}-${parts.day}`,
-    time: `${parts.hour}:${parts.minute}`,
-  };
-}
+/** The next half hour, in the viewer's time zone: a sensible start for a new meeting. */
+const nextHalfHour = (timeZone: string) =>
+  localParts(new Date(Math.ceil(Date.now() / 1_800_000) * 1_800_000), timeZone);
 
 export function defaultValues(): ScheduleFormValues {
-  const timeZone = deviceTimeZone();
+  const timeZone = viewerTimeZone();
   return {
     title: "",
     description: "",

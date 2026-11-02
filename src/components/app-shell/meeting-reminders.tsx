@@ -14,6 +14,8 @@ import {
   useIntlLocale,
   withDefaults,
 } from "@/lib/preferences";
+import { meetingPath } from "@/lib/routes";
+import { viewerTimeZone } from "@/lib/time";
 
 /** How far ahead to look, and how often to look again. */
 const LOOK_AHEAD_MS = 24 * 60 * 60 * 1000;
@@ -56,10 +58,11 @@ export function MeetingReminders() {
     if (alreadyShown(key)) return;
     markShown(key);
     const title = row.title ?? t("untitled", { name: row.hostName });
-    const at = new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
-      new Date(row.start),
-    );
-    const link = `/j/${row.code}${row.passcode ? `#pwd=${row.passcode}` : ""}`;
+    const at = new Intl.DateTimeFormat(locale, {
+      timeStyle: "short",
+      timeZone: viewerTimeZone(),
+    }).format(new Date(row.start));
+    const link = meetingPath(row.code, row.passcode);
     // The real time left: a reminder can show late, when FaceOn was opened late.
     const left = Math.max(
       1,

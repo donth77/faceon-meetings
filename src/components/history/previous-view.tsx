@@ -16,6 +16,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Segment, Segments } from "@/components/ui/segments";
 import { Sheet, SheetTitle } from "@/components/ui/sheet";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
 import { formatDay } from "@/lib/time";
@@ -76,11 +77,14 @@ function Avatars({ people, label }: { people: Attendee[]; label: string }) {
   );
 }
 
+/** Times and days in the viewer's time zone (Settings → General). */
 function useFormats() {
   const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
   const time = new Intl.DateTimeFormat(locale, {
     hour: "numeric",
     minute: "2-digit",
+    timeZone,
   });
   return {
     range: (start: string, end: string) =>
@@ -91,17 +95,20 @@ function useFormats() {
         weekday: "long",
         month: "long",
         day: "numeric",
+        timeZone,
       }),
     shortDay: (at: string) =>
       formatDay(new Date(at), locale, {
         weekday: "short",
         month: "short",
         day: "numeric",
+        timeZone,
       }),
     date: (at: string) =>
       formatDay(new Date(at), locale, {
         month: "short",
         day: "numeric",
+        timeZone,
       }),
   };
 }

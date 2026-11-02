@@ -193,22 +193,30 @@ export function systemTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+/** Whether this browser knows a time zone by that name. */
+export function isTimeZone(zone: unknown): zone is string {
+  if (typeof zone !== "string") return false;
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The viewer's time zone: the one chosen in Settings → General on this device, or else
- * the device's own. Browser only.
+ * the device's own. Browser only; components use useViewerTimeZone().
  */
-export function deviceTimeZone(): string {
+export function viewerTimeZone(): string {
   try {
     const raw = localStorage.getItem("faceon.prefs");
     const zone = raw
       ? (JSON.parse(raw) as { timeZone?: unknown }).timeZone
       : null;
-    if (typeof zone === "string") {
-      new Intl.DateTimeFormat("en", { timeZone: zone });
-      return zone;
-    }
+    if (isTimeZone(zone)) return zone;
   } catch {
-    // No storage, or a zone this browser doesn't know: use the device's.
+    // No storage: use the device's.
   }
   return systemTimeZone();
 }

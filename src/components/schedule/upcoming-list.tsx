@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button, LinkButton } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -14,18 +15,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNow } from "@/hooks/use-now";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule, recurrenceChip } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
 import { deleteScheduleAction } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
-import {
-  deviceTimeZone,
-  formatDay,
-  formatTimeRange,
-  localParts,
-  zoneCity,
-} from "@/lib/time";
+import { editMeetingPath } from "@/lib/routes";
+import { formatDay, formatTimeRange, localParts, zoneCity } from "@/lib/time";
 
 import { useScheduledInvitation } from "./invitation";
 import { ScopeDialog } from "./scope-dialog";
@@ -49,17 +46,13 @@ export type UpcomingRow = {
   seriesStartDate: string;
 };
 
-const CHIP =
-  "inline-flex h-6 items-center gap-1 rounded-xl px-2 text-xs font-bold whitespace-nowrap";
-const ROLE_CHIP = `${CHIP} bg-chip text-chip-foreground`;
-const NEUTRAL_CHIP = `${CHIP} bg-muted text-muted-foreground`;
-
 function Row({ row }: { row: UpcomingRow }) {
   const t = useTranslations("Upcoming");
   const td = useTranslations("MeetingDetails");
   const ts = useTranslations("Schedule");
   const tr = useTranslations("Recurrence");
   const locale = useIntlLocale();
+  const zone = useViewerTimeZone();
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const recurrence = row.rrule ? fromRRule(row.rrule, row.timeZone) : null;
@@ -106,34 +99,34 @@ function Row({ row }: { row: UpcomingRow }) {
   }
 
   return (
-    <li className="bg-card flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] px-4 py-3.5 ring-1 ring-[#e2e5ea] dark:ring-white/10">
+    <li className="bg-card ring-border flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] px-4 py-3.5 ring-1">
       <span className="w-[150px] shrink-0 font-mono text-sm tabular-nums">
-        {formatTimeRange(start, end, deviceTimeZone(), locale)}
+        {formatTimeRange(start, end, zone, locale)}
       </span>
       <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-base font-bold">{title}</span>
           {recurrence ? (
-            <span className={NEUTRAL_CHIP}>
+            <Chip>
               <Repeat className="size-3.5" aria-hidden="true" />
               {recurrenceChip(tr, recurrence)}
-            </span>
+            </Chip>
           ) : null}
-          <span className={isHost ? ROLE_CHIP : NEUTRAL_CHIP}>
+          <Chip tone={isHost ? "brand" : "neutral"}>
             {isHost ? t("host") : t("invitedChip")}
-          </span>
+          </Chip>
         </div>
         <span className="text-muted-foreground text-[13px]">
           {meta.filter(Boolean).join(" · ")}
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <LinkButton href={invitation.link} className="h-[38px] rounded-[10px]">
+        <LinkButton href={invitation.link} size="app">
           {isHost ? t("start") : t("join")}
         </LinkButton>
         <Button
           variant="outline"
-          className="h-[38px] rounded-[10px]"
+          size="app"
           onPress={() => void invitation.copyInvitation()}
         >
           <Copy aria-hidden="true" />
@@ -158,11 +151,10 @@ function Row({ row }: { row: UpcomingRow }) {
               <DropdownMenuItem
                 onAction={() =>
                   router.push(
-                    `/meetings/${row.code}/edit${
-                      recurrence
-                        ? `?occurrence=${encodeURIComponent(row.originalStart)}`
-                        : ""
-                    }`,
+                    editMeetingPath(
+                      row.code,
+                      recurrence ? row.originalStart : null,
+                    ),
                   )
                 }
               >
@@ -204,13 +196,13 @@ function Row({ row }: { row: UpcomingRow }) {
 }
 
 /**
- * Upcoming, as a list: meetings grouped by day in this device's time zone ("Today ·
+ * Upcoming, as a list: meetings grouped by day in the viewer's time zone ("Today ·
  * Sunday, November 1"), each with Start or Join, Copy invitation and more.
  */
 export function UpcomingList({ rows }: { rows: UpcomingRow[] }) {
   const t = useTranslations("Upcoming");
   const locale = useIntlLocale();
-  const zone = deviceTimeZone();
+  const zone = useViewerTimeZone();
   const now = useNow(60_000);
   if (now === null) return null;
   const today = localParts(new Date(now), zone).date;
@@ -240,10 +232,10 @@ export function UpcomingList({ rows }: { rows: UpcomingRow[] }) {
         {t("subtitle", { city: zoneCity(zone) })}
       </p>
       {days.size === 0 ? (
-        <div className="bg-card flex flex-col items-start gap-3 rounded-2xl p-6 ring-1 ring-[#e2e5ea] dark:ring-white/10">
+        <div className="bg-card ring-border flex flex-col items-start gap-3 rounded-2xl p-6 ring-1">
           <p className="text-[15px] font-semibold">{t("emptyTitle")}</p>
           <p className="text-muted-foreground text-sm">{t("emptyBody")}</p>
-          <LinkButton href="/schedule" className="h-[38px] rounded-[10px]">
+          <LinkButton href="/schedule" size="app">
             <CalendarPlus aria-hidden="true" />
             {t("schedule")}
           </LinkButton>

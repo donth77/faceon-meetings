@@ -2,7 +2,7 @@ import { cn } from "cn";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-import { LogoLockup } from "@/components/brand/logo-lockup";
+import { LogoLockup, LogoMark } from "@/components/brand/logo-lockup";
 import { LinkButton } from "@/components/ui/button";
 import { publicEnv } from "@/lib/env";
 
@@ -35,7 +35,13 @@ export async function SiteHeader({
         aria-label={t("homeLink", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
         className="inline-flex shrink-0 rounded-md"
       >
-        <LogoLockup className="h-7 sm:h-[30px]" />
+        {/* Below 384px the name doesn't fit beside Sign in and Sign up: the mark alone. */}
+        <span className="max-[24rem]:hidden">
+          <LogoLockup className="h-7 sm:h-[30px]" />
+        </span>
+        <span className="hidden max-[24rem]:block">
+          <LogoMark className="size-7" />
+        </span>
       </Link>
       <nav
         aria-label={t("primaryNav")}
@@ -43,7 +49,7 @@ export async function SiteHeader({
       >
         <Link
           href="/help"
-          className="hover:bg-muted focus-visible:ring-ring hidden h-10 items-center rounded-[10px] px-3 text-[15px] font-semibold outline-none focus-visible:ring-2 sm:flex"
+          className="hover:bg-muted focus-visible:focus-ring hidden h-10 items-center rounded-[10px] px-3 text-[15px] font-semibold outline-hidden sm:flex"
         >
           {t("help")}
         </Link>

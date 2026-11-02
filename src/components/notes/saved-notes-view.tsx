@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { meetingApi } from "@/components/meeting/api-client";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import type { SavedNotes } from "@/lib/meetings/saved-notes";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import { useIntlLocale } from "@/lib/preferences";
@@ -81,6 +82,7 @@ export function SavedNotesView({ notes }: { notes: SavedNotes }) {
   const tn = useTranslations("Notes");
   const tp = useTranslations("Previous");
   const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
   const router = useRouter();
   const toMarkdown = useNotesMarkdown();
   const [shared, setShared] = useState(notes.shared);
@@ -94,10 +96,12 @@ export function SavedNotesView({ notes }: { notes: SavedNotes }) {
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone,
   });
   const range = new Intl.DateTimeFormat(locale, {
     hour: "numeric",
     minute: "2-digit",
+    timeZone,
   }).formatRange(start, end);
   const made = notes.provider
     ? t("madeBy", { provider: PROVIDER_INFO[notes.provider].name })

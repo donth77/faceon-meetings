@@ -69,3 +69,18 @@ export function safeRedirectPath(next: string | null | undefined): string {
   }
   return next;
 }
+
+/**
+ * A meeting's join link: /j/<code>, with the passcode in the fragment (#pwd=…), which
+ * browsers never send to the server.
+ */
+export const meetingPath = (code: string, passcode?: string | null) =>
+  `/j/${code}${passcode ? `#pwd=${passcode}` : ""}`;
+
+/** Editing a meeting; for a repeating one, the occurrence chosen (its original start). */
+export const editMeetingPath = (code: string, occurrence?: string | null) =>
+  `/meetings/${code}/edit${occurrence ? `?occurrence=${encodeURIComponent(occurrence)}` : ""}`;
+
+/** Sign in, then come back to `next`. */
+export const signInPath = (next: string) =>
+  `${SIGN_IN_ROUTE}?next=${encodeURIComponent(next)}`;

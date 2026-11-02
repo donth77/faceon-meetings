@@ -8,19 +8,19 @@ import { useScheduledInvitation } from "@/components/schedule/invitation";
 import type { UpcomingRow } from "@/components/schedule/upcoming-list";
 import { Button, LinkButton } from "@/components/ui/button";
 import { useNow } from "@/hooks/use-now";
+import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
 import { useIntlLocale } from "@/lib/preferences";
-import { deviceTimeZone, localParts } from "@/lib/time";
+import { localParts } from "@/lib/time";
 
 import { useInvitation } from "../meeting/invitation";
 
-const CARD =
-  "bg-card flex flex-col gap-3 rounded-2xl p-5.5 ring-1 ring-[#e2e5ea] dark:ring-white/10";
+const CARD = "bg-card ring-border flex flex-col gap-3 rounded-2xl p-5.5 ring-1";
 
 function CardIcon({ icon: Icon }: { icon: typeof DoorOpen }) {
   return (
-    <span className="flex size-10 items-center justify-center rounded-xl bg-[#e8eeff] text-[#1f5eff] dark:bg-[#1f5eff]/20 dark:text-[#8fb0ff]">
+    <span className="bg-chip text-chip-foreground flex size-10 items-center justify-center rounded-xl">
       <Icon className="size-5" aria-hidden="true" />
     </span>
   );
@@ -90,6 +90,7 @@ function TodayRow({ row }: { row: UpcomingRow }) {
   const t = useTranslations("Home");
   const tu = useTranslations("Upcoming");
   const locale = useIntlLocale();
+  const zone = useViewerTimeZone();
   const title = row.title ?? tu("untitled", { name: row.hostName });
   const start = new Date(row.start);
   const end = new Date(row.end);
@@ -109,6 +110,7 @@ function TodayRow({ row }: { row: UpcomingRow }) {
     new Intl.DateTimeFormat(locale, {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: zone,
     }).format(date);
   const isHost = row.role === "host";
   const meta = isHost
@@ -123,12 +125,12 @@ function TodayRow({ row }: { row: UpcomingRow }) {
       ];
 
   return (
-    <li className="flex items-center gap-4 border-b px-5.5 py-4.5 last:border-b-0">
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-b px-5.5 py-4.5 last:border-b-0">
       <span className="flex w-[5.5rem] shrink-0 flex-col font-mono text-[15px] whitespace-nowrap tabular-nums">
         <span>{time(start)}</span>
         <span className="text-muted-foreground">{time(end)}</span>
       </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <div className="flex min-w-[9rem] flex-1 flex-col gap-0.5">
         <Link
           href={`/meetings/${row.code}`}
           className="truncate text-base font-semibold hover:underline"
@@ -159,12 +161,12 @@ function TodayRow({ row }: { row: UpcomingRow }) {
   );
 }
 
-/** Today: what's left of today's meetings, in this device's time zone. */
+/** Today: what's left of today's meetings, in the viewer's time zone. */
 export function TodayList({ rows }: { rows: UpcomingRow[] }) {
   const t = useTranslations("Home");
+  const zone = useViewerTimeZone();
   const now = useNow(60_000);
   if (now === null) return null;
-  const zone = deviceTimeZone();
   const today = localParts(new Date(now), zone).date;
   const todays = rows.filter(
     (row) =>
