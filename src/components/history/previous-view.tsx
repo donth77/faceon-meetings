@@ -194,6 +194,15 @@ function Details({
                     </span>
                   ) : null}
                 </span>
+                {person.visits.length > 1 ? (
+                  // Joined and left more than once: the total time is what they were here.
+                  <span className="text-muted-foreground mt-1 block pl-9 text-xs leading-normal">
+                    {t("visits", { count: person.visits.length })}:{" "}
+                    {person.visits
+                      .map((visit) => f.range(visit.joinedAt, visit.leftAt))
+                      .join(", ")}
+                  </span>
+                ) : null}
               </th>
               <td className="py-2.5 text-right font-mono text-[13px]">
                 {f.time(person.joinedAt)}

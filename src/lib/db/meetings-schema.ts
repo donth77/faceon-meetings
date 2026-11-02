@@ -134,6 +134,8 @@ export const meetingMember = pgTable(
       onDelete: "set null",
     }),
     displayName: text("display_name").notNull(),
+    /** Their avatar when admitted, for Previous: guests have no account to look it up in. */
+    image: text("image"),
     role: memberRole("role").notNull(),
     admittedAt: timestamp("admitted_at", { withTimezone: true })
       .defaultNow()

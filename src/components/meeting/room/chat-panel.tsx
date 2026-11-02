@@ -173,9 +173,12 @@ export function ChatPanel({
         </Button>
       }
     >
-      <p className="bg-background text-muted-foreground mx-4 mb-2.5 shrink-0 rounded-[10px] px-3 py-2.5 text-[13px] leading-normal">
-        {t("notice")}
-      </p>
+      {/* Before the first message: who sees it, and that it isn't kept, as in Meet. */}
+      {messages.length === 0 ? (
+        <p className="bg-background text-muted-foreground mx-4 mb-2.5 shrink-0 rounded-[10px] px-3 py-2.5 text-[13px] leading-normal">
+          {t("notice")}
+        </p>
+      ) : null}
       <ol
         ref={listRef}
         aria-label={t("title")}

@@ -19,6 +19,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export type Attendee = {
   name: string;
   image: string | null;
+  /** Each time they joined and left, when they came more than once. */
+  visits: Array<{ joinedAt: string; leftAt: string }>;
   isHost: boolean;
   isGuest: boolean;
   isYou: boolean;
@@ -150,7 +152,12 @@ export async function previousMeetings(viewer: {
       const member = roleOf(mediaUserId);
       const current = people.get(mediaUserId);
       const minutes = minutesBetween(joined, left);
+      const visit = {
+        joinedAt: joined.toISOString(),
+        leftAt: left.toISOString(),
+      };
       if (current) {
+        current.visits.push(visit);
         current.joined = joined < current.joined ? joined : current.joined;
         current.left = left > current.left ? left : current.left;
         current.minutes += minutes;
@@ -162,6 +169,7 @@ export async function previousMeetings(viewer: {
         isHost: member?.role === "host",
         isGuest: mediaUserId.startsWith("g_"),
         isYou: member?.userId === viewer.id,
+        visits: [visit],
         joinedAt: "",
         leftAt: "",
         minutes,
@@ -176,7 +184,15 @@ export async function previousMeetings(viewer: {
         add(
           c.mediaUserId,
           c.displayName,
-          imageOf(c.userId, c.image),
+          imageOf(
+            c.userId,
+            c.image ??
+              members.find(
+                (m) =>
+                  m.sessionId === session.id && m.mediaUserId === c.mediaUserId,
+              )?.image ??
+              null,
+          ),
           c.joinedAt,
           c.leftAt ?? sessionEnd,
         );
@@ -186,7 +202,7 @@ export async function previousMeetings(viewer: {
         add(
           m.mediaUserId,
           m.displayName,
-          imageOf(m.userId, null),
+          imageOf(m.userId, m.image),
           m.admittedAt,
           sessionEnd,
         );
@@ -195,8 +211,13 @@ export async function previousMeetings(viewer: {
 
     const list = [...people.values()]
       .sort((a, b) => a.joined.getTime() - b.joined.getTime())
-      .map(({ joined, left, ...person }) => ({
+      .map(({ joined, left, visits, ...person }) => ({
         ...person,
+        // One visit says no more than joined and left do.
+        visits:
+          visits.length > 1
+            ? visits.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))
+            : [],
         joinedAt: joined.toISOString(),
         leftAt: left.toISOString(),
       }));

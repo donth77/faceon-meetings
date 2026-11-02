@@ -34,7 +34,9 @@ const PROVIDERS: ReadonlyArray<{
     id: "github",
     name: "GitHub",
     Icon: GitHubIcon,
-    className: "bg-foreground text-background hover:bg-foreground/85",
+    // The outline style's dark background mustn't win over it in dark mode.
+    className:
+      "border-transparent bg-foreground text-background hover:bg-foreground/85 dark:border-transparent dark:bg-foreground dark:hover:bg-foreground/85",
   },
 ];
 

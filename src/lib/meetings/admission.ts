@@ -44,6 +44,7 @@ export async function admit(input: {
     mediaUserId: self.id,
     userId: principal.kind === "user" ? principal.userId : null,
     displayName: self.name,
+    image: self.image ?? null,
     role,
   });
   const connection = await provider.admit({

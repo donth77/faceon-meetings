@@ -339,6 +339,7 @@ export async function upsertMember(input: {
   mediaUserId: string;
   userId: string | null;
   displayName: string;
+  image: string | null;
   role: MeetingRole;
 }): Promise<void> {
   await db()
@@ -346,7 +347,11 @@ export async function upsertMember(input: {
     .values(input)
     .onConflictDoUpdate({
       target: [meetingMember.sessionId, meetingMember.mediaUserId],
-      set: { displayName: input.displayName, role: input.role },
+      set: {
+        displayName: input.displayName,
+        image: input.image,
+        role: input.role,
+      },
     });
 }
 

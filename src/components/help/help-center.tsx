@@ -134,7 +134,7 @@ export function ReportLinks({ repoUrl }: { repoUrl: string }) {
         href={`${repoUrl.replace(/\/$/, "")}/issues/new/choose`}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-card ring-border hover:bg-muted focus-visible:ring-ring flex h-12 w-full items-center justify-center gap-2.5 rounded-xl font-semibold ring-1 outline-none focus-visible:ring-2"
+        className="bg-card ring-border hover:bg-muted focus-visible:ring-ring inline-flex h-11 max-w-full items-center justify-center gap-2.5 rounded-xl px-5 font-semibold ring-1 outline-none focus-visible:ring-2"
       >
         <GitHubIcon className="size-5" />
         {t("reportIssue")}
@@ -145,10 +145,10 @@ export function ReportLinks({ repoUrl }: { repoUrl: string }) {
         href={repoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
       >
-        <GitHubIcon className="size-4" />
         {t("viewSource")}
+        <span className="sr-only">{t("opensInNewTab")}</span>
       </a>
     </div>
   );

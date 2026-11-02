@@ -463,7 +463,8 @@
     "mutedNudge": "You’re muted. Unmute so others can hear you.",
     "hidePreview": "Hide preview",
     "showPreview": "Show preview",
-    "previewHidden": "Preview hidden. Everyone else still sees your screen."
+    "previewHidden": "Preview hidden. Everyone else still sees your screen.",
+    "tryAgain": "Try again"
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -846,7 +847,8 @@
     "guest": "Guest",
     "untitled": "{name}’s meeting",
     "empty": "Meetings you host or join show up here afterwards.",
-    "noMatch": "No meetings match that."
+    "noMatch": "No meetings match that.",
+    "visits": "{count, plural, one {# visit} other {# visits}}"
   },
   "Settings": {
     "title": "Settings",

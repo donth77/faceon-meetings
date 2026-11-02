@@ -41,7 +41,8 @@ type Admission = Extract<JoinResponse, { state: "admitted" }>;
 
 type Step =
   | { name: "prejoin"; error: JoinErrorKind | null }
-  | { name: "joining" }
+  /** Asking the API to join; on a rejoin, without showing pre-join again. */
+  | { name: "joining"; rejoin?: boolean }
   | { name: "waiting" }
   /** In the waiting room: asked to join, polling until a host decides. */
   | { name: "asking"; requestId: string }
@@ -171,9 +172,9 @@ export default function MeetingEntry({
   }, []);
 
   const join = useCallback(
-    async (input: JoinInput, { quiet = false } = {}) => {
+    async (input: JoinInput, { quiet = false, rejoin = false } = {}) => {
       lastJoin.current = input;
-      if (!quiet) setStep({ name: "joining" });
+      if (!quiet) setStep({ name: "joining", rejoin });
       try {
         const result = await meetingApi.join(code, {
           name: input.name,
@@ -284,18 +285,25 @@ export default function MeetingEntry({
     });
   }, []);
 
+  // Ending takes the server a moment (and Stream's "ended" a moment more), so the host
+  // leaves at once while the meeting ends for everyone else.
   const endForAll = useCallback(async () => {
     endingForAll.current = true;
-    try {
-      await meetingApi.end(code);
-    } catch {
-      endingForAll.current = false;
-      toast.error(t("endFailed"));
-    }
+    setStep({ name: "left", reason: "endedByYou" });
+    const end = async () => {
+      try {
+        await meetingApi.end(code);
+      } catch {
+        toast.error(t("endFailed"), {
+          action: { label: t("tryAgain"), onClick: () => void end() },
+        });
+      }
+    };
+    await end();
   }, [code, t]);
 
   const rejoin = () => {
-    if (lastJoin.current) void join(lastJoin.current);
+    if (lastJoin.current) void join(lastJoin.current, { rejoin: true });
     else setStep({ name: "prejoin", error: null });
   };
 
@@ -340,17 +348,21 @@ export default function MeetingEntry({
       break;
     }
     default:
-      content = (
-        <PreJoin
-          meeting={meeting}
-          viewer={viewer}
-          initialPasscode={initialPasscode}
-          status={step.name === "prejoin" ? "idle" : step.name}
-          error={step.name === "prejoin" ? step.error : null}
-          onJoin={(input) => void join(input)}
-          onStopWaiting={stopWaiting}
-        />
-      );
+      // Rejoining from the left screen goes straight back in, without pre-join.
+      content =
+        step.name === "joining" && step.rejoin ? (
+          <JoiningScreen />
+        ) : (
+          <PreJoin
+            meeting={meeting}
+            viewer={viewer}
+            initialPasscode={initialPasscode}
+            status={step.name === "prejoin" ? "idle" : step.name}
+            error={step.name === "prejoin" ? step.error : null}
+            onJoin={(input) => void join(input)}
+            onStopWaiting={stopWaiting}
+          />
+        );
   }
 
   const inRoom = step.name === "room";
