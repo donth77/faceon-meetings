@@ -5,6 +5,12 @@
 import { z } from "zod";
 
 import type { JoinInfo, MeetingRole } from "@/lib/media/types";
+import {
+  ENGINES,
+  MAX_SAVED_NOTES_BYTES,
+  MeetingNotes,
+} from "@/lib/notes/notes";
+import { PROVIDERS } from "@/lib/notes/providers";
 
 import { SessionPolicy } from "./policy";
 
@@ -49,6 +55,8 @@ export type SelfInfo = {
   name: string;
   image?: string;
   role: MeetingRole;
+  /** Signed in, rather than a guest: saving AI notes needs an account. */
+  signedIn: boolean;
 };
 
 /** What members see in Meeting info. */
@@ -65,6 +73,8 @@ export type AdmittedMeetingInfo = {
 
 /** The session's limits; the time left is in seconds when admitted, so no clocks disagree. */
 export type SessionInfo = {
+  /** The session (one run of the meeting), which saved AI notes belong to. */
+  id: string;
   demo: boolean;
   maxParticipants: number;
   maxMinutes: number | null;
@@ -133,6 +143,22 @@ export type HandRequest = z.infer<typeof HandRequest>;
 /** AI notes: hosts and co-hosts turn them on or off, for everyone. */
 export const NotesRequest = z.object({ on: z.boolean() });
 export type NotesRequest = z.infer<typeof NotesRequest>;
+
+/** Saving AI notes to a session, replacing any saved before. */
+export const SaveNotesRequest = z.object({
+  notes: MeetingNotes,
+  /** The transcript as text, or null to leave it out. */
+  transcript: z.string().max(MAX_SAVED_NOTES_BYTES).nullable(),
+  engine: z.enum(ENGINES),
+  provider: z.enum(PROVIDERS).nullable(),
+  madeAt: z.iso.datetime(),
+  shared: z.boolean(),
+});
+export type SaveNotesRequest = z.infer<typeof SaveNotesRequest>;
+
+/** Sharing saved AI notes with the session's attendees, or not. */
+export const ShareNotesRequest = z.object({ shared: z.boolean() });
+export type ShareNotesRequest = z.infer<typeof ShareNotesRequest>;
 
 /** What hosts and co-hosts can do to others, and to the meeting. */
 export const ModerateRequest = z.discriminatedUnion("action", [

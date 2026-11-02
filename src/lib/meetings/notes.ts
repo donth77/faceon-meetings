@@ -1,5 +1,7 @@
 import "server-only";
 
+import { aiNotesEnabled } from "@/lib/env";
+
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import type { NotesRequest } from "./api";
 import { MeetingError } from "./errors";
@@ -20,6 +22,9 @@ export async function setNotes(input: {
   const { meeting } = await requireMeeting(input.code);
   const principal = requirePrincipal(input.principal);
   const { session, member } = await requireMember(meeting.id, principal);
+  if (input.request.on && !aiNotesEnabled) {
+    throw new MeetingError("NOT_ALLOWED");
+  }
   const allowed = canSetNotes({
     actor: member.role,
     on: input.request.on,

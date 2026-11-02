@@ -20,6 +20,8 @@ import type {
 } from "@/lib/media/types";
 import type { SessionPolicy } from "@/lib/meetings/policy";
 import type { MeetingSettings } from "@/lib/meetings/settings";
+import type { EngineId, MeetingNotes } from "@/lib/notes/notes";
+import type { ProviderId } from "@/lib/notes/providers";
 
 import { user } from "./auth-schema";
 
@@ -280,6 +282,29 @@ export const participantSession = pgTable(
   },
   (table) => [index("participant_session_session").on(table.sessionId)],
 );
+
+/**
+ * AI notes a host or co-host saved to a session, only when they chose to. Shared notes
+ * show under Previous for the session's signed-in attendees. They go with the session,
+ * with the account that saved them, or after 90 days with the session's attendance.
+ */
+export const meetingNotes = pgTable("meeting_notes", {
+  sessionId: uuid("session_id")
+    .primaryKey()
+    .references(() => meetingSession.id, { onDelete: "cascade" }),
+  savedBy: text("saved_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  notes: jsonb("notes").$type<MeetingNotes>().notNull(),
+  /** The transcript as text ("Ana (10:02): …"), when it fit. */
+  transcript: text("transcript"),
+  engine: text("engine").$type<EngineId>().notNull(),
+  provider: text("provider").$type<ProviderId>(),
+  /** When the notes were made, which can be before they were saved. */
+  madeAt: timestamp("made_at", { withTimezone: true }).notNull(),
+  shared: boolean("shared").notNull().default(false),
+  savedAt: timestamp("saved_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 /** Webhook deliveries already handled, so a retry or replay changes nothing. */
 export const webhookEvent = pgTable("webhook_event", {

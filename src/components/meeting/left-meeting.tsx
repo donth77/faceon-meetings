@@ -29,11 +29,14 @@ export function LeftMeeting({
   reason,
   title,
   code,
+  session,
   onRejoin,
 }: {
   reason: LeftReason;
   title: string;
   code: string;
+  /** The session you were in; null if you never got in. */
+  session: { id: string; signedIn: boolean } | null;
   onRejoin: () => void;
 }) {
   const t = useTranslations("Meeting");
@@ -60,7 +63,9 @@ export function LeftMeeting({
             {t("returnHome")}
           </LinkButton>
         </MeetingCard>
-        <NotesAfterMeeting code={code} title={title} />
+        {session ? (
+          <NotesAfterMeeting code={code} title={title} session={session} />
+        ) : null}
       </div>
     </MeetingPageFrame>
   );

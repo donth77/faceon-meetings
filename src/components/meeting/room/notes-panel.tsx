@@ -99,6 +99,8 @@ function Transcript({
  */
 export function NotesPanel({
   code,
+  sessionId,
+  canSave,
   title,
   notes,
   demo,
@@ -111,6 +113,10 @@ export function NotesPanel({
   onClose,
 }: {
   code: string;
+  /** This session, which saved notes belong to. */
+  sessionId: string;
+  /** Signed in: the notes can be saved with the meeting. */
+  canSave: boolean;
   /** The meeting's title, which the notes and their file are named after. */
   title: string;
   notes: NotesState | null;
@@ -174,6 +180,8 @@ export function NotesPanel({
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-4">
         <NotesMaker
           code={code}
+          sessionId={sessionId}
+          canSave={canSave}
           title={title}
           lines={lines}
           settings={{ onPress: onOpenSettings }}

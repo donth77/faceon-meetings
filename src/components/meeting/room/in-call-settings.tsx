@@ -35,6 +35,7 @@ import {
   type DevicePreferences,
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
+import { aiNotesEnabled } from "@/lib/env";
 import {
   savePreferences,
   usePreferences,
@@ -61,7 +62,8 @@ const SECTIONS: Array<{ id: InCallSection; icon: LucideIcon }> = [
   { id: "effects", icon: WandSparkles },
   { id: "general", icon: Settings },
   { id: "accessibility", icon: Accessibility },
-  { id: "aiNotes", icon: Sparkles },
+  // A copy can turn AI notes off; their settings go with them.
+  ...(aiNotesEnabled ? [{ id: "aiNotes" as const, icon: Sparkles }] : []),
 ];
 
 /** The device the next meeting starts with follows what you pick here. */

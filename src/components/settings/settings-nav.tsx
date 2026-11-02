@@ -19,6 +19,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, use, type ReactNode } from "react";
 
+import { aiNotesEnabled } from "@/lib/env";
+
 export const SETTINGS_SECTIONS = [
   { slug: "general", key: "general", icon: Settings },
   { slug: "audio", key: "audio", icon: Mic },
@@ -48,7 +50,10 @@ export function SettingsNav() {
       aria-label={t("sections")}
       className="-m-0.5 flex gap-0.5 overflow-x-auto p-0.5 xl:m-0 xl:flex-[0_0_236px] xl:flex-col xl:overflow-visible xl:p-0"
     >
-      {SETTINGS_SECTIONS.map(({ slug, key, icon: Icon }) => {
+      {SETTINGS_SECTIONS.filter(
+        // A copy can turn AI notes off; their settings go with them.
+        ({ key }) => key !== "aiNotes" || aiNotesEnabled,
+      ).map(({ slug, key, icon: Icon }) => {
         // General is Settings' first page.
         const href = slug === "general" ? "/settings" : `/settings/${slug}`;
         const current = pathname.endsWith(href);

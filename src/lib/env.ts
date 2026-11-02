@@ -13,6 +13,8 @@ const PublicEnv = z.object({
   NEXT_PUBLIC_OPERATOR_NAME: z.string().min(1).optional(),
   /** Where people write about privacy or the terms. */
   NEXT_PUBLIC_CONTACT_EMAIL: z.email().optional(),
+  /** AI notes, on unless this copy turns them off. */
+  NEXT_PUBLIC_AI_NOTES: z.enum(["on", "off"]).default("on"),
 });
 
 export const publicEnv = PublicEnv.parse({
@@ -21,4 +23,8 @@ export const publicEnv = PublicEnv.parse({
   NEXT_PUBLIC_REPO_URL: process.env.NEXT_PUBLIC_REPO_URL || undefined,
   NEXT_PUBLIC_OPERATOR_NAME: process.env.NEXT_PUBLIC_OPERATOR_NAME || undefined,
   NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL || undefined,
+  NEXT_PUBLIC_AI_NOTES: process.env.NEXT_PUBLIC_AI_NOTES || undefined,
 });
+
+/** Whether this copy offers AI notes. */
+export const aiNotesEnabled = publicEnv.NEXT_PUBLIC_AI_NOTES === "on";

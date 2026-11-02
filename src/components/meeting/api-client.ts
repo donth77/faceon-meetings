@@ -9,6 +9,7 @@ import {
   type MeetingErrorCode,
   type ModerateRequest,
   type NotesRequest,
+  type SaveNotesRequest,
   type TokenResponse,
 } from "@/lib/meetings/api";
 
@@ -36,7 +37,7 @@ function errorCodeOf(body: unknown): MeetingErrorCode | undefined {
 }
 
 async function send<T>(
-  method: "GET" | "POST" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   body?: unknown,
   init?: RequestInit,
@@ -74,6 +75,14 @@ export const meetingApi = {
     post<void>(`/api/meetings/${code}/hand`, request),
   notes: (code: string, request: NotesRequest) =>
     post<void>(`/api/meetings/${code}/notes`, request),
+  saveNotes: (code: string, sessionId: string, request: SaveNotesRequest) =>
+    send<void>("PUT", `/api/meetings/${code}/notes/${sessionId}`, request),
+  shareNotes: (code: string, sessionId: string, shared: boolean) =>
+    send<void>("PATCH", `/api/meetings/${code}/notes/${sessionId}`, {
+      shared,
+    }),
+  deleteNotes: (code: string, sessionId: string) =>
+    send<void>("DELETE", `/api/meetings/${code}/notes/${sessionId}`),
   moderate: (code: string, request: ModerateRequest) =>
     post<void>(`/api/meetings/${code}/moderate`, request),
   pollAdmission: (code: string, requestId: string) =>

@@ -898,7 +898,11 @@
     "untitled": "{name}’s meeting",
     "empty": "Meetings you host or join show up here afterwards.",
     "noMatch": "No meetings match that.",
-    "visits": "{count, plural, one {# visit} other {# visits}}"
+    "visits": "{count, plural, one {# visit} other {# visits}}",
+    "notes": "AI notes",
+    "notesSaved": "AI notes saved",
+    "notesShared": "AI notes shared",
+    "viewNotes": "View AI notes"
   },
   "Settings": {
     "title": "Settings",
@@ -1191,9 +1195,35 @@
     "copyFailed": "Couldn't copy. Try Download instead.",
     "download": "Download .md",
     "fileName": "{title} AI notes",
-    "onlyYou": "Only you can see these notes, in this tab. Audio is never stored.",
+    "onlyYou": "Only you can see these notes. Nothing is saved until you choose Save to meeting, and audio is never stored.",
     "discard": "Delete notes and transcript",
     "discardConfirm": "Delete them from this tab?",
-    "discardYes": "Delete"
+    "discardYes": "Delete",
+    "save": "Save to meeting",
+    "share": "Share with participants",
+    "stopSharing": "Stop sharing",
+    "saveFailed": "Couldn't save the notes. Try again.",
+    "savedPrivate": "Saved with the meeting. Only you and the host can see them.",
+    "savedShared": "Shared with the meeting's participants: everyone who was in it with an account can see them under Previous meetings.",
+    "transcriptLeftOut": "The transcript was too long to save with them; Download keeps it.",
+    "openSaved": "Open in Previous meetings",
+    "onlyYouGuest": "Only you can see these notes, in this tab. Audio is never stored. Copy or Download them to keep them.",
+    "audioNeverStored": "Audio is never stored."
+  },
+  "SavedNotes": {
+    "back": "Previous meetings",
+    "madeOnDevice": "made on this computer",
+    "madeBy": "made by {provider}",
+    "private": "Only you and the host can see these notes. Audio is never stored.",
+    "shared": "Shared with the meeting's participants: everyone who was in it with an account can see them. Audio is never stored.",
+    "sharedWithYou": "Shared with the meeting's participants. Audio is never stored.",
+    "nowShared": "Notes shared with the meeting's participants",
+    "noLongerShared": "Notes no longer shared",
+    "failed": "Couldn't change the notes. Try again.",
+    "delete": "Delete notes",
+    "deleteConfirm": "Delete these notes for everyone who can see them?",
+    "deleted": "Notes deleted",
+    "showAll": "Show all {count, plural, one {# line} other {# lines}}",
+    "showLess": "Show less"
   }
 }

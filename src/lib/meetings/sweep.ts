@@ -9,6 +9,7 @@ import {
   pruneEndedSessionMembers,
 } from "./queries";
 import { SESSION_GRACE_MS } from "./rules";
+import { pruneSavedNotes } from "./saved-notes";
 import { currentSession } from "./sessions";
 import { pruneEndedSessionRequests } from "./waiting-room";
 
@@ -20,7 +21,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *   calls, so they don't count as running and old tokens can't rejoin;
  * - deletes instant meetings unused for 30 days (their expiry);
  * - drops admission records and waiting-room requests a week after their session ended,
- *   attendance after 90 days, and attempt counters and sign-in rate limits after a day.
+ *   attendance and saved AI notes after 90 days, and attempt counters and sign-in rate
+ *   limits after a day.
  *   The privacy policy promises these.
  */
 export async function sweep(now = new Date()) {
@@ -55,6 +57,9 @@ export async function sweep(now = new Date()) {
       new Date(now.getTime() - DAY_MS),
     ),
     prunedAttendance: await pruneAttendance(
+      new Date(now.getTime() - 90 * DAY_MS),
+    ),
+    prunedSavedNotes: await pruneSavedNotes(
       new Date(now.getTime() - 90 * DAY_MS),
     ),
     prunedWebhookEvents: await pruneWebhookEvents(

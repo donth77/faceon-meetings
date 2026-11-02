@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, exists, gt, inArray, or } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, or } from "drizzle-orm";
 
 import { avatarUrl } from "@/lib/avatars/seed";
 import { db } from "@/lib/db";
@@ -12,6 +12,9 @@ import {
   participantSession,
   user,
 } from "@/lib/db/schema";
+
+import { attendedBy } from "./queries";
+import { notesInPrevious } from "./saved-notes";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -41,6 +44,8 @@ export type PastMeeting = {
   end: string;
   minutes: number;
   attendees: Attendee[];
+  /** AI notes saved to the meeting that you may read, and whether they're shared. */
+  notes: { shared: boolean } | null;
 };
 
 const minutesBetween = (from: Date, to: Date) =>
@@ -55,20 +60,7 @@ export async function previousMeetings(viewer: {
   id: string;
 }): Promise<PastMeeting[]> {
   const since = new Date(Date.now() - 90 * DAY_MS);
-  const attended = or(
-    eq(meeting.hostId, viewer.id),
-    exists(
-      db()
-        .select({ one: meetingMember.sessionId })
-        .from(meetingMember)
-        .where(
-          and(
-            eq(meetingMember.sessionId, meetingSession.id),
-            eq(meetingMember.userId, viewer.id),
-          ),
-        ),
-    ),
-  );
+  const attended = or(eq(meeting.hostId, viewer.id), attendedBy(viewer.id));
   const sessions = await db()
     .select({
       session: meetingSession,
@@ -91,7 +83,7 @@ export async function previousMeetings(viewer: {
 
   const ids = sessions.map((s) => s.session.id);
   const meetingIds = [...new Set(sessions.map((s) => s.meeting.id))];
-  const [connections, members, series] = await Promise.all([
+  const [connections, members, series, notes] = await Promise.all([
     db()
       .select()
       .from(participantSession)
@@ -104,6 +96,10 @@ export async function previousMeetings(viewer: {
       .select({ meetingId: meetingRule.meetingId })
       .from(meetingRule)
       .where(inArray(meetingRule.meetingId, meetingIds)),
+    notesInPrevious(
+      sessions.map((s) => ({ id: s.session.id, hostId: s.meeting.hostId })),
+      viewer.id,
+    ),
   ]);
 
   // Signed-in people show their avatar as it is now; guests keep the one they had.
@@ -239,6 +235,7 @@ export async function previousMeetings(viewer: {
       end: end.toISOString(),
       minutes: minutesBetween(start, end),
       attendees: list,
+      notes: notes.get(session.id) ?? null,
     };
   });
 }

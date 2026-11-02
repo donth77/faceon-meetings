@@ -5,7 +5,7 @@ category: hosting
 order: 5
 ---
 
-AI notes turn what's said in a meeting into a short summary, a list of action items (with who will do each and by when, when that's clear) and the decisions made. They're off unless a host turns them on, everyone can see when they're on, and nothing is saved anywhere.
+AI notes turn what's said in a meeting into a short summary, a list of action items (with who will do each and by when, when that's clear) and the decisions made. They're off unless a host turns them on, everyone can see when they're on, and nothing is saved unless the notetaker chooses to.
 
 ## Turn them on
 
@@ -38,4 +38,13 @@ When the notetaker stops AI notes, or leaves, the notes are made from the transc
 
 The notes show in the **AI notes** panel, and after you leave the meeting. Select **Copy** to copy them, or **Download .md** to save them, with the transcript, as a Markdown file. **Make again** makes them again, for example another way.
 
-The transcript and the notes stay only in that browser tab: closing the tab forgets them. Select **Delete notes and transcript** to remove them sooner.
+Until you save them, the transcript and the notes stay only in that browser tab: closing the tab forgets them. Select **Delete notes and transcript** to remove them sooner.
+
+## Save and share them
+
+If you're signed in, you can keep the notes with the meeting:
+
+- **Save to meeting**: only you and the meeting's host can see them.
+- **Share with participants**: everyone who was in the meeting with an account can see them too.
+
+Saved notes are under **Previous**: select the meeting's **View details**, then **View AI notes**. There, **Stop sharing** or **Delete notes** if you saved them or host the meeting. The transcript is saved with them when it fits (up to about 200 KB in all). Saved notes are deleted after 90 days, or with the meeting.

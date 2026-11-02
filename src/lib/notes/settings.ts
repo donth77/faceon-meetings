@@ -7,11 +7,8 @@
 import { useSyncExternalStore } from "react";
 import { z } from "zod";
 
+import { ENGINES } from "./notes";
 import { isProvider, PROVIDERS, type ProviderId } from "./providers";
-
-/** On this computer (Chrome's built-in model), or with the host's own AI key. */
-export const ENGINES = ["onDevice", "ownKey"] as const;
-export type EngineId = (typeof ENGINES)[number];
 
 const byProvider = z
   .record(z.string(), z.string().max(400))

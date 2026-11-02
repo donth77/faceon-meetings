@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
+import { meetingApi } from "@/components/meeting/api-client";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { modelApi } from "@/lib/ai/built-in";
 import {
@@ -13,6 +14,7 @@ import {
   UnreadableNotesError,
   type NotesProgress,
 } from "@/lib/notes/engines";
+import { MAX_SAVED_NOTES_BYTES, savedNotesBytes } from "@/lib/notes/notes";
 import { ProviderError, type ProviderFailure } from "@/lib/notes/providers";
 import { useNotesSettings } from "@/lib/notes/settings";
 import {
@@ -35,21 +37,27 @@ export type MakerState =
   | { step: "done"; made: MadeNotes }
   | { step: "failed"; failure: NotesFailure };
 
-const settled = (code: string): MakerState => {
-  const made = loadMadeNotes(code);
+const settled = (sessionId: string): MakerState => {
+  const made = loadMadeNotes(sessionId);
   return made ? { step: "done", made } : { step: "ready" };
 };
 
+/** Saving the notes to the meeting: where it stands. */
+export type SaveState = "idle" | "saving" | "failed";
+
 /**
  * Makes AI notes from this tab's transcript, the way Settings → AI notes says, and keeps
- * them in the tab. Making them again replaces them.
+ * them in the tab; making them again replaces them. Saving puts them with the meeting
+ * (for Previous), shared with its attendees or not.
  */
 export function useNotesMaker({
   code,
+  sessionId,
   title,
   lines,
 }: {
   code: string;
+  sessionId: string;
   title: string;
   lines: readonly TranscriptLine[];
 }) {
@@ -59,7 +67,10 @@ export function useNotesMaker({
   const onDevice = useOnDeviceModel();
   const engine = preferredEngine(settings, onDevice ?? "none");
   const choice = providerChoice(settings);
-  const [state, setState] = useState<MakerState>(() => settled(code));
+  const [state, setState] = useState<MakerState>(() => settled(sessionId));
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  /** The last save left the transcript out: it was too long. */
+  const [transcriptLeftOut, setTranscriptLeftOut] = useState(false);
   const running = useRef<AbortController | null>(null);
 
   // Leaving the page stops a run; nothing is half-saved.
@@ -80,11 +91,11 @@ export function useNotesMaker({
       return;
     }
     setState({ step: "making", progress: null });
-    const time = new Intl.DateTimeFormat(timeLocale, { timeStyle: "short" });
+    setSaveState("idle");
     const job = {
       locale,
       title,
-      transcript: transcriptText(lines, (at) => time.format(at)),
+      transcript: transcriptOf(),
       signal: controller.signal,
       onProgress: (progress: NotesProgress) => {
         if (!controller.signal.aborted) setState({ step: "making", progress });
@@ -106,7 +117,7 @@ export function useNotesMaker({
         ...(engine === "ownKey" ? { provider: choice.provider } : {}),
         madeAt: Date.now(),
       };
-      saveMadeNotes(code, made);
+      saveMadeNotes(sessionId, made);
       setState({ step: "done", made });
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -126,14 +137,53 @@ export function useNotesMaker({
 
   function cancel() {
     running.current?.abort();
-    setState(settled(code));
+    setState(settled(sessionId));
   }
 
   /** Forgets the notes made in this tab. */
   function discard() {
     running.current?.abort();
-    saveMadeNotes(code, null);
+    saveMadeNotes(sessionId, null);
     setState({ step: "ready" });
+  }
+
+  /** The transcript as text, its times on this device's clock. */
+  function transcriptOf() {
+    const time = new Intl.DateTimeFormat(timeLocale, { timeStyle: "short" });
+    return transcriptText(lines, (at) => time.format(at));
+  }
+
+  /**
+   * Saves the notes to the meeting (shared with its attendees, or not), or changes
+   * whether saved notes are shared. A transcript too long to save is left out.
+   */
+  async function save(shared: boolean) {
+    if (state.step !== "done") return;
+    const { made } = state;
+    setSaveState("saving");
+    try {
+      if (made.saved) {
+        await meetingApi.shareNotes(code, sessionId, shared);
+      } else {
+        const full = transcriptOf();
+        const fits = savedNotesBytes(made.notes, full) <= MAX_SAVED_NOTES_BYTES;
+        await meetingApi.saveNotes(code, sessionId, {
+          notes: made.notes,
+          transcript: fits ? full : null,
+          engine: made.engine,
+          provider: made.provider ?? null,
+          madeAt: new Date(made.madeAt).toISOString(),
+          shared,
+        });
+        setTranscriptLeftOut(!fits);
+      }
+      const next: MadeNotes = { ...made, saved: { shared } };
+      saveMadeNotes(sessionId, next);
+      setState({ step: "done", made: next });
+      setSaveState("idle");
+    } catch {
+      setSaveState("failed");
+    }
   }
 
   return {
@@ -145,5 +195,8 @@ export function useNotesMaker({
     make,
     cancel,
     discard,
+    saveState,
+    transcriptLeftOut,
+    save,
   };
 }

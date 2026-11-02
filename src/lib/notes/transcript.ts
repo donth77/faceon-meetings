@@ -6,9 +6,8 @@
  */
 import { z } from "zod";
 
-import { MeetingNotes } from "./notes";
+import { ENGINES, MeetingNotes } from "./notes";
 import { PROVIDERS } from "./providers";
-import { ENGINES } from "./settings";
 
 export const TranscriptLine = z.object({
   id: z.string(),
@@ -82,13 +81,13 @@ export function transcriptText(
     .join("\n\n");
 }
 
-const storageKey = (code: string) => `faceon.transcript.${code}`;
+const storageKey = (sessionId: string) => `faceon.transcript.${sessionId}`;
 const Stored = z.array(TranscriptLine);
 
-/** The transcript this tab collected for a meeting; empty when there's none. */
-export function loadTranscript(code: string): TranscriptLine[] {
+/** The transcript this tab collected in a session; empty when there's none. */
+export function loadTranscript(sessionId: string): TranscriptLine[] {
   try {
-    const raw = sessionStorage.getItem(storageKey(code));
+    const raw = sessionStorage.getItem(storageKey(sessionId));
     const parsed = Stored.safeParse(raw ? JSON.parse(raw) : []);
     return parsed.success ? parsed.data : [];
   } catch {
@@ -98,12 +97,12 @@ export function loadTranscript(code: string): TranscriptLine[] {
 
 /** Keeps it for a reload; a browser that won't store it just keeps it in memory. */
 export function saveTranscript(
-  code: string,
+  sessionId: string,
   lines: readonly TranscriptLine[],
 ): void {
   try {
-    if (lines.length === 0) sessionStorage.removeItem(storageKey(code));
-    else sessionStorage.setItem(storageKey(code), JSON.stringify(lines));
+    if (lines.length === 0) sessionStorage.removeItem(storageKey(sessionId));
+    else sessionStorage.setItem(storageKey(sessionId), JSON.stringify(lines));
   } catch {
     // Kept in memory only.
   }
@@ -116,14 +115,16 @@ export const MadeNotes = z.object({
   provider: z.enum(PROVIDERS).optional(),
   /** When they were made (ms since epoch). */
   madeAt: z.number(),
+  /** Saved to the meeting from this tab, shared or not. */
+  saved: z.object({ shared: z.boolean() }).optional(),
 });
 export type MadeNotes = z.infer<typeof MadeNotes>;
 
-const notesKey = (code: string) => `faceon.notes.${code}`;
+const notesKey = (sessionId: string) => `faceon.notes.${sessionId}`;
 
-export function loadMadeNotes(code: string): MadeNotes | null {
+export function loadMadeNotes(sessionId: string): MadeNotes | null {
   try {
-    const raw = sessionStorage.getItem(notesKey(code));
+    const raw = sessionStorage.getItem(notesKey(sessionId));
     const parsed = MadeNotes.safeParse(raw ? JSON.parse(raw) : null);
     return parsed.success ? parsed.data : null;
   } catch {
@@ -131,10 +132,10 @@ export function loadMadeNotes(code: string): MadeNotes | null {
   }
 }
 
-export function saveMadeNotes(code: string, made: MadeNotes | null): void {
+export function saveMadeNotes(sessionId: string, made: MadeNotes | null): void {
   try {
-    if (made) sessionStorage.setItem(notesKey(code), JSON.stringify(made));
-    else sessionStorage.removeItem(notesKey(code));
+    if (made) sessionStorage.setItem(notesKey(sessionId), JSON.stringify(made));
+    else sessionStorage.removeItem(notesKey(sessionId));
   } catch {
     // Kept in memory only.
   }

@@ -16,10 +16,11 @@ import {
   parseNotes,
   systemPrompt,
   transcriptPrompt,
+  type EngineId,
   type MeetingNotes,
 } from "./notes";
 import { callProvider, defaultModel, type ProviderId } from "./providers";
-import type { EngineId, NotesSettings } from "./settings";
+import type { NotesSettings } from "./settings";
 
 /** How far along the notes are. */
 export type NotesProgress =

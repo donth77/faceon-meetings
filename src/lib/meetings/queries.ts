@@ -1,9 +1,25 @@
 import "server-only";
 
-import { and, count, eq, gte, inArray, isNull, lt } from "drizzle-orm";
+import {
+  and,
+  count,
+  eq,
+  exists,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  or,
+} from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { meeting, meetingMember, meetingSession, user } from "@/lib/db/schema";
+import {
+  meeting,
+  meetingMember,
+  meetingSession,
+  participantSession,
+  user,
+} from "@/lib/db/schema";
 import type {
   MediaProviderId,
   MeetingRole,
@@ -463,4 +479,35 @@ export async function pruneEndedSessionMembers(before: Date): Promise<number> {
     .where(inArray(meetingMember.sessionId, ended))
     .returning({ sessionId: meetingMember.sessionId });
   return deleted.length;
+}
+
+/**
+ * Someone with an account was in the session: admitted to it, or in its attendance.
+ * Admission records go a week after a session; attendance stays 90 days.
+ */
+export function attendedBy(viewerId: string) {
+  return or(
+    exists(
+      db()
+        .select({ one: meetingMember.sessionId })
+        .from(meetingMember)
+        .where(
+          and(
+            eq(meetingMember.sessionId, meetingSession.id),
+            eq(meetingMember.userId, viewerId),
+          ),
+        ),
+    ),
+    exists(
+      db()
+        .select({ one: participantSession.sessionId })
+        .from(participantSession)
+        .where(
+          and(
+            eq(participantSession.sessionId, meetingSession.id),
+            eq(participantSession.userId, viewerId),
+          ),
+        ),
+    ),
+  );
 }

@@ -19,6 +19,7 @@ import {
 import { INPUT, RadioDot, SelectField } from "@/components/schedule/fields";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
+import { ENGINES, type EngineId } from "@/lib/notes/notes";
 import {
   defaultModel,
   PROVIDER_INFO,
@@ -28,11 +29,9 @@ import {
   type ProviderId,
 } from "@/lib/notes/providers";
 import {
-  ENGINES,
   saveForProvider,
   saveNotesSettings,
   useNotesSettings,
-  type EngineId,
 } from "@/lib/notes/settings";
 
 import { SectionTitle, SettingsCard } from "./settings-nav";

@@ -180,3 +180,34 @@ export function canSetNotes(input: {
 }): boolean {
   return isHostRole(input.actor) && !(input.on && input.demo);
 }
+
+/** Saving AI notes to a session: hosts and co-hosts with an account. */
+export function canSaveNotes(member: {
+  role: MeetingRole;
+  userId: string | null;
+}): boolean {
+  return isHostRole(member.role) && member.userId !== null;
+}
+
+/**
+ * Who sees saved AI notes: whoever saved them and the meeting's host, and once they're
+ * shared, everyone with an account who was in that session.
+ */
+export function canReadNotes(input: {
+  viewer: string;
+  savedBy: string;
+  hostId: string;
+  shared: boolean;
+  attended: boolean;
+}): boolean {
+  return canManageNotes(input) || (input.shared && input.attended);
+}
+
+/** Sharing or deleting saved AI notes: whoever saved them, or the meeting's host. */
+export function canManageNotes(input: {
+  viewer: string;
+  savedBy: string;
+  hostId: string;
+}): boolean {
+  return input.viewer === input.savedBy || input.viewer === input.hostId;
+}

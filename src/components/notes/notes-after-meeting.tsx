@@ -15,12 +15,15 @@ import { NotesMaker } from "./notes-maker";
 export function NotesAfterMeeting({
   code,
   title,
+  session,
 }: {
   code: string;
   title: string;
+  /** The session you left, and whether you're signed in to save notes with it. */
+  session: { id: string; signedIn: boolean };
 }) {
   const t = useTranslations("Notes");
-  const [lines, setLines] = useState(() => loadTranscript(code));
+  const [lines, setLines] = useState(() => loadTranscript(session.id));
   if (lines.length === 0) return null;
   return (
     <section
@@ -36,12 +39,14 @@ export function NotesAfterMeeting({
       </h2>
       <NotesMaker
         code={code}
+        sessionId={session.id}
+        canSave={session.signedIn}
         title={title}
         lines={lines}
         settings={{ href: "/settings/ai-notes" }}
         autoStart
         onDiscard={() => {
-          saveTranscript(code, []);
+          saveTranscript(session.id, []);
           setLines([]);
         }}
       />

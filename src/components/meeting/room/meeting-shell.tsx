@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { DeviceProblem } from "@/lib/device/problems";
+import { aiNotesEnabled } from "@/lib/env";
 import type {
   AdmittedMeetingInfo,
   ModerateRequest,
@@ -239,9 +240,11 @@ export function MeetingShell({
   // person unless they'd rather not. The notetaker's device collects the transcript.
   const notes = state?.notes ?? null;
   const isNotetaker = notes?.by === self.id;
+  /** Hosts and co-hosts run AI notes, where this copy offers them. */
+  const canRunNotes = isHost && aiNotesEnabled;
   const transcript = useTranscript({
     media,
-    code: meeting.code,
+    sessionId: session.id,
     collecting: isNotetaker,
     self,
   });
@@ -529,6 +532,8 @@ export function MeetingShell({
         <NotesPanel
           key="notes"
           code={meeting.code}
+          sessionId={session.id}
+          canSave={self.signedIn}
           title={title}
           notes={notes}
           demo={session.demo}
@@ -595,7 +600,9 @@ export function MeetingShell({
                   self={transcription.state}
                   onOptOutChange={setOptedOut}
                   onDownload={() => void download()}
-                  onOpenNotes={isHost ? () => openPanel("notes") : undefined}
+                  onOpenNotes={
+                    canRunNotes ? () => openPanel("notes") : undefined
+                  }
                 />
               ) : null
             }
@@ -701,7 +708,7 @@ export function MeetingShell({
             onOpenPictureInPicture={
               pip.supported ? () => void pip.open() : undefined
             }
-            onOpenNotes={isHost ? () => openPanel("notes") : undefined}
+            onOpenNotes={canRunNotes ? () => openPanel("notes") : undefined}
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}

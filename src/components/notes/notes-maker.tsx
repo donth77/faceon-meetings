@@ -1,14 +1,12 @@
 "use client";
 
-import { Copy, Download, LoaderCircle, Settings, Sparkles } from "lucide-react";
+import { LoaderCircle, Save, Settings, Sparkles, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { toast } from "sonner";
 
 import { Button, LinkButton } from "@/components/ui/button";
-import { downloadFile } from "@/lib/download";
 import type { NotesProgress } from "@/lib/notes/engines";
-import { notesMarkdown, type NotesLabels } from "@/lib/notes/notes";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import {
   transcriptText,
@@ -17,10 +15,13 @@ import {
 } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
 
+import {
+  NOTES_ACTION as ACTION,
+  NotesFileButtons,
+  useNotesMarkdown,
+} from "./notes-file";
 import { NotesView } from "./notes-view";
-import { useNotesMaker } from "./use-notes-maker";
-
-const ACTION = "h-10 gap-2 rounded-[10px] px-3.5 text-sm font-semibold";
+import { useNotesMaker, type SaveState } from "./use-notes-maker";
 
 /** Where AI notes settings open: the meeting's Settings dialog, or the Settings page. */
 export type SettingsLink = { onPress: () => void } | { href: string };
@@ -65,12 +66,75 @@ function ProgressText({ progress }: { progress: NotesProgress | null }) {
   return t("making");
 }
 
-/** The notes, how and when they were made, Copy and Download, and Make again. */
+/** Saving the notes with the meeting, for Previous: privately, or shared with attendees. */
+function SaveControls({
+  made,
+  sessionId,
+  saveState,
+  transcriptLeftOut,
+  onSave,
+}: {
+  made: MadeNotes;
+  sessionId: string;
+  saveState: SaveState;
+  transcriptLeftOut: boolean;
+  onSave: (shared: boolean) => void;
+}) {
+  const t = useTranslations("Notes");
+  const saving = saveState === "saving";
+  const shared = made.saved?.shared === true;
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap gap-2">
+        {made.saved ? null : (
+          <Button
+            variant="outline"
+            className={ACTION}
+            isPending={saving}
+            onPress={() => onSave(false)}
+          >
+            <Save className="size-4" aria-hidden="true" />
+            {t("save")}
+          </Button>
+        )}
+        <Button
+          variant={shared ? "outline" : "default"}
+          className={ACTION}
+          isPending={saving}
+          onPress={() => onSave(!shared)}
+        >
+          <Users className="size-4" aria-hidden="true" />
+          {shared ? t("stopSharing") : t("share")}
+        </Button>
+      </div>
+      <div role="status" className="text-[13px] leading-normal empty:hidden">
+        {saveState === "failed" ? (
+          <p className="text-destructive">{t("saveFailed")}</p>
+        ) : made.saved ? (
+          <p className="text-muted-foreground">
+            {shared ? t("savedShared") : t("savedPrivate")}{" "}
+            {transcriptLeftOut ? `${t("transcriptLeftOut")} ` : ""}
+            <Link
+              href={`/previous/${sessionId}/notes`}
+              target="_blank"
+              className="text-primary font-semibold underline-offset-4 hover:underline"
+            >
+              {t("openSaved")}
+            </Link>
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/** The notes, how and when they were made, saving, Copy and Download, and Make again. */
 function MadeNotesView({
   made,
   title,
   lines,
   settings,
+  save,
   onMakeAgain,
 }: {
   made: MadeNotes;
@@ -78,23 +142,24 @@ function MadeNotesView({
   lines: readonly TranscriptLine[];
   /** To make them another way, again. */
   settings: SettingsLink;
+  /** Saving with the meeting; absent for guests, who have no account to save with. */
+  save:
+    | {
+        sessionId: string;
+        state: SaveState;
+        transcriptLeftOut: boolean;
+        onSave: (shared: boolean) => void;
+      }
+    | undefined;
   onMakeAgain: () => void;
 }) {
   const t = useTranslations("Notes");
   const locale = useIntlLocale();
   const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" });
 
-  function markdown() {
-    const labels: NotesLabels = {
-      summary: t("summary"),
-      actionItems: t("actionItems"),
-      decisions: t("decisions"),
-      transcript: t("transcript"),
-      noOwner: t("noOwner"),
-      due: (when) => t("dueBy", { when }),
-      none: t("none"),
-    };
-    return notesMarkdown({
+  const toMarkdown = useNotesMarkdown();
+  const markdown = () =>
+    toMarkdown({
       title,
       when: new Intl.DateTimeFormat(locale, {
         dateStyle: "full",
@@ -102,18 +167,7 @@ function MadeNotesView({
       }).format(made.madeAt),
       notes: made.notes,
       transcript: transcriptText(lines, (at) => time.format(at)),
-      labels,
     });
-  }
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(markdown());
-      toast.success(t("copied"));
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -126,30 +180,17 @@ function MadeNotesView({
           : t("madeOnDevice", { time: time.format(made.madeAt) })}
       </p>
       <NotesView notes={made.notes} />
+      {save ? (
+        <SaveControls
+          made={made}
+          sessionId={save.sessionId}
+          saveState={save.state}
+          transcriptLeftOut={save.transcriptLeftOut}
+          onSave={save.onSave}
+        />
+      ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          className={ACTION}
-          onPress={() => void copy()}
-        >
-          <Copy className="size-4" aria-hidden="true" />
-          {t("copy")}
-        </Button>
-        <Button
-          variant="outline"
-          className={ACTION}
-          onPress={() =>
-            downloadFile({
-              name: t("fileName", { title }),
-              extension: "md",
-              content: markdown(),
-              type: "text/markdown",
-            })
-          }
-        >
-          <Download className="size-4" aria-hidden="true" />
-          {t("download")}
-        </Button>
+        <NotesFileButtons title={title} markdown={markdown} />
         <Button variant="outline" className={ACTION} onPress={onMakeAgain}>
           <Sparkles className="size-4" aria-hidden="true" />
           {t("makeAgain")}
@@ -157,7 +198,11 @@ function MadeNotesView({
         <SettingsButton settings={settings} />
       </div>
       <p className="text-muted-foreground text-[13px] leading-normal">
-        {t("onlyYou")}
+        {made.saved
+          ? t("audioNeverStored")
+          : save
+            ? t("onlyYou")
+            : t("onlyYouGuest")}
       </p>
     </div>
   );
@@ -169,6 +214,8 @@ function MadeNotesView({
  */
 export function NotesMaker({
   code,
+  sessionId,
+  canSave,
   title,
   lines,
   settings,
@@ -176,6 +223,10 @@ export function NotesMaker({
   onDiscard,
 }: {
   code: string;
+  /** The session the transcript is from, which saved notes belong to. */
+  sessionId: string;
+  /** Signed in: notes can be saved with the meeting. */
+  canSave: boolean;
   title: string;
   lines: readonly TranscriptLine[];
   settings: SettingsLink;
@@ -184,7 +235,7 @@ export function NotesMaker({
   onDiscard: () => void;
 }) {
   const t = useTranslations("Notes");
-  const maker = useNotesMaker({ code, title, lines });
+  const maker = useNotesMaker({ code, sessionId, title, lines });
   const { state } = maker;
   const [confirming, setConfirming] = useState(false);
   const provider = PROVIDER_INFO[maker.provider].name;
@@ -225,6 +276,16 @@ export function NotesMaker({
           title={title}
           lines={lines}
           settings={settings}
+          save={
+            canSave
+              ? {
+                  sessionId,
+                  state: maker.saveState,
+                  transcriptLeftOut: maker.transcriptLeftOut,
+                  onSave: (shared) => void maker.save(shared),
+                }
+              : undefined
+          }
           onMakeAgain={() => void maker.make()}
         />
       );

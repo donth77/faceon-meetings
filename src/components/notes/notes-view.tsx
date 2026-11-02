@@ -1,40 +1,72 @@
 "use client";
 
+import { cn } from "cn";
 import { Square } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import type { MeetingNotes } from "@/lib/notes/notes";
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-[15px] font-bold">{title}</h3>
-      {children}
-    </section>
-  );
-}
+/** A card on the notes page, as in the mockup. */
+export const NOTES_CARD =
+  "bg-card flex flex-col gap-3 rounded-2xl px-6 py-5.5 ring-1 ring-[#e2e5ea] dark:ring-white/10";
 
 /**
  * AI notes, as in the mockup: Summary, Action items (with who and by when) and
- * Decisions. Everything is plain text; nothing the model wrote becomes HTML.
+ * Decisions. Everything is plain text; nothing the model wrote becomes HTML. Stacked in
+ * a panel; as cards on the notes page.
  */
-export function NotesView({ notes }: { notes: MeetingNotes }) {
+export function NotesView({
+  notes,
+  layout = "stack",
+}: {
+  notes: MeetingNotes;
+  layout?: "stack" | "cards";
+}) {
   const t = useTranslations("Notes");
+  const cards = layout === "cards";
+  // In a panel the sections sit under its title; on the page, under the page's.
+  const Heading = cards ? "h2" : "h3";
   const none = <p className="text-muted-foreground text-sm">{t("none")}</p>;
+  const section = (title: string, children: ReactNode, wide = false) => (
+    <section
+      className={cn(
+        cards ? NOTES_CARD : "flex flex-col gap-2",
+        cards && wide && "col-span-full",
+      )}
+    >
+      <Heading
+        className={cards ? "text-lg font-bold" : "text-[15px] font-bold"}
+      >
+        {title}
+      </Heading>
+      {children}
+    </section>
+  );
+
   return (
-    <div className="flex flex-col gap-5">
-      <Section title={t("summary")}>
-        {notes.summary ? (
-          <p className="max-w-[68ch] text-[15px] leading-relaxed whitespace-pre-line">
+    <div
+      className={cards ? "grid gap-4 sm:grid-cols-2" : "flex flex-col gap-5"}
+    >
+      {section(
+        t("summary"),
+        notes.summary ? (
+          <p
+            className={cn(
+              "max-w-[68ch] leading-relaxed whitespace-pre-line",
+              cards ? "text-base" : "text-[15px]",
+            )}
+          >
             {notes.summary}
           </p>
         ) : (
           none
-        )}
-      </Section>
-      <Section title={t("actionItems")}>
-        {notes.actionItems.length > 0 ? (
+        ),
+        true,
+      )}
+      {section(
+        t("actionItems"),
+        notes.actionItems.length > 0 ? (
           <ul className="flex flex-col gap-2.5">
             {notes.actionItems.map((item, index) => (
               <li
@@ -61,10 +93,11 @@ export function NotesView({ notes }: { notes: MeetingNotes }) {
           </ul>
         ) : (
           none
-        )}
-      </Section>
-      <Section title={t("decisions")}>
-        {notes.decisions.length > 0 ? (
+        ),
+      )}
+      {section(
+        t("decisions"),
+        notes.decisions.length > 0 ? (
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-[15px] leading-snug">
             {notes.decisions.map((decision, index) => (
               <li key={index}>{decision}</li>
@@ -72,8 +105,8 @@ export function NotesView({ notes }: { notes: MeetingNotes }) {
           </ul>
         ) : (
           none
-        )}
-      </Section>
+        ),
+      )}
     </div>
   );
 }

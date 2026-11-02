@@ -185,18 +185,18 @@ export function useTranscription({
  */
 export function useTranscript({
   media,
-  code,
+  sessionId,
   collecting,
   self,
 }: {
   media: Pick<RoomMedia, "subscribeEvents">;
-  code: string;
+  sessionId: string;
   /** You're the notetaker, and AI notes are on. */
   collecting: boolean;
   self: { id: string; name: string };
 }) {
   const [lines, setLines] = useState<readonly TranscriptLine[]>(() =>
-    loadTranscript(code),
+    loadTranscript(sessionId),
   );
   const [statuses, setStatuses] = useState<
     Readonly<Record<string, TranscriptionStatus>>
@@ -230,7 +230,7 @@ export function useTranscript({
     [subscribeEvents],
   );
 
-  useEffect(() => saveTranscript(code, lines), [code, lines]);
+  useEffect(() => saveTranscript(sessionId, lines), [sessionId, lines]);
 
   return {
     lines,

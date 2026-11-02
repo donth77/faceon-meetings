@@ -38,6 +38,7 @@ export async function admit(input: {
     name: input.name,
     image: principal.image,
     role,
+    signedIn: principal.kind === "user",
   };
   await upsertMember({
     sessionId: session.id,
@@ -73,6 +74,7 @@ export async function admit(input: {
       videoOffOnEntry: meeting.settings.videoOffOnEntry,
     },
     session: {
+      id: session.id,
       demo: session.limits.demo === true,
       maxParticipants: session.limits.maxParticipants,
       maxMinutes: session.limits.maxDurationSeconds

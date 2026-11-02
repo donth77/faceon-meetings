@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { MeetingRole } from "@/lib/media/types";
 
 import {
+  canManageNotes,
   canModerate,
+  canReadNotes,
+  canSaveNotes,
   canSetNotes,
   checkEntry,
   isSessionStale,
@@ -326,5 +329,44 @@ describe("canSetNotes", () => {
   it("keeps them off in demo meetings", () => {
     expect(canSetNotes({ actor: "host", on: true, demo: true })).toBe(false);
     expect(canSetNotes({ actor: "host", on: false, demo: true })).toBe(true);
+  });
+});
+
+describe("saved AI notes", () => {
+  it("are saved by hosts and co-hosts with an account", () => {
+    expect(canSaveNotes({ role: "host", userId: "u1" })).toBe(true);
+    expect(canSaveNotes({ role: "cohost", userId: "u2" })).toBe(true);
+    expect(canSaveNotes({ role: "cohost", userId: null })).toBe(false);
+    expect(canSaveNotes({ role: "participant", userId: "u3" })).toBe(false);
+  });
+
+  const notes = { savedBy: "saver", hostId: "host", shared: false };
+
+  it("are seen by whoever saved them and the host", () => {
+    expect(canReadNotes({ ...notes, viewer: "saver", attended: true })).toBe(
+      true,
+    );
+    expect(canReadNotes({ ...notes, viewer: "host", attended: false })).toBe(
+      true,
+    );
+    expect(canReadNotes({ ...notes, viewer: "guest", attended: true })).toBe(
+      false,
+    );
+  });
+
+  it("are seen by attendees once shared, and nobody else", () => {
+    const shared = { ...notes, shared: true };
+    expect(canReadNotes({ ...shared, viewer: "ana", attended: true })).toBe(
+      true,
+    );
+    expect(canReadNotes({ ...shared, viewer: "eve", attended: false })).toBe(
+      false,
+    );
+  });
+
+  it("are shared or deleted only by whoever saved them, or the host", () => {
+    expect(canManageNotes({ ...notes, viewer: "saver" })).toBe(true);
+    expect(canManageNotes({ ...notes, viewer: "host" })).toBe(true);
+    expect(canManageNotes({ ...notes, viewer: "ana" })).toBe(false);
   });
 });

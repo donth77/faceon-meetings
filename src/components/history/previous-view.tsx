@@ -1,7 +1,15 @@
 "use client";
 
 import { cn } from "cn";
-import { CalendarPlus, Clock3, Repeat, Search, Users, X } from "lucide-react";
+import {
+  CalendarPlus,
+  Clock3,
+  Repeat,
+  Search,
+  Sparkles,
+  Users,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 import { Button as AriaButton, Radio, RadioGroup } from "react-aria-components";
@@ -14,6 +22,8 @@ import { formatDay } from "@/lib/time";
 
 const NEUTRAL_CHIP =
   "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eef1f5] px-2 text-xs font-bold whitespace-nowrap text-[#4f5966] dark:bg-white/10 dark:text-white/70";
+const NOTES_CHIP =
+  "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eeebff] px-2 text-xs font-bold whitespace-nowrap text-[#5b4db3] dark:bg-[#5b4db3]/30 dark:text-[#cfc8ff]";
 
 /** Someone's avatar, or their initial when there's no picture (a guest before webhooks). */
 function PersonAvatar({
@@ -153,6 +163,12 @@ function Details({
           <Users className="size-3.5" aria-hidden="true" />
           {t("people", { count: meeting.attendees.length })}
         </span>
+        {meeting.notes ? (
+          <span className={NOTES_CHIP}>
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            {meeting.notes.shared ? t("notesShared") : t("notesSaved")}
+          </span>
+        ) : null}
       </div>
       <table className="w-full border-collapse">
         <caption className="mb-2 text-left text-base font-bold">
@@ -217,7 +233,17 @@ function Details({
           ))}
         </tbody>
       </table>
-      <div className="mt-auto flex justify-end gap-2 pt-4">
+      <div className="mt-auto flex flex-wrap justify-end gap-2 pt-4">
+        {meeting.notes ? (
+          <LinkButton
+            href={`/previous/${meeting.sessionId}/notes`}
+            variant="outline"
+            className="h-[38px] rounded-[10px]"
+          >
+            <Sparkles aria-hidden="true" />
+            {t("viewNotes")}
+          </LinkButton>
+        ) : null}
         <LinkButton
           href={`/schedule?again=${meeting.code}`}
           className="h-[38px] rounded-[10px]"
@@ -343,6 +369,12 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                           <span className={NEUTRAL_CHIP}>
                             <Repeat className="size-3.5" aria-hidden="true" />
                             {f.date(meeting.start)}
+                          </span>
+                        ) : null}
+                        {meeting.notes ? (
+                          <span className={NOTES_CHIP}>
+                            <Sparkles className="size-3.5" aria-hidden="true" />
+                            {t("notes")}
                           </span>
                         ) : null}
                       </div>

@@ -5,6 +5,10 @@
  */
 import { z } from "zod";
 
+/** On this computer (Chrome's built-in model), or with the host's own AI key. */
+export const ENGINES = ["onDevice", "ownKey"] as const;
+export type EngineId = (typeof ENGINES)[number];
+
 /** Text the model may leave empty; empty becomes null. */
 const optional = z
   .string()
@@ -28,6 +32,21 @@ export const MeetingNotes = z.object({
   decisions: z.array(z.string().trim().min(1).max(500)).max(100),
 });
 export type MeetingNotes = z.infer<typeof MeetingNotes>;
+
+/** Saved notes, with their transcript, stay under this. */
+export const MAX_SAVED_NOTES_BYTES = 200 * 1024;
+
+/** The size saved notes take, in bytes. */
+export function savedNotesBytes(
+  notes: MeetingNotes,
+  transcript: string | null,
+): number {
+  const encoder = new TextEncoder();
+  return (
+    encoder.encode(JSON.stringify(notes)).length +
+    (transcript ? encoder.encode(transcript).length : 0)
+  );
+}
 
 /** The shape the model answers in, as JSON Schema (for models that take one). */
 export const NOTES_SCHEMA = {

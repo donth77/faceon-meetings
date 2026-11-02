@@ -53,7 +53,12 @@ type Step =
       /** When the session's time limit runs out, on this device's clock. */
       endsAt: number | null;
     }
-  | { name: "left"; reason: LeftReason }
+  | {
+      name: "left";
+      reason: LeftReason;
+      /** The session you were in, for AI notes taken in it. */
+      session: { id: string; signedIn: boolean } | null;
+    }
   | { name: "notice"; kind: NoticeKind };
 
 /** Errors that end the visit, instead of letting the person try again from pre-join. */
@@ -138,6 +143,7 @@ export default function MeetingEntry({
   const endingForAll = useRef(false);
   const endsAt = useRef<number | null>(null);
   const leftAlone = useRef(false);
+  const lastSession = useRef<{ id: string; signedIn: boolean } | null>(null);
 
   useEffect(() => scrubLinkPasscode(), []);
 
@@ -146,6 +152,10 @@ export default function MeetingEntry({
       if (input.passcode) rememberPasscode(code, input.passcode);
       endingForAll.current = false;
       leftAlone.current = false;
+      lastSession.current = {
+        id: admission.session.id,
+        signedIn: admission.self.signedIn,
+      };
       const { secondsLeft } = admission.session;
       endsAt.current =
         secondsLeft === null ? null : Date.now() + secondsLeft * 1000;
@@ -275,6 +285,7 @@ export default function MeetingEntry({
       endsAt.current !== null && Date.now() >= endsAt.current - 10_000;
     setStep({
       name: "left",
+      session: lastSession.current,
       reason: endingForAll.current
         ? "endedByYou"
         : reason === "ended" && timeUp
@@ -289,7 +300,11 @@ export default function MeetingEntry({
   // leaves at once while the meeting ends for everyone else.
   const endForAll = useCallback(async () => {
     endingForAll.current = true;
-    setStep({ name: "left", reason: "endedByYou" });
+    setStep({
+      name: "left",
+      reason: "endedByYou",
+      session: lastSession.current,
+    });
     const end = async () => {
       try {
         await meetingApi.end(code);
@@ -318,6 +333,7 @@ export default function MeetingEntry({
           reason={step.reason}
           title={title}
           code={code}
+          session={step.session}
           onRejoin={rejoin}
         />
       );
