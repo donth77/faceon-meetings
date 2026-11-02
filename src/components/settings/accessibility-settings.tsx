@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { use } from "react";
 
-import { SwitchRow } from "@/components/schedule/fields";
 import { ShortcutsList } from "@/components/shortcuts/shortcuts-list";
+import { SwitchRow } from "@/components/ui/form-fields";
 import {
   savePreferences,
   usePreferences,

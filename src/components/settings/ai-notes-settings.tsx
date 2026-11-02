@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { Check, ChevronDown, ExternalLink, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -16,7 +17,12 @@ import {
   TextField,
 } from "react-aria-components";
 
-import { INPUT, RadioDot, SelectField } from "@/components/schedule/fields";
+import {
+  FIELD_POPOVER,
+  INPUT,
+  RadioDot,
+  SelectField,
+} from "@/components/ui/form-fields";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { preferredEngine, providerChoice, testKey } from "@/lib/notes/engines";
 import { ENGINES, type EngineId } from "@/lib/notes/notes";
@@ -96,7 +102,10 @@ function ModelField({
       </span>
       <Popover
         placement="bottom start"
-        className="bg-popover text-popover-foreground max-h-80 w-(--trigger-width) overflow-auto rounded-xl p-1.5 shadow-[0_16px_40px_rgba(18,22,28,0.18)] ring-1 ring-black/10 outline-none dark:ring-white/10"
+        className={cn(
+          FIELD_POPOVER,
+          "max-h-80 w-(--trigger-width) overflow-auto",
+        )}
       >
         <ListBox className="outline-none">
           {(option: { id: string; label: string }) => (

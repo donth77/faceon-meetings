@@ -17,9 +17,8 @@ import {
   Popover,
 } from "react-aria-components";
 
+import { FIELD_POPOVER, INPUT } from "@/components/ui/form-fields";
 import { useIntlLocale } from "@/lib/preferences";
-
-import { INPUT } from "./fields";
 
 const formatted = (date: string, locale: string) => {
   const [y = 1970, m = 1, d = 1] = date.split("-").map(Number);
@@ -73,10 +72,7 @@ export function DateField({
           aria-hidden="true"
         />
       </Button>
-      <Popover
-        placement="bottom start"
-        className="bg-popover text-popover-foreground rounded-xl p-3 shadow-[0_16px_40px_rgba(18,22,28,0.18)] ring-1 ring-black/10 outline-none dark:ring-white/10"
-      >
+      <Popover placement="bottom start" className={cn(FIELD_POPOVER, "p-3")}>
         <Dialog aria-labelledby={labelId} className="outline-none">
           {({ close }) => (
             <Calendar

@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { INPUT } from "@/components/ui/form-fields";
 import { setPasswordAction, updateProfileAction } from "@/lib/account/actions";
 import {
   changePassword,
@@ -64,8 +65,6 @@ export type AccountInfo = {
 
 const OUTLINE =
   "h-[38px] gap-2 rounded-[10px] border-[#c9cfd8] px-3.5 text-sm font-semibold dark:border-white/15";
-const INPUT =
-  "bg-background focus-visible:ring-ring h-11 w-full rounded-[10px] border border-[#c9cfd8] px-3 text-[15px] outline-none focus-visible:ring-2 dark:border-white/15";
 
 const avatarSrc = (seed: string) => `/avatar/${seed}.svg`;
 
@@ -204,7 +203,7 @@ function Profile({
               }}
               aria-invalid={nameError || undefined}
               aria-describedby={nameError ? nameErrorId : undefined}
-              className={INPUT}
+              className={cn(INPUT, "h-11 text-[15px]")}
             />
             {nameError ? (
               <span id={nameErrorId} className="text-destructive text-[13px]">

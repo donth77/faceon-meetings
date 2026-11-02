@@ -6,9 +6,9 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 
-import { RadioDot, SelectField } from "@/components/schedule/fields";
 import { TimeZoneField } from "@/components/schedule/time-zone-field";
 import { Button } from "@/components/ui/button";
+import { RadioDot, SelectField } from "@/components/ui/form-fields";
 import { routing } from "@/i18n/routing";
 import {
   savePreferences,

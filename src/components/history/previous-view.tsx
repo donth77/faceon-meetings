@@ -12,13 +12,15 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
-import { Button as AriaButton, Radio, RadioGroup } from "react-aria-components";
+import { Button as AriaButton } from "react-aria-components";
 
-import { SEGMENT, SEGMENTS } from "@/components/schedule/upcoming-calendar";
 import { Button, LinkButton } from "@/components/ui/button";
+import { Segment, Segments } from "@/components/ui/segments";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
 import { formatDay } from "@/lib/time";
+
+const SHOW = ["all", "hosted"] as const;
 
 const NEUTRAL_CHIP =
   "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eef1f5] px-2 text-xs font-bold whitespace-nowrap text-[#4f5966] dark:bg-white/10 dark:text-white/70";
@@ -265,7 +267,7 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
   const f = useFormats();
   const searchId = useId();
   const [query, setQuery] = useState("");
-  const [show, setShow] = useState<"all" | "hosted">("all");
+  const [show, setShow] = useState<(typeof SHOW)[number]>("all");
   const [selected, setSelected] = useState<string | null>(null);
 
   const q = query.trim().toLocaleLowerCase();
@@ -318,22 +320,15 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
             >
               {t("show")}
             </span>
-            <RadioGroup
-              aria-labelledby={`${searchId}-show`}
-              orientation="horizontal"
+            <Segments
+              labelledBy={`${searchId}-show`}
               value={show}
-              onChange={(value) =>
-                setShow(value === "hosted" ? "hosted" : "all")
-              }
-              className={SEGMENTS}
+              values={SHOW}
+              onChange={setShow}
             >
-              <Radio value="all" className={SEGMENT}>
-                {t("all")}
-              </Radio>
-              <Radio value="hosted" className={SEGMENT}>
-                {t("hostedByMe")}
-              </Radio>
-            </RadioGroup>
+              <Segment value="all">{t("all")}</Segment>
+              <Segment value="hosted">{t("hostedByMe")}</Segment>
+            </Segments>
           </div>
         </div>
       </div>

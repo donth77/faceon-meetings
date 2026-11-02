@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SwitchRow } from "@/components/ui/form-fields";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
@@ -44,7 +45,6 @@ import type { MeetingDetails } from "@/lib/meetings/scheduling";
 import { useIntlLocale } from "@/lib/preferences";
 import { formatDay, formatTimeRange, zoneCity, zonedToUtc } from "@/lib/time";
 
-import { SwitchRow } from "./fields";
 import { useScheduledInvitation } from "./invitation";
 import { ScopeDialog } from "./scope-dialog";
 

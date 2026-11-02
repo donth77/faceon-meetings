@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
+import { SwitchRow } from "@/components/ui/form-fields";
 import {
   regeneratePersonalRoom,
   updatePersonalRoomSettings,
@@ -73,39 +73,6 @@ function DetailRow({
         {value}
       </span>
       <div className="flex gap-1.5">{children}</div>
-    </div>
-  );
-}
-
-function SettingRow({
-  label,
-  hint,
-  isSelected,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  isSelected: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  const labelId = useId();
-  const hintId = useId();
-  return (
-    <div className="flex items-center justify-between gap-4 border-b py-3 last:border-b-0">
-      <div className="flex flex-col gap-0.5">
-        <span id={labelId} className="text-[15px] font-semibold">
-          {label}
-        </span>
-        <span id={hintId} className="text-muted-foreground text-[13px]">
-          {hint}
-        </span>
-      </div>
-      <Switch
-        aria-labelledby={labelId}
-        aria-describedby={hintId}
-        isSelected={isSelected}
-        onChange={onChange}
-      />
     </div>
   );
 }
@@ -264,22 +231,22 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
           <h2 id="room-settings" className="text-lg font-bold">
             {t("settings")}
           </h2>
-          <div>
-            <SettingRow
+          <div className="divide-y">
+            <SwitchRow
               label={t("waitingRoom")}
-              hint={t("waitingRoomHint")}
+              help={t("waitingRoomHint")}
               isSelected={room.settings.waitingRoom}
               onChange={(value) => void changeSetting("waitingRoom", value)}
             />
-            <SettingRow
+            <SwitchRow
               label={t("allowGuests")}
-              hint={t("allowGuestsHint")}
+              help={t("allowGuestsHint")}
               isSelected={room.settings.allowGuests}
               onChange={(value) => void changeSetting("allowGuests", value)}
             />
-            <SettingRow
+            <SwitchRow
               label={t("muteOnEntry")}
-              hint={t("muteOnEntryHint")}
+              help={t("muteOnEntryHint")}
               isSelected={room.settings.muteOnEntry}
               onChange={(value) => void changeSetting("muteOnEntry", value)}
             />

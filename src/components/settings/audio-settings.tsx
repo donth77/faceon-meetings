@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 
 import { MicMeter } from "@/components/meeting/pre-join/mic-meter";
 import { useLocalTrack } from "@/components/meeting/pre-join/use-local-track";
-import { SwitchRow } from "@/components/schedule/fields";
 import { Button } from "@/components/ui/button";
+import { SwitchRow } from "@/components/ui/form-fields";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import { playTestSound } from "@/lib/device/test-sound";
 import {

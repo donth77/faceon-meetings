@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { SelectField, SwitchRow } from "@/components/schedule/fields";
 import { Button } from "@/components/ui/button";
+import { SelectField, SwitchRow } from "@/components/ui/form-fields";
 import {
   REMINDER_MINUTES,
   savePreferences,

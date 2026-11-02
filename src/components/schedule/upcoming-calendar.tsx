@@ -17,11 +17,10 @@ import {
   Dialog,
   DialogTrigger,
   Popover,
-  Radio,
-  RadioGroup,
 } from "react-aria-components";
 
 import { Button, LinkButton } from "@/components/ui/button";
+import { Segment, Segments } from "@/components/ui/segments";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNow } from "@/hooks/use-now";
 import { fromRRule, recurrenceChip } from "@/lib/meetings/describe";
@@ -39,7 +38,8 @@ import {
 
 import { useScheduledInvitation } from "./invitation";
 
-type Mode = "month" | "week";
+const MODES = ["month", "week"] as const;
+type Mode = (typeof MODES)[number];
 
 const ONE_OFF = "#4f5966";
 const SERIES = [
@@ -660,12 +660,6 @@ function PhoneCalendar({
   );
 }
 
-const SEGMENT =
-  "data-focus-visible:ring-ring flex h-[34px] cursor-default items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-[#4f5966] outline-none data-focus-visible:ring-2 data-selected:bg-white data-selected:font-bold data-selected:text-[#12161c] data-selected:shadow-[0_1px_2px_rgba(18,22,28,0.14)] dark:text-white/70 dark:data-selected:bg-white/15 dark:data-selected:text-white";
-export const SEGMENTS =
-  "flex rounded-[10px] bg-[#eef1f5] p-[3px] ring-1 ring-[#e2e5ea] ring-inset dark:bg-white/5 dark:ring-white/10";
-export { SEGMENT };
-
 /** Upcoming's calendar: Month or Week, Today and ‹ ›, on phones a compact month. */
 export function UpcomingCalendar() {
   const t = useTranslations("Upcoming");
@@ -748,20 +742,15 @@ export function UpcomingCalendar() {
           </Button>
           <h2 className="ml-1.5 text-[22px] font-bold">{title}</h2>
         </div>
-        <RadioGroup
-          aria-label={t("range")}
-          orientation="horizontal"
+        <Segments
+          label={t("range")}
           value={mode}
-          onChange={(value) => setMode(value as Mode)}
-          className={SEGMENTS}
+          values={MODES}
+          onChange={setMode}
         >
-          <Radio value="month" className={SEGMENT}>
-            {t("month")}
-          </Radio>
-          <Radio value="week" className={SEGMENT}>
-            {t("week")}
-          </Radio>
-        </RadioGroup>
+          <Segment value="month">{t("month")}</Segment>
+          <Segment value="week">{t("week")}</Segment>
+        </Segments>
       </div>
       {effective === "month" ? (
         <MonthView days={days} anchor={anchor} rows={rows} today={today} />

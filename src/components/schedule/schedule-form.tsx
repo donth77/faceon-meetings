@@ -29,6 +29,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Field,
+  INPUT,
+  SelectField,
+  SwitchRow,
+} from "@/components/ui/form-fields";
 import type { Recurrence } from "@/lib/meetings/recurrence";
 import type {
   ScheduleDraft,
@@ -43,7 +49,6 @@ import { useIntlLocale } from "@/lib/preferences";
 import { deviceTimeZone, zonedToUtc } from "@/lib/time";
 
 import { DateField } from "./date-field";
-import { Field, INPUT, SelectField, SwitchRow } from "./fields";
 import { useScheduledInvitation, type ScheduledMeeting } from "./invitation";
 import { InviteesField } from "./invitees-field";
 import { RepeatField } from "./repeat-field";

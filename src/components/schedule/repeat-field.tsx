@@ -1,22 +1,10 @@
 "use client";
 
 import { cn } from "cn";
-import { Check, ChevronDown, Repeat } from "lucide-react";
+import { Repeat } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import {
-  Button,
-  Label,
-  ListBox,
-  ListBoxItem,
-  Popover,
-  Radio,
-  RadioGroup,
-  Select,
-  SelectValue,
-  ToggleButton,
-  type Key,
-} from "react-aria-components";
+import { Radio, RadioGroup, ToggleButton } from "react-aria-components";
 
 import { Button as UIButton } from "@/components/ui/button";
 import {
@@ -25,6 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  INPUT,
+  RadioDot,
+  SelectField,
+  type Option,
+} from "@/components/ui/form-fields";
 import { describeRecurrence, presetLabel } from "@/lib/meetings/describe";
 import {
   latestSeriesEnd,
@@ -32,37 +26,19 @@ import {
   presetRecurrence,
   REPEAT_PRESETS,
   startFacts,
-  WEEKDAYS,
   type Recurrence,
-  type RepeatPreset,
-  type Weekday,
 } from "@/lib/meetings/recurrence";
+import { oneOf } from "@/lib/narrow";
 import { useIntlLocale } from "@/lib/preferences";
+import { weekdayName, weekdaysInOrder } from "@/lib/weekdays";
 
 import { DateField } from "./date-field";
-import { INPUT, RadioDot } from "./fields";
 
-const NUMBER =
-  "bg-background focus-visible:ring-ring h-10 w-16 rounded-[10px] border border-[#c9cfd8] px-2.5 text-[15px] outline-none focus-visible:ring-2 dark:border-white/15";
+const NUMBER = cn(INPUT, "h-10 w-16 px-2.5 text-[15px]");
 const RADIO =
-  "group flex min-h-10 cursor-default items-center gap-3 text-[15px] outline-none";
-
-/** Days of the week in the reader's order: Sunday first in the US, Monday in Europe. */
-function weekOrder(locale: string): Weekday[] {
-  const info = new Intl.Locale(locale) as Intl.Locale & {
-    getWeekInfo?: () => { firstDay: number };
-    weekInfo?: { firstDay: number };
-  };
-  const firstDay =
-    info.getWeekInfo?.().firstDay ?? info.weekInfo?.firstDay ?? 7;
-  const start = (firstDay + 6) % 7; // 1 = Monday → index 0
-  return [...WEEKDAYS.slice(start), ...WEEKDAYS.slice(0, start)];
-}
-
-const dayName = (day: Weekday, locale: string, width: "long" | "narrow") =>
-  new Intl.DateTimeFormat(locale, { weekday: width, timeZone: "UTC" }).format(
-    new Date(Date.UTC(2026, 10, 2 + WEEKDAYS.indexOf(day), 12)),
-  );
+  "group flex min-h-10 cursor-default items-center gap-3 text-[15px] outline-hidden";
+const FREQS = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
+const MONTHLY = ["date", "weekday", "lastWeekday"] as const;
 
 /** The Custom recurrence dialog: every n units, on which days, and when it ends. */
 function CustomDialog({
@@ -127,46 +103,25 @@ function CustomDialog({
             }
             className={NUMBER}
           />
-          <Select
-            aria-label={t("repeatUnit")}
-            selectedKey={draft.freq}
-            onSelectionChange={(key: Key | null) => {
-              const freq = String(key) as Recurrence["freq"];
+          <SelectField
+            label={t("repeatUnit")}
+            hideLabel
+            options={FREQS.map((freq) => ({
+              id: freq,
+              label: t(`unit${freq}`, { count: draft.interval }),
+            }))}
+            value={draft.freq}
+            onChange={(value) => {
+              const freq = oneOf(FREQS, value);
+              if (!freq) return;
               update({
                 freq,
                 byDay: freq === "WEEKLY" ? days : undefined,
                 monthly: freq === "MONTHLY" ? "date" : undefined,
               });
             }}
-          >
-            <Button
-              className={cn(
-                INPUT,
-                "flex h-10 w-32 items-center gap-2 text-left text-[15px]",
-              )}
-            >
-              <SelectValue className="flex-1" />
-              <ChevronDown
-                className="text-muted-foreground size-4"
-                aria-hidden="true"
-              />
-            </Button>
-            <Popover className="bg-popover text-popover-foreground min-w-(--trigger-width) rounded-xl p-1.5 shadow-lg ring-1 ring-black/10 outline-none">
-              <ListBox className="outline-none">
-                {(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const).map(
-                  (freq) => (
-                    <ListBoxItem
-                      key={freq}
-                      id={freq}
-                      className="data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-9 cursor-default items-center rounded-lg px-2.5 text-[15px] outline-hidden"
-                    >
-                      {t(`unit${freq}`, { count: draft.interval })}
-                    </ListBoxItem>
-                  ),
-                )}
-              </ListBox>
-            </Popover>
-          </Select>
+            buttonClassName="h-10 w-36 text-[15px]"
+          />
         </div>
 
         {draft.freq === "WEEKLY" ? (
@@ -174,11 +129,15 @@ function CustomDialog({
             <span id={onId} className="text-[15px]">
               {t("repeatOn")}
             </span>
-            <div role="group" aria-labelledby={onId} className="flex gap-1.5">
-              {weekOrder(locale).map((day) => (
+            <div
+              role="group"
+              aria-labelledby={onId}
+              className="flex flex-wrap gap-1.5"
+            >
+              {weekdaysInOrder(locale).map((day) => (
                 <ToggleButton
                   key={day}
-                  aria-label={dayName(day, locale, "long")}
+                  aria-label={weekdayName(day, locale, "long")}
                   isSelected={days.includes(day)}
                   onChange={(on) => {
                     const next = on
@@ -186,9 +145,9 @@ function CustomDialog({
                       : days.filter((d) => d !== day);
                     if (next.length > 0) update({ byDay: next });
                   }}
-                  className="data-focus-visible:ring-ring flex size-10 items-center justify-center rounded-full bg-[#eef1f5] text-sm font-bold outline-none data-focus-visible:ring-2 data-selected:bg-[#1f5eff] data-selected:text-white dark:bg-white/10"
+                  className="bg-muted data-focus-visible:focus-ring data-selected:bg-primary data-selected:text-primary-foreground flex size-10 items-center justify-center rounded-full text-sm font-bold outline-hidden dark:bg-white/10"
                 >
-                  {dayName(day, locale, "narrow")}
+                  {weekdayName(day, locale, "narrow")}
                 </ToggleButton>
               ))}
             </div>
@@ -199,9 +158,7 @@ function CustomDialog({
           <RadioGroup
             aria-label={t("repeatOn")}
             value={draft.monthly ?? "date"}
-            onChange={(value) =>
-              update({ monthly: value as Recurrence["monthly"] })
-            }
+            onChange={(value) => update({ monthly: oneOf(MONTHLY, value) })}
             className="flex flex-col gap-0.5"
           >
             <Radio value="date" className={RADIO}>
@@ -212,7 +169,7 @@ function CustomDialog({
               <RadioDot />
               {tr("monthlyOn", {
                 nth: facts.nth === 5 ? 0 : facts.nth,
-                weekday: dayName(facts.weekday, locale, "long"),
+                weekday: weekdayName(facts.weekday, locale, "long"),
               })}
             </Radio>
             {facts.isLast && facts.nth !== 5 ? (
@@ -220,7 +177,7 @@ function CustomDialog({
                 <RadioDot />
                 {tr("monthlyOn", {
                   nth: 0,
-                  weekday: dayName(facts.weekday, locale, "long"),
+                  weekday: weekdayName(facts.weekday, locale, "long"),
                 })}
               </Radio>
             ) : null}
@@ -350,76 +307,33 @@ export function RepeatField({
   const current = presetOf(value, facts);
   const [customOpen, setCustomOpen] = useState(false);
 
-  const items: Array<{ id: string; label: string }> = REPEAT_PRESETS.map(
-    (preset) => ({ id: preset, label: presetLabel(tr, preset, facts, locale) }),
-  );
+  const items: Option[] = REPEAT_PRESETS.map((preset) => ({
+    id: preset,
+    label: presetLabel(tr, preset, facts, locale),
+  }));
   if (current === "custom" && value) {
     items.push({
       id: "current",
       label: describeRecurrence(tr, value, startDate, locale),
     });
   }
-  items.push({ id: "custom", label: tr("custom") });
+  items.push({ id: "custom", label: tr("custom"), separated: true });
 
   return (
     <>
-      <Select
-        selectedKey={current === "custom" ? "current" : current}
-        onSelectionChange={(key: Key | null) => {
-          if (key === "custom") setCustomOpen(true);
-          else if (key !== null && key !== "current") {
-            onChange(presetRecurrence(key as RepeatPreset, facts));
-          }
+      <SelectField
+        label={t("repeat")}
+        icon={Repeat}
+        options={items}
+        value={current === "custom" ? "current" : current}
+        onChange={(value) => {
+          if (value === "custom") setCustomOpen(true);
+          const preset = oneOf(REPEAT_PRESETS, value);
+          if (preset) onChange(presetRecurrence(preset, facts));
         }}
-        className="flex flex-col gap-1.5"
-      >
-        <Label className="text-sm font-semibold">{t("repeat")}</Label>
-        <Button
-          className={cn(
-            INPUT,
-            "flex w-auto min-w-[280px] items-center gap-2 self-start text-left",
-          )}
-        >
-          <Repeat
-            className="text-muted-foreground size-[18px] shrink-0"
-            aria-hidden="true"
-          />
-          <SelectValue className="min-w-0 flex-1 truncate" />
-          <ChevronDown
-            className="text-muted-foreground size-4 shrink-0"
-            aria-hidden="true"
-          />
-        </Button>
-        <Popover
-          placement="bottom start"
-          className="bg-popover text-popover-foreground w-[340px] max-w-[calc(100vw-2rem)] rounded-xl p-1.5 shadow-[0_16px_40px_rgba(18,22,28,0.18)] ring-1 ring-black/10 outline-none dark:ring-white/10"
-        >
-          <ListBox items={items} className="outline-none">
-            {(item) => (
-              <ListBoxItem
-                id={item.id}
-                textValue={item.label}
-                className={cn(
-                  "data-focused:bg-accent data-focus-visible:focus-ring-inset flex min-h-10 cursor-default items-center gap-2 rounded-lg px-2 text-[15px] outline-hidden",
-                  item.id === "custom" &&
-                    "mt-1 rounded-t-none border-t border-[#e2e5ea] dark:border-white/10",
-                )}
-              >
-                {({ isSelected }) => (
-                  <>
-                    <span className="text-primary flex w-[18px] justify-center">
-                      {isSelected ? (
-                        <Check className="size-4" aria-hidden="true" />
-                      ) : null}
-                    </span>
-                    {item.label}
-                  </>
-                )}
-              </ListBoxItem>
-            )}
-          </ListBox>
-        </Popover>
-      </Select>
+        buttonClassName="sm:w-auto sm:min-w-[280px] sm:self-start"
+        popoverClassName="w-[340px] max-w-[calc(100vw-2rem)]"
+      />
       {customOpen ? (
         <CustomDialog
           startDate={startDate}

@@ -14,10 +14,9 @@ import {
   type Key,
 } from "react-aria-components";
 
+import { FIELD_POPOVER, INPUT } from "@/components/ui/form-fields";
 import { useIntlLocale } from "@/lib/preferences";
 import { timeZones, zoneLabel } from "@/lib/time";
-
-import { INPUT } from "./fields";
 
 /** Time zone, as "New York (GMT−05:00)", searchable by city or offset. */
 export function TimeZoneField({
@@ -58,7 +57,10 @@ export function TimeZoneField({
       </div>
       <Popover
         placement="bottom start"
-        className="bg-popover text-popover-foreground max-h-80 w-(--trigger-width) overflow-auto rounded-xl p-1.5 shadow-[0_16px_40px_rgba(18,22,28,0.18)] ring-1 ring-black/10 outline-none dark:ring-white/10"
+        className={cn(
+          FIELD_POPOVER,
+          "max-h-80 w-(--trigger-width) overflow-auto",
+        )}
       >
         <ListBox className="outline-none">
           {(option: { id: string; label: string }) => (

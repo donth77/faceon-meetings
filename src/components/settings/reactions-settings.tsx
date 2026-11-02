@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { SelectField, SwitchRow } from "@/components/schedule/fields";
+import { SelectField, SwitchRow } from "@/components/ui/form-fields";
 import {
   savePreferences,
   usePreferences,

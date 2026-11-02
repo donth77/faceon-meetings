@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button as AriaButton } from "react-aria-components";
 
-import { SelectField } from "@/components/schedule/fields";
+import { SelectField } from "@/components/ui/form-fields";
 import {
   loadDevicePreferences,
   saveDevicePreferences,
