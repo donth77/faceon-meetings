@@ -42,6 +42,11 @@
         "title": "Free and open source",
         "short": "Free, open source",
         "body": "MIT licensed, with no ads and no tracking. Run your own copy."
+      },
+      "googleWorkspace": {
+        "title": "In Google Calendar and Gmail",
+        "short": "Google Calendar",
+        "body": "Add a meeting to any event or email, right from Google’s own menus."
       }
     },
     "footerLabel": "Footer",
@@ -1322,7 +1327,10 @@
       "disconnectFailed": "Couldn’t disconnect Google Calendar. Try again.",
       "otherCalendars": "Each meeting’s page also has buttons to add it to Outlook or any calendar app.",
       "popupConnected": "Google Calendar is connected. You can close this window.",
-      "popupNotConnected": "Google Calendar wasn’t connected. You can close this window and try again."
+      "popupNotConnected": "Google Calendar wasn’t connected. You can close this window and try again.",
+      "addonTitle": "{appName} in Google Calendar and Gmail",
+      "addonBody": "Add a {appName} meeting to any event from Google Calendar’s Add video conferencing, and insert one into an email in Gmail. On a computer, in your browser.",
+      "addonGet": "Get {appName} for Google Workspace"
     },
     "effects": {
       "title": "Backgrounds and effects",

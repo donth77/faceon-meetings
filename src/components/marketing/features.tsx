@@ -1,4 +1,5 @@
 import {
+  CalendarPlus,
   CodeXml,
   DoorOpen,
   Languages,
@@ -10,6 +11,7 @@ import {
 import { getTranslations } from "next-intl/server";
 
 import { latestDesktopRelease } from "@/lib/desktop/releases";
+import { publicEnv } from "@/lib/env";
 
 type Feature = {
   key:
@@ -18,11 +20,15 @@ type Feature = {
     | "safety"
     | "desktopApp"
     | "languages"
-    | "openSource";
+    | "openSource"
+    | "googleWorkspace";
   icon: LucideIcon;
 };
 
-/** The desktop app once it's out (lib/desktop/releases.ts); until then, the languages. */
+/**
+ * The desktop app once it's out (lib/desktop/releases.ts); until then, the languages.
+ * The Google Workspace add-on once it's listed (NEXT_PUBLIC_GOOGLE_ADDON_URL).
+ */
 const features = (desktopApp: boolean): Feature[] => [
   { key: "anyDevice", icon: TabletSmartphone },
   { key: "screenShare", icon: MonitorUp },
@@ -31,6 +37,9 @@ const features = (desktopApp: boolean): Feature[] => [
     ? { key: "desktopApp", icon: Monitor }
     : { key: "languages", icon: Languages },
   { key: "openSource", icon: CodeXml },
+  ...(publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL
+    ? [{ key: "googleWorkspace" as const, icon: CalendarPlus }]
+    : []),
 ];
 
 /** What FaceOn does, below the join card: titles only on phones, with a line each above. */

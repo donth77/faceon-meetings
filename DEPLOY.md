@@ -194,6 +194,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | From [step 5](#5-set-up-sign-in-with-google-and-google-calendar)                                                                                                                                  |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | From [step 6](#6-set-up-sign-in-with-github)                                                                                                                                                      |
 | `GOOGLE_CALENDAR_SYNC`                     | Optional: `off` turns Google Calendar sync off                                                                                                                                                    |
+| `GOOGLE_ADDON_CLIENT_ID`                   | Optional: the Google Workspace add-on's OAuth client ID, which turns on its API ([The Google Workspace add-on](#the-google-workspace-add-on-optional))                                            |
+| `NEXT_PUBLIC_GOOGLE_ADDON_URL`             | Optional: the add-on's Marketplace listing, once it's listed                                                                                                                                      |
 | `BETTER_AUTH_TRUSTED_ORIGINS`              | Optional: more addresses allowed to use sign-in, as exact origins separated by commas (a second domain, say). Your address and each Vercel deployment's own are already allowed. Never a wildcard |
 
 **Guests**
@@ -404,6 +406,31 @@ The four abstract backgrounds are drawn in FaceOn's colors by `scripts/backgroun
 ## The desktop app (optional)
 
 The desktop app for macOS and Windows lives in `desktop/`. A copy builds its own: set `FACEON_APP_URL` (your site) and `NEXT_PUBLIC_APP_NAME` in `desktop/.env.local`, run `pnpm desktop:icons` after `pnpm brand`, and follow [desktop/README.md](desktop/README.md) for signing the Mac app on your own Mac, the Windows installer and releases. Once a release is out, set `DESKTOP_RELEASES_REPO` (the releases repository, as `owner/name`) in Vercel too: `/download`, Settings → General and the account menu then offer the app on computers, and the landing page lists it.
+
+## The Google Workspace add-on (optional)
+
+The add-on in `google-addon/` puts **FaceOn meeting** in Google Calendar's **Add video conferencing**, a sidebar in Calendar and Gmail, and **Insert a FaceOn meeting** in Gmail's compose window ([google-addon/README.md](google-addon/README.md)). It talks only to the copy it's built for (`FACEON_URL`), so a copy makes its own:
+
+| Who                             | How                                                                                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| You, for yourself               | A test deployment from your own Apps Script project. No review                                                                                              |
+| A Google Workspace organization | Its own add-on, listed privately for the organization (a Workspace account can; an @gmail.com account can't). The admin installs it for everyone. No review |
+| Anyone                          | A public Marketplace listing: Google reviews it, and verifies the OAuth consent screen, which needs your verified domain                                    |
+
+Set it up:
+
+1. Follow [google-addon/SPIKE.md](google-addon/SPIKE.md): the Apps Script API, `pnpm addon:login`, a new Apps Script project linked to your Google Cloud project (the one Sign in with Google uses), `pnpm addon:push` (with `FACEON_URL` set to your site), and a test deployment.
+2. The first time you add **FaceOn meeting** to an event, Apps Script's **Executions** logs the add-on's `aud`. Set `GOOGLE_ADDON_CLIENT_ID` to it in Vercel and redeploy: that turns on the add-on's API (`/api/addon/google/*`).
+3. Google asks for the conference logo to be hosted on Google. If Calendar shows none, set `FACEON_CONFERENCE_LOGO_URL` to such an image and push again.
+
+To list it, in the Google Cloud console:
+
+1. Turn on the **Google Workspace Marketplace SDK**. In **App Configuration**, choose Google Workspace add-on, paste the **deployment ID** (Apps Script: **Deploy → New deployment**, type Add-on), allow Individual and Admin install, and pick the visibility. **Public can't be changed later.**
+2. Fill in the **Store Listing**: name, descriptions, the 32 and 128 px icons, the 220×140 banner, 1280×800 screenshots, and your terms, privacy and support links.
+3. Submit the OAuth consent screen for verification (its scopes are sensitive, not restricted, so no paid assessment), then submit the listing for review.
+4. Once it's listed, set `NEXT_PUBLIC_GOOGLE_ADDON_URL` to the listing in Vercel: Settings → Calendar and the landing page then offer it.
+
+Releases: a `google-addon-v*` tag builds the add-on and attaches it to the tag's GitHub release. With three repository secrets it also pushes it as a new version of your deployment: `CLASPRC_JSON` (the contents of `~/.clasprc.json` after `pnpm addon:login`), `CLASP_SCRIPT_ID` (from `google-addon/.clasp.json`) and `CLASP_DEPLOYMENT_ID`. Repository variables `FACEON_URL` and `FACEON_CONFERENCE_LOGO_URL` say what to build it for. [google-addon/QA.md](google-addon/QA.md) is the checklist before each release.
 
 ## CI secrets (optional)
 

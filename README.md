@@ -14,6 +14,7 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 - Noise suppression that takes typing, traffic and background voices out of your microphone, on your own device (RNNoise)
 - Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key, and saved or shared with the participants
 - Previous meetings with who came, keyboard shortcuts, and a searchable Help center
+- A Google Workspace add-on: FaceOn meeting in Google Calendar's Add video conferencing, a sidebar in Calendar and Gmail, and Insert a FaceOn meeting in Gmail ([google-addon/](google-addon/README.md))
 - Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app (from Chrome or Edge, or Add to Home Screen and Add to Dock in Safari)
 
 On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.

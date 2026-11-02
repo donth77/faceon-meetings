@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   CalendarDays,
   CircleCheck,
+  ExternalLink,
   Info,
   TriangleAlert,
 } from "lucide-react";
@@ -20,8 +21,9 @@ import {
   connectInPage,
   reportToOpener,
 } from "@/components/google-calendar/connect";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 import {
   connectProblem,
@@ -245,6 +247,27 @@ export function CalendarSettings({
           </p>
         ) : null}
       </SettingsCard>
+      {publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL ? (
+        <SettingsCard
+          title={t("addonTitle", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-muted-foreground max-w-[56ch] text-sm leading-normal">
+              {t("addonBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+            </span>
+            <LinkButton
+              href={publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL}
+              target="_blank"
+              rel="noreferrer"
+              variant="outline"
+            >
+              <ExternalLink aria-hidden="true" />
+              {t("addonGet", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+              <NewTabNote />
+            </LinkButton>
+          </div>
+        </SettingsCard>
+      ) : null}
       <ConfirmDialog
         isOpen={confirming}
         onClose={() => setConfirming(false)}

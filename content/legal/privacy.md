@@ -44,6 +44,12 @@ AI notes are kept only when a host or co-host chooses to save them, or when the 
 
 {appName} uses this permission only to add, update and cancel the meetings you schedule. It never reads your other events.
 
+### Google Calendar and Gmail, with the add-on
+
+If you use {appName}'s add-on for Google Workspace, {appName} keeps what it keeps for any meeting you schedule (its title, times, repeat and settings). For a meeting made from a Calendar event, it also keeps that **event's ID** and its **calendar's ID** (for your main calendar, that's your email address), to follow the event and link to it. It doesn't keep the event's guests: Google Calendar invites them.
+
+The add-on runs on Google's servers. It reads the event you add a {appName} meeting to while you have it open, and the events that change in that calendar afterwards, telling {appName} only about the ones with {appName} meetings. In Gmail it adds an invitation where you're writing, and never reads the email. To know who you are, it sends {appName} a token from Google with your Google account's ID, which {appName} uses for that request and never keeps.
+
 ### People without an account
 
 Guests get a cookie with a random ID and an avatar, so they're recognized when they come back. It holds no name or email. The name a guest types is kept in the meeting's records above, and remembered in their own browser for next time.
@@ -98,7 +104,7 @@ If you use {appName}'s app for Mac or Windows, it keeps on your computer its set
 - **Resend** sends account emails, such as verifying your address or resetting your password.
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
 - **GitHub** hosts the desktop app's downloads and updates. It sees your IP address when the app checks for an update or you download it.
-- **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations.
+- **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations. **Google Workspace**, if you use {appName}'s add-on: Google runs it, as described above.
 - **Cloudflare Turnstile**, if {appName} turns it on, checks there's a person behind signing up, asking for a password reset or a new verification email, and joining as a guest for the first time. It sees your IP address and details of your browser and device while it checks.
 - **Sentry**, if {appName} turns error reports on, receives a report when something breaks: the error, where in the code it happened, your browser and operating system, and the page's address with meeting IDs and passcodes taken out. Reports never include your name, email address, IP address, chat, notes or keys.
 - **A host's AI provider** (OpenAI, Anthropic, Google, DeepSeek or OpenRouter), only when a host makes AI notes with their own key. The transcript goes from the host's browser straight to that provider, under the host's own account and the provider's terms.
@@ -109,7 +115,7 @@ These services may handle your information in the United States and other countr
 
 ### Information from Google
 
-{appName}'s use and transfer of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. {appName} uses Google sign-in only for your account, and Google Calendar only for the meetings you schedule. It doesn't use information from Google for advertising and doesn't sell it, and nobody reads it unless you ask them to, security requires it, or the law does.
+{appName}'s use and transfer of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. {appName} uses Google sign-in only for your account, Google Calendar only for the meetings you schedule, and the add-on only for the meetings you add from Google Calendar and Gmail. It doesn't use information from Google for advertising and doesn't sell it, and nobody reads it unless you ask them to, security requires it, or the law does.
 
 ## How long it's kept
 
