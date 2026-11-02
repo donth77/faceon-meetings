@@ -577,7 +577,6 @@
     "shortcutsTitle": "Keyboard shortcuts",
     "shortcutsBody": "Shortcuts in both the Meet and the Zoom style. Press <key>?</key> anywhere to see them.",
     "showShortcuts": "Show shortcuts",
-    "reportIssue": "Found an issue? Submit",
     "opensInNewTab": "(opens GitHub in a new tab)",
     "viewSource": "View source on GitHub",
     "assistant": {
@@ -598,7 +597,9 @@
       "unavailable": "Chrome has a small AI model, Gemini Nano, that can answer questions here, but it isn’t ready on this computer. It needs free disk space and may need turning on at chrome://flags.",
       "learnMore": "About Gemini Nano",
       "dismiss": "Dismiss"
-    }
+    },
+    "reportIssueShort": "Report an issue",
+    "stillStuck": "Still stuck? <link>Report an issue on GitHub</link>."
   },
   "Shortcuts": {
     "title": "Keyboard shortcuts",

@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { HelpNav, ReportLinks } from "@/components/help/help-center";
+import { HelpNav, RepoLinks } from "@/components/help/help-center";
 import { HelpHeader } from "@/components/help/help-header";
 import { HelpMarkdown } from "@/components/help/help-markdown";
 import { publicEnv } from "@/lib/env";
@@ -63,16 +63,21 @@ export default async function HelpArticlePage({
             entries={sections.flatMap((section) => section.entries)}
           />
         </div>
-        <nav
-          aria-label={t("breadcrumb")}
-          className="text-muted-foreground mb-4 flex flex-wrap items-center gap-1.5 text-sm"
-        >
-          <Link href="/help" className="hover:text-foreground font-medium">
-            {t("title")}
-          </Link>
-          <ChevronRight className="size-3.5" aria-hidden="true" />
-          <span>{t(`categories.${article.category}`)}</span>
-        </nav>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <nav
+            aria-label={t("breadcrumb")}
+            className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm"
+          >
+            <Link href="/help" className="hover:text-foreground font-medium">
+              {t("title")}
+            </Link>
+            <ChevronRight className="size-3.5" aria-hidden="true" />
+            <span>{t(`categories.${article.category}`)}</span>
+          </nav>
+          {publicEnv.NEXT_PUBLIC_REPO_URL ? (
+            <RepoLinks repoUrl={publicEnv.NEXT_PUBLIC_REPO_URL} />
+          ) : null}
+        </div>
         <article>
           <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
             {article.title}
@@ -117,9 +122,20 @@ export default async function HelpArticlePage({
           ) : null}
         </nav>
         {publicEnv.NEXT_PUBLIC_REPO_URL ? (
-          <div className="mt-10">
-            <ReportLinks repoUrl={publicEnv.NEXT_PUBLIC_REPO_URL} />
-          </div>
+          <p className="text-muted-foreground mt-10 text-sm">
+            {t.rich("stillStuck", {
+              link: (chunks) => (
+                <a
+                  href={`${publicEnv.NEXT_PUBLIC_REPO_URL?.replace(/\/$/, "")}/issues/new/choose`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold underline-offset-4 hover:underline"
+                >
+                  {chunks}
+                </a>
+              ),
+            })}
+          </p>
         ) : null}
       </main>
     </div>

@@ -63,13 +63,16 @@ export function HelpIndex({
 
   return (
     <main className="flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          {t("title")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t("subtitle", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            {t("title")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("subtitle", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+          </p>
+        </div>
+        {repoUrl ? <RepoLinks repoUrl={repoUrl} /> : null}
       </div>
 
       <HelpHeader entries={sections.flatMap((section) => section.entries)} />
@@ -119,36 +122,35 @@ export function HelpIndex({
           {t("showShortcuts")}
         </Button>
       </section>
-
-      {repoUrl ? <ReportLinks repoUrl={repoUrl} /> : null}
     </main>
   );
 }
 
-/** Report a problem on GitHub, and the source code. */
-export function ReportLinks({ repoUrl }: { repoUrl: string }) {
+/** Report an issue and View source on GitHub, at the top right of every Help page. */
+export function RepoLinks({ repoUrl }: { repoUrl: string }) {
   const t = useTranslations("Help");
+  const repo = repoUrl.replace(/\/$/, "");
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex shrink-0 items-center gap-1">
       <a
-        href={`${repoUrl.replace(/\/$/, "")}/issues/new/choose`}
+        href={`${repo}/issues/new/choose`}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-card ring-border hover:bg-muted focus-visible:ring-ring inline-flex h-11 max-w-full items-center justify-center gap-2.5 rounded-xl px-5 font-semibold ring-1 outline-none focus-visible:ring-2"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold outline-none focus-visible:ring-2"
       >
-        <GitHubIcon className="size-5" />
-        {t("reportIssue")}
-        <ExternalLink className="size-4" aria-hidden="true" />
+        {t("reportIssueShort")}
+        <ExternalLink className="size-3.5" aria-hidden="true" />
         <span className="sr-only">{t("opensInNewTab")}</span>
       </a>
       <a
-        href={repoUrl}
+        href={repo}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+        aria-label={t("viewSource")}
+        title={t("viewSource")}
+        className="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex size-9 items-center justify-center rounded-lg outline-none focus-visible:ring-2"
       >
-        {t("viewSource")}
-        <span className="sr-only">{t("opensInNewTab")}</span>
+        <GitHubIcon className="size-5" />
       </a>
     </div>
   );
