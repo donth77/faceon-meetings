@@ -152,6 +152,14 @@ export const auth = betterAuth({
         defaultValue: false,
         input: false,
       },
+      // The options this person last scheduled a meeting with (schedule-defaults.ts).
+      // Only the schedule page reads them, from the database.
+      scheduleDefaults: {
+        type: "json",
+        required: false,
+        input: false,
+        returned: false,
+      },
     },
   },
   databaseHooks: {

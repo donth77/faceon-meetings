@@ -46,6 +46,7 @@ import {
   resolveRole,
   type ClosedReason,
 } from "./rules";
+import type { ScheduleDefaults } from "./schedule-defaults";
 import { DEFAULT_SETTINGS, MeetingSettings } from "./settings";
 
 export type Meeting = Omit<typeof meeting.$inferSelect, "settings"> & {
@@ -780,4 +781,24 @@ export function attendedBy(viewerId: string) {
     ),
     not(removed),
   );
+}
+
+/** The options this host last scheduled a meeting with, as stored (read with schedule-defaults.ts). */
+export async function storedScheduleDefaults(userId: string): Promise<unknown> {
+  const [row] = await db()
+    .select({ defaults: user.scheduleDefaults })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  return row?.defaults ?? null;
+}
+
+export async function saveScheduleDefaults(
+  userId: string,
+  defaults: ScheduleDefaults,
+): Promise<void> {
+  await db()
+    .update(user)
+    .set({ scheduleDefaults: defaults })
+    .where(eq(user.id, userId));
 }

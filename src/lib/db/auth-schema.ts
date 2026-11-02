@@ -4,6 +4,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -24,6 +25,7 @@ export const user = pgTable("user", {
   avatarSeed: text("avatar_seed"),
   avatarSource: text("avatar_source"),
   aiNotes: boolean("ai_notes").default(false).notNull(),
+  scheduleDefaults: jsonb("schedule_defaults"),
 });
 
 export const session = pgTable(

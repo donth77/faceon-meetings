@@ -7,7 +7,11 @@ import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 import { notesAllowedFor } from "@/lib/meetings/notes";
-import { findMeetingByCode } from "@/lib/meetings/queries";
+import {
+  findMeetingByCode,
+  storedScheduleDefaults,
+} from "@/lib/meetings/queries";
+import { rememberedOptions } from "@/lib/meetings/schedule-defaults";
 import { newScheduleDraft } from "@/lib/meetings/schedule-draft";
 import { invitationsOf } from "@/lib/meetings/scheduling";
 
@@ -27,20 +31,29 @@ export default function SchedulePage(props: PageProps<"/[locale]/schedule">) {
 }
 
 /**
- * Schedule a meeting: a fresh meeting ID and passcode the invitation can preview.
- * `?again=` (Schedule again, from Previous) starts from an earlier meeting: its title,
+ * Schedule a meeting: a fresh meeting ID and passcode the invitation can preview. It
+ * starts from the options you last scheduled with (schedule-defaults.ts). `?again=`
+ * (Schedule again, from Previous) starts from an earlier meeting instead: its title,
  * and when you hosted it, its length, settings and invitees.
  */
 async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
   const session = await requireSession("/schedule");
   const draft = newScheduleDraft();
   const { again } = await searchParams;
-  const earlier =
-    typeof again === "string" ? await findMeetingByCode(again) : null;
-  let initial: Partial<ScheduleFormValues> | undefined;
+  const [earlier, connection, aiNotesAllowed, stored] = await Promise.all([
+    typeof again === "string" ? findMeetingByCode(again) : null,
+    calendarConnection(session.user),
+    notesAllowedFor(session.user.id),
+    storedScheduleDefaults(session.user.id),
+  ]);
+  let initial: Partial<ScheduleFormValues> = rememberedOptions(stored, {
+    aiNotes: aiNotesAllowed,
+    calendar: connection.status === "connected",
+  });
   if (earlier) {
     const mine = earlier.meeting.hostId === session.user.id;
     initial = {
+      ...initial,
       title: earlier.meeting.title ?? "",
       ...(mine
         ? {
@@ -64,11 +77,11 @@ async function NewMeeting({ searchParams }: PageProps<"/[locale]/schedule">) {
     <ScheduleFormLoader
       hostName={session.user.name}
       calendar={{
-        connection: await calendarConnection(session.user),
+        connection,
         email: session.user.email,
         synced: false,
       }}
-      aiNotesAllowed={await notesAllowedFor(session.user.id)}
+      aiNotesAllowed={aiNotesAllowed}
       draft={draft}
       initial={initial}
     />

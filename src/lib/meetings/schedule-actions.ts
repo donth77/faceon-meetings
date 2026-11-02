@@ -6,13 +6,17 @@ import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 import type { CalendarOutcome } from "@/lib/google-calendar/shared";
 import { syncGoogleCalendar } from "@/lib/google-calendar/sync";
+import { loggable } from "@/lib/log";
 import { serverEnv } from "@/lib/server-env";
 
 import { Passcode } from "./codes";
+import { notesAllowedFor } from "./notes";
 import {
   countMeetingsCreatedSince,
   findMeetingByCode,
+  saveScheduleDefaults,
   setMeetingPasscode,
+  storedScheduleDefaults,
   updateMeetingSettings,
 } from "./queries";
 import { DAY_MS } from "./retention";
@@ -25,6 +29,7 @@ import {
   type DeleteResult,
   type ScheduleResult,
 } from "./schedule";
+import { nextScheduleDefaults } from "./schedule-defaults";
 import { draftIsValid } from "./schedule-draft";
 import {
   deleteSchedule,
@@ -42,16 +47,46 @@ const SCHEDULE_ROUTE = "/schedule";
 const MeetingCode = z.string().max(32);
 
 /**
- * Whether a meeting may go on the host's Google Calendar: they asked, and their
- * calendar is connected (or only needs a reconnect, which the outcome then asks for).
+ * The host's Google Calendar is connected, or only needs a reconnect, which the outcome
+ * then asks for.
  */
+async function calendarOffered(host: {
+  id: string;
+  email: string;
+}): Promise<boolean> {
+  const { status } = await calendarConnection(host);
+  return status === "connected" || status === "reconnect";
+}
+
+/** Whether a meeting may go on the host's Google Calendar: they asked, and it's connected. */
 async function wantsGoogleCalendar(
   asked: boolean,
   host: { id: string; email: string },
 ): Promise<boolean> {
-  if (!asked) return false;
-  const { status } = await calendarConnection(host);
-  return status === "connected" || status === "reconnect";
+  return asked && (await calendarOffered(host));
+}
+
+/**
+ * The next new meeting starts from this one's options, never its details. Remembering
+ * is a convenience: if it fails, the meeting is still scheduled.
+ */
+async function rememberOptions(
+  host: { id: string; email: string },
+  used: Parameters<typeof nextScheduleDefaults>[1],
+): Promise<void> {
+  try {
+    const [stored, aiNotes, calendar] = await Promise.all([
+      storedScheduleDefaults(host.id),
+      notesAllowedFor(host.id),
+      calendarOffered(host),
+    ]);
+    await saveScheduleDefaults(
+      host.id,
+      nextScheduleDefaults(stored, used, { aiNotes, calendar }),
+    );
+  } catch (error) {
+    console.error("Couldn't remember the scheduling options", loggable(error));
+  }
 }
 
 /** Schedule a meeting: one-off or repeating, with the previewed ID and passcode. */
@@ -95,6 +130,7 @@ export async function scheduleMeetingAction(
       return { ok: false, reason: error.reason };
     throw error;
   }
+  await rememberOptions(session.user, parsed.data);
   // The meeting is saved; Google Calendar follows, and can be retried if it fails.
   return {
     ok: true,

@@ -18,6 +18,8 @@ order: 3
 
 Then copy the link or invitation, or add the meeting to Google Calendar, Outlook or any calendar app.
 
+Your next meeting starts with the options you chose this time, such as its length, passcode, waiting room and what happens when people join, on any device you sign in on. Its title, description, time and people start fresh.
+
 ## Send invitations from Google Calendar
 
 Connect Google Calendar once, and {appName} puts the meetings you schedule on it. Google emails each person you invite a real invitation they can accept from Gmail, Outlook or Apple Mail.

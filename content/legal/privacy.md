@@ -16,6 +16,7 @@ updated: 2026-11-02
 - Which **sign-in methods** you've connected. When you sign in with Google or GitHub, {appName} receives your name, email address and photo from them, and keeps the sign-in tokens they send, encrypted.
 - Your **sign-in sessions**, with the IP address and browser each came from, so you stay signed in and sessions can be checked and ended.
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
+- The **options you last scheduled a meeting with**, such as its length, passcode on or off, and waiting room, so your next meeting starts from them. Never its title, people or passcode.
 - If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
 - If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when.
 
