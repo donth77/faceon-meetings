@@ -44,6 +44,7 @@ import {
 import { InCallSettings, type InCallSection } from "./in-call-settings";
 import { useRoomTransition } from "./motion";
 import { ParticipantsPanel } from "./participants-panel";
+import { PictureInPicture, usePictureInPicture } from "./picture-in-picture";
 import { FloatingReactions } from "./reactions";
 import { moderates, roleIn, roomRoleOf } from "./roles";
 import { RoomBadgesProvider } from "./room-badges";
@@ -418,6 +419,29 @@ export function MeetingShell({
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
   useMutedNudge(media.mic.speakingWhileMuted, toggleMic);
+  const pip = usePictureInPicture();
+  const { autoPictureInPicture } = withDefaults(usePreferences());
+  const openPip = useEffectEvent(() => void pip.open());
+  // Chrome opens the small window by itself when you switch away from a call, if the
+  // page asks it to (it asks you once, as for Meet).
+  useEffect(() => {
+    if (!autoPictureInPicture || !pip.supported) return;
+    const session = navigator.mediaSession as MediaSession & {
+      setActionHandler(action: string, handler: (() => void) | null): void;
+    };
+    try {
+      session.setActionHandler("enterpictureinpicture", () => openPip());
+    } catch {
+      return; // this Chrome doesn't offer it
+    }
+    return () => {
+      try {
+        session.setActionHandler("enterpictureinpicture", null);
+      } catch {
+        // Already gone.
+      }
+    };
+  }, [autoPictureInPicture, pip.supported]);
   usePresenceSounds(media.participants);
 
   function renderPanel(name: PanelName) {
@@ -546,6 +570,14 @@ export function MeetingShell({
               void media.leave();
             }}
           />
+          <PictureInPicture
+            pipWindow={pip.pipWindow}
+            onToggleMic={toggleMic}
+            handRaised={self.id in hands}
+            onToggleHand={() =>
+              void changeHand({ raised: !(self.id in hands) })
+            }
+          />
           <InCallSettings
             section={settings}
             onSectionChange={setSettings}
@@ -558,6 +590,9 @@ export function MeetingShell({
             panels={panels}
             onTogglePanel={togglePanel}
             onOpenSettings={(section) => setSettings(section ?? "audio")}
+            onOpenPictureInPicture={
+              pip.supported ? () => void pip.open() : undefined
+            }
             unreadChat={chat.unread}
             waitingCount={lobby.requests.length}
             onToggleMic={toggleMic}

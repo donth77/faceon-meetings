@@ -54,7 +54,7 @@ export function VideoSettings() {
   const t = useTranslations("Settings.video");
   const tp = useTranslations("PreJoin");
   const [devices, update] = useRememberedDevices();
-  const { mirrorVideo, hdVideo, cameraOffOnJoin } =
+  const { mirrorVideo, hdVideo, cameraOffOnJoin, autoPictureInPicture } =
     withDefaults(usePreferences());
   const camera = useLocalTrack("video", true, devices.cameraId);
   const lists = useMediaDevices(camera.track?.id ?? "");
@@ -134,6 +134,14 @@ export function VideoSettings() {
             isSelected={cameraOffOnJoin}
             onChange={(on) =>
               savePreferences({ cameraOffOnJoin: on ? true : undefined })
+            }
+          />
+          <SwitchRow
+            label={t("autoPip")}
+            help={t("autoPipHelp")}
+            isSelected={autoPictureInPicture}
+            onChange={(on) =>
+              savePreferences({ autoPictureInPicture: on ? undefined : false })
             }
           />
         </div>

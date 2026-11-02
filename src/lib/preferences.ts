@@ -50,6 +50,8 @@ export type Preferences = {
   popupHands?: boolean;
   /** A pop-up when someone asks to join (hosts). Default on. */
   popupLobby?: boolean;
+  /** The meeting in a small window when you switch away, where Chrome allows. Default on. */
+  autoPictureInPicture?: boolean;
   /** Hold Space to talk while muted. Default off, as in Meet. */
   pushToTalk?: boolean;
   /** Minutes before a meeting to remind you; 0 for never. Default 5, as in Zoom. */
@@ -75,6 +77,7 @@ const BOOLEANS = [
   "popupHands",
   "popupLobby",
   "pushToTalk",
+  "autoPictureInPicture",
 ] as const;
 
 let cached: { raw: string | null; value: Preferences } | null = null;
@@ -171,6 +174,7 @@ export function withDefaults(preferences: Preferences) {
     popupHands: preferences.popupHands ?? true,
     popupLobby: preferences.popupLobby ?? true,
     pushToTalk: preferences.pushToTalk ?? false,
+    autoPictureInPicture: preferences.autoPictureInPicture ?? true,
     reminderMinutes: preferences.reminderMinutes ?? 5,
   };
 }

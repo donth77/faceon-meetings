@@ -22,7 +22,7 @@ const loudness = (participant: RoomParticipant) =>
  * Three green bars that move with someone's voice while they speak, as in Meet; a mic
  * while they're quiet, and a crossed-out one while they're muted.
  */
-function VoiceLevel({ participant }: { participant: RoomParticipant }) {
+export function VoiceLevel({ participant }: { participant: RoomParticipant }) {
   const t = useTranslations("Meeting");
   if (!participant.audio) {
     return (

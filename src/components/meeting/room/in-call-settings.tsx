@@ -141,7 +141,7 @@ function VideoSection() {
   const tm = useTranslations("Meeting");
   const tp = useTranslations("PreJoin");
   const { camera } = useRoomMedia();
-  const { mirrorVideo, hdVideo, cameraOffOnJoin } =
+  const { mirrorVideo, hdVideo, cameraOffOnJoin, autoPictureInPicture } =
     withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
@@ -211,6 +211,14 @@ function VideoSection() {
           isSelected={cameraOffOnJoin}
           onChange={(on) =>
             savePreferences({ cameraOffOnJoin: on ? true : undefined })
+          }
+        />
+        <SwitchRow
+          label={t("autoPip")}
+          help={t("autoPipHelp")}
+          isSelected={autoPictureInPicture}
+          onChange={(on) =>
+            savePreferences({ autoPictureInPicture: on ? undefined : false })
           }
         />
       </div>

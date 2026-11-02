@@ -11,6 +11,7 @@ import {
   MicOff,
   Minimize,
   PhoneOff,
+  PictureInPicture2,
   Settings,
   SmilePlus,
   Users,
@@ -212,7 +213,13 @@ function useFullscreen() {
 }
 
 /** Settings, full screen and the keyboard shortcuts, in both More menus. */
-function MoreItems({ onOpenSettings }: { onOpenSettings: () => void }) {
+function MoreItems({
+  onOpenSettings,
+  onOpenPictureInPicture,
+}: {
+  onOpenSettings: () => void;
+  onOpenPictureInPicture?: (() => void) | undefined;
+}) {
   const t = useTranslations("Meeting");
   const openShortcuts = useOpenShortcuts();
   const fullscreen = useFullscreen();
@@ -232,6 +239,12 @@ function MoreItems({ onOpenSettings }: { onOpenSettings: () => void }) {
           {fullscreen.active ? t("exitFullScreen") : t("fullScreen")}
         </DropdownMenuItem>
       ) : null}
+      {onOpenPictureInPicture ? (
+        <DropdownMenuItem onAction={onOpenPictureInPicture}>
+          <PictureInPicture2 aria-hidden="true" />
+          {t("openPictureInPicture")}
+        </DropdownMenuItem>
+      ) : null}
       <DropdownMenuItem onAction={openShortcuts} className="max-md:hidden">
         <Keyboard aria-hidden="true" />
         {t("keyboardShortcuts")}
@@ -241,14 +254,23 @@ function MoreItems({ onOpenSettings }: { onOpenSettings: () => void }) {
 }
 
 /** More, beside Raise hand on desktop: Settings, full screen and the shortcuts. */
-function DesktopMoreMenu({ onOpenSettings }: { onOpenSettings: () => void }) {
+function DesktopMoreMenu({
+  onOpenSettings,
+  onOpenPictureInPicture,
+}: {
+  onOpenSettings: () => void;
+  onOpenPictureInPicture?: (() => void) | undefined;
+}) {
   const t = useTranslations("Meeting");
   return (
     <div className="flex max-md:hidden">
       <DropdownMenuTrigger>
         <ControlButton icon={Ellipsis} label={t("more")} />
         <DropdownMenu placement="top" className="min-w-56">
-          <MoreItems onOpenSettings={onOpenSettings} />
+          <MoreItems
+            onOpenSettings={onOpenSettings}
+            onOpenPictureInPicture={onOpenPictureInPicture}
+          />
         </DropdownMenu>
       </DropdownMenuTrigger>
     </div>
@@ -337,6 +359,7 @@ export function ControlBar({
   panels,
   onTogglePanel,
   onOpenSettings,
+  onOpenPictureInPicture,
   unreadChat,
   waitingCount,
   onToggleMic,
@@ -354,6 +377,8 @@ export function ControlBar({
   onTogglePanel: (panel: PanelName) => void;
   /** Opens Settings on a section. */
   onOpenSettings: (section?: "audio" | "video") => void;
+  /** Opens the meeting in a small window; absent where the browser can't. */
+  onOpenPictureInPicture?: (() => void) | undefined;
   unreadChat: number;
   /** People in the waiting room (hosts and co-hosts see them). */
   waitingCount: number;
@@ -449,7 +474,10 @@ export function ControlBar({
           tone={handRaised ? "amber" : "plain"}
           onPress={onToggleHand}
         />
-        <DesktopMoreMenu onOpenSettings={() => onOpenSettings()} />
+        <DesktopMoreMenu
+          onOpenSettings={() => onOpenSettings()}
+          onOpenPictureInPicture={onOpenPictureInPicture}
+        />
         <MoreMenu
           peopleCount={count}
           unreadChat={unreadChat}

@@ -477,7 +477,8 @@
     "hideSelf": "Hide self view",
     "hideNoVideo": "Hide tiles without video",
     "selfHidden": "Your tile is hidden from you. Others still see you.",
-    "nothingToShow": "Nobody to show with these choices. Change them in Layout, at the top right."
+    "nothingToShow": "Nobody to show with these choices. Change them in Layout, at the top right.",
+    "openPictureInPicture": "Open picture-in-picture"
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -929,7 +930,9 @@
       "hd": "Send HD video",
       "hdHelp": "Uses more data. Turns off by itself when your connection is slow.",
       "offOnJoin": "Turn off my camera when I join",
-      "preview": "Your camera preview"
+      "preview": "Your camera preview",
+      "autoPip": "Open picture-in-picture automatically",
+      "autoPipHelp": "In Chrome, when you switch to another tab or app during a meeting, a small window keeps it in view"
     },
     "accessibility": {
       "title": "Accessibility",

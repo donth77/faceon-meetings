@@ -26,6 +26,12 @@ Hosts and co-hosts can select **Pin for everyone** to put someone on everyone's 
 
 The person speaking gets a green outline, and green bars beside their name move with their voice. When their camera is off, a ring pulses around their picture.
 
+## Keep the meeting in view
+
+In Chrome and Edge on a computer, select **More**, then **Open picture-in-picture**. A small window stays on top of your other tabs and apps, showing whoever is talking or the shared screen, with **Mute**, **Video**, **Raise hand** and **Leave**.
+
+Chrome can also open it by itself when you switch to another tab or app during a meeting, including when you share one. It asks you the first time. To stop it, turn off **Open picture-in-picture automatically** in **Settings**, under **Video**.
+
 ## Full screen
 
 Select **More**, then **Full screen**. Press `Esc` to leave full screen.
