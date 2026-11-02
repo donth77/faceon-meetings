@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useRouter } from "next/navigation";
 import type { Selection } from "react-aria-components";
+import { toast } from "sonner";
 
 import { InstallMenuItem } from "@/components/pwa/install-app";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
@@ -31,7 +31,7 @@ export type AccountUser = {
   name: string;
   email: string;
   image?: string | null;
-  /** An admin (ADMIN_EMAILS): the menu links to /admin. */
+  /** An admin (ADMIN_EMAILS): the menu links to Settings → Admin. */
   admin?: boolean;
 };
 
@@ -43,14 +43,19 @@ const THEMES = ["system", "light", "dark"] as const;
  */
 export function AccountMenu({ user }: { user: AccountUser }) {
   const t = useTranslations("Account");
-  const router = useRouter();
   const { theme = "system", setTheme } = useTheme();
   const openShortcuts = useOpenShortcuts();
 
+  // Feedback at once, then a full load, so nothing from the session stays in memory. The
+  // page can't change first: only the server can clear the sign-in cookie, and until it
+  // has, the landing page would send you back to Home.
   async function handleSignOut() {
-    await signOut();
-    router.replace("/");
-    router.refresh();
+    toast.loading(t("signingOut"));
+    try {
+      await signOut();
+    } finally {
+      window.location.replace("/");
+    }
   }
 
   function handleTheme(keys: Selection) {
@@ -81,7 +86,7 @@ export function AccountMenu({ user }: { user: AccountUser }) {
           {t("profile")}
         </DropdownMenuItem>
         {user.admin ? (
-          <DropdownMenuItem href="/admin">
+          <DropdownMenuItem href="/settings/admin">
             <ShieldCheck aria-hidden="true" />
             {t("admin")}
           </DropdownMenuItem>

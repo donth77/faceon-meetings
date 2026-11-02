@@ -18,15 +18,10 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-t">
-      <div
-        className={cn(
-          PUBLIC_CONTAINER,
-          "flex justify-center py-5 sm:justify-start",
-        )}
-      >
+      <div className={cn(PUBLIC_CONTAINER, "py-5")}>
         <nav
           aria-label={t("footerLabel")}
-          className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-sm"
+          className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-sm sm:justify-start"
         >
           <Link href="/help" className="hover:text-foreground">
             {t("help")}
@@ -45,7 +40,7 @@ export async function SiteFooter() {
               href={repo}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-foreground inline-flex items-center gap-1.5"
+              className="hover:text-foreground inline-flex items-center gap-1.5 sm:ml-auto"
             >
               <GitHubIcon className="size-4" />
               {t("viewSource")}

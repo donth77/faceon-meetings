@@ -14,7 +14,7 @@ import { hostingAccess, type HostingAccess } from "./rules";
 
 type Account = { email: string; emailVerified: boolean };
 
-/** Whether an admin approved this address on /admin. */
+/** Whether an admin approved this address in Settings → Admin. */
 export async function approvedOnAdmin(email: string): Promise<boolean> {
   const [row] = await db()
     .select({ email: hostAllowlist.email })

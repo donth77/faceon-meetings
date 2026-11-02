@@ -6,7 +6,7 @@ import { serverEnv } from "@/lib/server-env";
 /**
  * Approved hosts host full meetings; every other account hosts demos. A host is approved
  * by `ADMIN_EMAILS` or `HOST_ALLOWLIST` (the operator's settings), or by an admin on
- * /admin (`approved`: the address is on the database's list, which lib/hosting reads).
+ * Settings → Admin (`approved`: the address is on the database's list, which lib/hosting reads).
  */
 export type HostingPlan = "full" | "demo";
 
@@ -29,7 +29,7 @@ export function approvedBySettings(email: string): boolean {
 }
 
 /**
- * Admins (`ADMIN_EMAILS`, with a verified address) open /admin and decide who hosts full
+ * Admins (`ADMIN_EMAILS`, with a verified address) open Settings → Admin and decide who hosts full
  * meetings. Nothing else: no admin can change, delete or see into anyone's account.
  */
 export function isAdmin(account: Account): boolean {

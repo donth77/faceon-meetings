@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Mic,
   Settings,
+  ShieldCheck,
   SmilePlus,
   Sparkles,
   User,
@@ -32,6 +33,8 @@ export const SETTINGS_SECTIONS = [
   { slug: "ai-notes", key: "aiNotes", icon: Sparkles },
   { slug: "accessibility", key: "accessibility", icon: Accessibility },
   { slug: "account", key: "account", icon: User },
+  // Only admins (ADMIN_EMAILS) see it.
+  { slug: "admin", key: "admin", icon: ShieldCheck },
 ] as const satisfies ReadonlyArray<{
   slug: string;
   key: string;
@@ -40,9 +43,10 @@ export const SETTINGS_SECTIONS = [
 
 /**
  * The sections of Settings; the current one is marked as the page. A column beside the
- * section on wide screens, a row that scrolls sideways on narrower ones.
+ * section on wide screens, a row that scrolls sideways on narrower ones. Admin shows
+ * only for admins.
  */
-export function SettingsNav() {
+export function SettingsNav({ admin = false }: { admin?: boolean }) {
   const t = useTranslations("Settings");
   const pathname = usePathname();
   return (
@@ -52,7 +56,8 @@ export function SettingsNav() {
     >
       {SETTINGS_SECTIONS.filter(
         // A copy can turn AI notes off; their settings go with them.
-        ({ key }) => key !== "aiNotes" || aiNotesEnabled,
+        ({ key }) =>
+          (key !== "aiNotes" || aiNotesEnabled) && (key !== "admin" || admin),
       ).map(({ slug, key, icon: Icon }) => {
         // General is Settings' first page.
         const href = slug === "general" ? "/settings" : `/settings/${slug}`;

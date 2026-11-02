@@ -36,7 +36,7 @@ export async function emailAdminsAboutRequest(input: {
       accountEmail("hostingAsked", {
         to: address,
         name: input.from.name,
-        url: `${siteUrl()}/admin`,
+        url: `${siteUrl()}/settings/admin`,
         locale: emailLocale(account ?? {}),
         values: { email: input.from.email },
         quote: input.note,

@@ -29,7 +29,7 @@ type Decision = {
   decidedBy: string | null;
 };
 
-/** /admin → Requests: who asked to host full meetings, to approve or decline. */
+/** Settings → Admin → Requests: who asked to host full meetings, to approve or decline. */
 export function AdminRequests({
   requests,
   decisions,

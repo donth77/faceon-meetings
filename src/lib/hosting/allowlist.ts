@@ -7,7 +7,7 @@ import { hostAllowlist, user } from "@/lib/db/schema";
 import { approvedBySettings } from "@/lib/meetings/hosting";
 import { serverEnv } from "@/lib/server-env";
 
-/** An approved host, as /admin lists them. */
+/** An approved host, as Settings → Admin lists them. */
 export type ApprovedHost = {
   email: string;
   /** "settings": HOST_ALLOWLIST, changed where the app is hosted; "admin": added here. */

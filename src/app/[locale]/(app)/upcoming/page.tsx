@@ -19,7 +19,7 @@ export default async function UpcomingPage() {
   const t = await getTranslations("Upcoming");
   return (
     <main className="flex flex-1 flex-col p-6 md:p-10">
-      <div className="flex w-full max-w-[1080px] flex-col gap-6.5">
+      <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-6.5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-[32px] font-bold tracking-[-0.01em]">
             {t("title")}

@@ -32,7 +32,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex flex-1 flex-col p-6 md:p-10">
-      <div className="flex w-full max-w-[1040px] flex-col gap-9">
+      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-9">
         <h1 className="sr-only">{t("title")}</h1>
         <Suspense fallback={null}>
           <Hosting />

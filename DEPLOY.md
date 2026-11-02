@@ -223,12 +223,12 @@ Then add the variables from [step 9](#9-decide-who-hosts-and-set-limits) and [st
 
 ## 9. Decide who hosts, and set limits
 
-Limits keep usage inside Stream's free credit. Everyone who signs in can host, but only approved hosts host full meetings; everyone else hosts demo meetings. Approve people in your settings below, or on `/admin` once you're signed in (see [Admins and `/admin`](#admins-and-admin)):
+Limits keep usage inside Stream's free credit. Everyone who signs in can host, but only approved hosts host full meetings; everyone else hosts demo meetings. Approve people in your settings below, or in Settings → Admin once you're signed in (see [Admins, and Settings → Admin](#admins-and-settings--admin)):
 
 | Variable                       | Default | What it does                                                                                              |
 | ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------- |
-| `ADMIN_EMAILS`                 |         | Your own addresses, separated by commas. They host full meetings and can open `/admin`                    |
-| `HOST_ALLOWLIST`               |         | Other addresses that host full meetings. `/admin` lists them but can't change them                        |
+| `ADMIN_EMAILS`                 |         | Your own addresses, separated by commas. They host full meetings and see Settings → Admin                 |
+| `HOST_ALLOWLIST`               |         | Other addresses that host full meetings. Settings → Admin lists them but can't change them                |
 | `MAX_PARTICIPANTS_PER_MEETING` | 20      | People in a full meeting. The meeting's host always gets in; Stream's own cap sits 2 above, as a backstop |
 | `MAX_MEETING_MINUTES`          | 0       | How long a full meeting can last; 0 for no limit                                                          |
 | `DEMO_MAX_MINUTES`             | 15      | How long a demo meeting can last. Everyone not listed above hosts demo meetings                           |
@@ -240,16 +240,16 @@ Limits keep usage inside Stream's free credit. Everyone who signs in can host, b
 
 A listed address counts only once it's verified. Google and GitHub sign-ins are; an email account is once its owner follows the link FaceOn sends.
 
-### Admins and `/admin`
+### Admins, and Settings → Admin
 
-Admins are the addresses in `ADMIN_EMAILS`, and only those: the app can't add or remove an admin. Signed in, an admin finds **Admin** in the account menu. `/admin` is about one thing, who hosts full meetings:
+Admins are the addresses in `ADMIN_EMAILS`, and only those: the app can't add or remove an admin. Signed in, an admin finds **Admin** in Settings (also in the account menu), at `/settings/admin`. It's about one thing, who hosts full meetings:
 
-- **Requests.** A demo host can select **Ask for full meetings** on Home and add a note. Admins get an email, then **Approve** or **Decline** on `/admin`, and the person gets an email with the answer. After a decline they can ask again in 30 days.
+- **Requests.** A demo host can select **Ask for full meetings** on Home and add a note. Admins get an email, then **Approve** or **Decline** in Settings → Admin, and the person gets an email with the answer. After a decline they can ask again in 30 days.
 - **Approved hosts.** Add an address before or after its owner signs up; their meetings are full from their next one. **Move to demo** takes someone back to demo meetings from their next meeting (a meeting already running keeps its limits), without an email. Addresses from `HOST_ALLOWLIST` show as "From settings" and change only there.
 
-Admins can't delete, edit or sign in as anyone's account, and `/admin` shows nothing of anyone's meetings, notes or settings: only what a hosting decision needs (name, email, whether an account exists, the note sent with a request, and past answers). Each action is its own server function that checks the caller is an admin; there's no general user management. Everyone else gets a "page not found" at `/admin`.
+Admins can't delete, edit or sign in as anyone's account, and Settings → Admin shows nothing of anyone's meetings, notes or settings: only what a hosting decision needs (name, email, whether an account exists, the note sent with a request, and past answers). Each action is its own server function that checks the caller is an admin; there's no general user management. Everyone else gets a "page not found" there.
 
-Emails to admins and about answers go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear on `/admin`, but nobody is emailed.
+Emails to admins and about answers go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear in Settings → Admin, but nobody is emailed.
 
 ## 10. Make the legal pages yours
 
@@ -328,7 +328,7 @@ Then:
 
 **Verification emails don't arrive.** Check that the domain is verified in Resend, that `EMAIL_FROM` uses it, and Resend's logs.
 
-**Meetings stop after 15 minutes, or at 4 people.** Those are demo limits. Approve the address on `/admin`, or add it to `HOST_ALLOWLIST` or `ADMIN_EMAILS` and redeploy, and make sure it's verified.
+**Meetings stop after 15 minutes, or at 4 people.** Those are demo limits. Approve the address in Settings → Admin, or add it to `HOST_ALLOWLIST` or `ADMIN_EMAILS` and redeploy, and make sure it's verified.
 
 **"Too many meetings are running right now."** `MAX_CONCURRENT_MEETINGS` is reached.
 

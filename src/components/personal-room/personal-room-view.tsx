@@ -121,7 +121,7 @@ export function PersonalRoomView({
 
   return (
     <main className="flex flex-1 flex-col p-6 md:p-10">
-      <div className="flex max-w-[900px] flex-col gap-5.5">
+      <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5.5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <h1 className="font-display text-3xl font-bold tracking-tight">

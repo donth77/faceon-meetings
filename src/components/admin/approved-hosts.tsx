@@ -29,7 +29,7 @@ type Host = {
 };
 
 /**
- * /admin → Approved hosts: add an address (before or after its owner signs up), or move
+ * Settings → Admin → Approved hosts: add an address (before or after its owner signs up), or move
  * one back to demo meetings. Addresses from the operator's settings are only listed.
  */
 export function ApprovedHosts({

@@ -192,7 +192,7 @@ export function MeetingDetailsView({
   }`;
 
   return (
-    <div className="flex max-w-[1000px] flex-col gap-5.5">
+    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5.5">
       <Link
         href="/upcoming"
         className="text-primary flex items-center gap-1 self-start text-sm font-semibold"

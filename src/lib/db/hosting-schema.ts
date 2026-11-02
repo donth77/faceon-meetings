@@ -13,7 +13,7 @@ import type { RequestStatus } from "@/lib/hosting/rules";
 import { user } from "./auth-schema";
 
 /**
- * Addresses an admin approved on /admin to host full meetings, before or after their
+ * Addresses an admin approved in Settings → Admin to host full meetings, before or after their
  * owner signs up. The operator's settings (ADMIN_EMAILS, HOST_ALLOWLIST) count as well,
  * read from the settings themselves. An address counts once an account has verified it.
  */

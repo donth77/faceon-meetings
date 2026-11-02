@@ -11,7 +11,7 @@ import { decideRequest } from "./requests";
 import { RequestNote } from "./rules";
 
 /*
- * /admin's actions. Each does one hosting decision and checks, every time, that the
+ * Settings → Admin's actions. Each does one hosting decision and checks, every time, that the
  * caller is an admin (lib/meetings/hosting.ts, isAdmin). There's deliberately nothing
  * else: no admin can change, delete or impersonate an account, or read its meetings.
  */

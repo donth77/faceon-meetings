@@ -16,7 +16,7 @@ export default async function PreviousPage() {
   const t = await getTranslations("Previous");
   return (
     <main className="flex flex-1 flex-col p-6 md:p-10">
-      <div className="flex w-full max-w-[1080px] flex-col gap-3">
+      <div className="mx-auto flex w-full max-w-[1080px] flex-col gap-3">
         <h1 className="text-[32px] font-bold tracking-[-0.01em]">
           {t("title")}
         </h1>

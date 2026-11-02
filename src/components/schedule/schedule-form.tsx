@@ -467,7 +467,7 @@ export function ScheduleForm({
   }));
 
   return (
-    <div className="flex w-full max-w-[1100px] flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-6">
       <Link
         href={edit ? `/meetings/${edit.code}` : "/upcoming"}
         className="text-primary flex items-center gap-1 self-start text-sm font-semibold"

@@ -210,6 +210,7 @@
     },
     "shortcuts": "Keyboard shortcuts",
     "signOut": "Sign out",
+    "signingOut": "Signing out…",
     "admin": "Admin"
   },
   "Hosting": {
@@ -1136,7 +1137,8 @@
       "calendar": "Calendar",
       "aiNotes": "AI notes",
       "accessibility": "Accessibility",
-      "account": "Account"
+      "account": "Account",
+      "admin": "Admin"
     },
     "general": {
       "title": "General",
@@ -1312,9 +1314,6 @@
       "deleteConfirmTitle": "Delete your account?",
       "deleteConfirmBody": "This can’t be undone. Your meetings, notes and avatar are removed for good, and people you invited can no longer join your meetings.",
       "deleteCalendar": "Your upcoming meetings are also cancelled in your Google Calendar, and Google lets the people you invited know.",
-      "adminTitle": "Admin",
-      "adminBody": "You’re an admin of {appName}: you decide who hosts full meetings.",
-      "adminOpen": "Open Admin",
       "deleteForGood": "Delete account",
       "signInFirst": "For your security, sign in again, then delete your account.",
       "legal": "The <privacy>Privacy Policy</privacy> explains what {appName} keeps about you and for how long, and the <terms>Terms</terms> cover using it.",

@@ -37,7 +37,7 @@ describe("hostingPlan", () => {
     vi.stubEnv("ADMIN_EMAILS", "admin@example.com");
     const maya = { email: "maya@example.com", emailVerified: true };
     expect(hostingPlan(maya, true)).toBe("full");
-    // Moved back to demo on /admin: the next meeting is a demo.
+    // Moved back to demo in Settings → Admin: the next meeting is a demo.
     expect(hostingPlan(maya, false)).toBe("demo");
     expect(hostingPlan({ ...maya, emailVerified: false }, true)).toBe("demo");
   });

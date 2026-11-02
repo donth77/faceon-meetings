@@ -1,7 +1,7 @@
 import type { ReactNode, Ref } from "react";
 
 /**
- * One section of /admin, as a card like Settings' sections. `headingRef` lets a section
+ * One section of Settings → Admin, as a card like Settings' sections. `headingRef` lets a section
  * move focus to its heading when the row someone acted on goes away.
  */
 export function AdminCard({
