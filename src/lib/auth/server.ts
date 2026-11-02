@@ -15,6 +15,7 @@ import {
 import { publicEnv } from "@/lib/env";
 import { siteUrl } from "@/lib/site";
 
+import { dropUnverifiedPassword } from "./linking";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
 /** Production origin. Preview deployments send OAuth through it (oAuthProxy). */
@@ -59,7 +60,13 @@ export const auth = betterAuth({
     },
   },
   account: {
-    accountLinking: { enabled: true, trustedProviders: ["google", "github"] },
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google", "github"],
+      // Google or GitHub may link to an account whose email was never verified; the
+      // hook below drops that account's password first.
+      requireLocalEmailVerified: false,
+    },
     encryptOAuthTokens: true,
   },
   emailAndPassword: {
@@ -100,6 +107,15 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
+    account: {
+      create: {
+        before: async (created) => {
+          if (created.providerId !== "credential") {
+            await dropUnverifiedPassword(created.userId);
+          }
+        },
+      },
+    },
     user: {
       create: {
         // Every new account gets a friendly default avatar (DiceBear "Dylan").
