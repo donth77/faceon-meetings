@@ -241,7 +241,7 @@ export function MeetingShell({
   const aloneCheck = useAloneCheck(alone, session.aloneTimeoutMinutes);
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
-  useMutedNudge(media.mic.speakingWhileMuted, toggleMic);
+  useMutedNudge(media, toggleMic);
   const pip = usePictureInPicture(title);
   useAutoPictureInPicture(pip, prefs.autoPictureInPicture);
   usePresenceSounds(media.participants);
@@ -320,13 +320,15 @@ export function MeetingShell({
           void moderate({ action: "setPolicy", policy })
         }
         autoNotes={
-          // The meeting's own setting: its host's to change.
-          selfRole === "host" && notes.canRunNotes && !session.demo
+          // The meeting's own setting: its host's to change, where their meetings offer AI
+          // notes (otherwise the room doesn't mention them).
+          selfRole === "host" &&
+          notes.canRunNotes &&
+          notes.notesAllowed &&
+          !session.demo
             ? {
                 on: notes.autoNotes,
-                allowed: notes.notesAllowed,
                 onChange: (on) => void notes.setAutoNotes(on),
-                onOpenSettings: () => setSettings("aiNotes"),
               }
             : undefined
         }
@@ -540,7 +542,7 @@ export function MeetingShell({
                 pip.supported ? () => void pip.open() : undefined
               }
               onOpenNotes={
-                notes.canRunNotes ? () => openPanel("notes") : undefined
+                notes.notesOffered ? () => openPanel("notes") : undefined
               }
               onOpenEffects={
                 canUseEffects ? () => openPanel("effects") : undefined

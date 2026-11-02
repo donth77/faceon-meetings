@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Settings } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import {
@@ -52,12 +52,10 @@ function SettingSwitch({
 }
 
 /** "Start AI notes automatically", which the meeting's host can change from the room. */
+/** "Start AI notes automatically": for the meeting's host, where their meetings offer AI notes. */
 export type AutoNotesSetting = {
   on: boolean;
-  /** The host allows AI notes (Settings → AI notes); otherwise there's a way there. */
-  allowed: boolean;
   onChange: (on: boolean) => void;
-  onOpenSettings: () => void;
 };
 
 /**
@@ -160,7 +158,7 @@ export function MeetingSettingsMenu({
                   </Radio>
                 </RadioGroup>
               </div>
-              {autoNotes?.allowed ? (
+              {autoNotes ? (
                 <SettingSwitch
                   label={t("autoNotes")}
                   help={t("autoNotesHelp")}
@@ -168,27 +166,6 @@ export function MeetingSettingsMenu({
                   isDisabled={false}
                   onChange={autoNotes.onChange}
                 />
-              ) : autoNotes ? (
-                <div className="flex flex-col items-start gap-2 px-3 py-2.5">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[15px] font-semibold">
-                      {t("autoNotes")}
-                    </span>
-                    <span className="text-muted-foreground text-[13px]">
-                      {t("autoNotesOff")}
-                    </span>
-                  </div>
-                  <Button
-                    onPress={() => {
-                      close();
-                      autoNotes.onOpenSettings();
-                    }}
-                    className="focus-visible:focus-ring flex h-8 items-center gap-1.5 rounded-lg bg-white/10 px-3 text-[13px] font-semibold outline-hidden hover:bg-white/15"
-                  >
-                    <Settings className="size-4" aria-hidden="true" />
-                    {t("autoNotesSettings")}
-                  </Button>
-                </div>
               ) : null}
               {isOwner ? (
                 <Button

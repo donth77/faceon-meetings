@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { aiNotesEnabled } from "@/lib/env";
 import type { SelfInfo, SessionInfo } from "@/lib/meetings/api";
-import { notesOnJoin } from "@/lib/meetings/rules";
+import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
 import { canMakeNotes } from "@/lib/notes/engines";
 import { useNotesSettings } from "@/lib/notes/settings";
 
@@ -60,6 +60,14 @@ export function useMeetingNotes({
     onLine: transcript.addOwn,
   });
   const { setOptedOut, download } = transcription;
+  /** More → AI notes: only where this meeting has them, or there's something to come back to. */
+  const notesOffered = offersNotes({
+    runsNotes: canRunNotes,
+    allowed: notesAllowed,
+    demo: session.demo,
+    on: notes !== null,
+    transcribed: transcript.lines.length > 0,
+  });
 
   // The meeting's host can change "Start AI notes automatically" from the room.
   const [autoNotes, setAutoNotesState] = useState(initialAutoNotes);
@@ -178,6 +186,7 @@ export function useMeetingNotes({
     isNotetaker,
     canRunNotes,
     notesAllowed,
+    notesOffered,
     autoNotes,
     setAutoNotes,
     transcript,

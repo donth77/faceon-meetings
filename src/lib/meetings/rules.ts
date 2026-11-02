@@ -297,6 +297,27 @@ export function notesOnJoin(
   return input.canMake ? "start" : "cantMake";
 }
 
+/**
+ * Whether the meeting room offers you AI notes (More → AI notes): you run them, and this
+ * meeting has them (not a demo, and its host allows them), or there's something to come
+ * back to: notes that are on, or this tab's transcript still to become notes. Where AI
+ * notes are off, the room doesn't mention them.
+ */
+export function offersNotes(input: {
+  /** A host or co-host, where this copy offers AI notes. */
+  runsNotes: boolean;
+  /** The meeting's host allows AI notes in their meetings (Settings → AI notes). */
+  allowed: boolean;
+  demo: boolean;
+  /** AI notes are on. */
+  on: boolean;
+  /** This tab has a transcript that hasn't become notes yet. */
+  transcribed: boolean;
+}): boolean {
+  if (!input.runsNotes) return false;
+  return (input.allowed && !input.demo) || input.on || input.transcribed;
+}
+
 /** Saving AI notes to a session: hosts and co-hosts with an account. */
 export function canSaveNotes(member: {
   role: MeetingRole;

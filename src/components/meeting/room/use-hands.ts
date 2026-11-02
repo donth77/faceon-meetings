@@ -12,7 +12,8 @@ const NO_HANDS: Record<string, string> = {};
 
 /**
  * Raised hands: who has one up (from the session's shared state), raising and lowering
- * through our API, and a sound and a pop-up for hosts as each goes up.
+ * through our API, a sound and a pop-up for hosts as each goes up, and a note when a host
+ * lowers yours.
  */
 export function useHands({
   media,
@@ -34,19 +35,29 @@ export function useHands({
   onView: () => void;
 }) {
   const t = useTranslations("Meeting");
-  const hands = media.sessionState?.hands ?? NO_HANDS;
+  // Null until the session's state arrives (and while it's reloaded).
+  const known = media.sessionState?.hands ?? null;
+  const hands = known ?? NO_HANDS;
+  /** You're lowering your own hand: its going down isn't news. */
+  const loweringOwn = useRef(false);
 
   async function changeHand(
     request: Parameters<typeof meetingApi.hand>[1],
   ): Promise<void> {
+    const own =
+      selfId in hands &&
+      ("lowerAll" in request ||
+        (!request.raised && (request.target ?? selfId) === selfId));
+    if (own) loweringOwn.current = true;
     try {
       await meetingApi.hand(code, request);
     } catch {
+      if (own) loweringOwn.current = false;
       toast.error(t("hand.failed"));
     }
   }
 
-  // Hosts hear about each hand that goes up.
+  // Hosts hear about each hand that goes up; you hear when a host lowers yours.
   const previous = useRef(hands);
   const announce = useEffectEvent((userId: string) => {
     if (!isHost || userId === selfId) return;
@@ -56,13 +67,19 @@ export function useHands({
       action: { label: t("hand.view"), onClick: onView },
     });
   });
+  const lowered = useEffectEvent(() => {
+    if (loweringOwn.current) loweringOwn.current = false;
+    else toast(t("hostActions.loweredHand"));
+  });
   useEffect(() => {
+    if (!known) return;
     const before = previous.current;
-    previous.current = hands;
-    for (const userId of Object.keys(hands)) {
+    previous.current = known;
+    for (const userId of Object.keys(known)) {
       if (!(userId in before)) announce(userId);
     }
-  }, [hands]);
+    if (selfId in before && !(selfId in known)) lowered();
+  }, [known, selfId]);
 
   return { hands, changeHand };
 }

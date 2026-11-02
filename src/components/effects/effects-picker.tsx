@@ -90,16 +90,32 @@ function Thumb({ src, lazy = false }: { src: string; lazy?: boolean }) {
   );
 }
 
-function Group({ label, children }: { label: string; children: ReactNode }) {
+function Group({
+  label,
+  hideLabel = false,
+  children,
+}: {
+  label: string;
+  /** Named for screen readers only, as the first row (no effect and the blurs) is. */
+  hideLabel?: boolean;
+  children: ReactNode;
+}) {
   const id = useId();
   return (
-    <div role="group" aria-labelledby={id} className="flex flex-col gap-2">
-      <span
-        id={id}
-        className="text-muted-foreground text-xs font-bold tracking-[0.06em] uppercase"
-      >
-        {label}
-      </span>
+    <div
+      role="group"
+      aria-labelledby={hideLabel ? undefined : id}
+      aria-label={hideLabel ? label : undefined}
+      className="flex flex-col gap-2"
+    >
+      {hideLabel ? null : (
+        <span
+          id={id}
+          className="text-muted-foreground text-xs font-bold tracking-[0.06em] uppercase"
+        >
+          {label}
+        </span>
+      )}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2 @lg:grid-cols-[repeat(auto-fill,minmax(96px,1fr))]">
         {children}
       </div>
@@ -187,7 +203,7 @@ export function EffectsPicker({
       onChange={(key) => onChange(effectFromKey(key))}
       className="flex flex-col gap-4"
     >
-      <Group label={t("groups.effects")}>
+      <Group label={t("groups.effects")} hideLabel>
         <Tile value="none" label={t("none")}>
           <BlurArt level={null} />
         </Tile>

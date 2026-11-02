@@ -562,6 +562,7 @@
       "nowCohost": "You’re now a co-host",
       "noLongerCohost": "You’re no longer a co-host",
       "spotlightedYou": "The host spotlighted you for everyone",
+      "loweredHand": "The host lowered your hand",
       "unmuteRequestTitle": "Unmute?",
       "unmuteRequestBody": "The host is asking you to turn on your microphone.",
       "stayMuted": "Stay muted",
@@ -622,8 +623,6 @@
       "shareHosts": "Hosts only",
       "autoNotes": "Start AI notes automatically",
       "autoNotesHelp": "In this meeting, whenever you or a co-host joins",
-      "autoNotesOff": "Your meetings don't offer AI notes.",
-      "autoNotesSettings": "Turn on in Settings",
       "endForAll": "End meeting for all"
     },
     "reactionsSummary": "{count, plural, one {# reaction} other {# reactions}}",
@@ -1497,8 +1496,7 @@
     "audioNeverStored": "Audio is never stored.",
     "auto": {
       "label": "Start AI notes automatically",
-      "help": "When you or a co-host joins. Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
-      "off": "Turn on AI notes in <settings>Settings</settings> first."
+      "help": "When you or a co-host joins. Everyone sees that AI notes are on, and anyone can choose not to be transcribed."
     }
   },
   "SavedNotes": {
@@ -1528,7 +1526,7 @@
     "backgroundOn": "Background on",
     "mirrored": "Mirrored for you",
     "groups": {
-      "effects": "Blur",
+      "effects": "No effect and blur",
       "art": "Art",
       "places": "Places",
       "abstract": "Abstract",

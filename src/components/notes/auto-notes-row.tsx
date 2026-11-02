@@ -1,15 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 
 import { SwitchRow } from "@/components/ui/form-fields";
 import { aiNotesEnabled } from "@/lib/env";
 
 /**
  * "Start AI notes automatically", for a meeting you host: on the schedule form, the
- * meeting's page and the personal room's. Where your account doesn't allow AI notes yet
- * (Settings → AI notes), it's unavailable and says where to turn them on.
+ * meeting's page and the personal room's. Only where your meetings offer AI notes
+ * (Settings → AI notes); otherwise nothing mentions them.
  */
 export function AutoNotesRow({
   allowed,
@@ -22,26 +21,12 @@ export function AutoNotesRow({
   onChange: (on: boolean) => void;
 }) {
   const t = useTranslations("Notes.auto");
-  if (!aiNotesEnabled) return null;
+  if (!aiNotesEnabled || !allowed) return null;
   return (
     <SwitchRow
       label={t("label")}
-      help={
-        allowed
-          ? t("help")
-          : t.rich("off", {
-              settings: (chunks) => (
-                <Link
-                  href="/settings/ai-notes"
-                  className="text-primary focus-visible:focus-ring rounded font-semibold underline-offset-4 outline-hidden hover:underline"
-                >
-                  {chunks}
-                </Link>
-              ),
-            })
-      }
-      isSelected={allowed && isSelected}
-      isDisabled={!allowed}
+      help={t("help")}
+      isSelected={isSelected}
       onChange={onChange}
     />
   );

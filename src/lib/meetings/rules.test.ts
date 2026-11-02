@@ -13,6 +13,7 @@ import {
   isSessionStale,
   notesOnJoin,
   notesStartAutomatically,
+  offersNotes,
   passcodeMatches,
   providerParticipantCap,
   resolveRole,
@@ -589,5 +590,35 @@ describe("providerParticipantCap", () => {
   it("leaves the provider room for the host and a second device", () => {
     expect(providerParticipantCap(4)).toBe(6);
     expect(providerParticipantCap(20)).toBe(22);
+  });
+});
+
+describe("offersNotes", () => {
+  const offered = {
+    runsNotes: true,
+    allowed: true,
+    demo: false,
+    on: false,
+    transcribed: false,
+  };
+
+  it("offers AI notes to hosts and co-hosts where the meeting has them", () => {
+    expect(offersNotes(offered)).toBe(true);
+    expect(offersNotes({ ...offered, runsNotes: false })).toBe(false);
+  });
+
+  it("leaves them out where the host turned them off, and in demo meetings", () => {
+    expect(offersNotes({ ...offered, allowed: false })).toBe(false);
+    expect(offersNotes({ ...offered, demo: true })).toBe(false);
+  });
+
+  it("keeps notes that are on, or a transcript still to become notes, within reach", () => {
+    expect(offersNotes({ ...offered, allowed: false, on: true })).toBe(true);
+    expect(offersNotes({ ...offered, allowed: false, transcribed: true })).toBe(
+      true,
+    );
+    expect(
+      offersNotes({ ...offered, runsNotes: false, transcribed: true }),
+    ).toBe(false);
   });
 });
