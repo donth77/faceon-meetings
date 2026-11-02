@@ -8,13 +8,7 @@ import { toast } from "sonner";
 
 import { useInvitation } from "@/components/meeting/invitation";
 import { Button, LinkButton } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SwitchRow } from "@/components/ui/form-fields";
 import {
   regeneratePersonalRoom,
@@ -254,30 +248,17 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
         </section>
       </div>
 
-      <Dialog
+      <ConfirmDialog
         isOpen={confirming}
-        onOpenChange={setConfirming}
-        closeLabel={t("cancel")}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">
-            {t("regenerateTitle")}
-          </DialogTitle>
-          <DialogDescription>{t("regenerateBody")}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" slot="close">
-            {t("cancel")}
-          </Button>
-          <Button
-            variant="destructive"
-            isPending={regenerating}
-            onPress={() => void regenerate()}
-          >
-            {t("regenerateConfirm")}
-          </Button>
-        </DialogFooter>
-      </Dialog>
+        onClose={() => setConfirming(false)}
+        title={t("regenerateTitle")}
+        description={t("regenerateBody")}
+        confirmLabel={t("regenerateConfirm")}
+        cancelLabel={t("cancel")}
+        destructive
+        isPending={regenerating}
+        onConfirm={() => void regenerate()}
+      />
     </main>
   );
 }

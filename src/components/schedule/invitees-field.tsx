@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useId,
+  useRef,
   useState,
   type ClipboardEvent,
   type KeyboardEvent,
@@ -38,6 +39,7 @@ export function InviteesField({
 }) {
   const t = useTranslations("Schedule");
   const inputId = useId();
+  const input = useRef<HTMLInputElement>(null);
   const errorId = useId();
   const [draft, setDraft] = useState("");
   const [invalid, setInvalid] = useState<string | null>(null);
@@ -86,11 +88,11 @@ export function InviteesField({
         {label}
         <span className="text-muted-foreground font-normal"> {optional}</span>
       </label>
-      <div className="bg-background focus-within:ring-ring flex min-h-12 flex-wrap items-center gap-1.5 rounded-[10px] border border-[#c9cfd8] p-1.5 focus-within:ring-2 dark:border-white/15">
+      <div className="bg-background border-input focus-within:focus-ring flex min-h-12 flex-wrap items-center gap-1.5 rounded-[10px] border p-1.5">
         {value.map((email) => (
           <span
             key={email}
-            className="flex h-8 max-w-full items-center gap-1.5 rounded-full bg-[#eef1f5] pr-0.5 pl-1 text-sm dark:bg-white/10"
+            className="bg-muted flex h-8 max-w-full items-center gap-1.5 rounded-full pr-0.5 pl-1 text-sm"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -102,14 +104,18 @@ export function InviteesField({
             <button
               type="button"
               aria-label={t("removeInvitee", { email })}
-              onClick={() => onChange(value.filter((e) => e !== email))}
-              className="focus-visible:ring-ring flex size-7 shrink-0 items-center justify-center rounded-full outline-none hover:bg-black/5 focus-visible:ring-2 dark:hover:bg-white/10"
+              onClick={() => {
+                onChange(value.filter((e) => e !== email));
+                input.current?.focus();
+              }}
+              className="focus-visible:focus-ring flex size-7 shrink-0 items-center justify-center rounded-full outline-hidden hover:bg-black/5 dark:hover:bg-white/10"
             >
               <X className="size-3.5" aria-hidden="true" />
             </button>
           </span>
         ))}
         <input
+          ref={input}
           id={inputId}
           type="email"
           value={draft}

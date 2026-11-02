@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button, LinkButton } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -50,11 +51,13 @@ export type UpcomingRow = {
 
 const CHIP =
   "inline-flex h-6 items-center gap-1 rounded-xl px-2 text-xs font-bold whitespace-nowrap";
-const ROLE_CHIP = `${CHIP} bg-[#e8eeff] text-[#1f5eff] dark:bg-[#1f5eff]/20 dark:text-[#8fb0ff]`;
-const NEUTRAL_CHIP = `${CHIP} bg-[#eef1f5] text-[#4f5966] dark:bg-white/10 dark:text-white/70`;
+const ROLE_CHIP = `${CHIP} bg-chip text-chip-foreground`;
+const NEUTRAL_CHIP = `${CHIP} bg-muted text-muted-foreground`;
 
 function Row({ row }: { row: UpcomingRow }) {
   const t = useTranslations("Upcoming");
+  const td = useTranslations("MeetingDetails");
+  const ts = useTranslations("Schedule");
   const tr = useTranslations("Recurrence");
   const locale = useIntlLocale();
   const router = useRouter();
@@ -169,9 +172,7 @@ function Row({ row }: { row: UpcomingRow }) {
             {isHost ? (
               <DropdownMenuItem
                 variant="destructive"
-                onAction={() =>
-                  recurrence ? setDeleting(true) : void remove("all")
-                }
+                onAction={() => setDeleting(true)}
               >
                 {t("delete")}
               </DropdownMenuItem>
@@ -179,7 +180,7 @@ function Row({ row }: { row: UpcomingRow }) {
           </DropdownMenu>
         </DropdownMenuTrigger>
       </div>
-      {deleting ? (
+      {deleting && recurrence ? (
         <ScopeDialog
           title={t("deleteSeries")}
           confirm={t("delete")}
@@ -188,6 +189,16 @@ function Row({ row }: { row: UpcomingRow }) {
           onClose={() => setDeleting(false)}
         />
       ) : null}
+      <ConfirmDialog
+        isOpen={deleting && !recurrence}
+        onClose={() => setDeleting(false)}
+        title={td("deleteTitle")}
+        description={td("deleteBody")}
+        confirmLabel={t("delete")}
+        cancelLabel={ts("cancel")}
+        destructive
+        onConfirm={() => void remove("all")}
+      />
     </li>
   );
 }

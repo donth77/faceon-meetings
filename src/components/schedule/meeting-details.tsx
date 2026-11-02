@@ -21,13 +21,7 @@ import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button, LinkButton } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -457,33 +451,16 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
           onClose={() => setDeleting(false)}
         />
       ) : null}
-      <Dialog
+      <ConfirmDialog
         isOpen={deleting && !recurrence}
-        onOpenChange={(open) => {
-          if (!open) setDeleting(false);
-        }}
-        role="alertdialog"
-        showCloseButton={false}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            {t("deleteTitle")}
-          </DialogTitle>
-          <DialogDescription>{t("deleteBody")}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" onPress={() => setDeleting(false)}>
-            {ts("cancel")}
-          </Button>
-          <Button
-            variant="destructive"
-            onPress={() => void remove("all")}
-            autoFocus
-          >
-            {t("delete")}
-          </Button>
-        </DialogFooter>
-      </Dialog>
+        onClose={() => setDeleting(false)}
+        title={t("deleteTitle")}
+        description={t("deleteBody")}
+        confirmLabel={t("delete")}
+        cancelLabel={ts("cancel")}
+        destructive
+        onConfirm={() => void remove("all")}
+      />
     </div>
   );
 }

@@ -8,24 +8,19 @@ import {
   Search,
   Sparkles,
   Users,
-  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
-import { Button as AriaButton } from "react-aria-components";
+import { useId, useState } from "react";
 
 import { Button, LinkButton } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { Segment, Segments } from "@/components/ui/segments";
+import { Sheet, SheetTitle } from "@/components/ui/sheet";
 import type { Attendee, PastMeeting } from "@/lib/meetings/history";
 import { useIntlLocale } from "@/lib/preferences";
 import { formatDay } from "@/lib/time";
 
 const SHOW = ["all", "hosted"] as const;
-
-const NEUTRAL_CHIP =
-  "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eef1f5] px-2 text-xs font-bold whitespace-nowrap text-[#4f5966] dark:bg-white/10 dark:text-white/70";
-const NOTES_CHIP =
-  "inline-flex h-6 items-center gap-1 rounded-xl bg-[#eeebff] px-2 text-xs font-bold whitespace-nowrap text-[#5b4db3] dark:bg-[#5b4db3]/30 dark:text-[#cfc8ff]";
 
 /** Someone's avatar, or their initial when there's no picture (a guest before webhooks). */
 function PersonAvatar({
@@ -111,65 +106,40 @@ function useFormats() {
   };
 }
 
-/** The details panel: who came, when they joined and left, and Schedule again. */
-function Details({
-  meeting,
-  onClose,
-}: {
-  meeting: PastMeeting;
-  onClose: () => void;
-}) {
+/**
+ * The details panel: who came, when they joined and left, and Schedule again. It's a
+ * sheet, so focus moves into it, stays there and goes back when it closes.
+ */
+function Details({ meeting }: { meeting: PastMeeting }) {
   const t = useTranslations("Previous");
   const f = useFormats();
-  const headingId = useId();
+  const locale = useIntlLocale();
   const title = meeting.title ?? t("untitled", { name: meeting.hostName });
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const times = new Intl.ListFormat(locale, { style: "narrow", type: "unit" });
 
   return (
-    <aside
-      aria-labelledby={headingId}
-      className="bg-card fixed inset-y-0 right-0 z-40 flex w-full max-w-[520px] flex-col gap-4.5 overflow-y-auto border-l px-6.5 py-6 shadow-[-18px_0_40px_rgba(18,22,28,0.14)]"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 id={headingId} className="text-2xl font-bold">
-            {title}
-          </h2>
-          <span className="text-muted-foreground text-[15px]">
-            {f.shortDay(meeting.start)} · {f.range(meeting.start, meeting.end)}{" "}
-            · {t("hostedBy", { name: meeting.hostName })}
-          </span>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("closeDetails")}
-          onPress={onClose}
-        >
-          <X aria-hidden="true" />
-        </Button>
+    <>
+      <div className="flex min-w-0 flex-col gap-1.5 pr-10">
+        <SheetTitle className="text-2xl font-bold">{title}</SheetTitle>
+        <span className="text-muted-foreground text-[15px]">
+          {f.shortDay(meeting.start)} · {f.range(meeting.start, meeting.end)} ·{" "}
+          {t("hostedBy", { name: meeting.hostName })}
+        </span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <span className={NEUTRAL_CHIP}>
+        <Chip>
           <Clock3 className="size-3.5" aria-hidden="true" />
           {t("minutes", { count: meeting.minutes })}
-        </span>
-        <span className={NEUTRAL_CHIP}>
+        </Chip>
+        <Chip>
           <Users className="size-3.5" aria-hidden="true" />
           {t("people", { count: meeting.attendees.length })}
-        </span>
+        </Chip>
         {meeting.notes ? (
-          <span className={NOTES_CHIP}>
+          <Chip tone="ai">
             <Sparkles className="size-3.5" aria-hidden="true" />
             {meeting.notes.shared ? t("notesShared") : t("notesSaved")}
-          </span>
+          </Chip>
         ) : null}
       </div>
       <table className="w-full border-collapse">
@@ -215,10 +185,14 @@ function Details({
                 {person.visits.length > 1 ? (
                   // Joined and left more than once: the total time is what they were here.
                   <span className="text-muted-foreground mt-1 block pl-9 text-xs leading-normal">
-                    {t("visits", { count: person.visits.length })}:{" "}
-                    {person.visits
-                      .map((visit) => f.range(visit.joinedAt, visit.leftAt))
-                      .join(", ")}
+                    {t("visitTimes", {
+                      count: person.visits.length,
+                      times: times.format(
+                        person.visits.map((visit) =>
+                          f.range(visit.joinedAt, visit.leftAt),
+                        ),
+                      ),
+                    })}
                   </span>
                 ) : null}
               </th>
@@ -254,7 +228,7 @@ function Details({
           {t("scheduleAgain")}
         </LinkButton>
       </div>
-    </aside>
+    </>
   );
 }
 
@@ -269,6 +243,7 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
   const [query, setQuery] = useState("");
   const [show, setShow] = useState<(typeof SHOW)[number]>("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const q = query.trim().toLocaleLowerCase();
   const shown = meetings.filter(
@@ -309,7 +284,7 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t("searchPlaceholder")}
-                className="bg-card focus-visible:ring-ring h-10 w-60 rounded-[10px] border border-[#c9cfd8] pr-3 pl-9 text-sm outline-none focus-visible:ring-2 dark:border-white/15"
+                className="bg-card border-input focus-visible:focus-ring h-10 w-60 rounded-[10px] border pr-3 pl-9 text-sm outline-hidden"
               />
             </div>
           </div>
@@ -333,8 +308,12 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
         </div>
       </div>
 
+      {/* Mounted from the start, so a search that finds nothing is announced. */}
+      <p role="status" className="sr-only">
+        {q && days.size === 0 && meetings.length > 0 ? t("noMatch") : ""}
+      </p>
       {days.size === 0 ? (
-        <p className="bg-card text-muted-foreground rounded-2xl p-6 text-sm ring-1 ring-[#e2e5ea] dark:ring-white/10">
+        <p className="bg-card text-muted-foreground ring-border rounded-2xl p-6 text-sm ring-1">
           {meetings.length === 0 ? t("empty") : t("noMatch")}
         </p>
       ) : (
@@ -349,9 +328,10 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                   <li
                     key={meeting.sessionId}
                     className={cn(
-                      "bg-card flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] px-4 py-3.5 ring-1 ring-[#e2e5ea] dark:ring-white/10",
-                      selected === meeting.sessionId &&
-                        "bg-[#f3f6ff] ring-2 ring-[#1f5eff] dark:bg-[#1f5eff]/10",
+                      "bg-card ring-border flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] px-4 py-3.5 ring-1",
+                      detailsOpen &&
+                        selected === meeting.sessionId &&
+                        "bg-chip ring-primary ring-2",
                     )}
                   >
                     <span className="w-[150px] shrink-0 font-mono text-sm tabular-nums">
@@ -361,16 +341,16 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-base font-bold">{title}</span>
                         {meeting.recurring ? (
-                          <span className={NEUTRAL_CHIP}>
+                          <Chip>
                             <Repeat className="size-3.5" aria-hidden="true" />
                             {f.date(meeting.start)}
-                          </span>
+                          </Chip>
                         ) : null}
                         {meeting.notes ? (
-                          <span className={NOTES_CHIP}>
+                          <Chip tone="ai">
                             <Sparkles className="size-3.5" aria-hidden="true" />
                             {t("notes")}
-                          </span>
+                          </Chip>
                         ) : null}
                       </div>
                       <span className="text-muted-foreground flex items-center gap-3 text-[13px]">
@@ -384,12 +364,16 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <AriaButton
-                        onPress={() => setSelected(meeting.sessionId)}
-                        className="focus-visible:ring-ring h-[38px] rounded-[10px] border border-[#c9cfd8] bg-white px-3.5 text-sm font-semibold outline-none hover:bg-[#f5f6f8] focus-visible:ring-2 dark:border-white/15 dark:bg-transparent dark:hover:bg-white/5"
+                      <Button
+                        variant="outline"
+                        size="app"
+                        onPress={() => {
+                          setSelected(meeting.sessionId);
+                          setDetailsOpen(true);
+                        }}
                       >
                         {t("viewDetails")}
-                      </AriaButton>
+                      </Button>
                       <LinkButton
                         href={`/schedule?again=${meeting.code}`}
                         variant="outline"
@@ -406,9 +390,15 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
           </section>
         ))
       )}
-      {open ? (
-        <Details meeting={open} onClose={() => setSelected(null)} />
-      ) : null}
+      <Sheet
+        isOpen={detailsOpen && open !== null}
+        onOpenChange={setDetailsOpen}
+        side="right"
+        closeLabel={t("closeDetails")}
+        className="gap-4.5 overflow-y-auto px-6.5 py-6 data-[side=right]:w-full data-[side=right]:sm:max-w-[520px]"
+      >
+        {open ? <Details meeting={open} /> : null}
+      </Sheet>
     </div>
   );
 }

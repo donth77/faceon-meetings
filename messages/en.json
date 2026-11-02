@@ -907,7 +907,7 @@
     "untitled": "{name}’s meeting",
     "empty": "Meetings you host or join show up here afterwards.",
     "noMatch": "No meetings match that.",
-    "visits": "{count, plural, one {# visit} other {# visits}}",
+    "visitTimes": "{count, plural, one {# visit} other {# visits}}: {times}",
     "notes": "AI notes",
     "notesSaved": "AI notes saved",
     "notesShared": "AI notes shared",

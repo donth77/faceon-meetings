@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { meetingApi } from "@/components/meeting/api-client";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { SavedNotes } from "@/lib/meetings/saved-notes";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import { useIntlLocale } from "@/lib/preferences";
@@ -194,40 +195,25 @@ export function SavedNotesView({ notes }: { notes: SavedNotes }) {
       ) : null}
 
       {notes.canManage ? (
-        confirming ? (
-          <div
-            role="group"
-            aria-label={t("delete")}
-            className="flex flex-wrap items-center gap-2 text-sm"
-          >
-            <span>{t("deleteConfirm")}</span>
-            <Button
-              variant="destructive"
-              className={NOTES_ACTION}
-              isPending={busy}
-              onPress={() => void remove()}
-            >
-              {t("delete")}
-            </Button>
-            <Button
-              variant="ghost"
-              className={NOTES_ACTION}
-              onPress={() => setConfirming(false)}
-            >
-              {tn("cancel")}
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            className={`${NOTES_ACTION} text-muted-foreground self-start`}
-            onPress={() => setConfirming(true)}
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-            {t("delete")}
-          </Button>
-        )
+        <Button
+          variant="ghost"
+          className={`${NOTES_ACTION} text-muted-foreground self-start`}
+          onPress={() => setConfirming(true)}
+        >
+          <Trash2 className="size-4" aria-hidden="true" />
+          {t("delete")}
+        </Button>
       ) : null}
+      <ConfirmDialog
+        isOpen={confirming}
+        onClose={() => setConfirming(false)}
+        title={t("deleteConfirm")}
+        confirmLabel={t("delete")}
+        cancelLabel={tn("cancel")}
+        destructive
+        isPending={busy}
+        onConfirm={() => void remove()}
+      />
     </div>
   );
 }

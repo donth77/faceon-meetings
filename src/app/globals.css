@@ -39,6 +39,8 @@
   /* Tinted chips and badges: brand text on a soft brand fill (5.8:1). */
   --chip: #e8eeff;
   --chip-foreground: #1a4fd6;
+  /* AI notes' chips: --ai text on a soft violet. */
+  --ai-soft: #eeebff;
   /* A raised hand, as in Meet. */
   --hand: #f2b200;
   --hand-foreground: #1b1500;
@@ -81,6 +83,7 @@
   --ai: #d9d2ff;
   --chip: #1b2440;
   --chip-foreground: #7499ff;
+  --ai-soft: #2a2550;
   --hand: #f2b200;
   --hand-foreground: #1b1500;
   --sidebar: #12161c;
@@ -197,6 +200,7 @@
   --color-live-text: var(--live-text);
   --color-chip: var(--chip);
   --color-chip-foreground: var(--chip-foreground);
+  --color-ai-soft: var(--ai-soft);
   --color-hand: var(--hand);
   --color-hand-foreground: var(--hand-foreground);
   --color-accent: var(--accent);
