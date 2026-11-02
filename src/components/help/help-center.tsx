@@ -1,17 +1,17 @@
 "use client";
 
 import { cn } from "cn";
-import { ChevronRight, ExternalLink, Keyboard, Search } from "lucide-react";
+import { ChevronRight, ExternalLink, Keyboard } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId, useState } from "react";
 
 import { GitHubIcon } from "@/components/auth/provider-icons";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { publicEnv } from "@/lib/env";
+
+import { HelpHeader } from "./help-header";
 
 /** What the browser needs about an article: enough to list it and search it. */
 export type HelpEntry = {
@@ -24,11 +24,6 @@ export type HelpEntry = {
 };
 
 export type HelpSection = { id: string; name: string; entries: HelpEntry[] };
-
-const matches = (query: string, entry: HelpEntry) =>
-  [entry.title, entry.summary, entry.text].some((text) =>
-    text.toLocaleLowerCase().includes(query),
-  );
 
 function EntryLink({ entry }: { entry: HelpEntry }) {
   return (
@@ -65,14 +60,6 @@ export function HelpIndex({
 }) {
   const t = useTranslations("Help");
   const openShortcuts = useOpenShortcuts();
-  const searchId = useId();
-  const [query, setQuery] = useState("");
-  const q = query.trim().toLocaleLowerCase();
-  const results = q
-    ? sections
-        .flatMap((section) => section.entries)
-        .filter((e) => matches(q, e))
-    : [];
 
   return (
     <main className="flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
@@ -85,55 +72,24 @@ export function HelpIndex({
         </p>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={searchId} className="text-sm font-semibold">
-          {t("searchLabel")}
-        </label>
-        <div className="relative">
-          <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2"
-            aria-hidden="true"
-          />
-          <Input
-            id={searchId}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("searchPlaceholder")}
-            className="h-12 rounded-xl pl-11 text-base md:text-base"
-          />
-        </div>
-      </div>
+      <HelpHeader entries={sections.flatMap((section) => section.entries)} />
 
-      {q ? (
-        <section aria-live="polite" className="flex flex-col gap-1">
-          <h2 className="text-muted-foreground mb-1 text-sm font-semibold">
-            {results.length > 0
-              ? t("resultCount", { count: results.length })
-              : t("noResults", { query: query.trim() })}
-          </h2>
-          {results.map((entry) => (
-            <EntryLink key={entry.slug} entry={entry} />
-          ))}
-        </section>
-      ) : (
-        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
-          {sections.map((section) => (
-            <section
-              key={section.id}
-              aria-labelledby={`help-${section.id}`}
-              className="flex flex-col gap-1"
-            >
-              <h2 id={`help-${section.id}`} className="mb-1 text-lg font-bold">
-                {section.name}
-              </h2>
-              {section.entries.map((entry) => (
-                <EntryLink key={entry.slug} entry={entry} />
-              ))}
-            </section>
-          ))}
-        </div>
-      )}
+      <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+        {sections.map((section) => (
+          <section
+            key={section.id}
+            aria-labelledby={`help-${section.id}`}
+            className="flex flex-col gap-1"
+          >
+            <h2 id={`help-${section.id}`} className="mb-1 text-lg font-bold">
+              {section.name}
+            </h2>
+            {section.entries.map((entry) => (
+              <EntryLink key={entry.slug} entry={entry} />
+            ))}
+          </section>
+        ))}
+      </div>
 
       <section
         aria-labelledby="help-shortcuts"

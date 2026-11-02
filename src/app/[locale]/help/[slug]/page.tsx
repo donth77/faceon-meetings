@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { HelpNav } from "@/components/help/help-center";
+import { HelpHeader } from "@/components/help/help-header";
 import { HelpMarkdown } from "@/components/help/help-markdown";
 import { helpArticles } from "@/lib/help/articles";
 import { helpSections } from "@/lib/help/sections";
@@ -43,7 +44,7 @@ export default async function HelpArticlePage({
   const next = articles[index + 1];
   const [t, sections] = await Promise.all([
     getTranslations("Help"),
-    helpSections(locale, { withText: false }),
+    helpSections(locale, { withText: true }),
   ]);
 
   const step =
@@ -56,6 +57,11 @@ export default async function HelpArticlePage({
         </div>
       </aside>
       <main className="max-w-[720px] min-w-0 flex-1">
+        <div className="mb-8">
+          <HelpHeader
+            entries={sections.flatMap((section) => section.entries)}
+          />
+        </div>
         <nav
           aria-label={t("breadcrumb")}
           className="text-muted-foreground mb-4 flex flex-wrap items-center gap-1.5 text-sm"

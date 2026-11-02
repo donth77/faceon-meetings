@@ -577,7 +577,26 @@
     "showShortcuts": "Show shortcuts",
     "reportIssue": "Found an issue? Submit",
     "opensInNewTab": "(opens GitHub in a new tab)",
-    "viewSource": "View source on GitHub"
+    "viewSource": "View source on GitHub",
+    "assistant": {
+      "heading": "Ask a question",
+      "placeholder": "Ask how to do something in {appName}",
+      "label": "Your question",
+      "send": "Ask",
+      "thinking": "Thinking…",
+      "note": "Answered on your device by Gemini Nano, from this help. It can be wrong.",
+      "noMatch": "Help doesn’t say. Try the search above.",
+      "failed": "Gemini Nano couldn’t answer. Try again.",
+      "sources": "From:",
+      "installHeading": "Ask questions about {appName}",
+      "install": "Gemini Nano is a small AI model that runs inside Chrome, on your computer. Download it once and you can ask questions here. Nothing you type leaves your device.",
+      "download": "Download Gemini Nano",
+      "downloading": "Downloading… {percent}%",
+      "update": "Chrome has a small AI model built in, Gemini Nano, that can answer questions here. Update Chrome to use it.",
+      "unavailable": "Chrome has a small AI model, Gemini Nano, that can answer questions here, but it isn’t ready on this computer. It needs free disk space and may need turning on at chrome://flags.",
+      "learnMore": "About Gemini Nano",
+      "dismiss": "Dismiss"
+    }
   },
   "Shortcuts": {
     "title": "Keyboard shortcuts",
