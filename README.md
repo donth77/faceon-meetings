@@ -53,4 +53,4 @@ Useful scripts:
 
 FaceOn runs on free plans: [Vercel](https://vercel.com) for hosting, [Neon](https://neon.com) for the database and [Stream](https://getstream.io) for audio and video, with Google and GitHub for sign-in and [Resend](https://resend.com) if you want email-and-password accounts. [DEPLOY.md](DEPLOY.md) walks through it step by step: the accounts, every environment variable, the database and Stream setup, Google Calendar, your own domain, updating your copy and troubleshooting.
 
-To give your copy its own name, logo and colors, see [Make it yours](DEPLOY.md#make-it-yours) and [BRAND.md](BRAND.md).
+Bot checks (Cloudflare Turnstile), error reports (Sentry), uptime checks and weekly encrypted backups are optional and free; [Protect and watch your copy](DEPLOY.md#protect-and-watch-your-copy-optional) sets them up. To give your copy its own name, logo and colors, see [Make it yours](DEPLOY.md#make-it-yours) and [BRAND.md](BRAND.md).

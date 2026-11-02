@@ -23,7 +23,7 @@ The examples use `https://faceon.example.com` as the address. Use your own. [`.e
 | [Google Cloud](https://console.cloud.google.com) | Sign in with Google, and Google Calendar sync  | Free                                                                                                                                                                                                                       |
 | [Resend](https://resend.com/pricing), optional   | Emails for email-and-password accounts         | 3,000 emails a month, 100 a day. Needs a domain you own                                                                                                                                                                    |
 
-Settings in `.env.example` for Turnstile, Sentry and LiveKit aren't read yet, so you can leave them empty.
+LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Turnstile), error reports (Sentry), uptime checks and backups are optional and free: [Protect and watch your copy](#protect-and-watch-your-copy-optional) sets them up.
 
 ### How much the free plans cover
 
@@ -217,6 +217,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 **The daily cleanup:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)).
 
+**Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
+
 **AI notes:** `NEXT_PUBLIC_AI_NOTES` is optional; `off` removes AI notes from your copy. When it's on, each host still decides in Settings → AI notes whether their meetings offer them, and they're off until a host turns them on.
 
 Then add the variables from [step 9](#9-decide-who-hosts-and-set-limits) and [step 10](#10-make-the-legal-pages-yours), and open **Deployments** and redeploy. Vercel applies changed variables to new deployments only, and `NEXT_PUBLIC_*` values are built into the pages, so redeploy after every change.
@@ -288,6 +290,63 @@ In Vercel, open **Settings → Domains**, add your domain and follow the DNS ins
 5. If you set up Google Calendar, connect it in **Settings → Calendar**, schedule a meeting, and look for it in your calendar.
 6. Run the cleanup once ([step 11](#11-check-the-daily-cleanup)) and `pnpm stream:check`.
 
+## Protect and watch your copy (optional)
+
+None of these needs an account to start with, and each stays off until you set it up.
+
+### Security headers and the Content Security Policy
+
+Every page is sent with headers that keep other sites from framing FaceOn, keep the camera, microphone, screen capture and full screen to FaceOn's own pages, give other sites only your address's origin as the referrer (never a page's address), and stop browsers guessing file types. Vercel adds HTTPS-only (HSTS) itself.
+
+A Content Security Policy lists where pages may load code and media from and connect to: your site, Stream, the AI providers a host's own key can call, Google and GitHub profile photos, and Turnstile and your error reports when they're on. It starts **report-only**: browsers report anything outside it to `/api/csp-report`, which writes one line per report to the server log, such as `csp report: connect-src blocked https://example.com on /j/:code`, and nothing is blocked. In Vercel, open **Logs** and search for `csp`.
+
+Once a week of ordinary use has passed with no reports you can't explain, set `CONTENT_SECURITY_POLICY=enforce` and redeploy, so browsers block those too. `off` leaves the policy out. If you change your copy to call another service from the browser, add its address in `src/lib/security/csp.ts`.
+
+### Bot checks (Cloudflare Turnstile)
+
+Turnstile checks there's a person behind the requests that send email (signing up, asking for a password reset, and asking for the verification email again), and behind a guest's first join from a browser, since guests take seats and Stream minutes. Most people never see it: Cloudflare asks for a click only when it isn't sure. Signing in, and signing in with Google or GitHub, aren't checked; failed sign-ins are already limited, and Google and GitHub screen for bots themselves.
+
+1. Make a free [Cloudflare](https://dash.cloudflare.com/sign-up) account and open **Turnstile → Add widget**.
+2. Name it, add your domain (and `localhost` if you want the check in development), and choose **Managed**.
+3. Copy the **site key** into `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the **secret key** into `TURNSTILE_SECRET_KEY` in Vercel, and redeploy.
+
+Without both keys there's no check.
+
+### Error reports (Sentry or GlitchTip)
+
+When something breaks, a report goes to [Sentry](https://sentry.io) so you can fix it. A report holds the error, where in the code it happened, the browser and operating system, and the page's address with meeting IDs and passcodes taken out. It never holds names, email addresses, IP addresses, chat, notes, transcripts or AI keys (`src/lib/monitoring/scrub.ts` removes them first), and there's no performance tracing or session replay. In the browser, Sentry's code loads only once a page is idle.
+
+1. Make a Sentry account (the free Developer plan is enough) and an organization. Choose where its data is stored, in the US or the EU.
+2. Create a project for **Next.js** and copy its DSN into `NEXT_PUBLIC_SENTRY_DSN` in Vercel.
+3. In the project's **Settings → Security & Privacy**, turn on **Prevent Storing of IP Addresses**. FaceOn doesn't send them; this makes sure.
+4. For readable stack traces, create an auth token under **Settings → Auth Tokens** and set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` (the organization's slug) and `SENTRY_PROJECT` (the project's) in Vercel. Each build then uploads its source maps to Sentry and deletes them, so they're never served.
+5. Redeploy.
+
+[GlitchTip](https://glitchtip.com), an open-source service compatible with Sentry that you can host yourself, works the same way: use its DSN, and for source maps also set `SENTRY_URL` to its address.
+
+### Uptime checks
+
+`/api/health` answers `{"ok":true}` while your copy is up. It doesn't touch the database, so checking it every few minutes never keeps Neon awake. With [UptimeRobot](https://uptimerobot.com)'s free plan, add a monitor: **HTTP(s)**, `https://faceon.example.com/api/health`, every 5 minutes, alerting you by email.
+
+`/api/health?db=1` also checks the database, and answers 503 when it can't reach it. Each check wakes a sleeping database for 5 minutes of Neon's monthly compute, so give it a slow monitor of its own, every 12 hours say.
+
+### Backups
+
+`.github/workflows/backup.yml` makes a copy of the database every Monday: it dumps it, restores the dump into a throwaway Postgres to prove it works (the run's summary lists each table's rows), encrypts it for a key only you hold, and keeps it as an artifact of the run for 90 days.
+
+1. Install [age](https://age-encryption.org) and make a key: `age-keygen -o faceon-backup-key.txt`. It prints the public key, `age1…`. Keep the file somewhere safe outside the repository, such as a password manager: without it, the backups can't be opened.
+2. In GitHub, under **Settings → Secrets and variables → Actions**, add `BACKUP_DATABASE_URL` (the direct connection string, your `DATABASE_URL_UNPOOLED`) and `BACKUP_AGE_RECIPIENT` (the public key).
+3. To try it all on a throwaway database first, open **Actions → Backup → Run workflow** and tick **selftest**: no secrets needed, and nothing is kept.
+
+To restore one, download it from the run (**Actions → Backup →** the run **→ Artifacts**; the zip holds `faceon-<date>.dump.age`), then:
+
+```bash
+age --decrypt --identity faceon-backup-key.txt --output faceon.dump faceon-<date>.dump.age
+pg_restore --no-owner --no-privileges --dbname "postgresql://…" faceon.dump
+```
+
+Restore into a new, empty database, such as a new Neon branch, rather than over the one in use. Check it, then point `DATABASE_URL` and `DATABASE_URL_UNPOOLED` at it and redeploy. `pg_restore` must be the same major version as your database or later (`select version()` shows it).
+
 ## Make it yours
 
 Your copy can have its own name, logo and colors, and a public one should: [BRAND.md](BRAND.md) says why.
@@ -351,7 +410,7 @@ GitHub Actions runs the browser tests on every push, against a database it throw
 | `STREAM_DEV_API_KEY`    | The API key of the Stream app you use for local development |
 | `STREAM_DEV_API_SECRET` | That app's secret                                           |
 
-Without them, those tests are skipped and every other test still runs; the job's summary says which. Nothing else is needed: each run makes its own throwaway secrets. While a repository is private, Actions minutes come from a monthly allowance, and the nightly workflow runs weekly to save them.
+Without them, those tests are skipped and every other test still runs; the job's summary says which. Backups take two more secrets of their own ([Backups](#backups)). Nothing else is needed: each run makes its own throwaway secrets. While a repository is private, Actions minutes come from a monthly allowance, and the nightly workflow runs weekly to save them.
 
 ## Updating your copy
 

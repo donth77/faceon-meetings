@@ -93,6 +93,8 @@ Your browser also keeps some things for {appName} that aren't sent to its server
 - **Resend** sends account emails, such as verifying your address or resetting your password.
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
 - **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations.
+- **Cloudflare Turnstile**, if {appName} turns it on, checks there's a person behind signing up, asking for a password reset or a new verification email, and joining as a guest for the first time. It sees your IP address and details of your browser and device while it checks.
+- **Sentry**, if {appName} turns error reports on, receives a report when something breaks: the error, where in the code it happened, your browser and operating system, and the page's address with meeting IDs and passcodes taken out. Reports never include your name, email address, IP address, chat, notes or keys.
 - **A host's AI provider** (OpenAI, Anthropic, Google, DeepSeek or OpenRouter), only when a host makes AI notes with their own key. The transcript goes from the host's browser straight to that provider, under the host's own account and the provider's terms.
 
 {appName} doesn't sell your information or share it for advertising. Otherwise it's disclosed only when the law requires it, or when that's needed to protect someone's safety.

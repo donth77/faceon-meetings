@@ -1,0 +1,157 @@
+name: Backup
+
+# Every Monday: the database is dumped, restored into a throwaway Postgres to prove the
+# backup works, encrypted for the age key in BACKUP_AGE_RECIPIENT, and kept as an artifact
+# for 90 days. Nothing happens until the repository secrets BACKUP_DATABASE_URL and
+# BACKUP_AGE_RECIPIENT are set (DEPLOY.md, "Backups"). Run it by hand with "selftest" to
+# try the whole path on a throwaway database with FaceOn's tables instead: no secrets,
+# nothing kept.
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      selftest:
+        description: Back up a throwaway database instead of yours (no secrets needed, nothing kept)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      # Every backup is restored into this, which goes when the job ends.
+      restore:
+        image: postgres:18
+        env:
+          POSTGRES_USER: restore
+          POSTGRES_PASSWORD: restore
+          POSTGRES_DB: restore
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U restore"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      # Only used by a selftest: stands in for your database.
+      source:
+        image: postgres:18
+        env:
+          POSTGRES_USER: source
+          POSTGRES_PASSWORD: source
+          POSTGRES_DB: source
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U source"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SELFTEST: ${{ inputs.selftest == true }}
+      SOURCE_URL: ${{ inputs.selftest == true && 'postgresql://source:source@localhost:5434/source' || secrets.BACKUP_DATABASE_URL }}
+      AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+      RESTORE_URL: postgresql://restore:restore@localhost:5433/restore
+    steps:
+      - name: Check it's set up
+        id: ready
+        run: |
+          if [ "$SELFTEST" != "true" ] && { [ -z "$SOURCE_URL" ] || [ -z "$AGE_RECIPIENT" ]; }; then
+            echo "::notice title=Backup::Backups are off. Set the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT repository secrets to turn them on (DEPLOY.md, \"Backups\")."
+            echo "Backups are off: the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT repository secrets aren't set (DEPLOY.md, \"Backups\")." >> "$GITHUB_STEP_SUMMARY"
+            echo "on=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=true" >> "$GITHUB_OUTPUT"
+            echo "STAMP=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install the Postgres 18 client and age
+        if: steps.ready.outputs.on == 'true'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -q postgresql-client-18 age
+
+      # A selftest stands in for your database with FaceOn's tables (the repository's
+      # migrations) and a row, and makes its own key.
+      - if: steps.ready.outputs.on == 'true' && env.SELFTEST == 'true'
+        uses: actions/checkout@v5
+      - if: steps.ready.outputs.on == 'true' && env.SELFTEST == 'true'
+        uses: pnpm/action-setup@v6
+      - if: steps.ready.outputs.on == 'true' && env.SELFTEST == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Make a throwaway database to back up
+        if: steps.ready.outputs.on == 'true' && env.SELFTEST == 'true'
+        env:
+          DATABASE_URL: ${{ env.SOURCE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ env.SOURCE_URL }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm db:migrate
+          psql "$SOURCE_URL" -v ON_ERROR_STOP=1 -c "insert into \"user\" (id, name, email, email_verified, created_at, updated_at) values ('backup_selftest', 'Backup Selftest', 'selftest@example.invalid', true, now(), now())"
+          age-keygen -o selftest-key.txt 2> /dev/null
+          echo "AGE_RECIPIENT=$(age-keygen -y selftest-key.txt)" >> "$GITHUB_ENV"
+
+      - name: Dump the database
+        if: steps.ready.outputs.on == 'true'
+        run: |
+          umask 077
+          pg_dump --format=custom --no-owner --no-privileges --file=backup.dump "$SOURCE_URL"
+          echo "Dumped $(du -h backup.dump | cut -f1)."
+
+      - name: Prove it restores
+        if: steps.ready.outputs.on == 'true'
+        run: |
+          pg_restore --no-owner --no-privileges --exit-on-error --dbname="$RESTORE_URL" backup.dump
+          tables="select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' order by 1"
+          psql "$SOURCE_URL" -At -c "$tables" > source-tables.txt
+          psql "$RESTORE_URL" -At -c "$tables" > restored-tables.txt
+          if ! diff source-tables.txt restored-tables.txt; then
+            echo "::error title=Backup::The restored database is missing tables."
+            exit 1
+          fi
+          {
+            echo "### Restored"
+            echo ""
+            echo "| Table | Rows |"
+            echo "| --- | ---: |"
+            while read -r table; do
+              echo "| $table | $(psql "$RESTORE_URL" -At -c "select count(*) from \"$table\"") |"
+            done < restored-tables.txt
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$SELFTEST" = "true" ]; then
+            test "$(psql "$RESTORE_URL" -At -c "select count(*) from \"user\" where id = 'backup_selftest'")" = 1
+          fi
+
+      - name: Encrypt it
+        if: steps.ready.outputs.on == 'true'
+        run: |
+          age --encrypt --recipient "$AGE_RECIPIENT" --output "faceon-$STAMP.dump.age" backup.dump
+          if [ "$SELFTEST" = "true" ]; then
+            age --decrypt --identity selftest-key.txt --output roundtrip.dump "faceon-$STAMP.dump.age"
+            cmp backup.dump roundtrip.dump
+            echo "Selftest: dumped, restored, encrypted and decrypted back to the same file." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          shred -u backup.dump roundtrip.dump 2> /dev/null || rm -f backup.dump roundtrip.dump
+
+      - name: Keep it for 90 days
+        if: steps.ready.outputs.on == 'true' && env.SELFTEST != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: database-${{ env.STAMP }}
+          path: faceon-${{ env.STAMP }}.dump.age
+          retention-days: 90
+          if-no-files-found: error
