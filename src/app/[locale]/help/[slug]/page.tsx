@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { HelpNav, RepoLinks } from "@/components/help/help-center";
 import { HelpHeader } from "@/components/help/help-header";
+import { HelpHighlights } from "@/components/help/help-highlights";
 import { HelpMarkdown } from "@/components/help/help-markdown";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
@@ -14,6 +16,10 @@ import { helpSections } from "@/lib/help/sections";
 
 // Rendered whole before sending, so an address that isn't an article is a real 404.
 export const instant = false;
+
+/** The article's heading and text, for the search highlights. */
+const TITLE_ID = "help-article-title";
+const ARTICLE_ID = "help-article-body";
 
 export async function generateStaticParams({
   params,
@@ -79,14 +85,22 @@ export default async function HelpArticlePage({
             <RepoLinks repoUrl={publicEnv.NEXT_PUBLIC_REPO_URL} />
           ) : null}
         </div>
+        {/* Opened from a search: the search highlighted, read in the browser. */}
+        <Suspense fallback={null}>
+          <HelpHighlights articleId={ARTICLE_ID} titleId={TITLE_ID} />
+        </Suspense>
         <article>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
+          <h1
+            id={TITLE_ID}
+            tabIndex={-1}
+            className="font-display focus-visible:focus-ring rounded-md text-3xl font-bold tracking-tight text-balance outline-hidden sm:text-[34px]"
+          >
             {article.title}
           </h1>
           <p className="text-muted-foreground mt-3 text-lg leading-normal">
             {article.summary}
           </p>
-          <div className="mt-8">
+          <div id={ARTICLE_ID} className="mt-8">
             <HelpMarkdown markdown={article.body} />
           </div>
         </article>

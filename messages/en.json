@@ -816,6 +816,18 @@
     "showShortcuts": "Show shortcuts",
     "opensInNewTab": "(opens GitHub in a new tab)",
     "viewSource": "View source on GitHub",
+    "matches": {
+      "label": "Your search in this article",
+      "looking": "Looking for “{query}”…",
+      "found": "{count, plural, one {# match} other {# matches}} for “{query}”",
+      "foundWords": "{count, plural, one {# match} other {# matches}} for the words in “{query}”",
+      "none": "No exact matches for “{query}” in this article",
+      "position": "{current} of {count}",
+      "positionSaid": "Match {current} of {count}",
+      "previous": "Previous match",
+      "next": "Next match",
+      "clear": "Clear"
+    },
     "assistant": {
       "heading": "Ask a question",
       "placeholder": "Ask how to do something in {appName}",

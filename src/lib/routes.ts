@@ -81,6 +81,12 @@ export const meetingPath = (code: string, passcode?: string | null) =>
 export const editMeetingPath = (code: string, occurrence?: string | null) =>
   `/meetings/${code}/edit${occurrence ? `?occurrence=${encodeURIComponent(occurrence)}` : ""}`;
 
+/** A Help article; with the search that found it, which the article highlights (?q=). */
+export const helpArticlePath = (slug: string, query?: string | null) => {
+  const searched = query?.trim();
+  return `/help/${slug}${searched ? `?q=${encodeURIComponent(searched)}` : ""}`;
+};
+
 /** Sign in, then come back to `next`. */
 export const signInPath = (next: string) =>
   `${SIGN_IN_ROUTE}?next=${encodeURIComponent(next)}`;

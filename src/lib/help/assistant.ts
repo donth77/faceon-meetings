@@ -12,6 +12,8 @@
  */
 import { optionsFor, type ModelApi } from "@/lib/ai/built-in";
 
+import { fold, QUESTION_WORDS } from "./text";
+
 /** One thing the model may answer from: a help article. */
 export interface Doc {
   slug: string;
@@ -21,40 +23,6 @@ export interface Doc {
   text: string;
 }
 
-const fold = (s: string): string =>
-  s.normalize("NFKD").replace(/[̀-ͯ]/g, "").normalize("NFKC").toLowerCase();
-
-/** Words in every question, which say nothing about what it's about. */
-const COMMON = new Set([
-  "the",
-  "and",
-  "for",
-  "how",
-  "can",
-  "does",
-  "what",
-  "where",
-  "why",
-  "when",
-  "which",
-  "who",
-  "you",
-  "your",
-  "with",
-  "this",
-  "that",
-  "there",
-  "are",
-  "was",
-  "not",
-  "but",
-  "get",
-  "make",
-  "use",
-  "want",
-  "need",
-  "about",
-]);
 /** Scripts written without spaces between words, searched by pairs of characters. */
 const UNSPACED = /[฀-๿぀-ヿ㐀-鿿가-힯]+/gu;
 
@@ -67,7 +35,7 @@ export function wordsOf(question: string): string[] {
     for (let i = 0; i + 1 < run.length; i++) out.add(run.slice(i, i + 2));
   }
   for (const word of text.replace(UNSPACED, " ").split(/[^\p{L}\p{N}]+/u)) {
-    if (word.length < 3 || COMMON.has(word)) continue;
+    if (word.length < 3 || QUESTION_WORDS.has(word)) continue;
     out.add(word);
     const stem = word.replace(/(ing|ed|es|s)$/, "");
     if (stem.length >= 4) out.add(stem);

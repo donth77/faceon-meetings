@@ -44,6 +44,11 @@
   /* A raised hand, as in Meet. */
   --hand: #f2b200;
   --hand-foreground: #1b1500;
+  /* A Help search highlighted in its article: text 14.3:1, the current match 10.6:1,
+     and its ring 4.6:1 against the page. */
+  --highlight: #ffe28a;
+  --highlight-current: #ffb938;
+  --highlight-ring: #b45309;
   --sidebar: #ffffff;
   --sidebar-foreground: #12161c;
   --sidebar-primary: #1f5eff;
@@ -86,6 +91,10 @@
   --ai-soft: #2a2550;
   --hand: #f2b200;
   --hand-foreground: #1b1500;
+  /* Text 7.9:1 on a match and 4.9:1 on the current one; its ring 12.4:1. */
+  --highlight: #5c4700;
+  --highlight-current: #8a6100;
+  --highlight-ring: #ffc94d;
   --sidebar: #12161c;
   --sidebar-foreground: #eef1f5;
   --sidebar-primary: #4d7eff;
@@ -265,6 +274,32 @@
     [role="tab"]
   ):not(:disabled, [aria-disabled="true"], [data-disabled]) {
     cursor: pointer;
+  }
+  /* A Help search, highlighted in the article it opened. The text keeps the page's own
+     colour for contrast (a link in a match is underlined instead), and the current match
+     has a ring, which takes no room, so nothing moves. */
+  mark[data-help-match] {
+    background: var(--highlight);
+    color: var(--foreground);
+    border-radius: 2px;
+  }
+  mark[data-help-match][data-current] {
+    background: var(--highlight-current);
+    outline: 2px solid var(--highlight-ring);
+    outline-offset: 1px;
+  }
+  a mark[data-help-match] {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  @media (forced-colors: active) {
+    mark[data-help-match] {
+      background: Mark;
+      color: MarkText;
+    }
+    mark[data-help-match][data-current] {
+      outline-color: Highlight;
+    }
   }
   /* Phones: keep what Tab reaches clear of the bottom tab bar (2.4.11). */
   @media (width < 48rem) {

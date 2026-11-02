@@ -42,22 +42,38 @@ import {
   type Doc,
 } from "@/lib/help/assistant";
 import type { HelpEntry } from "@/lib/help/sections";
+import { fold } from "@/lib/help/text";
+import { helpArticlePath } from "@/lib/routes";
+
+type Searchable = { title: string; summary: string; text: string };
 
 /** How well an article matches: in its title first, then its summary, then its text. */
-const scoreOf = (query: string, entry: HelpEntry) =>
-  (entry.title.toLocaleLowerCase().includes(query) ? 4 : 0) +
-  (entry.summary.toLocaleLowerCase().includes(query) ? 2 : 0) +
-  (entry.text.toLocaleLowerCase().includes(query) ? 1 : 0);
+const scoreOf = (query: string, entry: Searchable) =>
+  (entry.title.includes(query) ? 4 : 0) +
+  (entry.summary.includes(query) ? 2 : 0) +
+  (entry.text.includes(query) ? 1 : 0);
 
-/** Search every article from any Help page: matches open under the box, and Enter goes there. */
+/**
+ * Search every article from any Help page: matches open under the box, and Enter goes
+ * there. Case and accents don't matter, and the article opened highlights the search.
+ */
 function HelpSearch({ entries }: { entries: HelpEntry[] }) {
   const t = useTranslations("Help");
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const q = query.trim().toLocaleLowerCase();
+  const folded = entries.map((entry) => ({
+    entry,
+    title: fold(entry.title),
+    summary: fold(entry.summary),
+    text: fold(entry.text),
+  }));
+  const q = fold(query.trim());
   const results = q
-    ? entries
-        .map((entry) => ({ entry, score: scoreOf(q, entry) }))
+    ? folded
+        .map(({ entry, ...searchable }) => ({
+          entry,
+          score: scoreOf(q, searchable),
+        }))
         .filter(({ score }) => score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, 8)
@@ -71,8 +87,9 @@ function HelpSearch({ entries }: { entries: HelpEntry[] }) {
       onInputChange={setQuery}
       onSelectionChange={(key) => {
         if (key === null) return;
+        const searched = query;
         setQuery("");
-        router.push(`/help/${String(key)}`);
+        router.push(helpArticlePath(String(key), searched));
       }}
       menuTrigger="input"
       allowsEmptyCollection
@@ -299,7 +316,7 @@ function ChatBox({ docs, language }: { docs: Doc[]; language: string }) {
                 {turn.sources.map((source) => (
                   <Link
                     key={source.slug}
-                    href={`/help/${source.slug}`}
+                    href={helpArticlePath(source.slug, turn.question)}
                     className="text-primary font-medium hover:underline"
                   >
                     {source.title}

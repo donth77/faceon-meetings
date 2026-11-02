@@ -29,6 +29,10 @@ It depends on how {appName} is set up for the host. Demo meetings have limits, a
 
 Recent versions of Chrome, Edge, Firefox and Safari, on a computer or a phone. Sharing your screen needs a computer. Sharing sound needs Chrome or Edge.
 
+## How do I find something in Help?
+
+Type what you're looking for in **Search help**, at the top of every Help page, and pick an article. It opens with your words highlighted: use the arrows to go from one to the next, and **Clear** to remove the highlighting.
+
 ## Something's wrong. Where do I tell you?
 
 Use **Found an issue?** on the [Help](/help) page to open a report on GitHub, where {appName}'s code lives.
