@@ -13,9 +13,9 @@ Free, open-source video meetings that run in your browser. If you've used Zoom o
 - Background blur and backgrounds (paintings, places, moving backgrounds, or your own image or looping video), processed on your own device
 - Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key
 - Previous meetings with who came, keyboard shortcuts, and a searchable Help center
-- Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android
+- Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app (from Chrome or Edge, or Add to Home Screen and Add to Dock in Safari)
 
-On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), installing it as an app, and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
+On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
 
 ## Tech stack
 

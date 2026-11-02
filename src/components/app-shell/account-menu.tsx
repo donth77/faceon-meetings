@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import type { Selection } from "react-aria-components";
 
+import { InstallMenuItem } from "@/components/pwa/install-app";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import {
   DropdownMenu,
@@ -29,8 +30,8 @@ export type AccountUser = {
 const THEMES = ["system", "light", "dark"] as const;
 
 /**
- * The account row at the bottom of the sidebar, with Profile, Theme,
- * Keyboard shortcuts and Sign out.
+ * The account row at the bottom of the sidebar, with Profile, Theme, Install app (where
+ * the browser offers it), Keyboard shortcuts and Sign out.
  */
 export function AccountMenu({ user }: { user: AccountUser }) {
   const t = useTranslations("Account");
@@ -86,6 +87,7 @@ export function AccountMenu({ user }: { user: AccountUser }) {
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <InstallMenuItem />
         <DropdownMenuItem onAction={openShortcuts}>
           <Keyboard aria-hidden="true" />
           {t("shortcuts")}

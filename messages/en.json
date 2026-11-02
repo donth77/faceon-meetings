@@ -156,6 +156,34 @@
     "help": "Help",
     "settings": "Settings"
   },
+  "Pwa": {
+    "shortcuts": {
+      "schedule": "Schedule a meeting"
+    },
+    "install": {
+      "title": "Install the app",
+      "intro": "Open {appName} from your home screen, dock or taskbar, in a window of its own.",
+      "button": "Install app",
+      "ios": "On this iPhone or iPad, tap Share <share></share> (on newer iPhones it’s in the ⋯ menu), then Add to Home Screen.",
+      "macSafari": "In Safari’s menu bar, choose File › Add to Dock.",
+      "none": "This browser can’t install apps. Chrome, Edge and Safari can.",
+      "installed": "You’re using {appName} as an app.",
+      "done": "{appName} is installed.",
+      "card": {
+        "label": "Install {appName}",
+        "title": "Get the {appName} app",
+        "prompt": "Install it for one-tap access to your meetings.",
+        "ios": "Tap Share <share></share> (on newer iPhones it’s in the ⋯ menu), then Add to Home Screen.",
+        "notNow": "Not now",
+        "gotIt": "Got it"
+      }
+    },
+    "offline": {
+      "title": "You’re offline",
+      "body": "{appName} needs an internet connection. Check yours, then try again.",
+      "retry": "Try again"
+    }
+  },
   "Toasts": {
     "region": "Notifications"
   },

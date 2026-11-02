@@ -40,7 +40,7 @@ export async function AppFrame({
       <SidebarInset
         id="main"
         tabIndex={-1}
-        className="pb-16 outline-none md:pb-0"
+        className="pb-[calc(4rem+env(safe-area-inset-bottom,0px))] outline-none md:pb-0"
       >
         {children}
       </SidebarInset>

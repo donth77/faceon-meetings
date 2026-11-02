@@ -276,6 +276,7 @@ Then:
 3. **Google:** in the OAuth client, add the new JavaScript origin and `https://<new domain>/api/auth/callback/google`. Update the home page, privacy policy, terms and authorized domains under **Branding**.
 4. **GitHub:** change the OAuth app's homepage and callback to `https://<new domain>/api/auth/callback/github`. It has only one callback, so Sign in with GitHub stops working at the old address.
 5. **Resend:** nothing changes, unless your email domain does too.
+6. **Installed apps** belong to the address they were installed from. People who added FaceOn to their home screen or dock add it again from the new address.
 
 ## Troubleshooting
 

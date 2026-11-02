@@ -11,6 +11,7 @@ import {
 } from "@/components/home/home-cards";
 import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { JoinForm } from "@/components/meetings/join-form";
+import { InstallCard } from "@/components/pwa/install-app";
 import { requireSession } from "@/lib/auth/session";
 import { demoTerms, hostingPlan } from "@/lib/meetings/hosting";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
@@ -43,6 +44,7 @@ export default async function HomePage() {
             <JoinForm />
           </div>
         </section>
+        <InstallCard />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
           <Suspense fallback={<CardsLoading rows={2} />}>
             <PersonalRoom />

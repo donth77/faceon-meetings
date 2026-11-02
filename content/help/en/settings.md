@@ -13,6 +13,7 @@ Open **Settings** at the bottom of the sidebar. During a meeting, select **More*
 - **Time format**: 12-hour or 24-hour times.
 - **Time zone**: the zone meeting times show in. It starts as your device's.
 - **Theme**: light, dark, or matching your device. The meeting room is always dark, so video stands out.
+- **Install the app**: adds {appName} to your home screen, dock or taskbar, or says how in your browser. See [Install {appName} as an app](/help/install-the-app).
 
 Dates follow your browser's region, so you'll see "Sunday 1 November" or "Sunday, November 1", whichever you're used to.
 

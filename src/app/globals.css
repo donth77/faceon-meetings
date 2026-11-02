@@ -221,6 +221,13 @@
   html:has([data-fullscreen]) {
     scrollbar-gutter: auto;
   }
+  /* The page reaches the screen's edges (viewport-fit=cover): on a phone turned sideways,
+     pages keep clear of the notch. The meeting room insets itself, so its dark background
+     reaches the edges. */
+  body:not(:has([data-fullscreen])) {
+    padding-inline: env(safe-area-inset-left, 0px)
+      env(safe-area-inset-right, 0px);
+  }
   * {
     @apply border-border outline-ring;
   }

@@ -5,6 +5,7 @@ import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import { AriaRouterProvider } from "@/components/providers/aria-router-provider";
+import { ServiceWorker } from "@/components/pwa/service-worker";
 import { ShortcutsProvider } from "@/components/shortcuts/shortcuts-dialog";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
@@ -40,6 +41,10 @@ export async function generateMetadata({
     title: { default: appName, template: `%s · ${appName}` },
     description: t("description"),
     applicationName: appName,
+    // Installed on an iPhone or iPad (Add to Home Screen): a window of its own, named
+    // FaceOn, under an ordinary status bar. Meeting IDs aren't phone numbers.
+    appleWebApp: { capable: true, title: appName, statusBarStyle: "default" },
+    formatDetection: { telephone: false },
     ...(publicEnv.NEXT_PUBLIC_APP_URL
       ? { metadataBase: new URL(publicEnv.NEXT_PUBLIC_APP_URL) }
       : {}),
@@ -47,6 +52,9 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
+  // Edge to edge on phones with a notch or a home bar; bars and controls keep clear of
+  // them with env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f6f8" },
     { media: "(prefers-color-scheme: dark)", color: "#0e1116" },
@@ -78,6 +86,7 @@ export default async function LocaleLayout({
               <ShortcutsProvider>{children}</ShortcutsProvider>
             </AriaRouterProvider>
           </NextIntlClientProvider>
+          <ServiceWorker />
         </ThemeProvider>
       </body>
     </html>

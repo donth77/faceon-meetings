@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 
+import { InstallAppCard } from "@/components/pwa/install-app";
 import { TimeZoneField } from "@/components/schedule/time-zone-field";
 import { Button } from "@/components/ui/button";
 import { RadioDot, SelectField } from "@/components/ui/form-fields";
@@ -200,6 +201,8 @@ export function GeneralSettings({
           </span>
         </SettingsCard>
       )}
+
+      {inMeeting ? null : <InstallAppCard />}
     </>
   );
 }

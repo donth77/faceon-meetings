@@ -50,6 +50,21 @@ const nextConfig: NextConfig = {
         source: "/j/:path*",
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
+      // The service worker (public/sw.js): never from a cache, so an update reaches
+      // everyone, and allowed to fetch from FaceOn itself only.
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
     ];
   },
 };

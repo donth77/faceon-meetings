@@ -303,7 +303,7 @@ export function MeetingShell({
     <div
       ref={shellRef}
       data-fullscreen
-      className="dark bg-background text-foreground flex h-dvh flex-col overflow-hidden"
+      className="dark bg-background text-foreground flex h-dvh flex-col overflow-hidden pr-[env(safe-area-inset-right,0px)] pl-[env(safe-area-inset-left,0px)]"
     >
       {/* Menus and dialogs open inside the room, so they're dark like it. */}
       <UNSAFE_PortalProvider getContainer={() => shellRef.current}>
