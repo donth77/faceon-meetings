@@ -23,7 +23,7 @@ export type Preferences = {
   timeFormat?: "12" | "24";
   /** A time zone other than the device's. */
   timeZone?: string;
-  /** Noise suppression on the microphone (see lib/noise). Default strong. */
+  /** Noise suppression on the microphone (see lib/noise). Default standard, the browser's own. */
   noiseSuppression?: NoiseSuppression;
   /** Your own camera shown mirrored, to you only. Default on. */
   mirrorVideo?: boolean;
@@ -182,7 +182,7 @@ export type Settings = Required<
 
 /** Every setting's default: one place to change one. */
 export const DEFAULTS: Settings = {
-  noiseSuppression: "strong",
+  noiseSuppression: "standard",
   mirrorVideo: true,
   hdVideo: true,
   cameraOffOnJoin: false,

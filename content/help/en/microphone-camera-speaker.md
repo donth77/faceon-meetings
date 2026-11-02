@@ -31,8 +31,8 @@ Before you join, the preview has the same meter and a **Play a test sound** butt
 ## Useful settings
 
 - **Noise suppression** keeps the noise around you out of the meeting:
-  - **Strong**, the default, filters out typing, traffic, fans and voices in the background. It runs on your device, so your audio isn't sent anywhere else for it.
-  - **Standard** is your browser's own. It mostly filters out steady noise like fans and hum.
+  - **Standard**, the default, is your browser's own. It mostly filters out steady noise like fans and hum.
+  - **Strong** also filters out typing, traffic and voices in the background. It runs on your device, so your audio isn't sent anywhere else for it, and it takes a little more of your device's power.
   - **Off** sends your microphone as it is, for music or a quiet room.
 
   Where a browser can't run Strong, Standard is on instead, and {appName} tells you.

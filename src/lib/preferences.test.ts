@@ -78,7 +78,7 @@ describe("loadPreferences", () => {
   it("lets the earlier noise suppression switch's on follow today's default", () => {
     stored({ noiseSuppression: true });
     expect(loadPreferences().noiseSuppression).toBeUndefined();
-    expect(withDefaults(loadPreferences()).noiseSuppression).toBe("strong");
+    expect(withDefaults(loadPreferences()).noiseSuppression).toBe("standard");
   });
 });
 
