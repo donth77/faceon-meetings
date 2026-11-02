@@ -23,7 +23,7 @@ import {
 } from "@/components/auth/fields";
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { LEGAL_LINKS } from "@/components/legal/legal-links";
-import { Button, LinkButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogDescription,

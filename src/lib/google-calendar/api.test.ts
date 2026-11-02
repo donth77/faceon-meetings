@@ -7,8 +7,10 @@ const EVENTS =
 
 /** A fetch that answers every request with this status and body, and records calls. */
 function answering(status: number, body: unknown = {}) {
-  const fetchMock = vi.fn(
-    async (_url: URL | RequestInfo, _init?: RequestInit) =>
+  const fetchMock = vi.fn<
+    (url: URL | RequestInfo, init?: RequestInit) => Promise<Response>
+  >(
+    async () =>
       new Response(status === 204 ? null : JSON.stringify(body), { status }),
   );
   return { fetchMock, api: calendarApi("ya29.token", fetchMock) };
