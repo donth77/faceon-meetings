@@ -22,6 +22,9 @@ const SECURITY = [
 ];
 
 const nextConfig: NextConfig = {
+  // Memoizes components and values automatically, so a change redraws only what it
+  // touches (the code is written for it: no hand-made memo or useCallback needed).
+  reactCompiler: true,
   cacheComponents: true,
   partialPrefetching: true,
   // Help articles and the legal pages are Markdown files read on the server.

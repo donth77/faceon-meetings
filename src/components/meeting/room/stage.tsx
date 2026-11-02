@@ -10,7 +10,12 @@ import { Button } from "react-aria-components";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { TrackView, useRoomMedia, type RoomParticipant } from "../media";
+import {
+  TrackView,
+  useDominantSpeakerKey,
+  useRoomMedia,
+  type RoomParticipant,
+} from "../media";
 import { fitGrid } from "./grid";
 import { useRoomTransition } from "./motion";
 import { useRoomControls } from "./room-controls";
@@ -76,10 +81,7 @@ export function Stage({ view }: { view: StageView }) {
   const screen: StageTile[] = presenter
     ? [{ participant: presenter, kind: "screen" }]
     : [];
-  const speakerKey = useSteadyValue(
-    media.dominantSpeakerKey,
-    SPEAKER_SWITCH_MS,
-  );
+  const speakerKey = useSteadyValue(useDominantSpeakerKey(), SPEAKER_SWITCH_MS);
   // Who the view leaves in the strip or the gallery.
   const people = everyone.filter(
     (p) => !(view.hideSelf && p.isLocal) && !(view.hideNoVideo && !p.video),
@@ -261,7 +263,7 @@ function OwnScreen({
   const { screenShare } = useRoomMedia();
   const [hidden, setHidden] = useState(false);
   const pill =
-    "focus-visible:ring-ring flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold outline-none focus-visible:ring-2";
+    "flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold outline-hidden focus-visible:focus-ring";
   return (
     <div className="bg-card relative size-full overflow-hidden rounded-xl">
       {hidden ? (
@@ -298,10 +300,18 @@ function OwnScreen({
             {hidden ? t("showPreview") : t("hidePreview")}
           </Button>
           <Button
-            onPress={() => void screenShare.stop()}
+            onPress={() => {
+              void screenShare.stop();
+              // This preview goes away; focus goes to the bar's Share screen.
+              requestAnimationFrame(() =>
+                document
+                  .querySelector<HTMLElement>("[data-share-control] button")
+                  ?.focus(),
+              );
+            }}
             className={cn(
               pill,
-              "bg-destructive hover:bg-destructive/90 text-white",
+              "bg-destructive-fill hover:bg-destructive-fill/90 text-white",
             )}
           >
             {t("stopSharing")}

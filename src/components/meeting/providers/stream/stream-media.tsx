@@ -17,6 +17,7 @@ import {
   useEffectEvent,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 
@@ -26,6 +27,8 @@ import {
   RoomEvent,
   SharedSessionState,
 } from "@/lib/meetings/events";
+import { canChooseSpeaker } from "@/lib/platform";
+import { createReuser } from "@/lib/reuse";
 
 import {
   RoomMediaProvider,
@@ -69,8 +72,6 @@ function toRoomParticipant(
     audio: hasAudio(p),
     video: hasVideo(p),
     screen: hasScreenShare(p),
-    speaking: p.isSpeaking,
-    audioLevel: p.audioLevel,
     connection: connectionOf(p),
   };
 }
@@ -137,11 +138,18 @@ const firstTrack = (stream: MediaStream | undefined, kind: "audio" | "video") =>
     ? stream?.getAudioTracks()
     : stream?.getVideoTracks())?.[0] ?? null;
 
-const supportsSpeakerSelection = () =>
-  typeof HTMLMediaElement !== "undefined" &&
-  "setSinkId" in HTMLMediaElement.prototype;
+/** Whether two of Stream's participants would play the same audio. */
+const sameAudio = (a: StreamVideoParticipant, b: StreamVideoParticipant) =>
+  a.userId === b.userId &&
+  a.isLocalParticipant === b.isLocalParticipant &&
+  a.audioStream === b.audioStream &&
+  a.screenShareAudioStream === b.screenShareAudioStream;
 
-/** Maps Stream's call state onto room media for the UI, and plays everyone else's audio. */
+/**
+ * Maps Stream's call state onto room media for the UI, and plays everyone else's audio.
+ * Stream's participant list changes with every audio level, many times a second; room
+ * media changes only when something the room shows does, so the room doesn't redraw.
+ */
 export function StreamMedia({
   call,
   joinedAt,
@@ -157,7 +165,6 @@ export function StreamMedia({
   const {
     useParticipants,
     useCallCallingState,
-    useDominantSpeaker,
     useMicrophoneState,
     useCameraState,
     useSpeakerState,
@@ -167,11 +174,32 @@ export function StreamMedia({
   } = useCallStateHooks();
   const participants = useParticipants();
   const callingState = useCallCallingState();
-  const dominantSpeaker = useDominantSpeaker();
-  const mic = useMicrophoneState({ optimisticUpdates: true });
-  const camera = useCameraState({ optimisticUpdates: true });
-  const speaker = useSpeakerState();
-  const screenShare = useScreenShareState({ optimisticUpdates: true });
+  // Stream's state hooks return a new object on every render; only these values matter.
+  const {
+    microphone,
+    optionsAwareIsMute: micMuted,
+    mediaStream: micStream,
+    isSpeakingWhileMuted,
+    error: micError,
+    devices: micDevices,
+    selectedDevice: micSelected,
+  } = useMicrophoneState({ optimisticUpdates: true });
+  const {
+    camera: cameraManager,
+    optionsAwareIsMute: cameraMuted,
+    mediaStream: cameraStream,
+    error: cameraError,
+    devices: cameraDevices,
+    selectedDevice: cameraSelected,
+  } = useCameraState({ optimisticUpdates: true });
+  const {
+    speaker: speakerManager,
+    isDeviceSelectionSupported,
+    devices: speakerDevices,
+    selectedDevice: speakerSelected,
+  } = useSpeakerState();
+  const { screenShare: screenShareManager, optionsAwareIsMute: notSharing } =
+    useScreenShareState({ optimisticUpdates: true });
   // Hosts' policies revoke these; Stream stops the track when one is taken away.
   const canSendAudio = useHasPermissions(OwnCapability.SEND_AUDIO);
   const canSendVideo = useHasPermissions(OwnCapability.SEND_VIDEO);
@@ -237,12 +265,20 @@ export function StreamMedia({
       | "sendReaction"
       | "subscribeReactions"
       | "subscribeHostMutes"
+      | "speakingOf"
+      | "audioLevelOf"
+      | "dominantSpeakerOf"
+      | "subscribeVoices"
     >
   >(
     () => ({
       leave: async () => {
         leaveReason.current = "left";
-        await call.leave();
+        // A second Leave (or one after the call ended) has nothing left to do.
+        if (call.state.callingState === CallingState.LEFT) return;
+        await call.leave().catch(() => {
+          // Leaving failed; the room stays, and Leave can be pressed again.
+        });
       },
       sendEvent: async (event) => {
         await call.sendCustomEvent(event);
@@ -273,6 +309,20 @@ export function StreamMedia({
             handler({ userId: event.reaction.user.id, code });
           }
         }),
+      speakingOf: (key) =>
+        call.state.participants.find((p) => p.sessionId === key)?.isSpeaking ??
+        false,
+      audioLevelOf: (key) =>
+        call.state.participants.find((p) => p.sessionId === key)?.audioLevel ??
+        0,
+      dominantSpeakerOf: () => call.state.dominantSpeaker?.sessionId,
+      // Stream works out the dominant speaker from the participant list too.
+      subscribeVoices: (onChange) => {
+        const subscription = call.state.participants$.subscribe(() =>
+          onChange(),
+        );
+        return () => subscription.unsubscribe();
+      },
       subscribeHostMutes: (handler) =>
         call.on("trackUnpublished", (event) => {
           const self = call.state.localParticipant;
@@ -292,80 +342,124 @@ export function StreamMedia({
     [call],
   );
 
+  // The same participant objects, and list, until something shown about them changes.
+  const [reuseParticipants] = useState(() =>
+    createReuser<RoomParticipant>((p) => p.key),
+  );
+  const roomParticipants = useMemo(
+    () =>
+      reuseParticipants(
+        participants.map((p) => toRoomParticipant(p, clockSkew)),
+      ),
+    [participants, clockSkew, reuseParticipants],
+  );
+  const [reuseRemote] = useState(() =>
+    createReuser<StreamVideoParticipant>((p) => p.sessionId, sameAudio),
+  );
+  const remote = useMemo(
+    () => reuseRemote(participants.filter((p) => !p.isLocalParticipant)),
+    [participants, reuseRemote],
+  );
+
+  const mic = useMemo<RoomMedia["mic"]>(
+    () => ({
+      enabled: !micMuted,
+      track: micMuted ? null : firstTrack(micStream, "audio"),
+      speakingWhileMuted: isSpeakingWhileMuted,
+      setNoiseSuppression: (on) => setNoiseSuppression(call, on),
+      allowed: canSendAudio,
+      problem: micError ? deviceProblem(micError) : null,
+      devices: micDevices,
+      selectedId: micSelected,
+      toggle: () => microphone.toggle(),
+      select: (deviceId) => microphone.select(deviceId),
+    }),
+    [
+      call,
+      canSendAudio,
+      isSpeakingWhileMuted,
+      micDevices,
+      micError,
+      micMuted,
+      micSelected,
+      micStream,
+      microphone,
+    ],
+  );
+  const camera = useMemo<RoomMedia["camera"]>(
+    () => ({
+      enabled: !cameraMuted,
+      track: cameraMuted ? null : firstTrack(cameraStream, "video"),
+      allowed: canSendVideo,
+      problem: cameraError ? deviceProblem(cameraError) : null,
+      devices: cameraDevices,
+      selectedId: cameraSelected,
+      toggle: () => cameraManager.toggle(),
+      select: (deviceId) => cameraManager.select(deviceId),
+      flip: () => cameraManager.flip(),
+      setProcessor: (processor) => setCameraProcessor(call, processor),
+    }),
+    [
+      call,
+      cameraDevices,
+      cameraError,
+      cameraManager,
+      cameraMuted,
+      cameraSelected,
+      cameraStream,
+      canSendVideo,
+    ],
+  );
+  const speaker = useMemo<RoomMedia["speaker"]>(
+    () => ({
+      supported: isDeviceSelectionSupported && canChooseSpeaker(),
+      devices: speakerDevices,
+      selectedId: speakerSelected || undefined,
+      select: (deviceId) => speakerManager.select(deviceId),
+    }),
+    [
+      isDeviceSelectionSupported,
+      speakerDevices,
+      speakerManager,
+      speakerSelected,
+    ],
+  );
+  const screenShare = useMemo<RoomMedia["screenShare"]>(
+    () => ({
+      enabled: !notSharing,
+      allowed: canShare,
+      start: (options) => startScreenShare(call, options),
+      stop: () => screenShareManager.disable(),
+    }),
+    [call, canShare, notSharing, screenShareManager],
+  );
+
   const media = useMemo<RoomMedia>(
     () => ({
       status: statusOf(callingState),
       sessionState,
-      participants: participants.map((p) => toRoomParticipant(p, clockSkew)),
-      dominantSpeakerKey: dominantSpeaker?.sessionId,
-      mic: {
-        enabled: !mic.optionsAwareIsMute,
-        track: mic.optionsAwareIsMute
-          ? null
-          : firstTrack(mic.mediaStream, "audio"),
-        speakingWhileMuted: mic.isSpeakingWhileMuted,
-        setNoiseSuppression: (on) => setNoiseSuppression(call, on),
-        allowed: canSendAudio,
-        problem: mic.error ? deviceProblem(mic.error) : null,
-        devices: mic.devices,
-        selectedId: mic.selectedDevice,
-        toggle: () => mic.microphone.toggle(),
-        select: (deviceId) => mic.microphone.select(deviceId),
-      },
-      camera: {
-        enabled: !camera.optionsAwareIsMute,
-        track: camera.optionsAwareIsMute
-          ? null
-          : firstTrack(camera.mediaStream, "video"),
-        allowed: canSendVideo,
-        problem: camera.error ? deviceProblem(camera.error) : null,
-        devices: camera.devices,
-        selectedId: camera.selectedDevice,
-        toggle: () => camera.camera.toggle(),
-        select: (deviceId) => camera.camera.select(deviceId),
-        flip: () => camera.camera.flip(),
-        setProcessor: (processor) => setCameraProcessor(call, processor),
-      },
-      speaker: {
-        supported:
-          speaker.isDeviceSelectionSupported && supportsSpeakerSelection(),
-        devices: speaker.devices,
-        selectedId: speaker.selectedDevice || undefined,
-        select: (deviceId) => speaker.speaker.select(deviceId),
-      },
-      screenShare: {
-        enabled: !screenShare.optionsAwareIsMute,
-        allowed: canShare,
-        start: (options) => startScreenShare(call, options),
-        stop: () => screenShare.screenShare.disable(),
-      },
-      ...actions,
-    }),
-    [
-      actions,
-      call,
-      callingState,
-      canSendAudio,
-      canSendVideo,
-      canShare,
-      clockSkew,
-      participants,
-      dominantSpeaker,
+      participants: roomParticipants,
       mic,
       camera,
       speaker,
       screenShare,
+      ...actions,
+    }),
+    [
+      actions,
+      callingState,
+      camera,
+      mic,
+      roomParticipants,
+      screenShare,
       sessionState,
+      speaker,
     ],
   );
-
-  const remote = useMemo(
-    () => participants.filter((p) => !p.isLocalParticipant),
-    [participants],
-  );
+  const value = useMemo(() => ({ media, TrackView: StreamTrackView }), [media]);
 
   return (
-    <RoomMediaProvider value={{ media, TrackView: StreamTrackView }}>
+    <RoomMediaProvider value={value}>
       <ParticipantsAudio participants={remote} />
       {children}
     </RoomMediaProvider>

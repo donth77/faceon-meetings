@@ -6,17 +6,26 @@ import { useTranslations } from "next-intl";
 
 import { emojiFor } from "@/lib/meetings/events";
 
-import { TrackView, type RoomParticipant } from "../media";
+import {
+  TrackView,
+  useAudioLevel,
+  useSpeaking,
+  type RoomParticipant,
+} from "../media";
 import { ParticipantMenu } from "./participant-menu";
 import { EMOJI_FONT } from "./reactions";
 import { useRoomBadges } from "./room-badges";
 import { useRoomControls } from "./room-controls";
 
-/** How loud someone sounds, 0 to 1, shaped so normal speech fills most of the range. */
-const loudness = (participant: RoomParticipant) =>
-  participant.speaking
-    ? Math.min(1, Math.sqrt(participant.audioLevel) * 1.6)
-    : 0;
+/**
+ * How loud someone sounds while they speak, 0 to 1, shaped so normal speech fills most
+ * of the range. Read per component, so only what shows it redraws as it changes.
+ */
+function useLoudness(participant: RoomParticipant): number {
+  const speaking = useSpeaking(participant.key);
+  const level = useAudioLevel(participant.key, speaking);
+  return speaking ? Math.min(1, Math.sqrt(level) * 1.6) : 0;
+}
 
 /**
  * Three green bars that move with someone's voice while they speak, as in Meet; a mic
@@ -24,15 +33,15 @@ const loudness = (participant: RoomParticipant) =>
  */
 export function VoiceLevel({ participant }: { participant: RoomParticipant }) {
   const t = useTranslations("Meeting");
+  const level = useLoudness(participant);
   if (!participant.audio) {
     return (
       <MicOff
-        className="size-3.5 shrink-0 text-[#ff7a7d]"
+        className="text-destructive-text size-3.5 shrink-0"
         aria-label={t("muted")}
       />
     );
   }
-  const level = loudness(participant);
   if (level === 0) {
     return (
       <Mic className="size-3.5 shrink-0 text-white/80" aria-hidden="true" />
@@ -53,6 +62,37 @@ export function VoiceLevel({ participant }: { participant: RoomParticipant }) {
         />
       ))}
     </span>
+  );
+}
+
+/** Grows with their voice around their picture, like the ripple around a speaker in Meet. */
+function SpeakingRing({ participant }: { participant: RoomParticipant }) {
+  const speaking = useSpeaking(participant.key);
+  const level = useLoudness(participant);
+  return (
+    <span
+      aria-hidden="true"
+      style={{ transform: `scale(${1 + 0.32 * level})` }}
+      className={cn(
+        "absolute inset-0 rounded-full bg-[#3ddc84]/30 ring-2 ring-[#3ddc84]/70 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none",
+        speaking ? "opacity-100" : "opacity-0",
+      )}
+    />
+  );
+}
+
+/** The green outline around a tile while its person speaks. */
+function SpeakingOutline({ participant }: { participant: RoomParticipant }) {
+  const speaking = useSpeaking(participant.key);
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute inset-0 rounded-xl transition-shadow duration-200 motion-reduce:transition-none",
+        speaking &&
+          "shadow-[inset_0_0_0_3px_#3ddc84,inset_0_0_18px_rgb(61_220_132/0.3)]",
+      )}
+    />
   );
 }
 
@@ -108,17 +148,7 @@ export function Tile({
         <div className="absolute inset-0 flex items-center justify-center">
           {participant.image ? (
             <span className="relative aspect-square h-2/5 max-h-36 min-h-10">
-              {/* Grows with their voice, like the ripple around a speaker in Meet. */}
-              <span
-                aria-hidden="true"
-                style={{
-                  transform: `scale(${1 + 0.32 * loudness(participant)})`,
-                }}
-                className={cn(
-                  "absolute inset-0 rounded-full bg-[#3ddc84]/30 ring-2 ring-[#3ddc84]/70 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none",
-                  participant.speaking ? "opacity-100" : "opacity-0",
-                )}
-              />
+              <SpeakingRing participant={participant} />
               {/* Avatars are small SVGs or provider photos; next/image adds nothing here. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -134,7 +164,7 @@ export function Tile({
       {handUp || reaction ? (
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
           {handUp ? (
-            <span className="animate-in zoom-in-50 fade-in flex size-[30px] items-center justify-center rounded-full bg-[#f2b200] text-[#1b1500] duration-200 motion-reduce:animate-none">
+            <span className="animate-in zoom-in-50 fade-in bg-hand text-hand-foreground flex size-[30px] items-center justify-center rounded-full duration-200 motion-reduce:animate-none">
               <Hand className="size-[18px]" aria-label={t("hand.raised")} />
             </span>
           ) : null}
@@ -152,7 +182,7 @@ export function Tile({
       <div className="absolute bottom-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] items-center gap-1.5 rounded-lg bg-black/65 px-2 py-1 text-[13px] leading-[18px] font-medium text-white">
         {spotlighted ? (
           <Star
-            className="size-3.5 shrink-0 fill-current text-[#f2b200]"
+            className="text-hand size-3.5 shrink-0 fill-current"
             aria-label={t("spotlighted")}
           />
         ) : pinned ? (
@@ -179,15 +209,7 @@ export function Tile({
         )}
       </div>
 
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-0 rounded-xl transition-shadow duration-200 motion-reduce:transition-none",
-          !isScreen &&
-            participant.speaking &&
-            "shadow-[inset_0_0_0_3px_#3ddc84,inset_0_0_18px_rgb(61_220_132/0.3)]",
-        )}
-      />
+      {isScreen ? null : <SpeakingOutline participant={participant} />}
     </div>
   );
 }

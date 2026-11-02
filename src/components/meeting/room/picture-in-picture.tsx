@@ -14,7 +14,12 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { TrackView, useRoomMedia, type RoomParticipant } from "../media";
+import {
+  TrackView,
+  useDominantSpeakerKey,
+  useRoomMedia,
+  type RoomParticipant,
+} from "../media";
 import { VoiceLevel } from "./tile";
 
 type DocumentPictureInPicture = {
@@ -96,10 +101,7 @@ function mainOf(
   if (presenter) return { participant: presenter, kind: "screen" };
   const others = participants.filter((p) => !p.isLocal);
   const speaker =
-    others.find((p) => p.key === dominantKey) ??
-    others.find((p) => p.speaking) ??
-    others[0] ??
-    participants[0];
+    others.find((p) => p.key === dominantKey) ?? others[0] ?? participants[0];
   return speaker ? { participant: speaker, kind: "video" } : null;
 }
 
@@ -121,7 +123,7 @@ function MiniRoom({
 }) {
   const t = useTranslations("Meeting");
   const media = useRoomMedia();
-  const main = mainOf(media.participants, media.dominantSpeakerKey);
+  const main = mainOf(media.participants, useDominantSpeakerKey());
   const sharingOwn = media.screenShare.enabled;
 
   return (
