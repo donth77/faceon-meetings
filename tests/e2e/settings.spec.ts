@@ -39,8 +39,7 @@ test.describe("Settings", () => {
     await expect(sections.getByRole("link", { name: "Admin" })).toHaveCount(0);
     await page.goto("/settings/admin");
     await expect(page.getByText("Page not found")).toBeVisible();
-    // No expectNoErrors: a not-found that arrives after the page has started streaming
-    // logs React's error #419 in production builds, here as on any such page.
+    expectNoErrors(person);
   });
 
   test("a choice made here is kept on this device", async ({ people }) => {

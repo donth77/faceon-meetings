@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { NotFoundContent } from "@/components/app-shell/not-found-content";
 import { SavedNotesLoader } from "@/components/notes/saved-notes-loader";
 import { requireSession } from "@/lib/auth/session";
 import { savedNotesFor } from "@/lib/meetings/saved-notes";
@@ -31,6 +31,6 @@ async function Notes({
   const { sessionId } = await params;
   const session = await requireSession(`/previous/${sessionId}/notes`);
   const notes = await savedNotesFor(sessionId, session.user.id);
-  if (!notes) notFound();
+  if (!notes) return <NotFoundContent />;
   return <SavedNotesLoader notes={notes} />;
 }

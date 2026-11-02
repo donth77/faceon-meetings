@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { NotFoundContent } from "@/components/app-shell/not-found-content";
 import { MeetingDetailsLoader } from "@/components/schedule/meeting-details-loader";
 import { requireSession } from "@/lib/auth/session";
 import { notesAllowedFor } from "@/lib/meetings/notes";
@@ -32,7 +32,7 @@ async function Details({
   const { code } = await params;
   const session = await requireSession(`/meetings/${code}`);
   const details = await meetingDetails({ code, viewer: session.user });
-  if (!details) notFound();
+  if (!details) return <NotFoundContent />;
   return (
     <MeetingDetailsLoader
       details={details}

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { NotFoundContent } from "@/components/app-shell/not-found-content";
 import { ScheduleFormLoader } from "@/components/schedule/schedule-loader";
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
@@ -40,7 +40,7 @@ async function EditMeeting({
   const { occurrence } = await searchParams;
   const session = await requireSession(`/meetings/${code}/edit`);
   const details = await meetingDetails({ code, viewer: session.user });
-  if (!details?.isHost) notFound();
+  if (!details?.isHost) return <NotFoundContent />;
 
   const chosen =
     typeof occurrence === "string"

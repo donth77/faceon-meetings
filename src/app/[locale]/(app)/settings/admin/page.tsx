@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
 
 import { AdminList } from "@/components/admin/admin-list";
 import { AdminRequests } from "@/components/admin/admin-requests";
 import { ApprovedHosts } from "@/components/admin/approved-hosts";
+import { NotFoundContent } from "@/components/app-shell/not-found-content";
 import { getSession } from "@/lib/auth/session";
 import { adminAddresses, approvedHosts } from "@/lib/hosting/allowlist";
 import { answeredRequests, openRequests } from "@/lib/hosting/requests";
@@ -35,7 +35,9 @@ export default async function AdminPage({
   searchParams,
 }: PageProps<"/[locale]/settings/admin">) {
   const session = await getSession();
-  if (!session || !isAdmin(session.user)) notFound();
+  if (!session || !isAdmin(session.user)) {
+    return <NotFoundContent heading="h2" />;
+  }
   const t = await getTranslations("Admin");
   const query = await searchParams;
   const [requests, answers, hosts, admins] = await Promise.all([
