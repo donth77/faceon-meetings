@@ -98,6 +98,7 @@ describe("checkEntry", () => {
     isMember: false,
     isBanned: false,
     locked: false,
+    waitingRoom: false,
     timesDenied: 0,
     hostPresent: true,
     connectedCount: 1,
@@ -149,36 +150,45 @@ describe("checkEntry", () => {
   });
 
   it("sends newcomers to the waiting room when it's on, but not members or hosts", () => {
-    const settings = DEFAULT_SETTINGS.personal;
-    expect(checkEntry({ ...facts, settings })).toBe("waiting_room");
-    expect(checkEntry({ ...facts, settings, isMember: true })).toBeNull();
-    expect(checkEntry({ ...facts, settings, role: "host" })).toBeNull();
-    expect(checkEntry({ ...facts, settings, role: "cohost" })).toBeNull();
+    expect(checkEntry({ ...facts, waitingRoom: true })).toBe("waiting_room");
+    expect(
+      checkEntry({ ...facts, waitingRoom: true, isMember: true }),
+    ).toBeNull();
+    expect(
+      checkEntry({ ...facts, waitingRoom: true, role: "host" }),
+    ).toBeNull();
+    expect(
+      checkEntry({ ...facts, waitingRoom: true, role: "cohost" }),
+    ).toBeNull();
   });
 
   it("asks the passcode before the waiting room", () => {
-    const settings = DEFAULT_SETTINGS.personal;
-    expect(checkEntry({ ...facts, settings, givenPasscode: "WRONG1" })).toBe(
-      "BAD_PASSCODE",
-    );
+    expect(
+      checkEntry({ ...facts, waitingRoom: true, givenPasscode: "WRONG1" }),
+    ).toBe("BAD_PASSCODE");
   });
 
   it("makes newcomers wait for a host when only hosts can let them in", () => {
-    const settings = DEFAULT_SETTINGS.personal; // join-before-host on, waiting room on
-    expect(checkEntry({ ...facts, settings, hostPresent: false })).toBe(
-      "waiting_for_host",
-    );
     expect(
-      checkEntry({ ...facts, settings, hostPresent: false, isMember: true }),
+      checkEntry({ ...facts, waitingRoom: true, hostPresent: false }),
+    ).toBe("waiting_for_host");
+    expect(
+      checkEntry({
+        ...facts,
+        waitingRoom: true,
+        hostPresent: false,
+        isMember: true,
+      }),
     ).toBeNull();
   });
 
   it("stops someone asking after being turned away three times", () => {
-    const settings = DEFAULT_SETTINGS.personal;
-    expect(checkEntry({ ...facts, settings, timesDenied: 2 })).toBe(
+    expect(checkEntry({ ...facts, waitingRoom: true, timesDenied: 2 })).toBe(
       "waiting_room",
     );
-    expect(checkEntry({ ...facts, settings, timesDenied: 3 })).toBe("DENIED");
+    expect(checkEntry({ ...facts, waitingRoom: true, timesDenied: 3 })).toBe(
+      "DENIED",
+    );
   });
 
   it("turns people away from a full meeting unless they're already in it", () => {

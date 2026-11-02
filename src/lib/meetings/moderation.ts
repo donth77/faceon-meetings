@@ -18,18 +18,7 @@ import {
 } from "./queries";
 import { canModerate, isHostRole } from "./rules";
 import { changeSession, sessionPolicy } from "./session-state";
-
-/**
- * What a participant (not a host or co-host) may publish under a policy: screen sharing
- * may be for hosts only, and the mic may need a host's OK. Null when nothing is withheld.
- */
-export function withheldFrom(policy: SessionPolicy): PublishPermissions | null {
-  const withheld: PublishPermissions = {
-    ...(policy.selfUnmute ? {} : { audio: false }),
-    ...(policy.screenShare === "host" ? { screen: false } : {}),
-  };
-  return Object.keys(withheld).length > 0 ? withheld : null;
-}
+import { admitEveryone } from "./waiting-room";
 
 /** After a policy change, gives every participant's publishing rights back or takes them. */
 async function applyPolicy(
@@ -186,6 +175,10 @@ export async function moderate(input: {
         policy: request.policy,
       });
       await applyPolicy(provider, session, policy, state);
+      // Turning the waiting room off lets everyone waiting in, as in Zoom.
+      if (policy.waitingRoom && !state.waitingRoom) {
+        await admitEveryone(session);
+      }
       return;
     }
   }

@@ -62,6 +62,7 @@ export const SharedSessionState = SessionPolicy.extend({
   rev: z.number().int(),
   // Defaults keep sessions that started before these existed readable. Stream stores an
   // empty list as null, so lists and maps accept null too.
+  waitingRoom: z.boolean().default(false),
   selfUnmute: z.boolean().default(true),
   /** The owner's media user ID. */
   host: z.string().default(""),

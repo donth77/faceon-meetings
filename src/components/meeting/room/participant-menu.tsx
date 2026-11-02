@@ -2,14 +2,13 @@
 
 import { cn } from "cn";
 import {
+  Crown,
   Ellipsis,
   Mic,
   MicOff,
   MonitorX,
   Pin,
   PinOff,
-  ShieldMinus,
-  ShieldPlus,
   Star,
   StarOff,
   UserX,
@@ -129,7 +128,7 @@ export function ParticipantMenu({
           key="cohost"
           onAction={() => run({ action: "removeCohost", target })}
         >
-          <ShieldMinus aria-hidden="true" />
+          <Crown aria-hidden="true" />
           {t("removeCohost")}
         </DropdownMenuItem>
       ) : (
@@ -137,7 +136,7 @@ export function ParticipantMenu({
           key="cohost"
           onAction={() => run({ action: "makeCohost", target })}
         >
-          <ShieldPlus aria-hidden="true" />
+          <Crown aria-hidden="true" />
           {t("makeCohost")}
         </DropdownMenuItem>
       ),

@@ -7,6 +7,7 @@ describe("SharedSessionState", () => {
     v: 1,
     rev: 4,
     locked: false,
+    waitingRoom: true,
     chat: true,
     reactions: true,
     screenShare: "all",
@@ -44,6 +45,7 @@ describe("SharedSessionState", () => {
       hands: {},
     });
     expect(older).toMatchObject({
+      waitingRoom: false,
       selfUnmute: true,
       host: "",
       cohosts: [],

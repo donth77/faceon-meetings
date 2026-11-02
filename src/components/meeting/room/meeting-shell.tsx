@@ -26,7 +26,6 @@ import { AloneCard } from "./alone-card";
 import { AloneCheckDialog, useAloneCheck } from "./alone-check";
 import { ChatPanel } from "./chat-panel";
 import { ControlBar, type PanelName } from "./control-bar";
-import { HostControlsPanel } from "./host-controls-panel";
 import {
   MuteAllDialog,
   RemoveDialog,
@@ -177,7 +176,9 @@ export function MeetingShell({
   const previousHands = useRef(hands);
   const announceHand = useEffectEvent((userId: string) => {
     if (isHost && userId !== self.id) {
-      toast(t("hand.someoneRaised", { name: nameOf(userId) }));
+      toast(t("hand.someoneRaised", { name: nameOf(userId) }), {
+        action: { label: t("hand.view"), onClick: () => openPanel("people") },
+      });
     }
   });
   useEffect(() => {
@@ -314,14 +315,18 @@ export function MeetingShell({
             {panel === "people" ? (
               <ParticipantsPanel
                 meeting={meeting}
+                state={state}
                 waiting={lobby.requests}
                 onDecide={(action) => void lobby.decide(action)}
-                hands={hands}
                 onLowerHand={(userId) =>
                   void changeHand({ raised: false, target: userId })
                 }
                 onLowerAll={() => void changeHand({ lowerAll: true })}
                 onMuteAll={() => setMutingAll(true)}
+                onPolicyChange={(policy) =>
+                  void moderate({ action: "setPolicy", policy })
+                }
+                onEndForAll={onEndForAll}
                 onClose={() => setPanel(null)}
               />
             ) : panel === "chat" ? (
@@ -330,14 +335,6 @@ export function MeetingShell({
                 messages={chat.messages}
                 canSend={(state?.chat ?? true) || isHost}
                 onSend={chat.send}
-                onClose={() => setPanel(null)}
-              />
-            ) : panel === "host" && isHost ? (
-              <HostControlsPanel
-                state={state}
-                onChange={(policy) =>
-                  void moderate({ action: "setPolicy", policy })
-                }
                 onClose={() => setPanel(null)}
               />
             ) : null}
@@ -379,7 +376,6 @@ export function MeetingShell({
           <ControlBar
             title={title}
             isOwner={selfRole === "host"}
-            isHost={isHost}
             onEndForAll={onEndForAll}
             panel={panel}
             onTogglePanel={togglePanel}

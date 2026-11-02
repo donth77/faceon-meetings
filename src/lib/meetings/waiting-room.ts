@@ -220,7 +220,18 @@ export async function decide(input: {
   action: LobbyAction;
 }): Promise<void> {
   const session = await hostedSession(input.code, input.principal);
-  const { action } = input;
+  await settle(session, input.action);
+}
+
+/** Lets everyone waiting in: the waiting room was turned off. */
+export async function admitEveryone(session: MeetingSession): Promise<void> {
+  await settle(session, { action: "admitAll" });
+}
+
+async function settle(
+  session: MeetingSession,
+  action: LobbyAction,
+): Promise<void> {
   const now = new Date();
   await db()
     .update(admissionRequest)

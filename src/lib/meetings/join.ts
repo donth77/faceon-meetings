@@ -8,6 +8,7 @@ import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import { admit } from "./admission";
 import type { JoinResponse } from "./api";
 import { MeetingError } from "./errors";
+import { policyFromSettings } from "./policy";
 import { userMediaId, type Principal } from "./principal";
 import {
   closeSession,
@@ -68,7 +69,10 @@ export async function joinMeeting(input: {
     memberRole: member?.role,
   });
   const connected = live?.snapshot?.connectedUserIds ?? [];
-  const asksHosts = member === null && meeting.settings.waitingRoom;
+  const policy = live
+    ? sessionPolicy(meeting, live.row)
+    : policyFromSettings(meeting.settings);
+  const asksHosts = member === null && policy.waitingRoom;
 
   const blocked = checkEntry({
     role,
@@ -77,7 +81,8 @@ export async function joinMeeting(input: {
     givenPasscode: input.passcode,
     isMember: member !== null,
     isBanned: member?.bannedAt != null,
-    locked: live ? sessionPolicy(meeting, live.row).locked : false,
+    locked: policy.locked,
+    waitingRoom: policy.waitingRoom,
     timesDenied:
       live && asksHosts
         ? await timesDenied(live.row.id, principal.mediaUserId)

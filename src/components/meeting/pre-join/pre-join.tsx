@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import {
+  Info,
   LoaderCircle,
   Mic,
   MicOff,
@@ -361,26 +362,54 @@ export function PreJoin({
           noValidate
           className="flex min-w-0 flex-col gap-5 max-lg:row-start-2 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
         >
-          <div className="flex flex-col gap-1.5">
-            <p className="text-muted-foreground text-[13px] font-bold tracking-[0.06em] uppercase">
-              {status === "waiting"
-                ? t("waitingEyebrow")
-                : status === "asking"
-                  ? t("askingEyebrow")
-                  : t("readyToJoin")}
-            </p>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
-              {title}
-            </h1>
-            <p className="text-muted-foreground">
-              {t("hostedBy", { name: meeting.hostName })} ·{" "}
-              <span className="font-mono text-sm">
-                {formatMeetingCode(meeting.code)}
-              </span>
-            </p>
-          </div>
+          {status === "asking" ? (
+            <>
+              <div className="flex flex-col gap-3">
+                <div aria-hidden="true" className="flex gap-2">
+                  {[0, 1, 2].map((dot) => (
+                    <span
+                      key={dot}
+                      style={{ animationDelay: `${dot * 200}ms` }}
+                      className="size-2.5 animate-pulse rounded-full bg-[#f2b200] motion-reduce:animate-none"
+                    />
+                  ))}
+                </div>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
+                  {t("askingTitle")}
+                </h1>
+                <p className="text-muted-foreground">
+                  {t("askingMeeting", { title, name: meeting.hostName })}
+                </p>
+              </div>
+              <p
+                role="status"
+                className="bg-muted flex items-start gap-3 rounded-[14px] px-4 py-3.5 text-sm leading-normal"
+              >
+                <Info
+                  className="text-muted-foreground mt-px size-5 shrink-0"
+                  aria-hidden="true"
+                />
+                {t("askingNote")}
+              </p>
+            </>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-muted-foreground text-[13px] font-bold tracking-[0.06em] uppercase">
+                {status === "waiting" ? t("waitingEyebrow") : t("readyToJoin")}
+              </p>
+              <h1 className="font-display text-3xl font-bold tracking-tight text-balance sm:text-[34px]">
+                {title}
+              </h1>
+              <p className="text-muted-foreground">
+                {t("hostedBy", { name: meeting.hostName })} ·{" "}
+                <span className="font-mono text-sm">
+                  {formatMeetingCode(meeting.code)}
+                </span>
+              </p>
+            </div>
+          )}
 
-          {status === "waiting" || status === "asking" ? (
+          {status === "waiting" ? (
             <p
               role="status"
               className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-3.5 py-3 text-sm leading-normal text-amber-950 ring-1 ring-amber-200 ring-inset dark:bg-amber-400/10 dark:text-amber-100 dark:ring-amber-400/30"
@@ -389,11 +418,11 @@ export function PreJoin({
                 aria-hidden="true"
                 className="mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-400"
               />
-              {status === "asking" ? t("askingNote") : t("waitingForHost")}
+              {t("waitingForHost")}
             </p>
           ) : null}
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5" hidden={status === "asking"}>
             <label htmlFor={nameId} className="text-sm font-semibold">
               {t("yourName")}
             </label>
@@ -435,13 +464,21 @@ export function PreJoin({
             </p>
           ) : null}
 
-          {status === "waiting" || status === "asking" ? (
+          {status === "asking" ? (
+            <Button
+              variant="outline"
+              onPress={onStopWaiting}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive h-[52px] rounded-[14px] text-[16px] font-semibold"
+            >
+              {t("leaveWaitingRoom")}
+            </Button>
+          ) : status === "waiting" ? (
             <Button
               variant="outline"
               onPress={onStopWaiting}
               className="h-[52px] rounded-xl text-[17px] font-semibold"
             >
-              {status === "asking" ? t("cancelAsking") : t("stopWaiting")}
+              {t("stopWaiting")}
             </Button>
           ) : (
             <>

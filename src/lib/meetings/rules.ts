@@ -81,6 +81,8 @@ export type EntryFacts = {
   isBanned: boolean;
   /** A host locked the session: nobody new gets in. */
   locked: boolean;
+  /** Newcomers ask the hosts first (the meeting's setting, or the session's). */
+  waitingRoom: boolean;
   /** How often hosts turned this person away in this session's waiting room. */
   timesDenied: number;
   hostPresent: boolean;
@@ -112,7 +114,7 @@ export function checkEntry(
   ) {
     return "BAD_PASSCODE";
   }
-  const asks = facts.settings.waitingRoom && !facts.isMember;
+  const asks = facts.waitingRoom && !facts.isMember;
   if (asks && facts.timesDenied >= MAX_DENIALS) return "DENIED";
   // Only hosts admit, so with the waiting room on, newcomers wait for one to arrive.
   if (!facts.hostPresent && (!facts.settings.joinBeforeHost || asks)) {

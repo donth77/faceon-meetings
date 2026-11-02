@@ -35,6 +35,8 @@ export type SessionState = {
   rev: number;
   /** Nobody new can join. */
   locked: boolean;
+  /** Newcomers ask to join. */
+  waitingRoom: boolean;
   chat: boolean;
   reactions: boolean;
   screenShare: "host" | "all";

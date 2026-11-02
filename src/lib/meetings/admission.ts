@@ -5,7 +5,7 @@ import type { MeetingRole } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
 
 import type { Admitted } from "./api";
-import { withheldFrom } from "./moderation";
+import { withheldFrom } from "./policy";
 import type { Principal } from "./principal";
 import {
   upsertMember,

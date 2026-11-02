@@ -307,8 +307,10 @@
       "micOn": "Mic on",
       "muted": "Muted",
       "cohost": "Co-host",
-      "raisedHands": "Raised hands ({count})",
-      "muteAll": "Mute all"
+      "raisedHands": "Raised hands · {count}",
+      "muteAll": "Mute all",
+      "everyoneElse": "Everyone else",
+      "allHandsUp": "Everyone here has a hand up."
     },
     "chat": {
       "title": "Chat",
@@ -341,32 +343,22 @@
       "raised": "Hand raised",
       "someoneRaised": "{name} raised their hand",
       "lowerAll": "Lower all hands",
-      "failed": "Couldn’t change the hand. Try again."
+      "failed": "Couldn’t change the hand. Try again.",
+      "view": "View",
+      "position": "Raised hand {order}",
+      "lowerFor": "Lower {name}’s hand",
+      "lowerShort": "Lower"
     },
     "locked": "Meeting locked",
     "lockedHelp": "This meeting is locked. Nobody new can join.",
     "pinned": "Pinned",
     "spotlighted": "Spotlighted",
-    "hostControls": {
-      "button": "Host controls",
-      "title": "Host controls",
-      "close": "Close host controls",
-      "meeting": "Meeting",
-      "lock": "Lock meeting",
-      "lockHelp": "Nobody new can join, even with the link.",
-      "letEveryone": "Let everyone",
-      "shareScreen": "Share their screen",
-      "chat": "Send chat messages",
-      "reactions": "Send reactions",
-      "unmute": "Turn on their microphone",
-      "unmuteHelp": "When this is off, everyone else is muted until a host asks them to unmute."
-    },
     "moderation": {
-      "optionsFor": "More options for {name}",
+      "optionsFor": "Options for {name}",
       "pin": "Pin for me",
       "unpin": "Unpin",
-      "spotlight": "Spotlight for everyone",
-      "endSpotlight": "Remove spotlight",
+      "spotlight": "Pin for everyone",
+      "endSpotlight": "Unpin for everyone",
       "mute": "Mute",
       "askToUnmute": "Ask to unmute",
       "stopVideo": "Stop video",
@@ -380,7 +372,7 @@
       "cancel": "Cancel",
       "muteAllTitle": "Mute everyone?",
       "muteAllBody": "Everyone except hosts and co-hosts will be muted.",
-      "muteAllLetUnmute": "Let them unmute themselves",
+      "muteAllLetUnmute": "Let people unmute themselves",
       "muteAllConfirm": "Mute all",
       "askedToUnmute": "Asked {name} to unmute",
       "failed": "Couldn’t do that. Try again."
@@ -435,6 +427,21 @@
       "manyWantToJoin": "{count} people want to join",
       "participantsWaiting": "{count, plural, one {# participant} other {# participants}}, {waiting} waiting to join",
       "failed": "Couldn’t do that. Try again."
+    },
+    "meetingSettings": {
+      "title": "Meeting settings",
+      "more": "More meeting settings",
+      "lock": "Lock meeting",
+      "lockHelp": "No one new can join, even with the link",
+      "waitingRoom": "Waiting room",
+      "waitingRoomHelp": "Hosts let each person in",
+      "chat": "Allow chat",
+      "reactions": "Allow reactions",
+      "unmute": "Let people unmute themselves",
+      "share": "Who can share their screen",
+      "shareEveryone": "Everyone",
+      "shareHosts": "Hosts only",
+      "endForAll": "End meeting for all"
     }
   },
   "PreJoin": {
@@ -472,9 +479,10 @@
     },
     "guestNote": "You’re joining as a guest. <link>Sign in</link> to use your account.",
     "askToJoin": "Ask to join",
-    "askingEyebrow": "Asking to join",
-    "askingNote": "You’ll join when someone in the meeting lets you in.",
-    "cancelAsking": "Cancel"
+    "askingNote": "Keep this screen open. You’ll join as soon as someone lets you in, and we’ll play a sound.",
+    "askingTitle": "Waiting for the host to let you in",
+    "askingMeeting": "{title} · Hosted by {name}",
+    "leaveWaitingRoom": "Leave"
   },
   "DeviceProblems": {
     "microphone": {

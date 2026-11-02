@@ -5,10 +5,17 @@ import { useTranslations } from "next-intl";
 import { useId, useState, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
-import type { AdmittedMeetingInfo, LobbyEntry } from "@/lib/meetings/api";
+import type {
+  AdmittedMeetingInfo,
+  LobbyAction,
+  LobbyEntry,
+} from "@/lib/meetings/api";
+import type { SharedSessionState } from "@/lib/meetings/events";
+import type { SessionPolicy } from "@/lib/meetings/policy";
 
 import { useInvitation } from "../invitation";
 import { useRoomMedia, type RoomParticipant } from "../media";
+import { MeetingSettingsMenu } from "./meeting-settings";
 import { ParticipantMenu } from "./participant-menu";
 import { moderates } from "./roles";
 import { useRoomControls } from "./room-controls";
@@ -21,80 +28,16 @@ const isGuest = (participant: RoomParticipant) =>
 
 const FOOTER_BUTTON =
   "focus-visible:ring-ring flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-white/10 text-sm font-semibold outline-none hover:bg-white/15 focus-visible:ring-2";
+const TEXT_BUTTON =
+  "focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2";
 
-function ParticipantRow({
-  participant,
-  handNumber,
-  onLowerHand,
-}: {
-  participant: RoomParticipant;
-  /** Their place in the queue of raised hands, if their hand is up. */
-  handNumber: number | null;
-  /** Hosts can lower someone's hand. */
-  onLowerHand: (() => void) | null;
-}) {
-  const t = useTranslations("Meeting.people");
-  const th = useTranslations("Meeting.hand");
-  const { roleOf } = useRoomControls();
-  const role = roleOf(participant.userId);
-  const tags = [
-    participant.isLocal ? t("you") : null,
-    role === "host" ? t("host") : role === "cohost" ? t("cohost") : null,
-    isGuest(participant) ? t("guest") : null,
-  ].filter(Boolean);
-
-  return (
-    <li className="group/row flex items-center gap-2.5 py-1.5 pr-3 pl-5 hover:bg-white/[0.04]">
-      {participant.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={participant.image}
-          alt=""
-          className="size-8 shrink-0 rounded-full"
-        />
-      ) : (
-        <span className="size-8 shrink-0 rounded-full bg-white/10" />
-      )}
-      <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
-        <span className="truncate">{participant.name}</span>
-        {tags.length > 0 ? (
-          <span className="text-muted-foreground shrink-0 text-xs">
-            {tags.join(", ")}
-          </span>
-        ) : null}
-      </span>
-      <span className="text-muted-foreground flex items-center gap-2">
-        {handNumber !== null ? (
-          <span className="flex items-center gap-0.5 text-[#f2b200]">
-            <Hand className="size-[18px]" aria-label={th("raised")} />
-            <span className="text-xs font-bold">{handNumber}</span>
-          </span>
-        ) : null}
-        {handNumber !== null && onLowerHand ? (
-          <Button
-            onPress={onLowerHand}
-            className="text-foreground focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
-          >
-            {th("lower")}
-          </Button>
-        ) : null}
-        {participant.video ? null : (
-          <VideoOff className="size-[18px]" aria-label={t("videoOff")} />
-        )}
-        {participant.audio ? (
-          <Mic className="size-[18px]" aria-label={t("micOn")} />
-        ) : (
-          <MicOff
-            className="size-[18px] text-[#ff7a7d]"
-            aria-label={t("muted")}
-          />
-        )}
-        <ParticipantMenu
-          participant={participant}
-          className="text-foreground opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 hover:bg-white/10 aria-expanded:opacity-100 pointer-coarse:opacity-100"
-        />
-      </span>
-    </li>
+function Avatar({ image }: { image: string | null | undefined }) {
+  return image ? (
+    // Avatars are small SVGs or provider photos; next/image adds nothing here.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={image} alt="" className="size-8 shrink-0 rounded-full" />
+  ) : (
+    <span className="size-8 shrink-0 rounded-full bg-white/10" />
   );
 }
 
@@ -115,6 +58,85 @@ function SectionHeading({
   );
 }
 
+/** Someone in the meeting: tags, camera and mic state, and their ⋯ menu. */
+function ParticipantRow({ participant }: { participant: RoomParticipant }) {
+  const t = useTranslations("Meeting.people");
+  const { roleOf } = useRoomControls();
+  const role = roleOf(participant.userId);
+  const tags = [
+    participant.isLocal ? t("you") : null,
+    role === "host" ? t("host") : role === "cohost" ? t("cohost") : null,
+    isGuest(participant) ? t("guest") : null,
+  ].filter(Boolean);
+
+  return (
+    <li className="group/row flex items-center gap-2.5 py-1.5 pr-3 pl-5 hover:bg-white/[0.04]">
+      <Avatar image={participant.image} />
+      <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
+        <span className="truncate">{participant.name}</span>
+        {tags.length > 0 ? (
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {tags.join(", ")}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-muted-foreground flex items-center gap-2">
+        {participant.video ? null : (
+          <VideoOff className="size-[18px]" aria-label={t("videoOff")} />
+        )}
+        {participant.audio ? (
+          <Mic className="size-[18px]" aria-label={t("micOn")} />
+        ) : (
+          <MicOff
+            className="size-[18px] text-[#ff7a7d]"
+            aria-label={t("muted")}
+          />
+        )}
+        <ParticipantMenu
+          participant={participant}
+          className="text-foreground opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 hover:bg-white/10 aria-expanded:opacity-100 pointer-coarse:opacity-100"
+        />
+      </span>
+    </li>
+  );
+}
+
+/** A raised hand, numbered in the order hands went up; hosts can lower it. */
+function RaisedHandRow({
+  participant,
+  order,
+  onLower,
+}: {
+  participant: RoomParticipant;
+  order: number;
+  onLower: (() => void) | null;
+}) {
+  const t = useTranslations("Meeting.hand");
+  return (
+    <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
+      <span
+        aria-label={t("position", { order })}
+        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f2b200] text-xs font-bold text-[#1b1500]"
+      >
+        {order}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm">
+        {participant.name}
+      </span>
+      <Hand className="size-[18px] text-[#f2b200]" aria-hidden="true" />
+      {onLower ? (
+        <Button
+          onPress={onLower}
+          aria-label={t("lowerFor", { name: participant.name })}
+          className={TEXT_BUTTON}
+        >
+          {t("lowerShort")}
+        </Button>
+      ) : null}
+    </li>
+  );
+}
+
 /** Someone in the waiting room, with Deny and Admit. */
 function WaitingRow({
   entry,
@@ -129,16 +151,7 @@ function WaitingRow({
   const tl = useTranslations("Meeting.lobby");
   return (
     <li className="flex items-center gap-2.5 py-1.5 pr-3 pl-5">
-      {entry.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={entry.image}
-          alt=""
-          className="size-8 shrink-0 rounded-full"
-        />
-      ) : (
-        <span className="size-8 shrink-0 rounded-full bg-white/10" />
-      )}
+      <Avatar image={entry.image} />
       <span className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
         <span className="truncate">{entry.name}</span>
         {entry.guest ? (
@@ -166,31 +179,32 @@ function WaitingRow({
 }
 
 /**
- * Participants: the waiting room (for hosts), then everyone in the meeting, searchable,
- * with raised hands on top in the order they went up. Hosts get Mute all and each
- * person's ⋯ menu of host actions.
+ * Participants: the waiting room (for hosts), raised hands in the order they went up,
+ * then everyone else, searchable. Hosts get Mute all, each person's ⋯ menu and Meeting
+ * settings.
  */
 export function ParticipantsPanel({
   meeting,
+  state,
   waiting,
   onDecide,
-  hands,
   onLowerHand,
   onLowerAll,
   onMuteAll,
+  onPolicyChange,
+  onEndForAll,
   onClose,
 }: {
   meeting: AdmittedMeetingInfo;
+  state: SharedSessionState | null;
   /** The waiting room; hosts and co-hosts only. */
   waiting: LobbyEntry[];
-  onDecide: (
-    action:
-      { action: "admit" | "deny"; ids: string[] } | { action: "admitAll" },
-  ) => void;
-  hands: Record<string, string>;
+  onDecide: (action: LobbyAction) => void;
   onLowerHand: (userId: string) => void;
   onLowerAll: () => void;
   onMuteAll: () => void;
+  onPolicyChange: (policy: Partial<SessionPolicy>) => void;
+  onEndForAll: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations("Meeting.people");
@@ -203,34 +217,18 @@ export function ParticipantsPanel({
   const searchId = useId();
   const [query, setQuery] = useState("");
 
-  const queue = Object.entries(hands)
+  const queue = Object.entries(state?.hands ?? {})
     .sort(([, a], [, b]) => a.localeCompare(b))
     .map(([userId]) => userId);
-  const handNumber = (p: RoomParticipant) => {
-    const index = queue.indexOf(p.userId);
-    return index === -1 ? null : index + 1;
-  };
   const everyone = orderParticipants(media.participants);
   const q = query.trim().toLocaleLowerCase();
-  const shown = q
-    ? everyone.filter((p) => p.name.toLocaleLowerCase().includes(q))
-    : everyone;
-  const waitingShown = q
-    ? waiting.filter((w) => w.name.toLocaleLowerCase().includes(q))
-    : waiting;
-  const raised = shown
-    .filter((p) => handNumber(p) !== null)
-    .sort((a, b) => (handNumber(a) ?? 0) - (handNumber(b) ?? 0));
-  const rest = shown.filter((p) => handNumber(p) === null);
-
-  const row = (participant: RoomParticipant) => (
-    <ParticipantRow
-      key={participant.key}
-      participant={participant}
-      handNumber={handNumber(participant)}
-      onLowerHand={isHost ? () => onLowerHand(participant.userId) : null}
-    />
-  );
+  const matches = (name: string) => !q || name.toLocaleLowerCase().includes(q);
+  const shown = everyone.filter((p) => matches(p.name));
+  const waitingShown = waiting.filter((w) => matches(w.name));
+  const raised = queue
+    .map((userId) => shown.find((p) => p.userId === userId))
+    .filter((p): p is RoomParticipant => p !== undefined);
+  const rest = shown.filter((p) => !queue.includes(p.userId));
 
   return (
     <SidePanel
@@ -239,12 +237,6 @@ export function ParticipantsPanel({
       onClose={onClose}
       footer={
         <>
-          {isHost ? (
-            <Button onPress={onMuteAll} className={FOOTER_BUTTON}>
-              <MicOff className="size-[18px]" aria-hidden="true" />
-              {t("muteAll")}
-            </Button>
-          ) : null}
           <Button
             onPress={() => void copyInvitation()}
             className={FOOTER_BUTTON}
@@ -252,6 +244,20 @@ export function ParticipantsPanel({
             <Link2 className="size-[18px]" aria-hidden="true" />
             {t("invite")}
           </Button>
+          {isHost ? (
+            <>
+              <Button onPress={onMuteAll} className={FOOTER_BUTTON}>
+                <MicOff className="size-[18px]" aria-hidden="true" />
+                {t("muteAll")}
+              </Button>
+              <MeetingSettingsMenu
+                state={state}
+                isOwner={selfRole === "host"}
+                onChange={onPolicyChange}
+                onEndForAll={onEndForAll}
+              />
+            </>
+          ) : null}
         </>
       }
     >
@@ -279,7 +285,7 @@ export function ParticipantsPanel({
               action={
                 <Button
                   onPress={() => onDecide({ action: "admitAll" })}
-                  className="text-primary focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+                  className={`text-primary ${TEXT_BUTTON}`}
                 >
                   {tl("admitAll")}
                 </Button>
@@ -306,7 +312,7 @@ export function ParticipantsPanel({
                 isHost ? (
                   <Button
                     onPress={onLowerAll}
-                    className="text-primary focus-visible:ring-ring rounded-md px-1.5 py-0.5 text-xs font-semibold outline-none hover:bg-white/10 focus-visible:ring-2"
+                    className={`text-primary ${TEXT_BUTTON}`}
                   >
                     {th("lowerAll")}
                   </Button>
@@ -315,21 +321,39 @@ export function ParticipantsPanel({
             >
               {t("raisedHands", { count: raised.length })}
             </SectionHeading>
-            <ul>{raised.map(row)}</ul>
+            <ul>
+              {raised.map((participant) => (
+                <RaisedHandRow
+                  key={participant.key}
+                  participant={participant}
+                  order={queue.indexOf(participant.userId) + 1}
+                  onLower={
+                    isHost ? () => onLowerHand(participant.userId) : null
+                  }
+                />
+              ))}
+            </ul>
           </section>
         ) : null}
-        {rest.length > 0 || raised.length === 0 ? (
-          <section>
-            <SectionHeading>{t("inMeeting")}</SectionHeading>
-            {rest.length > 0 ? (
-              <ul>{rest.map(row)}</ul>
-            ) : (
-              <p className="text-muted-foreground px-5 py-3 text-sm">
-                {t("noMatch")}
-              </p>
-            )}
-          </section>
-        ) : null}
+        <section>
+          <SectionHeading>
+            {raised.length > 0 ? t("everyoneElse") : t("inMeeting")}
+          </SectionHeading>
+          {rest.length > 0 ? (
+            <ul>
+              {rest.map((participant) => (
+                <ParticipantRow
+                  key={participant.key}
+                  participant={participant}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground px-5 py-3 text-sm">
+              {shown.length === 0 ? t("noMatch") : t("allHandsUp")}
+            </p>
+          )}
+        </section>
       </div>
     </SidePanel>
   );

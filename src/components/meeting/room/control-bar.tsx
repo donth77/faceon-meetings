@@ -8,7 +8,6 @@ import {
   Mic,
   MicOff,
   PhoneOff,
-  ShieldUser,
   SmilePlus,
   Users,
   Video,
@@ -121,7 +120,7 @@ function LeaveControl({
  * caret), then Share screen, then the red Leave. Phones get the same buttons, larger,
  * without labels.
  */
-export type PanelName = "people" | "chat" | "host";
+export type PanelName = "people" | "chat";
 
 /** Participants or Chat: a round button with a count badge, tinted while its panel is open. */
 function PanelButton({
@@ -178,17 +177,15 @@ function PanelButton({
   );
 }
 
-/** On phones, Participants, Chat and Host controls live in the More menu. */
+/** On phones, Participants and Chat live in the More menu. */
 function MoreMenu({
   peopleCount,
   unreadChat,
-  isHost,
   onOpenPanel,
   onReaction,
 }: {
   peopleCount: number;
   unreadChat: number;
-  isHost: boolean;
   onOpenPanel: (panel: PanelName) => void;
   /** Null when the host has turned reactions off. */
   onReaction: ((code: ReactionCode) => void) | null;
@@ -245,12 +242,6 @@ function MoreMenu({
               ? t("chat.withUnread", { count: unreadChat })
               : t("chat.title")}
           </DropdownMenuItem>
-          {isHost ? (
-            <DropdownMenuItem onAction={() => onOpenPanel("host")}>
-              <ShieldUser aria-hidden="true" />
-              {t("hostControls.title")}
-            </DropdownMenuItem>
-          ) : null}
         </DropdownMenu>
       </DropdownMenuTrigger>
     </div>
@@ -260,7 +251,6 @@ function MoreMenu({
 export function ControlBar({
   title,
   isOwner,
-  isHost,
   onEndForAll,
   panel,
   onTogglePanel,
@@ -275,8 +265,6 @@ export function ControlBar({
   title: string;
   /** The meeting's owner, who can end it for everyone. */
   isOwner: boolean;
-  /** The owner or a co-host, who get Host controls. */
-  isHost: boolean;
   onEndForAll: () => void;
   /** The side panel that's open, if any. */
   panel: PanelName | null;
@@ -375,7 +363,6 @@ export function ControlBar({
         <MoreMenu
           peopleCount={count}
           unreadChat={unreadChat}
-          isHost={isHost}
           onOpenPanel={onTogglePanel}
           onReaction={onReaction}
         />
@@ -383,16 +370,6 @@ export function ControlBar({
       </div>
 
       <div className="flex flex-1 items-start justify-end gap-0.5 max-md:hidden">
-        {isHost ? (
-          <PanelButton
-            icon={ShieldUser}
-            label={t("hostControls.button")}
-            accessibleLabel={t("hostControls.title")}
-            badge={null}
-            active={panel === "host"}
-            onPress={() => onTogglePanel("host")}
-          />
-        ) : null}
         <PanelButton
           icon={Users}
           label={t("people.button")}
