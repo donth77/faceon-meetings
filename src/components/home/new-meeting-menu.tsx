@@ -85,8 +85,8 @@ function MeetingLinkDialog({
 }
 
 /**
- * Meet-style "New meeting" menu: start an instant meeting, or create one for later and
- * share its link. Scheduling arrives with the scheduler.
+ * Meet-style "New meeting" menu: start an instant meeting, create one for later and
+ * share its link, or schedule one.
  */
 export function NewMeetingMenu() {
   const t = useTranslations("Home");
@@ -95,6 +95,10 @@ export function NewMeetingMenu() {
   const [created, setCreated] = useState<Created | null>(null);
 
   function handleAction(key: Key) {
+    if (key === "schedule") {
+      router.push("/schedule");
+      return;
+    }
     if (key !== "instant" && key !== "later") return;
     startTransition(async () => {
       try {
@@ -125,7 +129,6 @@ export function NewMeetingMenu() {
         <DropdownMenu
           placement="bottom start"
           className="min-w-64"
-          disabledKeys={["schedule"]}
           onAction={handleAction}
         >
           <DropdownMenuItem id="instant" textValue={t("startInstant")}>

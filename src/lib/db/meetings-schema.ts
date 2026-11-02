@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -56,8 +57,16 @@ export const meeting = pgTable(
     status: meetingStatus("status").notNull().default("active"),
     /** Null shows the default, "{host}'s meeting", in each viewer's language. */
     title: text("title"),
+    description: text("description"),
     passcode: text("passcode"),
     settings: jsonb("settings").$type<MeetingSettings>().notNull(),
+    /** Scheduled meetings: when it (or a series' first meeting) starts, and for how long. */
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    durationMin: integer("duration_min"),
+    /** The IANA time zone it was scheduled in; a series keeps its local time in it. */
+    timeZone: text("time_zone"),
+    /** The host's Google Calendar event, when Calendar sync is on. */
+    googleEventId: text("google_event_id"),
     createdAt: createdAt(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
   },
@@ -99,6 +108,8 @@ export const meetingSession = pgTable(
       .defaultNow()
       .notNull(),
     endedAt: timestamp("ended_at", { withTimezone: true }),
+    /** For a scheduled meeting: the occurrence this session ran (its planned start). */
+    occurrenceStart: timestamp("occurrence_start", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("meeting_session_one_open")
@@ -173,4 +184,66 @@ export const admissionRequest = pgTable(
       .on(table.sessionId, table.mediaUserId)
       .where(sql`${table.status} = 'pending'`),
   ],
+);
+
+/** People invited to a scheduled meeting, by email. Deleted with the meeting. */
+export const meetingInvitee = pgTable(
+  "meeting_invitee",
+  {
+    meetingId: uuid("meeting_id")
+      .notNull()
+      .references(() => meeting.id, { onDelete: "cascade" }),
+    /** Lowercased. */
+    email: text("email").notNull(),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.meetingId, table.email] }),
+    index("meeting_invitee_email").on(table.email),
+  ],
+);
+
+/**
+ * How a recurring meeting repeats: an RFC 5545 rule (without DTSTART), expanded in the
+ * meeting's time zone. Usually one row; "this and following" ends one and starts
+ * another, so the ID and link never change.
+ */
+export const meetingRule = pgTable(
+  "meeting_rule",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    meetingId: uuid("meeting_id")
+      .notNull()
+      .references(() => meeting.id, { onDelete: "cascade" }),
+    rrule: text("rrule").notNull(),
+    /** The first occurrence this rule covers. */
+    firstStart: timestamp("first_start", { withTimezone: true }).notNull(),
+    /** Null while the series runs on. */
+    lastStart: timestamp("last_start", { withTimezone: true }),
+    durationMin: integer("duration_min").notNull(),
+    timeZone: text("time_zone").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("meeting_rule_meeting").on(table.meetingId)],
+);
+
+/** One occurrence of a series moved, retitled or cancelled ("this meeting" edits). */
+export const meetingException = pgTable(
+  "meeting_exception",
+  {
+    meetingId: uuid("meeting_id")
+      .notNull()
+      .references(() => meeting.id, { onDelete: "cascade" }),
+    /** The occurrence's planned start, which identifies it. */
+    originalStart: timestamp("original_start", {
+      withTimezone: true,
+    }).notNull(),
+    cancelled: boolean("cancelled").notNull().default(false),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    durationMin: integer("duration_min"),
+    title: text("title"),
+  },
+  (table) => [primaryKey({ columns: [table.meetingId, table.originalStart] })],
 );

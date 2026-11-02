@@ -36,7 +36,7 @@ const KEEP_UNUSED_MS = 30 * 24 * 60 * 60 * 1000;
 const keepUntil = () => new Date(Date.now() + KEEP_UNUSED_MS);
 
 /** Settings are checked on every read; settings added later fall back to their defaults. */
-function readMeeting(row: typeof meeting.$inferSelect): Meeting {
+export function readMeeting(row: typeof meeting.$inferSelect): Meeting {
   return {
     ...row,
     settings: MeetingSettings.parse({
@@ -144,7 +144,7 @@ export async function updateMeetingSettings(
 }
 
 /** Postgres's unique_violation, possibly wrapped by Drizzle. */
-function isUniqueViolation(error: unknown): boolean {
+export function isUniqueViolation(error: unknown): boolean {
   const code = (value: unknown) =>
     typeof value === "object" && value !== null && "code" in value
       ? value.code
