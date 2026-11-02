@@ -36,3 +36,4 @@ Backgrounds and effects need a recent Chrome, Edge, Firefox or Safari. Where a b
 
 - Your video is mirrored to you if you like it that way (**Settings**, under **Video**), so text in a background reads backwards to you only. Everyone else sees it the right way round.
 - The first time, your browser downloads what it needs to find you, a few megabytes, and then keeps it.
+- For the cleanest edges, light your face and sit in front of something that stands out from your hair and clothes. {appName} lines its outline up with what your camera sees, so a dark sweater in front of a dark wall blurs where they meet.

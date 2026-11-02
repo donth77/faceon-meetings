@@ -1,6 +1,16 @@
 import type { BlurLevel, MotionId } from "../effects";
 import { coverScale } from "../frame";
-import { BACKGROUND_WEIGHTS, BLUR, COMPOSITE, MOTION, VERTEX } from "./shaders";
+import {
+  BACKGROUND_WEIGHTS,
+  BLUR,
+  BOX,
+  BOX_4,
+  COMPOSITE,
+  GUIDE_FIT,
+  GUIDE_MOMENTS,
+  MOTION,
+  VERTEX,
+} from "./shaders";
 
 /** What goes behind the person. */
 export type Backdrop =
@@ -29,12 +39,43 @@ const MOTION_SIZE = { width: 640, height: 360 };
 
 /** Mask values between these blend the person into the background. */
 const EDGE = [0.35, 0.75] as const;
+/** The same for the guided filter's alpha, whose edges already sit on the real outline. */
+const REFINED_EDGE = [0.25, 0.75] as const;
+
+/** The guided filter's working width (see the shaders): a little more than the mask's. */
+const GUIDE_WIDTH = 384;
+/** Contrast (a color variance) below which the filter doesn't treat a change as an edge. */
+const GUIDE_EPSILON = 0.001;
+/** Window contrast (a color variance) where trusting the fit over the mask starts, and is full. */
+const GUIDE_TRUST = [0.0001, 0.0008] as const;
+/** How much of a new background's light the person's edges take on. */
+const LIGHT_WRAP = 0.3;
 
 type Target = {
   texture: WebGLTexture;
   framebuffer: WebGLFramebuffer;
   width: number;
   height: number;
+};
+
+/** Half-float textures drawn in one pass. */
+type Targets = {
+  textures: WebGLTexture[];
+  framebuffer: WebGLFramebuffer;
+  width: number;
+  height: number;
+};
+
+/** The guided filter's working targets, at its working size. */
+type Guide = {
+  /** The window sums: four textures, and the same again for the second direction. */
+  moments: Targets;
+  momentsSpare: Targets;
+  /** The fit pass: the fit, then the smooth mask, the trust and the window's mask. */
+  fitPass: Targets;
+  /** The fit's own texture, alone, for the second direction of its average. */
+  fit: Target;
+  fitSpare: Target;
 };
 
 type Program = {
@@ -50,6 +91,8 @@ export class Compositor {
   readonly canvas = document.createElement("canvas");
   /** The GPU dropped the context; the processor stops using this compositor. */
   lost = false;
+  /** Whether to refine the mask's edges (see refine); off on devices too slow for it. */
+  refining = true;
   private readonly gl: WebGL2RenderingContext;
   private readonly programs = new Map<string, Program>();
   private readonly frameTexture: WebGLTexture;
@@ -58,6 +101,11 @@ export class Compositor {
   private uploadedBackground: TexImageSource | null = null;
   private blurTargets: [Target, Target] | null = null;
   private motionTarget: Target | null = null;
+  /** Whether this GPU can draw to half floats, which the guided filter needs. */
+  private canRefine: boolean;
+  private guide: Guide | null = null;
+  /** Signals when the GPU has finished the last frame drawn. */
+  private drawn: WebGLSync | null = null;
 
   constructor() {
     const gl = this.canvas.getContext("webgl2", {
@@ -86,9 +134,14 @@ export class Compositor {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
+    this.canRefine = Boolean(
+      gl.getExtension("EXT_color_buffer_float") ??
+      gl.getExtension("EXT_color_buffer_half_float"),
+    );
+    // Backgrounds keep smaller copies (mipmaps), for the soft light at the person's edges.
     this.frameTexture = this.createTexture();
     this.maskTexture = this.createTexture();
-    this.backgroundTexture = this.createTexture();
+    this.backgroundTexture = this.createTexture(true);
     // Until the first mask: all background, so nobody shows before we know where they are.
     this.setMask(new Uint8ClampedArray(1), 1, 1);
   }
@@ -125,13 +178,14 @@ export class Compositor {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.frameTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, frame);
+    const refined = this.refine(width, height);
 
     let mode: number;
     let background: WebGLTexture;
     let cover: [number, number] = [1, 1];
     if (backdrop.kind === "blur") {
       mode = 0;
-      background = this.blur(width, height, backdrop.level);
+      background = this.blur(width, height, backdrop.level, refined);
     } else if (backdrop.kind === "image") {
       mode = 1;
       background = this.backgroundTexture;
@@ -146,6 +200,7 @@ export class Compositor {
           gl.UNSIGNED_BYTE,
           backdrop.source,
         );
+        gl.generateMipmap(gl.TEXTURE_2D);
         this.uploadedBackground = backdrop.source;
       }
       cover = coverScale(backdrop, { width, height });
@@ -160,12 +215,31 @@ export class Compositor {
     gl.viewport(0, 0, width, height);
     gl.useProgram(composite.program);
     this.bindTexture(composite, "u_frame", 0, this.frameTexture);
-    this.bindTexture(composite, "u_mask", 1, this.maskTexture);
+    this.bindPerson(composite, refined);
     this.bindTexture(composite, "u_background", 2, background);
+    // Images and videos only: a blur is the same room, and motion has no mipmaps.
+    const wrap = refined && mode === 1;
+    gl.uniform1f(composite.uniform("u_wrap"), wrap ? LIGHT_WRAP : 0);
     gl.uniform1i(composite.uniform("u_mode"), mode);
     gl.uniform2f(composite.uniform("u_cover"), cover[0], cover[1]);
-    gl.uniform2f(composite.uniform("u_edge"), EDGE[0], EDGE[1]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    if (this.drawn) gl.deleteSync(this.drawn);
+    this.drawn = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gl.flush();
+  }
+
+  /**
+   * Whether the GPU is still drawing the last frame. Another one now would only queue
+   * behind it, and on a slow GPU the queue grows until the page stops responding.
+   */
+  get busy(): boolean {
+    const { gl, drawn } = this;
+    if (!drawn) return false;
+    if (gl.getSyncParameter(drawn, gl.SYNC_STATUS) !== gl.SIGNALED) return true;
+    gl.deleteSync(drawn);
+    this.drawn = null;
+    return false;
   }
 
   /** Frees the GPU's memory now rather than whenever the page lets the canvas go. */
@@ -173,8 +247,101 @@ export class Compositor {
     this.gl.getExtension("WEBGL_lose_context")?.loseContext();
   }
 
+  /**
+   * Runs the guided filter (see the shaders) on this frame and the latest mask, leaving
+   * the fit in `guide.fit`. False where the GPU can't, or is too slow to: then the smooth
+   * mask is used.
+   */
+  private refine(width: number, height: number): boolean {
+    if (!this.refining || !this.canRefine) return false;
+    const { gl } = this;
+    const w = Math.min(width, GUIDE_WIDTH);
+    const h = Math.max(1, Math.round((height * w) / width));
+    if (this.guide?.fit.width !== w || this.guide.fit.height !== h) {
+      if (this.guide) this.deleteGuide(this.guide);
+      this.guide = this.createGuide(w, h);
+      if (!this.guide) {
+        this.canRefine = false;
+        return false;
+      }
+    }
+    const { moments, momentsSpare, fitPass, fit, fitSpare } = this.guide;
+
+    const sums = this.program("guide-moments", GUIDE_MOMENTS);
+    this.target(moments);
+    gl.useProgram(sums.program);
+    this.bindTexture(sums, "u_frame", 0, this.frameTexture);
+    this.bindTexture(sums, "u_mask", 1, this.maskTexture);
+    // Four reads a quarter of a working pixel apart cover the camera pixels it spans.
+    const spread = width / w / 4;
+    gl.uniform2f(sums.uniform("u_spread"), spread / width, spread / height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    const box4 = this.program("box-4", BOX_4);
+    gl.useProgram(box4.program);
+    this.box(box4, moments.textures, momentsSpare, [1, 0]);
+    this.box(box4, momentsSpare.textures, moments, [0, 1]);
+
+    const solve = this.program("guide-fit", GUIDE_FIT);
+    this.target(fitPass);
+    gl.useProgram(solve.program);
+    moments.textures.forEach((texture, n) =>
+      this.bindTexture(solve, `u_in${n}`, n, texture),
+    );
+    this.bindTexture(solve, "u_mask", 4, this.maskTexture);
+    gl.uniform1f(solve.uniform("u_epsilon"), GUIDE_EPSILON);
+    gl.uniform2f(solve.uniform("u_edge"), EDGE[0], EDGE[1]);
+    gl.uniform2f(solve.uniform("u_trust"), GUIDE_TRUST[0], GUIDE_TRUST[1]);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    const box1 = this.program("box", BOX);
+    gl.useProgram(box1.program);
+    this.box(box1, [fit.texture], fitSpare, [1, 0]);
+    this.box(box1, [fitSpare.texture], fit, [0, 1]);
+    return true;
+  }
+
+  /** One direction of the window average, from `inputs` into `output`. */
+  private box(
+    program: Program,
+    inputs: readonly WebGLTexture[],
+    output: Target | Targets,
+    step: [number, number],
+  ) {
+    const { gl } = this;
+    this.target(output);
+    inputs.forEach((texture, n) =>
+      this.bindTexture(program, `u_in${n}`, n, texture),
+    );
+    gl.uniform2i(program.uniform("u_step"), step[0], step[1]);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  /** What the shaders' person() reads: the mask, or the guided filter's results. */
+  private bindPerson(program: Program, refined: boolean) {
+    const { gl } = this;
+    this.bindTexture(program, "u_mask", 1, this.maskTexture);
+    const guide = this.guide?.fitPass.textures[1];
+    if (refined && this.guide && guide) {
+      this.bindTexture(program, "u_fit", 3, this.guide.fit.texture);
+      this.bindTexture(program, "u_guide", 4, guide);
+    }
+    gl.uniform1i(program.uniform("u_refined"), refined ? 1 : 0);
+    gl.uniform2f(program.uniform("u_edge"), EDGE[0], EDGE[1]);
+    gl.uniform2f(
+      program.uniform("u_refinedEdge"),
+      REFINED_EDGE[0],
+      REFINED_EDGE[1],
+    );
+  }
+
   /** The background without the person, blurred; weighted (see the shaders). */
-  private blur(width: number, height: number, level: BlurLevel): WebGLTexture {
+  private blur(
+    width: number,
+    height: number,
+    level: BlurLevel,
+    refined: boolean,
+  ): WebGLTexture {
     const { gl } = this;
     const { scale, rounds, spread } = BLUR_SETTINGS[level];
     const w = Math.max(1, Math.round(width * scale));
@@ -189,8 +356,7 @@ export class Compositor {
     this.target(a);
     gl.useProgram(weights.program);
     this.bindTexture(weights, "u_frame", 0, this.frameTexture);
-    this.bindTexture(weights, "u_mask", 1, this.maskTexture);
-    gl.uniform2f(weights.uniform("u_edge"), EDGE[0], EDGE[1]);
+    this.bindPerson(weights, refined);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     const blur = this.program("blur", BLUR);
@@ -227,7 +393,7 @@ export class Compositor {
     return this.motionTarget.texture;
   }
 
-  private target(target: Target) {
+  private target(target: Target | Targets) {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, target.framebuffer);
     this.gl.viewport(0, 0, target.width, target.height);
   }
@@ -285,31 +451,29 @@ export class Compositor {
     return entry;
   }
 
-  private createTexture(): WebGLTexture {
+  private createTexture(mipmaps = false): WebGLTexture {
     const { gl } = this;
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      mipmaps ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR,
+    );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return texture;
   }
 
-  private createTarget(width: number, height: number): Target {
+  /** A texture to draw into, new or (`texture`) one that's also drawn into elsewhere. */
+  private createTarget(
+    width: number,
+    height: number,
+    halfFloat = false,
+    texture = this.allocate(width, height, halfFloat),
+  ): Target {
     const { gl } = this;
-    const texture = this.createTexture();
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA8,
-      width,
-      height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null,
-    );
     const framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.framebufferTexture2D(
@@ -320,6 +484,83 @@ export class Compositor {
       0,
     );
     return { texture, framebuffer, width, height };
+  }
+
+  private createTargets(width: number, height: number, count: number): Targets {
+    const { gl } = this;
+    const textures = Array.from({ length: count }, () =>
+      this.allocate(width, height, true),
+    );
+    const framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    const attachments = textures.map((texture, n) => {
+      gl.framebufferTexture2D(
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0 + n,
+        gl.TEXTURE_2D,
+        texture,
+        0,
+      );
+      return gl.COLOR_ATTACHMENT0 + n;
+    });
+    gl.drawBuffers(attachments);
+    return { textures, framebuffer, width, height };
+  }
+
+  /** The guided filter's targets, or null where this GPU can't draw to them. */
+  private createGuide(width: number, height: number): Guide | null {
+    const { gl } = this;
+    const fitPass = this.createTargets(width, height, 2);
+    const guide: Guide = {
+      moments: this.createTargets(width, height, 4),
+      momentsSpare: this.createTargets(width, height, 4),
+      fitPass,
+      fit: this.createTarget(width, height, true, fitPass.textures[0]),
+      fitSpare: this.createTarget(width, height, true),
+    };
+    const complete = [
+      guide.moments,
+      guide.momentsSpare,
+      guide.fitPass,
+      guide.fit,
+      guide.fitSpare,
+    ].every((target) => {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+      return (
+        gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE
+      );
+    });
+    if (complete) return guide;
+    this.deleteGuide(guide);
+    return null;
+  }
+
+  private deleteGuide(guide: Guide) {
+    for (const target of [guide.moments, guide.momentsSpare, guide.fitPass]) {
+      this.gl.deleteFramebuffer(target.framebuffer);
+      target.textures.forEach((texture) => this.gl.deleteTexture(texture));
+    }
+    // The fit's texture went with the fit pass.
+    this.gl.deleteFramebuffer(guide.fit.framebuffer);
+    this.deleteTarget(guide.fitSpare);
+  }
+
+  /** An empty texture to draw into: 8-bit, or half floats for the guided filter. */
+  private allocate(width: number, height: number, halfFloat: boolean) {
+    const { gl } = this;
+    const texture = this.createTexture();
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      halfFloat ? gl.RGBA16F : gl.RGBA8,
+      width,
+      height,
+      0,
+      gl.RGBA,
+      halfFloat ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE,
+      null,
+    );
+    return texture;
   }
 
   private deleteTarget(target: Target) {

@@ -38,14 +38,16 @@ export function wideCrop(picture: Size, maxWidth: number) {
 
 /**
  * Turns each frame's person mask (a confidence from 0 to 1 per pixel) into 8-bit alpha
- * for the GPU, eased toward each new mask so edges don't flicker between frames.
+ * for the GPU, steadied over time only where the model is unsure. A pixel it's sure about
+ * takes the new value at once, so edges keep up when you move; one near 0.5 leans on the
+ * last frame, so edges don't flicker. (MediaPipe's own segmentation smoothing.)
  */
 export class MaskSmoother {
   private level = new Float32Array(0);
   private bytes = new Uint8ClampedArray(0);
 
-  /** `follow`: how far each new mask moves the edges, from 0 (never) to 1 (at once). */
-  constructor(private readonly follow = 0.65) {}
+  /** `keep`: how much of the last frame an unsure pixel keeps, from 0 to 1. */
+  constructor(private readonly keep = 0.7) {}
 
   update(confidence: Float32Array): Uint8ClampedArray {
     if (this.level.length !== confidence.length) {
@@ -53,13 +55,27 @@ export class MaskSmoother {
       this.bytes = new Uint8ClampedArray(confidence.length);
     }
     for (let i = 0; i < confidence.length; i++) {
-      const previous = this.level[i] ?? 0;
-      const next = previous + ((confidence[i] ?? 0) - previous) * this.follow;
-      this.level[i] = next;
-      this.bytes[i] = next * 255;
+      const next = Math.min(1, Math.max(0, confidence[i] ?? 0));
+      const previous = this.level[i] ?? next;
+      const value = next + (previous - next) * uncertainty(next) * this.keep;
+      this.level[i] = value;
+      this.bytes[i] = value * 255;
     }
     return this.bytes;
   }
+}
+
+/**
+ * How unsure a confidence is: 1 at 0.5, falling to 0 at 0 and 1. MediaPipe's polynomial
+ * fit of 1 - (1 - H(p))², H being the binary entropy.
+ */
+export function uncertainty(confidence: number): number {
+  const t = confidence - 0.5;
+  const x = t * t;
+  const certainty =
+    x *
+    (5.68842 + x * (-0.748699 + x * (-57.8051 + x * (291.309 + x * -624.717))));
+  return 1 - Math.min(1, Math.max(0, certainty));
 }
 
 /**

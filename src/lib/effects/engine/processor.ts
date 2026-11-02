@@ -7,7 +7,10 @@ import { Compositor } from "./compositor";
 import { loadSegmenter, segment } from "./segmenter";
 
 export type EffectsEvents = {
-  /** Frames kept taking too long, even finding the person every other frame. */
+  /**
+   * Frames kept taking too long, even finding the person every other frame with plain
+   * edges.
+   */
   onTooSlow?: () => void;
   /** Nothing can be shown: the model or the first background didn't load, or the GPU gave up. */
   onFailed?: () => void;
@@ -112,10 +115,22 @@ export function startEffects(
   }
   setEffect(effect);
 
+  /** Step down: find the person every other frame, then skip the edge refinement. */
+  function stepDown() {
+    if (every === 1) every = 2;
+    else if (compositor.refining) compositor.refining = false;
+    else events.onTooSlow?.();
+  }
+
   const render: Render = (frame, width, height) => {
     if (!backdrop || failed) return false;
     if (compositor.lost) {
       fail();
+      return false;
+    }
+    // The GPU hasn't finished the last frame: skip this one, and count it as slow.
+    if (compositor.busy) {
+      if (segmenter && budget.record(Infinity)) stepDown();
       return false;
     }
     const begun = performance.now();
@@ -141,10 +156,7 @@ export function startEffects(
       fail();
       return false;
     }
-    if (segmenter && budget.record(performance.now() - begun)) {
-      if (every === 1) every = 2;
-      else events.onTooSlow?.();
-    }
+    if (segmenter && budget.record(performance.now() - begun)) stepDown();
     return true;
   };
 

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { coverScale, FrameBudget, MaskSmoother, wideCrop } from "./frame";
+import {
+  coverScale,
+  FrameBudget,
+  MaskSmoother,
+  uncertainty,
+  wideCrop,
+} from "./frame";
 
 describe("wideCrop", () => {
   it("takes the middle 16:9 of a tall picture", () => {
@@ -62,11 +68,18 @@ describe("MaskSmoother", () => {
     ]);
   });
 
-  it("eases toward each new mask", () => {
-    const smoother = new MaskSmoother(0.5);
+  it("takes a value the model is sure of at once, so edges keep up", () => {
+    const smoother = new MaskSmoother();
     smoother.update(Float32Array.from([0, 1]));
-    expect([...smoother.update(Float32Array.from([1, 0]))]).toEqual([128, 128]);
-    expect([...smoother.update(Float32Array.from([1, 0]))]).toEqual([191, 64]);
+    expect([...smoother.update(Float32Array.from([1, 0]))]).toEqual([255, 0]);
+  });
+
+  it("steadies a value the model is unsure of with the last frame", () => {
+    const smoother = new MaskSmoother(0.5);
+    smoother.update(Float32Array.from([0]));
+    // 0.5 is as unsure as it gets: half of the last frame stays.
+    expect([...smoother.update(Float32Array.from([0.5]))]).toEqual([64]);
+    expect([...smoother.update(Float32Array.from([0.5]))]).toEqual([96]);
   });
 
   it("keeps values in range", () => {
@@ -74,6 +87,7 @@ describe("MaskSmoother", () => {
     expect([...smoother.update(Float32Array.from([-0.2, 1.3]))]).toEqual([
       0, 255,
     ]);
+    expect([...smoother.update(Float32Array.from([-5, 9]))]).toEqual([0, 255]);
   });
 
   it("starts over when the mask's size changes", () => {
@@ -82,6 +96,20 @@ describe("MaskSmoother", () => {
     expect([...smoother.update(Float32Array.from([1, 1, 1]))]).toEqual([
       255, 255, 255,
     ]);
+  });
+});
+
+describe("uncertainty", () => {
+  it("is greatest at 0.5 and gone at 0 and 1", () => {
+    expect(uncertainty(0.5)).toBe(1);
+    expect(uncertainty(0)).toBeCloseTo(0, 2);
+    expect(uncertainty(1)).toBeCloseTo(0, 2);
+  });
+
+  it("falls the surer the model is, the same either way", () => {
+    expect(uncertainty(0.75)).toBeLessThan(uncertainty(0.6));
+    expect(uncertainty(0.9)).toBeLessThan(uncertainty(0.75));
+    expect(uncertainty(0.25)).toBeCloseTo(uncertainty(0.75), 6);
   });
 });
 
