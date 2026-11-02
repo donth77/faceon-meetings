@@ -11,13 +11,13 @@
     "dev": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next dev",
     "build": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next build",
     "start": "next start",
-    "lint": "eslint src scripts tests *.ts *.mjs",
-    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "eslint src scripts tests google-addon *.ts *.mjs",
+    "typecheck": "next typegen && tsc --noEmit && tsc -p google-addon",
     "test": "vitest run",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:nightly": "playwright test --project=nightly-chromium --project=nightly-firefox",
-    "format": "prettier --write src scripts tests *.ts *.mjs *.json *.md",
-    "format:check": "prettier --check src scripts tests *.ts *.mjs *.json *.md",
+    "format": "prettier --write src scripts tests google-addon *.ts *.mjs *.json *.md",
+    "format:check": "prettier --check src scripts tests google-addon *.ts *.mjs *.json *.md",
     "stream:setup": "node --env-file=.env.local scripts/setup-stream.ts",
     "stream:check": "node --env-file=.env.local scripts/setup-stream.ts --check",
     "stream:lockdown-test": "node --env-file=.env.local scripts/stream-lockdown-test.ts",
@@ -25,7 +25,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:check": "node --env-file=.env.local scripts/db-check.ts",
-    "brand": "node scripts/brand.ts"
+    "brand": "node scripts/brand.ts",
+    "addon:build": "pnpm --filter @faceon/google-addon build",
+    "addon:push": "pnpm --filter @faceon/google-addon push"
   },
   "dependencies": {
     "@dicebear/core": "^10.7.0",

@@ -1,3 +1,6 @@
+packages:
+  - google-addon
+
 ignoredBuiltDependencies:
   - "@parcel/watcher"
   - "@swc/core"

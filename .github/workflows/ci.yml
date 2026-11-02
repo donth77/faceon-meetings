@@ -52,6 +52,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm addon:build
 
       - name: Throwaway secrets for this run
         run: |

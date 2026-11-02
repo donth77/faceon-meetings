@@ -1,0 +1,44 @@
+{
+  "timeZone": "Etc/UTC",
+  "runtimeVersion": "V8",
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "openid",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/script.locale",
+    "https://www.googleapis.com/auth/script.scriptapp",
+    "https://www.googleapis.com/auth/calendar.addons.execute",
+    "https://www.googleapis.com/auth/calendar.addons.current.event.read",
+    "https://www.googleapis.com/auth/calendar.addons.current.event.write",
+    "https://www.googleapis.com/auth/calendar.events.readonly",
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/gmail.addons.current.action.compose"
+  ],
+  "urlFetchWhitelist": ["{{FACEON_URL}}/"],
+  "dependencies": {
+    "enabledAdvancedServices": [
+      { "userSymbol": "Calendar", "serviceId": "calendar", "version": "v3" }
+    ]
+  },
+  "addOns": {
+    "common": {
+      "name": "{{APP_NAME}}",
+      "logoUrl": "{{LOGO_URL}}",
+      "layoutProperties": { "primaryColor": "#1f5eff" },
+      "homepageTrigger": { "runFunction": "onHomepage", "enabled": true },
+      "useLocaleFromApp": true
+    },
+    "calendar": {
+      "conferenceSolution": [
+        {
+          "id": "faceon",
+          "name": "{{APP_NAME}} meeting",
+          "logoUrl": "{{CONFERENCE_LOGO_URL}}",
+          "onCreateFunction": "onCreateConference"
+        }
+      ],
+      "createSettingsUrlFunction": "createSettingsUrl",
+      "currentEventAccess": "READ_WRITE"
+    }
+  }
+}

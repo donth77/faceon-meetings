@@ -26,6 +26,11 @@
 
 # misc
 .DS_Store
+
+# the Google Workspace add-on's build and its clasp settings (each deployment's own)
+/google-addon/dist/
+/google-addon/.clasp.json
+/google-addon/.clasprc.json
 *.pem
 
 # debug

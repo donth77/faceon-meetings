@@ -1,0 +1,16 @@
+{
+  "name": "@faceon/google-addon",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "push": "node build.mjs && pnpm dlx @google/clasp@3.4.1 push --force",
+    "login": "pnpm dlx @google/clasp@3.4.1 login"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "2.0.14",
+    "esbuild": "0.28.2"
+  }
+}
