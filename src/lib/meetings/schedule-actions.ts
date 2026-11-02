@@ -21,7 +21,9 @@ import {
   deleteSchedule,
   ScheduleError,
   scheduleMeeting,
+  upcomingFor,
   updateSchedule,
+  type UpcomingItem,
 } from "./scheduling";
 import { MeetingSettings } from "./settings";
 
@@ -181,4 +183,44 @@ export async function updateScheduledSettingsAction(
     ...(next.waitingRoom ? { joinBeforeHost: false } : {}),
   });
   return true;
+}
+
+/** Upcoming rows as the browser gets them: times in ISO 8601. */
+export type OccurrenceRow = Omit<
+  UpcomingItem,
+  "start" | "end" | "originalStart"
+> & { start: string; end: string; originalStart: string };
+
+/**
+ * The calendar's meetings between two moments (at most about two months at a time): the
+ * ones the caller hosts or is invited to.
+ */
+export async function occurrencesAction(
+  from: unknown,
+  to: unknown,
+): Promise<OccurrenceRow[]> {
+  const session = await requireSession("/upcoming");
+  const start = OccurrenceRef.safeParse(from);
+  const end = OccurrenceRef.safeParse(to);
+  if (!start.success || !end.success) return [];
+  const fromDate = new Date(start.data);
+  const toDate = new Date(end.data);
+  if (
+    toDate <= fromDate ||
+    toDate.getTime() - fromDate.getTime() > 62 * DAY_MS
+  ) {
+    return [];
+  }
+  const items = await upcomingFor({
+    userId: session.user.id,
+    verifiedEmail: session.user.emailVerified ? session.user.email : null,
+    from: fromDate,
+    to: toDate,
+  });
+  return items.slice(0, 500).map((item) => ({
+    ...item,
+    start: item.start.toISOString(),
+    end: item.end.toISOString(),
+    originalStart: item.originalStart.toISOString(),
+  }));
 }

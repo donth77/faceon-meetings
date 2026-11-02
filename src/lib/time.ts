@@ -152,3 +152,14 @@ export function timeZones(): string[] {
 /** This device's time zone. */
 export const deviceTimeZone = () =>
   Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+/** The first day of the week where the reader lives: 0 for Sunday, 1 for Monday… */
+export function weekStartsOn(locale: string): number {
+  const info = new Intl.Locale(locale) as Intl.Locale & {
+    getWeekInfo?: () => { firstDay: number };
+    weekInfo?: { firstDay: number };
+  };
+  const firstDay =
+    info.getWeekInfo?.().firstDay ?? info.weekInfo?.firstDay ?? 7;
+  return firstDay % 7;
+}

@@ -806,6 +806,24 @@
     "deleteFailed": "Couldn’t delete the meeting. Try again.",
     "untitled": "{name}’s meeting",
     "emptyTitle": "Nothing scheduled",
-    "emptyBody": "Meetings you schedule, or are invited to, show up here."
+    "emptyBody": "Meetings you schedule, or are invited to, show up here.",
+    "view": "View",
+    "list": "List",
+    "calendar": "Calendar",
+    "range": "Calendar range",
+    "month": "Month",
+    "week": "Week",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "weekOf": "Week of {date}",
+    "now": "Now, {time}",
+    "more": "+{count} more",
+    "close": "Close",
+    "youHost": "You’re the host · {count} invited",
+    "dayWithMeetings": "{date}, has meetings",
+    "nothingThatDay": "No meetings this day.",
+    "todayButton": "Today"
   }
 }
