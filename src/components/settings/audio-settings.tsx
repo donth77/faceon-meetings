@@ -27,7 +27,7 @@ import { SectionTitle, SettingsCard } from "./settings-nav";
 export function AudioSettings() {
   const t = useTranslations("Settings.audio");
   const [devices, update] = useRememberedDevices();
-  const { noiseSuppression } = withDefaults(usePreferences());
+  const { noiseSuppression, meetingSounds } = withDefaults(usePreferences());
   const mic = useLocalTrack("audio", true, devices.micId, noiseSuppression);
   const lists = useMediaDevices(mic.track?.id ?? "");
   const chooseSpeaker = canChooseSpeaker() && lists.speakers.length > 0;
@@ -81,13 +81,21 @@ export function AudioSettings() {
             {t("speakerFixed")}
           </p>
         )}
-        <div className="border-t border-[#e2e5ea] dark:border-white/10">
+        <div className="divide-y divide-[#e2e5ea] border-t border-[#e2e5ea] dark:divide-white/10 dark:border-white/10">
           <SwitchRow
             label={t("noiseSuppression")}
             help={t("noiseSuppressionHelp")}
             isSelected={noiseSuppression}
             onChange={(on) =>
               savePreferences({ noiseSuppression: on ? undefined : false })
+            }
+          />
+          <SwitchRow
+            label={t("meetingSounds")}
+            help={t("meetingSoundsHelp")}
+            isSelected={meetingSounds}
+            onChange={(on) =>
+              savePreferences({ meetingSounds: on ? undefined : false })
             }
           />
         </div>

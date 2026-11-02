@@ -1,10 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 import { Button, LinkButton } from "@/components/ui/button";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 
+import { playSound } from "./chime";
 import type { LeaveReason } from "./media";
 import { MeetingCard, MeetingPageFrame } from "./page-frame";
 
@@ -31,6 +33,7 @@ export function LeftMeeting({
   onRejoin: () => void;
 }) {
   const t = useTranslations("Meeting");
+  useEffect(() => playSound("youLeft"), []);
 
   return (
     <MeetingPageFrame>

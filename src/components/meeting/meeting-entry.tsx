@@ -17,7 +17,7 @@ import type { DevicePreferences } from "@/lib/device/preferences";
 import type { JoinResponse, MeetingErrorCode } from "@/lib/meetings/api";
 
 import { meetingApi, MeetingRequestError } from "./api-client";
-import { playChime } from "./chime";
+import { playSound } from "./chime";
 import { LeftMeeting, type LeftReason } from "./left-meeting";
 import {
   readLinkPasscode,
@@ -217,7 +217,7 @@ export default function MeetingEntry({
         if (done) return;
         if (result.state === "admitted") {
           done = true;
-          playChime();
+          playSound("admitted");
           navigator.vibrate?.(200);
           if (lastJoin.current) enter(result, lastJoin.current);
           return;

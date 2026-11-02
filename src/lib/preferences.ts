@@ -26,6 +26,8 @@ export type Preferences = {
   singleKeyShortcuts?: boolean;
   /** Screen readers hear a summary of reactions. Default on. */
   announceReactions?: boolean;
+  /** Short sounds as people join and leave, hands go up and messages arrive. Default on. */
+  meetingSounds?: boolean;
 };
 
 const KEY = "faceon.prefs";
@@ -37,6 +39,7 @@ const BOOLEANS = [
   "cameraOffOnJoin",
   "singleKeyShortcuts",
   "announceReactions",
+  "meetingSounds",
 ] as const;
 
 let cached: { raw: string | null; value: Preferences } | null = null;
@@ -103,6 +106,7 @@ export function withDefaults(preferences: Preferences) {
     cameraOffOnJoin: preferences.cameraOffOnJoin ?? false,
     singleKeyShortcuts: preferences.singleKeyShortcuts ?? true,
     announceReactions: preferences.announceReactions ?? true,
+    meetingSounds: preferences.meetingSounds ?? true,
   };
 }
 

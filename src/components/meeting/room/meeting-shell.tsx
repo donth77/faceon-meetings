@@ -18,6 +18,7 @@ import type {
 import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
+import { playSound } from "../chime";
 import {
   useRoomMedia,
   type RoomParticipant,
@@ -81,6 +82,34 @@ function ConnectionBanner({ status }: { status: RoomStatus }) {
       </AnimatePresence>
     </div>
   );
+}
+
+/** Past this many people, joins and leaves make no sound, as in Meet: it would never stop. */
+const SOUNDS_UP_TO = 8;
+
+/**
+ * A sound as you join, then as others join and leave. The people already here when you
+ * arrive (who show up over the first moments) don't each get a sound.
+ */
+function usePresenceSounds(participants: RoomParticipant[]) {
+  const known = useRef<Set<string> | null>(null);
+  const settledAt = useRef(0);
+  useEffect(() => {
+    playSound("youJoined");
+    settledAt.current = performance.now() + 2500;
+  }, []);
+  useEffect(() => {
+    const others = new Set(
+      participants.filter((p) => !p.isLocal).map((p) => p.key),
+    );
+    const before = known.current;
+    known.current = others;
+    if (!before || performance.now() < settledAt.current) return;
+    if (participants.length > SOUNDS_UP_TO) return;
+    if ([...others].some((key) => !before.has(key))) playSound("someoneJoined");
+    else if ([...before].some((key) => !others.has(key)))
+      playSound("someoneLeft");
+  }, [participants]);
 }
 
 /** "You're muted" when you seem to be talking with the mic off, at most once a minute. */
@@ -176,11 +205,13 @@ export function MeetingShell({
     isOpen: panels.includes("chat"),
     accepts: (senderId) => (state?.chat ?? true) || sentByHost(senderId),
     // A preview of each new message while the chat panel is closed, as in both apps.
-    onPreview: (message) =>
+    onPreview: (message) => {
+      playSound("message");
       toast(message.senderName, {
         description: message.text,
         action: { label: t("chat.open"), onClick: () => openPanel("chat") },
-      }),
+      });
+    },
   });
 
   // Raised hands and reactions.
@@ -222,6 +253,7 @@ export function MeetingShell({
   const previousHands = useRef(hands);
   const announceHand = useEffectEvent((userId: string) => {
     if (isHost && userId !== self.id) {
+      playSound("handRaised");
       toast(t("hand.someoneRaised", { name: nameOf(userId) }), {
         action: { label: t("hand.view"), onClick: () => openPanel("people") },
       });
@@ -344,6 +376,7 @@ export function MeetingShell({
   useDeviceProblemToast("microphone", media.mic.problem, media.mic.toggle);
   useDeviceProblemToast("camera", media.camera.problem, media.camera.toggle);
   useMutedNudge(media.mic.speakingWhileMuted, toggleMic);
+  usePresenceSounds(media.participants);
 
   function renderPanel(name: PanelName) {
     return name === "people" ? (

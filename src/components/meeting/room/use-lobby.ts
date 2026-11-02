@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import type { LobbyAction, LobbyEntry } from "@/lib/meetings/api";
 
 import { meetingApi } from "../api-client";
-import { playChime } from "../chime";
+import { playSound } from "../chime";
 import type { RoomMedia } from "../media";
 
 /** While someone waits, check this often too, in case an update was missed. */
@@ -68,7 +68,7 @@ export function useLobby({
   // Announce each new request once, with a chime. A request's toast goes away once
   // someone decides it, or the person stops asking.
   const announce = useEffectEvent((fresh: LobbyEntry[]) => {
-    playChime([660, 880]);
+    playSound("knock");
     const [first] = fresh;
     if (fresh.length === 1 && first) {
       toast(t("wantsToJoin", { name: first.name }), {

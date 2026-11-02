@@ -899,7 +899,9 @@
       "speakerFixed": "Your browser plays sound through your device’s current speaker.",
       "noiseSuppression": "Noise suppression",
       "noiseSuppressionHelp": "Filters out typing, fans and traffic",
-      "micLevel": "Microphone level"
+      "micLevel": "Microphone level",
+      "meetingSounds": "Meeting sounds",
+      "meetingSoundsHelp": "Short sounds when people join or leave, hands go up, or messages arrive"
     },
     "video": {
       "title": "Video",

@@ -57,7 +57,7 @@ const remember = (patch: Partial<DevicePreferences>) =>
 function AudioSection() {
   const t = useTranslations("Settings.audio");
   const { mic, speaker } = useRoomMedia();
-  const { noiseSuppression } = withDefaults(usePreferences());
+  const { noiseSuppression, meetingSounds } = withDefaults(usePreferences());
   return (
     <div className="flex flex-col gap-5">
       <div className="flex max-w-[480px] flex-col gap-3">
@@ -100,7 +100,7 @@ function AudioSection() {
           {t("speakerFixed")}
         </p>
       )}
-      <div className="border-t border-white/10">
+      <div className="divide-y divide-white/10 border-t border-white/10">
         <SwitchRow
           label={t("noiseSuppression")}
           help={t("noiseSuppressionHelp")}
@@ -109,6 +109,14 @@ function AudioSection() {
             savePreferences({ noiseSuppression: on ? undefined : false });
             void mic.setNoiseSuppression(on).catch(() => {});
           }}
+        />
+        <SwitchRow
+          label={t("meetingSounds")}
+          help={t("meetingSoundsHelp")}
+          isSelected={meetingSounds}
+          onChange={(on) =>
+            savePreferences({ meetingSounds: on ? undefined : false })
+          }
         />
       </div>
     </div>
