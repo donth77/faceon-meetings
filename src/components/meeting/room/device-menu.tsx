@@ -22,6 +22,13 @@ export type DeviceSection = {
 const firstKey = (keys: Selection) =>
   keys === "all" ? undefined : [...keys][0];
 
+/**
+ * Item keys are per section: browsers give a microphone and a speaker the same IDs
+ * ("default", "communications" on Windows), and one menu can't hold the same key twice.
+ */
+const itemKey = (section: number, deviceId: string) => `${section}:${deviceId}`;
+const deviceIdOf = (key: string) => key.slice(key.indexOf(":") + 1);
+
 /** The caret beside the mic and camera buttons: pick a microphone, speaker or camera. */
 export function DeviceMenu({
   label,
@@ -41,16 +48,20 @@ export function DeviceMenu({
         <ChevronUp className="size-3" aria-hidden="true" />
       </Button>
       <DropdownMenu placement="top" className="max-w-sm min-w-72">
-        {sections.map((section) => (
+        {sections.map((section, sectionIndex) => (
           <DropdownMenuGroup
             key={section.title}
             aria-label={section.title}
             selectionMode="single"
             disallowEmptySelection
-            selectedKeys={section.selectedId ? [section.selectedId] : []}
+            selectedKeys={
+              section.selectedId
+                ? [itemKey(sectionIndex, section.selectedId)]
+                : []
+            }
             onSelectionChange={(keys) => {
-              const deviceId = firstKey(keys);
-              if (typeof deviceId === "string") section.onSelect(deviceId);
+              const key = firstKey(keys);
+              if (typeof key === "string") section.onSelect(deviceIdOf(key));
             }}
           >
             <DropdownMenuLabel>{section.title}</DropdownMenuLabel>
@@ -65,7 +76,7 @@ export function DeviceMenu({
                 return (
                   <DropdownMenuItem
                     key={device.deviceId}
-                    id={device.deviceId}
+                    id={itemKey(sectionIndex, device.deviceId)}
                     textValue={name}
                   >
                     <span className="truncate">{name}</span>
