@@ -6,7 +6,8 @@
  *   it, so only call grants keep a user's token from reaching other calls.
  * - The `system` user, which sends server events.
  * - With STREAM_WEBHOOK_URL set, the app's webhook (attendance for Previous), for example
- *   https://joinfaceon.vercel.app/api/webhooks/stream. Stream can't reach localhost.
+ *   https://faceon.example.com/api/webhooks/stream. Stream can't reach localhost. A new
+ *   domain replaces the old one's webhook.
  *
  * Usage:
  *   node --env-file=.env.local scripts/setup-stream.ts           apply
@@ -118,10 +119,13 @@ if (!checkOnly) {
 
 const webhookUrl = process.env.STREAM_WEBHOOK_URL;
 if (webhookUrl && !checkOnly) {
-  // Stream's event hooks: keep any others, and (re)place ours.
+  // Stream's event hooks: keep any others, and (re)place ours, found by its path on any domain.
+  const ourPath = new URL(webhookUrl).pathname;
+  const isOurs = (url: string | undefined) =>
+    !!url && URL.canParse(url) && new URL(url).pathname === ourPath;
   const { app } = await client.getApp();
   const others = (app.event_hooks ?? []).filter(
-    (hook) => hook.webhook_url !== webhookUrl,
+    (hook) => !isOurs(hook.webhook_url),
   );
   await client.updateApp({
     event_hooks: [

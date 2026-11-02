@@ -20,8 +20,7 @@ import { dropUnverifiedPassword } from "./linking";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
 /** Production origin. Preview deployments send OAuth through it (oAuthProxy). */
-const productionUrl =
-  publicEnv.NEXT_PUBLIC_APP_URL ?? "https://joinfaceon.vercel.app";
+const productionUrl = siteUrl();
 
 /** Sends an account email to a user, in their language, after the response. */
 function emailUser(
