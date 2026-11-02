@@ -552,61 +552,24 @@
   },
   "Help": {
     "title": "Help",
-    "subtitle": "Quick answers about meetings in {appName}.",
+    "subtitle": "How to use {appName}, step by step.",
     "searchLabel": "Search help",
     "searchPlaceholder": "For example: share sound",
     "noResults": "Nothing matches “{query}”. Try other words.",
-    "gettingStarted": "Getting started",
-    "faqTitle": "Questions people ask",
-    "close": "Close",
-    "guides": {
-      "start": {
-        "title": "Start a meeting",
-        "summary": "Start one now or create one for later, then share the link.",
-        "steps": "On Home, select New meeting.\nChoose Start an instant meeting to join now, or Create a meeting for later to get a link.\nTo invite people from a meeting, select the shield icon at the top left, then Copy link. The passcode is part of the link."
-      },
-      "join": {
-        "title": "Join from a link",
-        "summary": "Open the link, check your camera and mic, then join.",
-        "steps": "Open the meeting link, or enter the meeting ID on Home or the sign-in page.\nCheck your camera and microphone in the preview, and pick the ones to use.\nEnter your name and select Join now."
-      },
-      "muteCamera": {
-        "title": "Mute and camera",
-        "summary": "Turn your mic and camera on or off, and pick which ones to use.",
-        "steps": "Select Mute or Stop video at the bottom of the meeting. A red button means it’s off.\nSelect the small arrow next to either button to choose a microphone, speaker or camera.\nOr use the keyboard: Ctrl+D or Alt+A for the mic, Ctrl+E or Alt+V for the camera (⌘ and ⌥ on a Mac)."
-      },
-      "share": {
-        "title": "Share your screen",
-        "summary": "Share a tab, a window or your whole screen.",
-        "steps": "Select Share screen at the bottom of the meeting.\nIn your browser’s picker, choose a tab, a window or your entire screen. To share a video’s sound, choose a tab and turn on its audio.\nSelect Stop sharing when you’re done."
-      }
+    "resultCount": "{count, plural, one {# article} other {# articles}}",
+    "categories": {
+      "gettingStarted": "Getting started",
+      "inAMeeting": "In a meeting",
+      "hosting": "Hosting",
+      "account": "Settings and account",
+      "troubleshooting": "Troubleshooting"
     },
-    "faq": {
-      "hearMe": {
-        "question": "Why can’t anyone hear me?",
-        "answer": "Check that the mic button isn’t red. Then select the arrow next to it and pick the microphone you’re using. If your browser blocked the mic, select the icon in the address bar and allow it."
-      },
-      "shareSound": {
-        "question": "How do I share sound?",
-        "answer": "Share a browser tab rather than a window, and turn on the tab’s audio in the picker. Chrome and Edge can share a tab’s sound; Safari and Firefox can’t share sound."
-      },
-      "phoneShare": {
-        "question": "Why can’t I share my screen from my phone?",
-        "answer": "Phone browsers don’t let websites share the screen. You can still see what others share."
-      },
-      "cameraInUse": {
-        "question": "My camera says it’s in use. What do I do?",
-        "answer": "Another app, often another meeting app, is using it. Close that app, then turn your camera on again."
-      },
-      "free": {
-        "question": "Is {appName} free?",
-        "answer": "Yes. {appName} is free and open source, with no ads and no tracking."
-      },
-      "recorded": {
-        "question": "Is my meeting recorded?",
-        "answer": "No. {appName} doesn’t record meetings."
-      }
-    },
+    "topics": "Help topics",
+    "allTopics": "All help topics",
+    "breadcrumb": "Breadcrumb",
+    "moreArticles": "More help",
+    "previousArticle": "Previous",
+    "nextArticle": "Next",
     "shortcutsTitle": "Keyboard shortcuts",
     "shortcutsBody": "Shortcuts in both the Meet and the Zoom style. Press <key>?</key> anywhere to see them.",
     "showShortcuts": "Show shortcuts",

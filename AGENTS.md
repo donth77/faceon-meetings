@@ -36,11 +36,13 @@ Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integr
   - `meetings/`: meeting IDs and passcodes, the join and moderation rules (`rules.ts`, pure and unit-tested: who gets in, and the host-controls permission matrix), the join flow (`join.ts`), admitting someone (`admission.ts`, the only place media tokens are minted), the waiting room (`waiting-room.ts`), host controls (`moderation.ts`), the session's shared state (`session-state.ts`: hands, roles, spotlight and policies, written under a per-session lock), session lifecycle (`sessions.ts`), the hosting policy (`hosting.ts`: allowlisted hosts get full limits, everyone else demos), the housekeeping sweep (`sweep.ts`, run daily by Vercel Cron at `/api/cron/sweep`), queries, the API's request/response types (`api.ts`, shared with the client) and server actions.
   - `media/`: the media-provider interface (`types.ts`) and the provider registry (`index.ts`). `stream/` is the Stream adapter; a LiveKit adapter will sit beside it.
   - `device/`: browser device helpers (permission problems, remembered devices, test sound).
-- `src/components/auth/`: sign-in, sign-up, verification and password-reset screens. `marketing/` holds the public header (one layout for every signed-out page), footer and language menu; `help/` the Help page; `shortcuts/` the Keyboard shortcuts dialog (`?` anywhere).
+  - `preferences.ts`: Settings kept on this device (time format and zone, noise suppression, mirroring, HD, single-key shortcuts…) and `useIntlLocale()`, the locale every date and time is formatted with.
+- `src/components/auth/`: sign-in, sign-up, verification and password-reset screens. `marketing/` holds the public header (one layout for every signed-out page), footer and language menu; `help/` the Help pages; `settings/` the Settings sections (also shown in the meeting's Settings dialog); `shortcuts/` the Keyboard shortcuts dialog (`?` anywhere).
 - `src/components/meeting/`: the meeting client, loaded only in the browser.
   - `meeting-entry.tsx`: pre-join → waiting for the host, or asking to join → room → left.
   - `media.tsx`: the client media port (`useRoomMedia()`, `<TrackView>`); `room/` is our UI on top of it. Roles and policies come from the session's shared state (`room/roles.ts`); host actions call our API, never the media SDK.
   - `providers/stream/`: the Stream bindings. Rooms load their provider's bindings on demand.
+- `content/help/<locale>/`: the Help articles, one Markdown file each with front matter (`title`, `summary`, `category`, `order`). Write `{appName}` for the app's name. A language without its own folder shows English. `src/lib/help/` reads them; `/help` lists and searches them, and `/help/<file name>` shows one.
 - `public/brand/`: logo files; `public/icons/`: PWA icons.
 
 ## Conventions

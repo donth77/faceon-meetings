@@ -1,132 +1,88 @@
 "use client";
 
-import {
-  ChevronDown,
-  ExternalLink,
-  Keyboard,
-  Link2,
-  Mic,
-  MonitorUp,
-  Search,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
+import { cn } from "cn";
+import { ChevronRight, ExternalLink, Keyboard, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
-import {
-  Button as AriaButton,
-  Disclosure,
-  DisclosureGroup,
-  DisclosurePanel,
-  Heading,
-} from "react-aria-components";
 
 import { GitHubIcon } from "@/components/auth/provider-icons";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { publicEnv } from "@/lib/env";
 
-/** Getting-started guides, for features that exist today. */
-const GUIDES: Array<{ id: GuideId; icon: LucideIcon }> = [
-  { id: "start", icon: Video },
-  { id: "join", icon: Link2 },
-  { id: "muteCamera", icon: Mic },
-  { id: "share", icon: MonitorUp },
-];
-type GuideId = "start" | "join" | "muteCamera" | "share";
+/** What the browser needs about an article: enough to list it and search it. */
+export type HelpEntry = {
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  /** The article's words, for search. */
+  text: string;
+};
 
-const QUESTIONS = [
-  "hearMe",
-  "shareSound",
-  "phoneShare",
-  "cameraInUse",
-  "free",
-  "recorded",
-] as const;
+export type HelpSection = { id: string; name: string; entries: HelpEntry[] };
 
-const matches = (query: string, ...texts: string[]) =>
-  texts.some((text) => text.toLocaleLowerCase().includes(query));
+const matches = (query: string, entry: HelpEntry) =>
+  [entry.title, entry.summary, entry.text].some((text) =>
+    text.toLocaleLowerCase().includes(query),
+  );
 
-function GuideDialog({
-  guide,
-  onClose,
-}: {
-  guide: GuideId;
-  onClose: () => void;
-}) {
-  const t = useTranslations("Help");
-  const steps = t(`guides.${guide}.steps`).split("\n");
+function EntryLink({ entry }: { entry: HelpEntry }) {
   return (
-    <Dialog
-      isOpen
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-      className="sm:max-w-md"
-      closeLabel={t("close")}
+    <Link
+      href={`/help/${entry.slug}`}
+      className="group hover:bg-muted/60 focus-visible:ring-ring -mx-3 flex items-start justify-between gap-3 rounded-xl px-3 py-2.5 outline-none focus-visible:ring-2"
     >
-      <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">
-          {t(`guides.${guide}.title`)}
-        </DialogTitle>
-        <DialogDescription>{t(`guides.${guide}.summary`)}</DialogDescription>
-      </DialogHeader>
-      <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-normal">
-        {steps.map((step) => (
-          <li key={step}>{step}</li>
-        ))}
-      </ol>
-    </Dialog>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-primary font-semibold group-hover:underline">
+          {entry.title}
+        </span>
+        <span className="text-muted-foreground text-sm leading-normal">
+          {entry.summary}
+        </span>
+      </span>
+      <ChevronRight
+        className="text-muted-foreground mt-0.5 size-4 shrink-0"
+        aria-hidden="true"
+      />
+    </Link>
   );
 }
 
 /**
- * The Help page body: search, getting-started guides, common questions, keyboard
- * shortcuts, and where to report a problem.
+ * Help's front page: search across every article, the articles by category, the
+ * keyboard shortcuts, and where to report a problem.
  */
-export function HelpCenter({ repoUrl }: { repoUrl?: string | undefined }) {
+export function HelpIndex({
+  sections,
+  repoUrl,
+}: {
+  sections: HelpSection[];
+  repoUrl?: string | undefined;
+}) {
   const t = useTranslations("Help");
   const openShortcuts = useOpenShortcuts();
   const searchId = useId();
-  const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
   const [query, setQuery] = useState("");
-  const [openGuide, setOpenGuide] = useState<GuideId | null>(null);
-
   const q = query.trim().toLocaleLowerCase();
-  const guides = GUIDES.filter(
-    ({ id }) =>
-      !q ||
-      matches(
-        q,
-        t(`guides.${id}.title`),
-        t(`guides.${id}.summary`),
-        t(`guides.${id}.steps`),
-      ),
-  );
-  const questions = QUESTIONS.filter(
-    (id) =>
-      !q ||
-      matches(
-        q,
-        t(`faq.${id}.question`, { appName }),
-        t(`faq.${id}.answer`, { appName }),
-      ),
-  );
+  const results = q
+    ? sections
+        .flatMap((section) => section.entries)
+        .filter((e) => matches(q, e))
+    : [];
 
   return (
-    <main className="flex w-full max-w-[860px] flex-1 flex-col gap-10 px-5 py-8 sm:px-10 sm:py-10">
+    <main className="flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
           {t("title")}
         </h1>
-        <p className="text-muted-foreground">{t("subtitle", { appName })}</p>
+        <p className="text-muted-foreground">
+          {t("subtitle", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+        </p>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -149,74 +105,37 @@ export function HelpCenter({ repoUrl }: { repoUrl?: string | undefined }) {
         </div>
       </div>
 
-      {guides.length > 0 ? (
-        <section aria-labelledby="help-guides" className="flex flex-col gap-3">
-          <h2 id="help-guides" className="text-xl font-bold">
-            {t("gettingStarted")}
+      {q ? (
+        <section aria-live="polite" className="flex flex-col gap-1">
+          <h2 className="text-muted-foreground mb-1 text-sm font-semibold">
+            {results.length > 0
+              ? t("resultCount", { count: results.length })
+              : t("noResults", { query: query.trim() })}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {guides.map(({ id, icon: Icon }) => (
-              <AriaButton
-                key={id}
-                onPress={() => setOpenGuide(id)}
-                className="bg-card ring-border hover:ring-primary/40 focus-visible:ring-ring flex items-start gap-3 rounded-2xl p-4 text-left ring-1 outline-none focus-visible:ring-2"
-              >
-                <span className="bg-secondary text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
-                  <Icon className="size-5" aria-hidden="true" />
-                </span>
-                <span className="flex flex-col gap-1">
-                  <span className="font-semibold">
-                    {t(`guides.${id}.title`)}
-                  </span>
-                  <span className="text-muted-foreground text-sm leading-normal">
-                    {t(`guides.${id}.summary`)}
-                  </span>
-                </span>
-              </AriaButton>
-            ))}
-          </div>
+          {results.map((entry) => (
+            <EntryLink key={entry.slug} entry={entry} />
+          ))}
         </section>
-      ) : null}
-
-      {questions.length > 0 ? (
-        <section aria-labelledby="help-faq" className="flex flex-col gap-3">
-          <h2 id="help-faq" className="text-xl font-bold">
-            {t("faqTitle")}
-          </h2>
-          <DisclosureGroup className="bg-card ring-border divide-y rounded-2xl ring-1">
-            {questions.map((id) => (
-              <Disclosure key={id} id={id} className="group">
-                <Heading level={3}>
-                  <AriaButton
-                    slot="trigger"
-                    className="focus-visible:ring-ring flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-left font-semibold outline-none focus-visible:ring-2 focus-visible:ring-inset"
-                  >
-                    {t(`faq.${id}.question`, { appName })}
-                    <ChevronDown
-                      className="text-muted-foreground size-5 shrink-0 transition-transform group-data-[expanded]:rotate-180 motion-reduce:transition-none"
-                      aria-hidden="true"
-                    />
-                  </AriaButton>
-                </Heading>
-                <DisclosurePanel>
-                  <p className="text-muted-foreground px-5 pb-4 text-[15px] leading-relaxed">
-                    {t(`faq.${id}.answer`, { appName })}
-                  </p>
-                </DisclosurePanel>
-              </Disclosure>
-            ))}
-          </DisclosureGroup>
-        </section>
-      ) : null}
-
-      {q && guides.length === 0 && questions.length === 0 ? (
-        <p role="status" className="text-muted-foreground">
-          {t("noResults", { query: query.trim() })}
-        </p>
-      ) : null}
+      ) : (
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+          {sections.map((section) => (
+            <section
+              key={section.id}
+              aria-labelledby={`help-${section.id}`}
+              className="flex flex-col gap-1"
+            >
+              <h2 id={`help-${section.id}`} className="mb-1 text-lg font-bold">
+                {section.name}
+              </h2>
+              {section.entries.map((entry) => (
+                <EntryLink key={entry.slug} entry={entry} />
+              ))}
+            </section>
+          ))}
+        </div>
+      )}
 
       <section
-        id="keyboard-shortcuts"
         aria-labelledby="help-shortcuts"
         className="bg-card ring-border flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5 ring-1"
       >
@@ -245,34 +164,77 @@ export function HelpCenter({ repoUrl }: { repoUrl?: string | undefined }) {
         </Button>
       </section>
 
-      {repoUrl ? (
-        <div className="flex flex-col items-center gap-3">
-          <a
-            href={`${repoUrl.replace(/\/$/, "")}/issues/new/choose`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-card ring-border hover:bg-muted focus-visible:ring-ring flex h-12 w-full items-center justify-center gap-2.5 rounded-xl font-semibold ring-1 outline-none focus-visible:ring-2"
-          >
-            <GitHubIcon className="size-5" />
-            {t("reportIssue")}
-            <ExternalLink className="size-4" aria-hidden="true" />
-            <span className="sr-only">{t("opensInNewTab")}</span>
-          </a>
-          <a
-            href={repoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
-          >
-            <GitHubIcon className="size-4" />
-            {t("viewSource")}
-          </a>
-        </div>
-      ) : null}
-
-      {openGuide ? (
-        <GuideDialog guide={openGuide} onClose={() => setOpenGuide(null)} />
-      ) : null}
+      {repoUrl ? <ReportLinks repoUrl={repoUrl} /> : null}
     </main>
+  );
+}
+
+/** Report a problem on GitHub, and the source code. */
+export function ReportLinks({ repoUrl }: { repoUrl: string }) {
+  const t = useTranslations("Help");
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <a
+        href={`${repoUrl.replace(/\/$/, "")}/issues/new/choose`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-card ring-border hover:bg-muted focus-visible:ring-ring flex h-12 w-full items-center justify-center gap-2.5 rounded-xl font-semibold ring-1 outline-none focus-visible:ring-2"
+      >
+        <GitHubIcon className="size-5" />
+        {t("reportIssue")}
+        <ExternalLink className="size-4" aria-hidden="true" />
+        <span className="sr-only">{t("opensInNewTab")}</span>
+      </a>
+      <a
+        href={repoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+      >
+        <GitHubIcon className="size-4" />
+        {t("viewSource")}
+      </a>
+    </div>
+  );
+}
+
+/** Every article by category, beside an article; the one you're reading is marked. */
+export function HelpNav({ sections }: { sections: HelpSection[] }) {
+  const t = useTranslations("Help");
+  const pathname = usePathname();
+  return (
+    <nav aria-label={t("topics")} className="flex flex-col gap-5">
+      <Link
+        href="/help"
+        className="text-muted-foreground hover:text-foreground text-sm font-semibold"
+      >
+        {t("allTopics")}
+      </Link>
+      {sections.map((section) => (
+        <div key={section.id} className="flex flex-col gap-0.5">
+          <span className="text-muted-foreground mb-1 text-xs font-bold tracking-[0.06em] uppercase">
+            {section.name}
+          </span>
+          {section.entries.map((entry) => {
+            const current = pathname.endsWith(`/help/${entry.slug}`);
+            return (
+              <Link
+                key={entry.slug}
+                href={`/help/${entry.slug}`}
+                aria-current={current ? "page" : undefined}
+                className={cn(
+                  "focus-visible:ring-ring -mx-2 rounded-lg px-2 py-1.5 text-sm outline-none focus-visible:ring-2",
+                  current
+                    ? "bg-secondary text-primary font-semibold"
+                    : "hover:bg-muted/60",
+                )}
+              >
+                {entry.title}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
   );
 }

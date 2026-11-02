@@ -1,0 +1,46 @@
+---
+title: Microphone, camera and speaker
+summary: Mute and unmute, turn your camera on or off, and choose your devices.
+category: in-a-meeting
+order: 1
+---
+
+## Mute and turn off your camera
+
+Select **Mute** or **Stop video** at the bottom of the meeting. A red button means it's off. Select it again to turn it back on.
+
+If you start talking while muted, {appName} reminds you that you're muted.
+
+## Talk while muted
+
+Hold `Space` to talk, then let go to mute again. This works when you're not typing in a box. You can turn single-key shortcuts off in [Settings](/help/settings).
+
+## Choose a microphone, speaker or camera
+
+Select the small arrow beside **Mute** or **Stop video**, then pick a device. **Audio settings…** and **Video settings…** at the bottom of each list open the full settings.
+
+## Check how you sound and look
+
+In the meeting, select **More**, then **Settings**:
+
+- **Audio** has a live meter for your microphone and **Test speaker** to play a short sound.
+- **Video** shows your camera as you'll appear.
+
+Before you join, the preview has the same meter and a **Play a test sound** button.
+
+## Useful settings
+
+- **Noise suppression** filters out typing, fans and traffic. It's on unless you turn it off.
+- **Mirror my video** shows you mirrored, as in a mirror. Only you see it that way.
+- **Send HD video** looks sharper but uses more data.
+- **Turn off my camera when I join** starts every meeting with your camera off.
+
+## Keyboard
+
+| Action | Windows and Linux | Mac |
+| --- | --- | --- |
+| Mute or unmute | `Ctrl+D` or `Alt+A` | `⌘D` or `⌥A` |
+| Start or stop video | `Ctrl+E` or `Alt+V` | `⌘E` or `⌥V` |
+| Talk while muted | Hold `Space` | Hold `Space` |
+
+If a host has turned microphones off, raise your hand to ask to speak.
