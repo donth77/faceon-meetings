@@ -165,6 +165,31 @@ export function startEffects(
   };
 }
 
+const nextTask = () =>
+  new Promise<null>((resolve) => setTimeout(() => resolve(null), 0));
+
+/**
+ * Lets go of the camera's frames. cancel() would drop a frame already waiting in the
+ * stream without closing it, so frames that come back at once are closed first, and a
+ * read still waiting for the camera closes whatever it gets.
+ */
+async function releaseFrames(reader: ReadableStreamDefaultReader<VideoFrame>) {
+  for (let i = 0; i < 8; i++) {
+    const read = reader.read();
+    const next = await Promise.race([read, nextTask()]);
+    if (!next) {
+      read.then(
+        (late) => late.value?.close(),
+        () => {},
+      );
+      break;
+    }
+    if (next.done) return;
+    next.value.close();
+  }
+  await reader.cancel().catch(() => {});
+}
+
 /** Chrome and Edge: camera frames in, processed frames out, background tab or not. */
 function throughTrackProcessor(
   input: MediaStreamTrack,
@@ -181,10 +206,13 @@ function throughTrackProcessor(
   const generator = new api.MediaStreamTrackGenerator({ kind: "video" });
   const writer = generator.writable.getWriter();
   let running = true;
+  let reading = false;
 
   void (async () => {
     while (running) {
+      reading = true;
       const next = await reader.read().catch(() => null);
+      reading = false;
       if (!next || next.done) break;
       const frame = next.value;
       let processed: VideoFrame | undefined;
@@ -203,7 +231,7 @@ function throughTrackProcessor(
         frame.close();
       }
     }
-    void reader.cancel().catch(() => {});
+    await releaseFrames(reader);
     void writer.close().catch(() => {});
   })();
 
@@ -212,6 +240,9 @@ function throughTrackProcessor(
     stop() {
       running = false;
       generator.stop();
+      // Waiting for a frame that may never come (a covered camera): stop waiting. A
+      // frame in hand is closed by the loop instead.
+      if (reading) void reader.cancel().catch(() => {});
     },
   };
 }
