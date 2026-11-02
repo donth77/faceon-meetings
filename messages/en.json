@@ -1371,11 +1371,12 @@
     },
     "motion": {
       "aurora": "Aurora",
-      "waves": "Waves",
-      "bokeh": "Lights",
-      "drift": "Drift"
+      "orbit": "Orbit",
+      "lake": "Lake",
+      "waterfall": "Waterfall",
+      "clouds": "Clouds",
+      "sunrise": "Sunrise"
     },
-    "motionNote": "Subtle motion looks best, and uses less data.",
     "license": {
       "publicDomain": "public domain",
       "cc0": "CC0",

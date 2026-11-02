@@ -5,7 +5,12 @@ import { LoaderCircle, VideoOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MirroredVideo } from "@/components/device/mirrored-video";
-import { STILLS, type Effect } from "@/lib/effects/effects";
+import {
+  MOTIONS,
+  STILLS,
+  type BackgroundLicense,
+  type Effect,
+} from "@/lib/effects/effects";
 
 import { EffectsPicker } from "./effects-picker";
 import { useUploads, type ShownUpload } from "./use-uploads";
@@ -13,24 +18,24 @@ import { useUploads, type ShownUpload } from "./use-uploads";
 /** What the chosen effect is called, and where it's from. */
 function useCaption(effect: Effect | null, uploads: ShownUpload[]) {
   const t = useTranslations("Effects");
+  const credit = (source?: { by: string; license: BackgroundLicense }) =>
+    source
+      ? t("credit", { by: source.by, license: t(`license.${source.license}`) })
+      : undefined;
   if (!effect) return { name: t("none") };
   switch (effect.kind) {
     case "blur":
       return { name: t(`blur.${effect.level}`) };
-    case "still": {
-      const still = STILLS.find((entry) => entry.id === effect.id);
+    case "still":
       return {
         name: t(`stills.${effect.id}`),
-        detail: still
-          ? t("credit", {
-              by: still.by,
-              license: t(`license.${still.license}`),
-            })
-          : undefined,
+        detail: credit(STILLS.find((entry) => entry.id === effect.id)),
       };
-    }
     case "motion":
-      return { name: t(`motion.${effect.id}`), detail: t("motionNote") };
+      return {
+        name: t(`motion.${effect.id}`),
+        detail: credit(MOTIONS.find((entry) => entry.id === effect.id)),
+      };
     case "upload": {
       const upload = uploads.find((entry) => entry.id === effect.id);
       return {

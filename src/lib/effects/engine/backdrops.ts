@@ -1,4 +1,4 @@
-import { stillFile, type Effect } from "../effects";
+import { motionFile, stillFile, type Effect } from "../effects";
 import { getUpload } from "../uploads";
 import type { Backdrop } from "./compositor";
 
@@ -7,21 +7,13 @@ export type LoadedBackdrop = { backdrop: Backdrop; release: () => void };
 
 const nothingToRelease = () => {};
 
-/** Blur and motion backgrounds are ready at once; images and videos load first. */
+/** Blur is ready at once; pictures and videos load first. */
 export function readyBackdrop(effect: Effect): LoadedBackdrop | null {
-  if (effect.kind === "blur") {
-    return {
-      backdrop: { kind: "blur", level: effect.level },
-      release: nothingToRelease,
-    };
-  }
-  if (effect.kind === "motion") {
-    return {
-      backdrop: { kind: "motion", id: effect.id },
-      release: nothingToRelease,
-    };
-  }
-  return null;
+  if (effect.kind !== "blur") return null;
+  return {
+    backdrop: { kind: "blur", level: effect.level },
+    release: nothingToRelease,
+  };
 }
 
 export async function loadBackdrop(effect: Effect): Promise<LoadedBackdrop> {
@@ -34,12 +26,15 @@ export async function loadBackdrop(effect: Effect): Promise<LoadedBackdrop> {
     await picture.decode();
     return image(await createImageBitmap(picture));
   }
+  if (effect.kind === "motion") return video(motionFile(effect.id));
   if (effect.kind === "upload") {
     const upload = await getUpload(effect.id);
     if (!upload) throw new Error("That background isn't on this device.");
-    return upload.kind === "image"
-      ? image(await createImageBitmap(upload.file))
-      : video(upload.file);
+    if (upload.kind === "image") {
+      return image(await createImageBitmap(upload.file));
+    }
+    const url = URL.createObjectURL(upload.file);
+    return video(url, () => URL.revokeObjectURL(url));
   }
   throw new Error("Unknown background.");
 }
@@ -57,19 +52,24 @@ function image(bitmap: ImageBitmap): LoadedBackdrop {
   };
 }
 
-/** A looping video, muted, drawn from wherever it has got to on each frame. */
-async function video(file: Blob): Promise<LoadedBackdrop> {
+/**
+ * A looping video, muted, drawn from wherever it has got to on each frame. `done` runs
+ * once it's let go, for whatever its address needs (an object URL is revoked).
+ */
+async function video(
+  src: string,
+  done: () => void = nothingToRelease,
+): Promise<LoadedBackdrop> {
   const element = document.createElement("video");
-  const url = URL.createObjectURL(file);
   element.muted = true;
   element.loop = true;
   element.playsInline = true;
-  element.src = url;
+  element.src = src;
   const release = () => {
     element.pause();
     element.removeAttribute("src");
     element.load();
-    URL.revokeObjectURL(url);
+    done();
   };
   try {
     await element.play();

@@ -1,4 +1,4 @@
-import type { BlurLevel, MotionId } from "../effects";
+import type { BlurLevel } from "../effects";
 import { coverScale } from "../frame";
 import {
   BACKGROUND_WEIGHTS,
@@ -8,7 +8,6 @@ import {
   COMPOSITE,
   GUIDE_FIT,
   GUIDE_MOMENTS,
-  MOTION,
   VERTEX,
 } from "./shaders";
 
@@ -22,8 +21,7 @@ export type Backdrop =
       height: number;
       /** A video: upload it again every frame. */
       live: boolean;
-    }
-  | { kind: "motion"; id: MotionId };
+    };
 
 /** Each blur works on a smaller copy of the frame, in one or more rounds. */
 const BLUR_SETTINGS: Record<
@@ -33,9 +31,6 @@ const BLUR_SETTINGS: Record<
   slight: { scale: 1 / 4, rounds: 1, spread: 1 },
   strong: { scale: 1 / 6, rounds: 2, spread: 1.6 },
 };
-
-/** Motion backgrounds are drawn this size, then stretched: they're soft anyway. */
-const MOTION_SIZE = { width: 640, height: 360 };
 
 /** Mask values between these blend the person into the background. */
 const EDGE = [0.35, 0.75] as const;
@@ -84,8 +79,8 @@ type Program = {
 };
 
 /**
- * Draws each camera frame with the person over a blurred, image or motion background,
- * on a WebGL2 canvas whose frames become the processed video.
+ * Draws each camera frame with the person over a blurred background, a picture or a
+ * video, on a WebGL2 canvas whose frames become the processed video.
  */
 export class Compositor {
   readonly canvas = document.createElement("canvas");
@@ -100,7 +95,6 @@ export class Compositor {
   private readonly backgroundTexture: WebGLTexture;
   private uploadedBackground: TexImageSource | null = null;
   private blurTargets: [Target, Target] | null = null;
-  private motionTarget: Target | null = null;
   /** Whether this GPU can draw to half floats, which the guided filter needs. */
   private canRefine: boolean;
   private guide: Guide | null = null;
@@ -164,13 +158,12 @@ export class Compositor {
     );
   }
 
-  /** Draws a frame onto the canvas. `time` is in seconds, for motion backgrounds. */
+  /** Draws a frame onto the canvas. */
   draw(
     frame: TexImageSource,
     width: number,
     height: number,
     backdrop: Backdrop,
-    time: number,
   ) {
     const { gl } = this;
     if (this.canvas.width !== width) this.canvas.width = width;
@@ -186,7 +179,7 @@ export class Compositor {
     if (backdrop.kind === "blur") {
       mode = 0;
       background = this.blur(width, height, backdrop.level, refined);
-    } else if (backdrop.kind === "image") {
+    } else {
       mode = 1;
       background = this.backgroundTexture;
       if (backdrop.live || this.uploadedBackground !== backdrop.source) {
@@ -204,10 +197,6 @@ export class Compositor {
         this.uploadedBackground = backdrop.source;
       }
       cover = coverScale(backdrop, { width, height });
-    } else {
-      mode = 2;
-      background = this.motion(backdrop.id, time);
-      cover = coverScale(MOTION_SIZE, { width, height });
     }
 
     const composite = this.program("composite", COMPOSITE);
@@ -217,7 +206,7 @@ export class Compositor {
     this.bindTexture(composite, "u_frame", 0, this.frameTexture);
     this.bindPerson(composite, refined);
     this.bindTexture(composite, "u_background", 2, background);
-    // Images and videos only: a blur is the same room, and motion has no mipmaps.
+    // Images and videos only: a blur is the same room.
     const wrap = refined && mode === 1;
     gl.uniform1f(composite.uniform("u_wrap"), wrap ? LIGHT_WRAP : 0);
     gl.uniform1i(composite.uniform("u_mode"), mode);
@@ -372,25 +361,6 @@ export class Compositor {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
     return a.texture;
-  }
-
-  private motion(id: MotionId, time: number): WebGLTexture {
-    const { gl } = this;
-    this.motionTarget ??= this.createTarget(
-      MOTION_SIZE.width,
-      MOTION_SIZE.height,
-    );
-    const shader = this.program(`motion:${id}`, MOTION[id]);
-    this.target(this.motionTarget);
-    gl.useProgram(shader.program);
-    gl.uniform1f(shader.uniform("u_time"), time);
-    gl.uniform2f(
-      shader.uniform("u_resolution"),
-      MOTION_SIZE.width,
-      MOTION_SIZE.height,
-    );
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    return this.motionTarget.texture;
   }
 
   private target(target: Target | Targets) {

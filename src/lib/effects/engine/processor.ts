@@ -65,7 +65,6 @@ export function startEffects(
   const compositor = new Compositor();
   const smoother = new MaskSmoother();
   const budget = new FrameBudget(FRAME_BUDGET_MS);
-  const startedAt = performance.now();
   let segmenter: ImageSegmenter | null = null;
   let backdrop: LoadedBackdrop | null = null;
   /** The effect whose background is drawn. */
@@ -145,13 +144,7 @@ export function startEffects(
         );
       }
       frames++;
-      compositor.draw(
-        frame,
-        width,
-        height,
-        backdrop.backdrop,
-        (begun - startedAt) / 1000,
-      );
+      compositor.draw(frame, width, height, backdrop.backdrop);
     } catch {
       fail();
       return false;

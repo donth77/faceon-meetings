@@ -1,3 +1,5 @@
+import { runnableEffect, type Effect } from "./effects";
+
 let supported: boolean | undefined;
 
 /**
@@ -23,3 +25,26 @@ export function effectsSupported(): boolean {
   supported = typeof WebAssembly === "object" && makesTracks && webgl2;
   return supported;
 }
+
+/** The motion backgrounds' format: H.264 (High profile, level 3.1) in MP4. */
+const FOOTAGE_TYPE = 'video/mp4; codecs="avc1.64001F"';
+let playsFootage: boolean | undefined;
+
+/**
+ * Whether this browser plays the motion backgrounds' footage. Nearly all do; where one
+ * can't (some Linux browsers without H.264), motion backgrounds aren't offered.
+ */
+export function footageSupported(): boolean {
+  if (playsFootage !== undefined) return playsFootage;
+  if (typeof document === "undefined") return false;
+  playsFootage =
+    document.createElement("video").canPlayType(FOOTAGE_TYPE) !== "";
+  return playsFootage;
+}
+
+/** The saved effect if it can run on this device, otherwise null (no effect). */
+export const availableEffect = (effect: Effect | null) =>
+  runnableEffect(effect, {
+    effects: effectsSupported(),
+    footage: footageSupported(),
+  });

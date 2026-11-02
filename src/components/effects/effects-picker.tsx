@@ -1,9 +1,17 @@
 "use client";
 
 import { cn } from "cn";
-import { Ban, Check, LoaderCircle, Plus, UserRound, X } from "lucide-react";
+import {
+  Ban,
+  Check,
+  Film,
+  LoaderCircle,
+  Plus,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button, FileTrigger, Radio, RadioGroup } from "react-aria-components";
 import { toast } from "sonner";
 
@@ -11,13 +19,15 @@ import {
   BLUR_LEVELS,
   effectFromKey,
   effectKey,
-  MOTION_IDS,
+  MOTIONS,
+  motionThumb,
   STILL_GROUPS,
   STILLS,
   stillThumb,
   type BlurLevel,
   type Effect,
 } from "@/lib/effects/effects";
+import { footageSupported } from "@/lib/effects/support";
 import {
   addUpload,
   removeUpload,
@@ -26,8 +36,9 @@ import {
   UploadRejected,
 } from "@/lib/effects/uploads";
 
-import { MotionThumb } from "./motion-thumb";
 import type { ShownUpload } from "./use-uploads";
+
+const subscribeNever = () => () => {};
 
 /** Focus is an outline around the tile; the chosen one also has a ring and a check. */
 const TILE =
@@ -36,27 +47,46 @@ const TILE =
 function Tile({
   value,
   label,
+  moving = false,
   children,
 }: {
   value: string;
   label: string;
-  /** `active` while pointed at or focused, for motion tiles. */
-  children: (active: boolean) => ReactNode;
+  /** A moving background, marked with a small film badge. */
+  moving?: boolean;
+  children: ReactNode;
 }) {
   return (
     <Radio value={value} aria-label={label} className={TILE}>
-      {({ isHovered, isFocusVisible }) => (
-        <>
-          {children(isHovered || isFocusVisible)}
-          <span
-            aria-hidden="true"
-            className="bg-primary text-primary-foreground absolute top-1 right-1 hidden size-5 items-center justify-center rounded-full shadow group-data-selected:flex"
-          >
-            <Check className="size-3.5" strokeWidth={3} />
-          </span>
-        </>
-      )}
+      {children}
+      {moving ? (
+        <span
+          aria-hidden="true"
+          className="absolute bottom-1 left-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white"
+        >
+          <Film className="size-3" />
+        </span>
+      ) : null}
+      <span
+        aria-hidden="true"
+        className="bg-primary text-primary-foreground absolute top-1 right-1 hidden size-5 items-center justify-center rounded-full shadow group-data-selected:flex"
+      >
+        <Check className="size-3.5" strokeWidth={3} />
+      </span>
     </Radio>
+  );
+}
+
+/** A background's still, filling its tile. */
+function Thumb({ src, lazy = false }: { src: string; lazy?: boolean }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading={lazy ? "lazy" : undefined}
+      className="absolute inset-0 size-full object-cover"
+    />
   );
 }
 
@@ -106,8 +136,8 @@ function BlurArt({ level }: { level: BlurLevel | null }) {
 
 /**
  * Every background and effect, as one set of choices (arrow keys move between them):
- * no effect and blurs, the default stills, motion, and the ones added on this device,
- * which can be added and removed here.
+ * no effect and blurs, the default stills, motion (where this browser plays it), and
+ * the ones added on this device, which can be added and removed here.
  */
 export function EffectsPicker({
   value,
@@ -120,6 +150,11 @@ export function EffectsPicker({
 }) {
   const t = useTranslations("Effects");
   const [adding, setAdding] = useState(false);
+  const playsFootage = useSyncExternalStore(
+    subscribeNever,
+    footageSupported,
+    () => false,
+  );
   const selected = effectKey(value);
 
   async function add(file: File) {
@@ -154,7 +189,7 @@ export function EffectsPicker({
     >
       <Group label={t("groups.effects")}>
         <Tile value="none" label={t("none")}>
-          {() => <BlurArt level={null} />}
+          <BlurArt level={null} />
         </Tile>
         {BLUR_LEVELS.map((level) => (
           <Tile
@@ -162,7 +197,7 @@ export function EffectsPicker({
             value={effectKey({ kind: "blur", level })}
             label={t(`blur.${level}`)}
           >
-            {() => <BlurArt level={level} />}
+            <BlurArt level={level} />
           </Tile>
         ))}
       </Group>
@@ -174,30 +209,25 @@ export function EffectsPicker({
               value={effectKey({ kind: "still", id: still.id })}
               label={t(`stills.${still.id}`)}
             >
-              {() => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={stillThumb(still.id)}
-                  alt=""
-                  loading="lazy"
-                  className="absolute inset-0 size-full object-cover"
-                />
-              )}
+              <Thumb src={stillThumb(still.id)} lazy />
             </Tile>
           ))}
         </Group>
       ))}
-      <Group label={t("groups.motion")}>
-        {MOTION_IDS.map((id) => (
-          <Tile
-            key={id}
-            value={effectKey({ kind: "motion", id })}
-            label={t(`motion.${id}`)}
-          >
-            {(active) => <MotionThumb id={id} moving={active} />}
-          </Tile>
-        ))}
-      </Group>
+      {playsFootage ? (
+        <Group label={t("groups.motion")}>
+          {MOTIONS.map(({ id }) => (
+            <Tile
+              key={id}
+              value={effectKey({ kind: "motion", id })}
+              label={t(`motion.${id}`)}
+              moving
+            >
+              <Thumb src={motionThumb(id)} lazy />
+            </Tile>
+          ))}
+        </Group>
+      ) : null}
       <Group label={t("groups.yours")}>
         <FileTrigger
           acceptedFileTypes={UPLOAD_TYPES}
@@ -231,15 +261,9 @@ export function EffectsPicker({
               <Tile
                 value={effectKey({ kind: "upload", id: upload.id })}
                 label={name}
+                moving={upload.kind === "video"}
               >
-                {() => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={upload.thumbUrl}
-                    alt=""
-                    className="absolute inset-0 size-full object-cover"
-                  />
-                )}
+                <Thumb src={upload.thumbUrl} />
               </Tile>
               <Button
                 aria-label={t("remove", { name })}

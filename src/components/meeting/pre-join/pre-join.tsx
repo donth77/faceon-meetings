@@ -34,7 +34,7 @@ import {
   type DevicePreferences,
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
-import { effectsSupported } from "@/lib/effects/support";
+import { availableEffect, effectsSupported } from "@/lib/effects/support";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { canChooseSpeaker } from "@/lib/platform";
 import {
@@ -217,7 +217,7 @@ export function PreJoin({
   }
   const [canUseEffects] = useState(effectsSupported);
   const [choosingEffect, setChoosingEffect] = useState(false);
-  const effect = canUseEffects ? settings.effect : null;
+  const effect = canUseEffects ? availableEffect(settings.effect) : null;
   // With a background on, the preview shows it, and never the bare camera meanwhile.
   const preview = useEffectsTrack(video.track, effect, useEffectProblems());
 

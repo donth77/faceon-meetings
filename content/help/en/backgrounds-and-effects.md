@@ -21,7 +21,7 @@ Select the arrow on the camera button, then **Backgrounds and effects…**. On a
 - **Art**: four public-domain paintings from The Metropolitan Museum of Art.
 - **Places**: a library, a valley, Earth from space and a coastline, all public domain.
 - **Abstract**: four soft gradients.
-- **Motion**: Aurora, Waves, Lights and Drift, which move gently. Subtle motion looks best, and uses less data.
+- **Motion**: an aurora, Earth from orbit, a lake, a waterfall, clouds and a sunrise: short looping videos from NASA, the U.S. National Park Service and photographers who gave them to the public domain. Each is a few megabytes, downloaded when you choose it, and the calmer ones use less data in a meeting. A browser that can't play their video doesn't show them.
 - **Yours**: select **Add** to use your own image (JPEG, PNG, WebP or GIF, up to 10 MB) or a looping video (MP4 or WebM, up to 60 seconds and 50 MB). Images are cropped to 16:9. What you add stays in this browser and is never uploaded. Select **×** on one to remove it.
 
 Your choice is kept on this device and used in every meeting. **Settings**, under **Backgrounds and effects**, sets it outside a meeting.

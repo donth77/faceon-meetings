@@ -8,14 +8,11 @@ import { z } from "zod";
 export const BLUR_LEVELS = ["slight", "strong"] as const;
 export type BlurLevel = (typeof BLUR_LEVELS)[number];
 
-/** Moving backgrounds, drawn live by small shaders, so they need no download. */
-export const MOTION_IDS = ["aurora", "waves", "bokeh", "drift"] as const;
-export type MotionId = (typeof MOTION_IDS)[number];
-
 export const STILL_GROUPS = ["art", "places", "abstract"] as const;
 export type StillGroup = (typeof STILL_GROUPS)[number];
 
-export type StillLicense = "publicDomain" | "cc0" | "ours";
+/** Where a default background comes from: the public domain, CC0, or drawn for FaceOn. */
+export type BackgroundLicense = "publicDomain" | "cc0" | "ours";
 
 /**
  * The default still backgrounds, in public/backgrounds/ (CREDITS.md there lists each
@@ -68,7 +65,7 @@ export const STILLS = [
   id: string;
   group: StillGroup;
   by: string;
-  license: StillLicense;
+  license: BackgroundLicense;
 }>;
 export type StillId = (typeof STILLS)[number]["id"];
 const STILL_IDS = STILLS.map((still) => still.id) as [StillId, ...StillId[]];
@@ -82,6 +79,32 @@ export const stillFile = (id: StillId) =>
   `/backgrounds/${id}.${drawn(id) ? "svg" : "webp"}`;
 export const stillThumb = (id: StillId) =>
   drawn(id) ? stillFile(id) : `/backgrounds/thumbs/${id}.webp`;
+
+/**
+ * Moving backgrounds: public-domain and CC0 footage cut into seamless loops, in
+ * public/backgrounds/motion/ (CREDITS.md in public/backgrounds/ lists each source).
+ */
+export const MOTIONS = [
+  { id: "aurora", by: "Fritzchens Fritz", license: "cc0" },
+  { id: "orbit", by: "NASA", license: "publicDomain" },
+  { id: "lake", by: "NPS / Jacob W. Frank", license: "publicDomain" },
+  { id: "waterfall", by: "NPS / Jacob W. Frank", license: "publicDomain" },
+  { id: "clouds", by: "Stepleton", license: "cc0" },
+  { id: "sunrise", by: "NPS / Jacob W. Frank", license: "publicDomain" },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  by: string;
+  license: BackgroundLicense;
+}>;
+export type MotionId = (typeof MOTIONS)[number]["id"];
+const MOTION_IDS = MOTIONS.map((motion) => motion.id) as [
+  MotionId,
+  ...MotionId[],
+];
+
+/** The looping video (H.264 in MP4), and the still the picker shows. */
+export const motionFile = (id: MotionId) => `/backgrounds/motion/${id}.mp4`;
+export const motionThumb = (id: MotionId) => `/backgrounds/motion/${id}.webp`;
 
 /** Images and looping videos people add; kept in their browser (uploads.ts). */
 export const UPLOAD_ID = z.string().regex(/^[a-z0-9-]{1,64}$/);
@@ -117,3 +140,15 @@ export function effectFromKey(key: string): Effect | null {
 
 export const sameEffect = (a: Effect | null, b: Effect | null) =>
   effectKey(a) === effectKey(b);
+
+/**
+ * The effect if this device can run it, otherwise null (no effect): every effect needs
+ * the engine, and motion backgrounds also need a browser that plays their footage.
+ */
+export function runnableEffect(
+  effect: Effect | null,
+  device: { effects: boolean; footage: boolean },
+): Effect | null {
+  if (!effect || !device.effects) return null;
+  return effect.kind === "motion" && !device.footage ? null : effect;
+}

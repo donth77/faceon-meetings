@@ -18,7 +18,7 @@ import {
   type EffectsProblem,
 } from "@/lib/effects/camera-effects";
 import type { Effect } from "@/lib/effects/effects";
-import { effectsSupported } from "@/lib/effects/support";
+import { availableEffect } from "@/lib/effects/support";
 import {
   loadPreferences,
   setPreference,
@@ -39,9 +39,7 @@ const RoomEffectsContext = createContext<RoomEffects | null>(null);
 /** Sets up the room's camera effect from the saved choice; once per room. */
 export function useNewRoomEffects(): RoomEffects {
   const [effects] = useState<RoomEffects>(() => {
-    const saved = effectsSupported()
-      ? withDefaults(loadPreferences()).effect
-      : null;
+    const saved = availableEffect(withDefaults(loadPreferences()).effect);
     return {
       camera: createCameraEffects(saved ?? { kind: "blur", level: "slight" }),
       startedWith: saved,
@@ -82,8 +80,9 @@ export function useRoomEffects() {
 
   useEffect(() => {
     if (!effects) return;
-    if (effect) effects.camera.set(effect);
-    const on = effect !== null && effectsSupported();
+    const usable = availableEffect(effect);
+    if (usable) effects.camera.set(usable);
+    const on = usable !== null;
     if (on === registered.current) return;
     registered.current = on;
     applyProcessor(on);
