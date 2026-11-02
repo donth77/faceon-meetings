@@ -25,9 +25,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ModerateRequest } from "@/lib/meetings/api";
+import { canModerate, type ModerationAction } from "@/lib/meetings/rules";
 
 import type { RoomParticipant } from "../media";
-import { moderates } from "./roles";
 import { useRoomControls } from "./room-controls";
 
 /**
@@ -46,7 +46,13 @@ export function ParticipantMenu({
   const controls = useRoomControls();
   const isSelf = participant.userId === controls.selfId;
   const theirRole = controls.roleOf(participant.userId);
-  const canModerate = moderates(controls.selfRole);
+  // The same permission matrix the server checks (rules.ts).
+  const may = (action: ModerationAction) =>
+    canModerate({
+      actor: controls.selfRole,
+      action,
+      target: { role: theirRole, isSelf },
+    });
   const pinned = controls.pinnedKey === participant.key;
   const spotlighted = controls.spotlight === participant.userId;
   const run = (request: ModerateRequest) => void controls.moderate(request);
@@ -61,7 +67,7 @@ export function ParticipantMenu({
       {pinned ? t("unpin") : t("pin")}
     </DropdownMenuItem>,
   ];
-  if (canModerate) {
+  if (may("spotlight")) {
     items.push(
       <DropdownMenuItem
         key="spotlight"
@@ -78,7 +84,8 @@ export function ParticipantMenu({
       </DropdownMenuItem>,
     );
   }
-  if (canModerate && !isSelf) {
+  // You turn your own mic, camera and share off with the controls, not this menu.
+  if (may("mute") && !isSelf) {
     items.push(
       participant.audio ? (
         <DropdownMenuItem
@@ -121,7 +128,7 @@ export function ParticipantMenu({
       );
     }
   }
-  if (controls.selfRole === "host" && !isSelf && theirRole !== "host") {
+  if (may("makeCohost") || may("removeCohost")) {
     items.push(
       theirRole === "cohost" ? (
         <DropdownMenuItem
@@ -142,12 +149,7 @@ export function ParticipantMenu({
       ),
     );
   }
-  const canRemove =
-    canModerate &&
-    !isSelf &&
-    theirRole !== "host" &&
-    (controls.selfRole === "host" || theirRole !== "cohost");
-  if (canRemove) {
+  if (may("remove")) {
     items.push(
       <DropdownMenuSeparator key="separator" />,
       <DropdownMenuItem
@@ -166,7 +168,7 @@ export function ParticipantMenu({
       <Button
         aria-label={t("optionsFor", { name: participant.name })}
         className={cn(
-          "focus-visible:ring-ring flex size-8 items-center justify-center rounded-full outline-none focus-visible:ring-2",
+          "focus-visible:focus-ring flex size-8 items-center justify-center rounded-full outline-hidden",
           className,
         )}
       >

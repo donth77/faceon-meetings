@@ -1,9 +1,8 @@
 /**
- * The join rules, kept free of I/O so they can be tested on their own. The join flow
- * (join.ts) gathers the facts and applies these.
+ * The join rules, kept free of I/O so they can be tested on their own, and free of
+ * anything Node-only, so the browser can ask them too (the ⋯ menu offers what
+ * canModerate allows). The join flow (join.ts) gathers the facts and applies these.
  */
-import { timingSafeEqual } from "node:crypto";
-
 import type { MeetingRole, SessionSnapshot } from "@/lib/media/types";
 
 import type { MeetingErrorCode, ModerateRequest } from "./api";
@@ -43,15 +42,22 @@ export function isJoinable(
 export const isHostRole = (role: MeetingRole) =>
   role === "host" || role === "cohost";
 
-/** Case-insensitive, constant-time passcode check. */
+/**
+ * Case-insensitive passcode check, in constant time: it looks at every character
+ * whatever it finds, so how long it takes says nothing about how close a guess was.
+ */
 export function passcodeMatches(
   expected: string,
   given: string | undefined,
 ): boolean {
   if (!given) return false;
-  const a = Buffer.from(expected.toUpperCase());
-  const b = Buffer.from(given.trim().toUpperCase());
-  return a.length === b.length && timingSafeEqual(a, b);
+  const a = expected.toUpperCase();
+  const b = given.trim().toUpperCase();
+  let difference = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    difference |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return difference === 0;
 }
 
 /**

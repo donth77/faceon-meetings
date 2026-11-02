@@ -60,6 +60,17 @@ describe("passcodeMatches", () => {
     expect(passcodeMatches("K7XQ2M", "K7XQ2")).toBe(false);
     expect(passcodeMatches("K7XQ2M", undefined)).toBe(false);
   });
+
+  it("rejects a longer guess that starts with the passcode", () => {
+    expect(passcodeMatches("K7XQ2M", "K7XQ2MA")).toBe(false);
+    expect(passcodeMatches("K7XQ2M", "")).toBe(false);
+  });
+
+  it("runs without Node's crypto, so the browser can use these rules", () => {
+    // Characters beyond ASCII compare too, and a near miss is still a miss.
+    expect(passcodeMatches("ÆBC123", "æbc123")).toBe(true);
+    expect(passcodeMatches("ÆBC123", "æbc124")).toBe(false);
+  });
 });
 
 describe("isSessionStale", () => {
