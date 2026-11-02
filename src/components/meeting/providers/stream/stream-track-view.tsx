@@ -6,7 +6,12 @@ import {
   type StreamVideoParticipant,
 } from "@stream-io/video-react-sdk";
 import { cn } from "cn";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type SyntheticEvent,
+} from "react";
 
 import { usePreferences, withDefaults } from "@/lib/preferences";
 
@@ -33,6 +38,7 @@ export function StreamTrackView({
   participant,
   kind,
   className,
+  onAspectRatio,
 }: TrackViewProps) {
   const call = useCall();
   const { mirrorVideo } = withDefaults(usePreferences());
@@ -60,6 +66,16 @@ export function StreamTrackView({
     () => undefined,
   );
   if (!streamParticipant) return null;
+  // The picture's shape, when it first loads and whenever it changes (a rotated phone,
+  // a resized shared window).
+  const reportShape = onAspectRatio
+    ? (event: SyntheticEvent<HTMLVideoElement>) => {
+        const { videoWidth, videoHeight } = event.currentTarget;
+        if (videoWidth > 0 && videoHeight > 0) {
+          onAspectRatio(videoWidth / videoHeight);
+        }
+      }
+    : undefined;
 
   return (
     <Video
@@ -69,6 +85,8 @@ export function StreamTrackView({
       mirror={kind === "video" && !mirrorVideo ? false : undefined}
       VideoPlaceholder={null}
       PictureInPicturePlaceholder={null}
+      onLoadedMetadata={reportShape}
+      onResize={reportShape}
       className={cn(
         "transition-opacity duration-200 [&.str-video__video--mirror]:-scale-x-100 [&.str-video__video--not-playing]:opacity-0",
         className,

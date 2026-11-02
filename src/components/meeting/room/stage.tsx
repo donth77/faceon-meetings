@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { Eye, EyeOff, MonitorUp } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Button } from "react-aria-components";
 
 import { useElementSize } from "@/hooks/use-element-size";
@@ -16,10 +16,20 @@ import {
   useRoomMedia,
   type RoomParticipant,
 } from "../media";
-import { fitGrid } from "./grid";
 import { useRoomTransition } from "./motion";
 import { useRoomControls } from "./room-controls";
-import { Tile } from "./tile";
+import {
+  ANY_SHAPE,
+  croppable,
+  exactly,
+  fitBox,
+  fitFocus,
+  fitGrid,
+  floatingShape,
+  WIDESCREEN,
+  type AspectRange,
+} from "./stage-layout";
+import { Tile, TileShapes } from "./tile";
 
 export type LayoutChoice = "auto" | "gallery" | "speaker" | "spotlight";
 
@@ -66,6 +76,28 @@ const videoOf = (participant: RoomParticipant): StageTile => ({
   kind: "video",
 });
 
+/** Each picture's shape (width over height) as its tile last saw it, by tile key. */
+type Shapes = ReadonlyMap<string, number>;
+
+/**
+ * The shapes a large tile may take: a shared screen exactly its own (it's never cropped),
+ * a camera its picture's within the crop limit, and an avatar any (it fills the space).
+ */
+function shapesFor(tile: StageTile, shapes: Shapes): AspectRange {
+  const aspect = shapes.get(tileKey(tile)) ?? WIDESCREEN;
+  if (tile.kind === "screen") return exactly(aspect);
+  return tile.participant.video ? croppable(aspect) : ANY_SHAPE;
+}
+
+/**
+ * What decides where the strip goes: a camera's shape even while it's off, so the strip
+ * doesn't move each time a camera goes on or off.
+ */
+function placementFor(tile: StageTile, shapes: Shapes): AspectRange {
+  const aspect = shapes.get(tileKey(tile)) ?? WIDESCREEN;
+  return tile.kind === "screen" ? exactly(aspect) : croppable(aspect);
+}
+
 /**
  * The video area. Someone you pinned comes first, then a shared screen, then whoever a
  * host spotlighted. Otherwise Auto shows a one-on-one call as the other person with
@@ -74,6 +106,25 @@ const videoOf = (participant: RoomParticipant): StageTile => ({
  * tiles without video leave tiles out, but never the one shown large.
  */
 export function Stage({ view }: { view: StageView }) {
+  // Kept across layouts, so a tile shown large takes its picture's shape at once.
+  const [shapes, setShapes] = useState<Shapes>(() => new Map());
+  function learnShape(key: string, kind: StageTile["kind"], ratio: number) {
+    setShapes((current) => {
+      const id = `${key}:${kind}`;
+      return current.get(id) === ratio
+        ? current
+        : new Map(current).set(id, ratio);
+    });
+  }
+  return (
+    <TileShapes value={learnShape}>
+      <StageLayout view={view} shapes={shapes} />
+    </TileShapes>
+  );
+}
+
+/** Which layout shows and who goes where, as described on Stage. */
+function StageLayout({ view, shapes }: { view: StageView; shapes: Shapes }) {
   const media = useRoomMedia();
   const { pinnedKey, spotlight } = useRoomControls();
   const everyone = orderParticipants(media.participants);
@@ -90,18 +141,46 @@ export function Stage({ view }: { view: StageView }) {
     ...(withScreen ? screen : []),
     ...people.filter((p) => p !== main).map(videoOf),
   ];
-  const focus = (main: StageTile, strip: StageTile[]) =>
-    view.layout === "spotlight" ? (
-      <StageFade kind="spotlight">
-        <Fitted>
-          <MainTile tile={main} />
-        </Fitted>
-      </StageFade>
-    ) : (
+  const focus = (main: StageTile, strip: StageTile[]) => {
+    if (view.layout === "spotlight") {
+      return (
+        <StageFade kind="spotlight">
+          <Fitted range={shapesFor(main, shapes)}>
+            <MainTile tile={main} />
+          </Fitted>
+        </StageFade>
+      );
+    }
+    // Only you left for the strip: they get the stage and you float in the corner, as
+    // in a one-on-one (Meet and Zoom do the same).
+    const [only] = strip;
+    if (
+      strip.length === 1 &&
+      main.kind === "video" &&
+      only?.kind === "video" &&
+      only.participant.isLocal
+    ) {
+      return (
+        <StageFade kind="oneOnOne">
+          <OneOnOne
+            other={main.participant}
+            self={only.participant}
+            shapes={shapes}
+          />
+        </StageFade>
+      );
+    }
+    return (
       <StageFade kind="focus">
-        <FocusLayout main={main} strip={strip} />
+        <FocusLayout
+          main={main}
+          strip={strip}
+          range={shapesFor(main, shapes)}
+          placeBy={placementFor(main, shapes)}
+        />
       </StageFade>
     );
+  };
 
   const pinned = everyone.find((p) => p.key === pinnedKey);
   if (pinned) return focus(videoOf(pinned), stripWithout(pinned));
@@ -122,7 +201,11 @@ export function Stage({ view }: { view: StageView }) {
   if (view.layout === "auto" && others.length === 1 && speaker) {
     return (
       <StageFade kind="oneOnOne">
-        <OneOnOne other={speaker} self={view.hideSelf ? undefined : self} />
+        <OneOnOne
+          other={speaker}
+          self={view.hideSelf ? undefined : self}
+          shapes={shapes}
+        />
       </StageFade>
     );
   }
@@ -177,7 +260,14 @@ function StageFade({ kind, children }: { kind: string; children: ReactNode }) {
 function Gallery({ tiles }: { tiles: StageTile[] }) {
   const t = useTranslations("Meeting");
   const [size, ref] = useElementSize<HTMLUListElement>();
-  const fit = fitGrid(tiles.length, size.width, size.height, GAP);
+  // Same-sized tiles, cropping a widescreen camera by no more than the limit.
+  const fit = fitGrid(
+    tiles.length,
+    size.width,
+    size.height,
+    GAP,
+    croppable(WIDESCREEN),
+  );
   const transition = useRoomTransition(0.28);
 
   return (
@@ -207,15 +297,19 @@ function Gallery({ tiles }: { tiles: StageTile[] }) {
   );
 }
 
-/** One 16:9 tile, as large as fits and centered. */
-function Fitted({ children }: { children: ReactNode }) {
+/** One tile as large as fits, in a shape from `range`, centered. */
+function Fitted({
+  range,
+  children,
+}: {
+  range: AspectRange;
+  children: ReactNode;
+}) {
   const [size, ref] = useElementSize<HTMLDivElement>();
-  const fit = fitGrid(1, size.width, size.height, 0);
+  const box = fitBox(size.width, size.height, range);
   return (
     <div ref={ref} className="flex size-full items-center justify-center">
-      <div style={{ width: fit.tileWidth, height: fit.tileHeight }}>
-        {children}
-      </div>
+      <div style={box}>{children}</div>
     </div>
   );
 }
@@ -224,9 +318,11 @@ function Fitted({ children }: { children: ReactNode }) {
 function OneOnOne({
   other,
   self,
+  shapes,
 }: {
   other: RoomParticipant;
   self: RoomParticipant | undefined;
+  shapes: Shapes;
 }) {
   const fill = useIsMobile();
   return (
@@ -240,18 +336,42 @@ function OneOnOne({
       )}
     >
       {fill ? (
-        <Tile participant={other} />
+        <Tile participant={other} cover />
       ) : (
-        <Fitted>
+        <Fitted range={shapesFor(videoOf(other), shapes)}>
           <Tile participant={other} />
         </Fitted>
       )}
-      {self ? (
-        // On a phone it clears the controls while they show (meeting-shell.tsx).
-        <div className="absolute right-3 bottom-[calc(0.75rem+var(--room-controls-bottom,0px))] aspect-video w-32 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 transition-[bottom] duration-200 ease-out [--tile-inset-bottom:0px] [--tile-inset-top:0px] motion-reduce:transition-none sm:w-56">
-          <Tile participant={self} />
-        </div>
-      ) : null}
+      {self ? <FloatingSelf participant={self} shapes={shapes} /> : null}
+    </div>
+  );
+}
+
+/**
+ * You, floating in the corner: your camera's shape (a phone held upright is tall), as
+ * much area as the usual 16:9 tile, or 16:9 with your camera off.
+ */
+function FloatingSelf({
+  participant,
+  shapes,
+}: {
+  participant: RoomParticipant;
+  shapes: Shapes;
+}) {
+  const camera = shapes.get(tileKey(videoOf(participant))) ?? null;
+  const shape = floatingShape(participant.video ? camera : null);
+  return (
+    // On a phone it clears the controls while they show (meeting-shell.tsx).
+    <div
+      style={
+        {
+          aspectRatio: shape.aspect,
+          "--float-scale": shape.widthScale,
+        } as CSSProperties
+      }
+      className="absolute right-3 bottom-[calc(0.75rem+var(--room-controls-bottom,0px))] w-[calc(8rem*var(--float-scale))] overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 transition-[bottom] duration-200 ease-out [--tile-inset-bottom:0px] [--tile-inset-top:0px] motion-reduce:transition-none sm:w-[calc(14rem*var(--float-scale))]"
+    >
+      <Tile participant={participant} />
     </div>
   );
 }
@@ -344,25 +464,72 @@ function MainTile({
   return <Tile participant={tile.participant} kind={tile.kind} />;
 }
 
-/** One tile large (a shared screen or the speaker), everyone else in a strip beside it. */
-function FocusLayout({ main, strip }: { main: StageTile; strip: StageTile[] }) {
+/**
+ * One tile large (a shared screen or the speaker), everyone else in a strip: beside it
+ * on a wide stage, in a row under it on a tall one, whichever leaves the large tile
+ * bigger (stage-layout.ts). The strip's tiles sit in the middle of it and scroll when
+ * there are more than fit.
+ */
+function FocusLayout({
+  main,
+  strip,
+  range,
+  placeBy,
+}: {
+  main: StageTile;
+  strip: StageTile[];
+  /** The shapes the large tile may take. */
+  range: AspectRange;
+  /** The shapes that decide where the strip goes. */
+  placeBy: AspectRange;
+}) {
   const t = useTranslations("Meeting");
+  const [size, ref] = useElementSize<HTMLDivElement>();
+  const fit = fitFocus({
+    width: size.width,
+    height: size.height,
+    gap: GAP,
+    stripCount: strip.length,
+    main: range,
+    placeBy,
+  });
+  const side = fit.strip === "side";
   return (
-    <div className="flex size-full flex-col gap-2.5 lg:flex-row">
-      <div className="min-h-0 min-w-0 flex-1">
-        <Fitted>
+    <div
+      ref={ref}
+      className={cn("flex size-full gap-2.5", side ? "flex-row" : "flex-col")}
+    >
+      <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+        <div style={fit.main}>
           <MainTile tile={main} />
-        </Fitted>
+        </div>
       </div>
       {strip.length > 0 ? (
         <ul
           aria-label={t("stageLabel")}
-          className="flex shrink-0 gap-2.5 overflow-x-auto lg:w-56 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto"
+          style={
+            side
+              ? { width: fit.stripTile.width }
+              : { height: fit.stripTile.height }
+          }
+          className={cn(
+            "flex shrink-0 gap-2.5",
+            side
+              ? "flex-col overflow-x-hidden overflow-y-auto"
+              : "overflow-x-auto overflow-y-hidden",
+          )}
         >
           {strip.map((tile) => (
             <li
               key={tileKey(tile)}
-              className="aspect-video h-24 shrink-0 lg:h-auto lg:w-full"
+              // Auto margins center the tiles while they fit, and let the strip scroll
+              // from its start when they don't.
+              className={cn(
+                "aspect-video shrink-0",
+                side
+                  ? "w-full first:mt-auto last:mb-auto"
+                  : "h-full first:ms-auto last:me-auto",
+              )}
             >
               <MainTile tile={tile} compact />
             </li>

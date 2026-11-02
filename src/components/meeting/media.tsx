@@ -152,6 +152,8 @@ export type TrackViewProps = {
   participant: RoomParticipant;
   kind: "video" | "screen";
   className?: string;
+  /** The picture's shape (width over height) once it's known, and whenever it changes. */
+  onAspectRatio?: (ratio: number) => void;
 };
 
 /** What every adapter's room component takes. */

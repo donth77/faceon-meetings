@@ -3,6 +3,7 @@
 import { cn } from "cn";
 import { Hand, Mic, MicOff, Pin, SignalLow, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { createContext, useContext, useState, type CSSProperties } from "react";
 
 import { emojiFor } from "@/lib/meetings/events";
 
@@ -16,6 +17,15 @@ import { ParticipantMenu } from "./participant-menu";
 import { EMOJI_FONT } from "./reactions";
 import { useRoomBadges } from "./room-badges";
 import { useRoomControls } from "./room-controls";
+import { croppable, WIDESCREEN } from "./stage-layout";
+
+/**
+ * Where tiles say what shape their picture is (a participant's key, camera or screen,
+ * width over height), so the stage can shape a large tile to it. The stage provides it.
+ */
+export const TileShapes = createContext<
+  ((key: string, kind: "video" | "screen", ratio: number) => void) | null
+>(null);
 
 /**
  * How loud someone sounds while they speak, 0 to 1, shaped so normal speech fills most
@@ -101,19 +111,28 @@ function SpeakingOutline({ participant }: { participant: RoomParticipant }) {
  * bottom-left with their voice level (or a muted icon), a green outline while
  * speaking, a ring that pulses around the avatar with their voice, a warning for a
  * poor connection, and a ⋯ menu on hover (always shown on touch screens).
+ *
+ * A camera fills the tile, cropped by no more than a fifth of its width or height; a
+ * tile of a very different shape shows the rest of the picture with space around it.
+ * A shared screen is never cropped.
  */
 export function Tile({
   participant,
   kind = "video",
+  cover = false,
   className,
 }: {
   participant: RoomParticipant;
   kind?: "video" | "screen";
+  /** Fill the tile with the camera however much that crops: a one-on-one on a phone, as in Meet. */
+  cover?: boolean;
   className?: string;
 }) {
   const t = useTranslations("Meeting");
   const badges = useRoomBadges();
   const controls = useRoomControls();
+  const reportShape = useContext(TileShapes);
+  const [aspect, setAspect] = useState<number | null>(null);
   const isScreen = kind === "screen";
   const pinned = !isScreen && controls.pinnedKey === participant.key;
   const spotlighted = !isScreen && controls.spotlight === participant.userId;
@@ -127,6 +146,14 @@ export function Tile({
     : participant.isLocal
       ? t("you", { name: participant.name })
       : participant.name;
+  // How far the picture may be cropped, for the video's box below.
+  const crop = croppable(aspect ?? WIDESCREEN);
+  function learnShape(ratio: number) {
+    // Two decimals: a different simulcast layer of the same camera isn't a new shape.
+    const rounded = Math.round(ratio * 100) / 100;
+    setAspect(rounded);
+    reportShape?.(participant.key, kind, rounded);
+  }
 
   return (
     <div
@@ -134,8 +161,11 @@ export function Tile({
       data-tile={kind}
       data-name={participant.name}
       data-local={participant.isLocal || undefined}
+      style={
+        { "--crop-min": crop.min, "--crop-max": crop.max } as CSSProperties
+      }
       className={cn(
-        "group/tile bg-card relative size-full overflow-hidden rounded-xl",
+        "group/tile bg-card [container-type:size] relative size-full overflow-hidden rounded-xl",
         className,
       )}
     >
@@ -143,9 +173,16 @@ export function Tile({
         <TrackView
           participant={participant}
           kind={kind}
+          onAspectRatio={learnShape}
           className={cn(
-            "absolute inset-0 size-full",
-            isScreen ? "object-contain" : "object-cover",
+            "absolute inset-0",
+            isScreen
+              ? "size-full object-contain"
+              : cover
+                ? "size-full object-cover"
+                : // The tile's box, unless that would crop past the limit: then the
+                  // picture's own shape, as near the tile's as the limit allows.
+                  "m-auto h-[min(100cqh,calc(100cqw/var(--crop-min)))] w-[min(100cqw,calc(100cqh*var(--crop-max)))] object-cover",
           )}
         />
       ) : (
