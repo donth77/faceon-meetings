@@ -27,7 +27,7 @@ It depends on how {appName} is set up for the host. Demo meetings have limits, a
 
 ## Which browsers work?
 
-Recent versions of Chrome, Edge, Firefox and Safari, on a computer or a phone. Sharing your screen needs a computer. Sharing sound needs Chrome or Edge.
+Recent versions of Chrome, Edge, Firefox and Safari, on a computer or a phone. Sharing your screen needs a computer. Sharing sound needs Chrome or Edge. A browser that can't join calls, or can't use your camera and microphone on the page, says so on the join screen.
 
 ## How do I find something in Help?
 

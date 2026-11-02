@@ -1,14 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 import { DeviceProblemNote } from "@/components/device/device-problem-note";
 import { useLocalTrack } from "@/components/device/use-local-track";
 import { EffectsChooser } from "@/components/effects/effects-chooser";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
-import { effectsSupported } from "@/lib/effects/support";
+import { useCapability } from "@/hooks/use-capability";
 import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
 
 import { useRememberedDevices } from "./device-fields";
@@ -23,7 +22,7 @@ export function EffectsSettings() {
   const te = useTranslations("Effects");
   const [devices] = useRememberedDevices();
   const { mirrorVideo, effect } = withDefaults(usePreferences());
-  const [supported] = useState(effectsSupported);
+  const supported = useCapability("effects");
   const camera = useLocalTrack("video", supported, devices.cameraId);
   const preview = useEffectsTrack(camera.track, effect, useEffectProblems());
 

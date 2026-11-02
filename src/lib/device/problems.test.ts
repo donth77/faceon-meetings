@@ -15,6 +15,12 @@ describe("deviceProblem", () => {
     );
   });
 
+  it("says so where the browser can't use cameras and microphones at all", () => {
+    expect(deviceProblem(new TypeError("no getUserMedia"), false)).toBe(
+      "unsupported",
+    );
+  });
+
   it("falls back to unknown", () => {
     expect(deviceProblem(new TypeError("boom"))).toBe("unknown");
     expect(deviceProblem("nope")).toBe("unknown");

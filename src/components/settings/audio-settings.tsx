@@ -10,10 +10,10 @@ import { useLocalTrack } from "@/components/device/use-local-track";
 import { useNoiseSuppression } from "@/components/device/use-noise-suppression";
 import { useNoiseTrack } from "@/components/device/use-noise-track";
 import { Button } from "@/components/ui/button";
+import { useCapability } from "@/hooks/use-capability";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import { playTestSound } from "@/lib/device/test-sound";
 import { browserSuppression } from "@/lib/noise/noise";
-import { canChooseSpeaker } from "@/lib/platform";
 
 import { DeviceField, useRememberedDevices } from "./device-fields";
 import { SectionTitle, SettingsCard } from "./settings-nav";
@@ -32,7 +32,8 @@ export function AudioSettings() {
   // The meter shows what others would hear, with strong suppression when it's on.
   const heard = useNoiseTrack(mic.track, noise.mode);
   const lists = useMediaDevices(mic.track?.id ?? "");
-  const chooseSpeaker = canChooseSpeaker() && lists.speakers.length > 0;
+  const canChoose = useCapability("chooseSpeaker");
+  const chooseSpeaker = canChoose && lists.speakers.length > 0;
 
   return (
     <>

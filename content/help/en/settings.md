@@ -19,11 +19,11 @@ Dates follow your browser's region, so you'll see "Sunday 1 November" or "Sunday
 
 ## Audio
 
-Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** keeps typing, fans, traffic and background voices out of the meeting: **Standard** (the default: your browser's own, for steady noise), **Strong** (on your device, for typing, traffic and voices too) or **Off**. **Push to talk** lets you hold `Space` to talk while muted; it's off unless you turn it on.
+Choose your microphone and speaker, watch the microphone meter, and select **Test speaker** to hear a short sound. **Noise suppression** keeps typing, fans, traffic and background voices out of the meeting: **Standard** (the default: your browser's own, for steady noise), **Strong** (on your device, for typing, traffic and voices too) or **Off**. **Push to talk** lets you hold `Space` to talk while muted; it's off unless you turn it on, and shows up once you use a keyboard.
 
 ## Video
 
-See your camera, choose which one to use, and decide whether to mirror your video, send HD video, or start meetings with your camera off.
+See your camera, choose which one to use, and decide whether to mirror your video, send HD video, or start meetings with your camera off. In Chrome and Edge on a computer, you can also choose whether picture-in-picture opens by itself when you switch away from a meeting.
 
 ## Backgrounds and effects
 
@@ -39,7 +39,7 @@ Choose which events make a sound (people joining and leaving, chat messages, rai
 
 **Sounds, pop-ups and reminders**, at the top, pauses them all at once, the reaction sound and meeting reminders too. Your other choices stay as they are and come back when you turn it on again. What screen readers hear about reactions doesn't change, and people asking to join still show under **Participants**.
 
-**Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
+**Meeting reminders** remind you 5, 10 or 15 minutes before meetings you host or are invited to, while FaceOn is open in a tab. Allow notifications to get them in any tab. On iPhone and iPad, notifications work once {appName} is on your Home Screen: see [Install {appName} as an app](/help/install-the-app). Calendar files you add from a meeting carry the same reminder, so your calendar reminds you even when FaceOn is closed.
 
 ## Calendar
 
@@ -53,7 +53,7 @@ How AI notes are made: **On this computer**, with Chrome's built-in AI, or with 
 
 ## Accessibility
 
-{appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know:
+{appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know, all about the keyboard, so they show up once you use one:
 
 - **Single-key shortcuts**, such as `?` for the list of shortcuts, and holding `Space` to talk when Push to talk is on. Turn them off if you use speech input or a switch device.
 - **Keyboard shortcuts**: every shortcut, with your computer's keys, listed right there. See [Keyboard shortcuts](/help/keyboard-shortcuts).

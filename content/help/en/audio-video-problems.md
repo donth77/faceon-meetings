@@ -5,6 +5,8 @@ category: troubleshooting
 order: 1
 ---
 
+If {appName} says this browser can't use a camera or microphone on this page, open the meeting link in a recent Chrome, Edge, Firefox or Safari. Some apps' built-in browsers can't use them, and no browser can on a page that isn't secure (its address doesn't start with `https`).
+
 ## Nobody can hear me
 
 1. Check that **Mute** isn't red.

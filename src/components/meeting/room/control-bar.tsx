@@ -34,11 +34,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useCapability } from "@/hooks/use-capability";
 import { useNow } from "@/hooks/use-now";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { REACTIONS, type ReactionCode } from "@/lib/meetings/events";
-import { canShareScreen } from "@/lib/platform";
 import { useIntlLocale } from "@/lib/preferences";
 
 import { useRoomMedia, type ShareOptions } from "../media";
@@ -203,11 +202,7 @@ function useFullscreen() {
     () => document.fullscreenElement !== null,
     () => false,
   );
-  const supported = useSyncExternalStore(
-    subscribeFullscreen,
-    () => document.fullscreenEnabled,
-    () => false,
-  );
+  const supported = useCapability("fullscreen");
   if (!supported) return null;
   return {
     active,
@@ -218,7 +213,10 @@ function useFullscreen() {
   };
 }
 
-/** AI notes (for hosts), Settings, full screen and the shortcuts, in both More menus. */
+/**
+ * AI notes (for hosts), Settings, full screen, picture-in-picture and the shortcuts, in
+ * both More menus: each only where this browser and device have it.
+ */
 function MoreItems({
   onOpenSettings,
   onOpenPictureInPicture,
@@ -230,7 +228,7 @@ function MoreItems({
   onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting");
-  const phone = useIsMobile();
+  const keyboard = useCapability("keyboard");
   const openShortcuts = useOpenShortcuts();
   const fullscreen = useFullscreen();
   return (
@@ -261,12 +259,12 @@ function MoreItems({
           {t("openPictureInPicture")}
         </DropdownMenuItem>
       ) : null}
-      {phone ? null : (
+      {keyboard ? (
         <DropdownMenuItem onAction={openShortcuts}>
           <Keyboard aria-hidden="true" />
           {t("keyboardShortcuts")}
         </DropdownMenuItem>
-      )}
+      ) : null}
     </>
   );
 }
@@ -454,6 +452,7 @@ export function ControlBar({
   const media = useRoomMedia();
   const { mic, camera, speaker, screenShare } = media;
   const count = media.participants.length;
+  const canShare = useCapability("screenShare");
 
   return (
     <footer
@@ -529,7 +528,7 @@ export function ControlBar({
             ]}
           />
         </Control>
-        {canShareScreen() ? (
+        {canShare ? (
           <ShareControl sharing={screenShare.enabled} {...share} />
         ) : null}
         {onReaction ? (

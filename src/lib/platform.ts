@@ -3,16 +3,6 @@ export const isAppleDevice = () =>
   typeof navigator !== "undefined" &&
   /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 
-/** Choosing where sound plays needs setSinkId, which Safari and phones lack. */
-export const canChooseSpeaker = () =>
-  typeof HTMLMediaElement !== "undefined" &&
-  "setSinkId" in HTMLMediaElement.prototype;
-
-/** Screen sharing needs getDisplayMedia, which most phone browsers lack. */
-export const canShareScreen = () =>
-  typeof navigator !== "undefined" &&
-  typeof navigator.mediaDevices?.getDisplayMedia === "function";
-
 /** Keyboard shortcuts stay out of the way while someone types. */
 export const isTypingTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement &&

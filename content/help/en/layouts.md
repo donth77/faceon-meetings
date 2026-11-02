@@ -28,13 +28,13 @@ The person speaking gets a green outline, and green bars beside their name move 
 
 ## Keep the meeting in view
 
-In Chrome and Edge on a computer, select **More**, then **Open picture-in-picture**. A small window stays on top of your other tabs and apps, showing whoever is talking or the shared screen, with **Mute**, **Video**, **Raise hand** and **Leave**.
+On a computer, select **More**, then **Open picture-in-picture**. It's there in Chrome, Edge and recent versions of Firefox. A small window stays on top of your other tabs and apps, showing whoever is talking or the shared screen, with **Mute**, **Video**, **Raise hand** and **Leave**.
 
-Chrome can also open it by itself when you switch to another tab or app during a meeting, including when you share one. It asks you the first time. To stop it, turn off **Open picture-in-picture automatically** in **Settings**, under **Video**.
+Chrome and Edge can also open it by itself when you switch to another tab or app during a meeting, including when you share one. It asks you the first time. To stop it, turn off **Open picture-in-picture automatically** in **Settings**, under **Video**.
 
 ## Full screen
 
-Select **More**, then **Full screen**. Press `Esc` to leave full screen.
+Select **More**, then **Full screen**. Press `Esc` to leave full screen. An iPhone can't make a page fill the screen, so it isn't there.
 
 ## On a phone
 

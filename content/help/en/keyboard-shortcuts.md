@@ -5,7 +5,7 @@ category: account
 order: 3
 ---
 
-Press `?` anywhere to see these, or `Ctrl+/` (`⌘/` on a Mac). They're also listed in **Settings**, under **Accessibility**, including in a meeting's Settings.
+Press `?` anywhere to see these, or `Ctrl+/` (`⌘/` on a Mac). They're also listed in **Settings**, under **Accessibility**, including in a meeting's Settings. On a phone or tablet without a keyboard, the menus and Settings leave them out until you use one.
 
 ## In a meeting
 

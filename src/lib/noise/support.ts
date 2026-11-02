@@ -1,22 +1,15 @@
-let capable: boolean | undefined;
+import { supports } from "@/lib/capabilities";
+
 let failed = false;
 let told = false;
 const listeners = new Set<() => void>();
 
-/** Whether this browser can run strong suppression: an AudioWorklet and WebAssembly. */
-export function strongSupported(): boolean {
-  if (capable !== undefined) return capable;
-  if (typeof window === "undefined") return false;
-  capable =
-    typeof AudioWorkletNode === "function" &&
-    typeof WebAssembly === "object" &&
-    window.isSecureContext;
-  return capable;
-}
-
-/** Strong suppression can run here, and hasn't failed during this visit. */
+/**
+ * Strong suppression can run here (an AudioWorklet and WebAssembly on a secure page,
+ * lib/capabilities.ts), and hasn't failed during this visit.
+ */
 export function strongAvailable(): boolean {
-  return !failed && strongSupported();
+  return !failed && supports("strongNoise");
 }
 
 /**

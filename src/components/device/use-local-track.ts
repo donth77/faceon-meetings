@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { supports } from "@/lib/capabilities";
 import { deviceProblem, type DeviceProblem } from "@/lib/device/problems";
 
 export type LocalTrack = {
@@ -70,7 +71,11 @@ export function useLocalTrack(
         },
         (error: unknown) => {
           if (!cancelled) {
-            setResult({ request, track: null, problem: deviceProblem(error) });
+            setResult({
+              request,
+              track: null,
+              problem: deviceProblem(error, supports("media")),
+            });
           }
         },
       );

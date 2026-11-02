@@ -11,10 +11,11 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { Button, FileTrigger, Radio, RadioGroup } from "react-aria-components";
 import { toast } from "sonner";
 
+import { useCapability } from "@/hooks/use-capability";
 import {
   BLUR_LEVELS,
   effectFromKey,
@@ -27,7 +28,6 @@ import {
   type BlurLevel,
   type Effect,
 } from "@/lib/effects/effects";
-import { footageSupported } from "@/lib/effects/support";
 import {
   addUpload,
   removeUpload,
@@ -38,8 +38,6 @@ import {
 import { publicEnv } from "@/lib/env";
 
 import type { ShownUpload } from "./use-uploads";
-
-const subscribeNever = () => () => {};
 
 /** Focus is an outline around the tile; the chosen one also has a ring and a check. */
 const TILE =
@@ -167,11 +165,7 @@ export function EffectsPicker({
 }) {
   const t = useTranslations("Effects");
   const [adding, setAdding] = useState(false);
-  const playsFootage = useSyncExternalStore(
-    subscribeNever,
-    footageSupported,
-    () => false,
-  );
+  const playsFootage = useCapability("motionBackgrounds");
   const selected = effectKey(value);
 
   async function add(file: File) {

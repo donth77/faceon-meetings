@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, use, type ReactNode } from "react";
 
+import { useCapability } from "@/hooks/use-capability";
 import { aiNotesEnabled } from "@/lib/env";
 
 export const SETTINGS_SECTIONS = [
@@ -44,11 +45,17 @@ export const SETTINGS_SECTIONS = [
 /**
  * The sections of Settings; the current one is marked as the page. A column beside the
  * section on wide screens, a row that scrolls sideways on narrower ones. Admin shows
- * only for admins.
+ * only for admins, Backgrounds and effects only where the browser can run them, and
+ * Accessibility (keyboard shortcuts) only with a keyboard; the page you're on always.
  */
 export function SettingsNav({ admin = false }: { admin?: boolean }) {
   const t = useTranslations("Settings");
   const pathname = usePathname();
+  // Most people have both: the server's page shows them, and the browser drops them.
+  const keyboard = useCapability("keyboard", true);
+  const effects = useCapability("effects", true);
+  const pageOf = (slug: string) =>
+    slug === "general" ? "/settings" : `/settings/${slug}`;
   return (
     <nav
       aria-label={t("sections")}
@@ -56,11 +63,16 @@ export function SettingsNav({ admin = false }: { admin?: boolean }) {
     >
       {SETTINGS_SECTIONS.filter(
         // A copy can turn AI notes off; their settings go with them.
-        ({ key }) =>
-          (key !== "aiNotes" || aiNotesEnabled) && (key !== "admin" || admin),
+        ({ slug, key }) =>
+          (key !== "aiNotes" || aiNotesEnabled) &&
+          (key !== "admin" || admin) &&
+          (key !== "accessibility" ||
+            keyboard ||
+            pathname.endsWith(pageOf(slug))) &&
+          (key !== "effects" || effects || pathname.endsWith(pageOf(slug))),
       ).map(({ slug, key, icon: Icon }) => {
         // General is Settings' first page.
-        const href = slug === "general" ? "/settings" : `/settings/${slug}`;
+        const href = pageOf(slug);
         const current = pathname.endsWith(href);
         return (
           <Link

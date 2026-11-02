@@ -21,18 +21,24 @@ function loadWorker() {
     },
   };
   runInNewContext(source, scope);
-  return scope.cacheRule as (request: {
-    url: URL;
-    origin: string;
-    method: string;
-    mode: string;
-    range: boolean;
-    rsc: boolean;
-  }) => Rule;
+  return {
+    cacheRule: scope.cacheRule as (request: {
+      url: URL;
+      origin: string;
+      method: string;
+      mode: string;
+      range: boolean;
+      rsc: boolean;
+    }) => Rule,
+    notificationTarget: scope.notificationTarget as (
+      data: unknown,
+      origin: string,
+    ) => string,
+  };
 }
 
 const ORIGIN = "https://faceon.example";
-const cacheRule = loadWorker();
+const { cacheRule, notificationTarget } = loadWorker();
 
 const rule = (
   address: string,
@@ -117,5 +123,24 @@ describe("the service worker's cache rules", () => {
     expect(rule("/_next/image?url=%2Fbrand%2Flogo.png&w=64&q=75")).toBe(
       "bypass",
     );
+  });
+});
+
+describe("a meeting reminder's notification", () => {
+  it("opens the meeting it's about", () => {
+    expect(
+      notificationTarget({ url: "/j/1234567890#pwd=K7XQ2M" }, ORIGIN),
+    ).toBe(`${ORIGIN}/j/1234567890#pwd=K7XQ2M`);
+  });
+
+  it("never leads to another site", () => {
+    for (const data of [
+      { url: "https://elsewhere.example/j/1" },
+      { url: "//elsewhere.example/j/1" },
+      undefined,
+      null,
+    ]) {
+      expect(notificationTarget(data, ORIGIN)).toBe(`${ORIGIN}/`);
+    }
   });
 });

@@ -30,7 +30,7 @@ Your choice is kept on this device and used in every meeting. **Settings**, unde
 
 Finding you in every frame takes some work. If your device can't keep up, {appName} first does less of it, then turns effects off to keep your video smooth, and tells you. Choosing a background again tries once more.
 
-Backgrounds and effects need a recent Chrome, Edge, Firefox or Safari. Where a browser can't run them, the button doesn't appear.
+Backgrounds and effects need a recent Chrome, Edge, Firefox or Safari. Where a browser can't run them, the button doesn't appear, and neither does their section in **Settings**.
 
 ## Good to know
 

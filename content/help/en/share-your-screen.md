@@ -20,7 +20,7 @@ In Firefox and Safari, your browser's own picker opens straight away.
 
 To play a video with its sound, share **A tab** and leave **Share sound** on. Turn on **Optimize for video** for smooth motion. Leave it off for sharp text, like slides or code.
 
-Chrome and Edge can share a tab's sound. Firefox and Safari can't share sound.
+Chrome and Edge can share a tab's sound, and on Windows your entire screen's sound too. Firefox and Safari can't share sound.
 
 ## While you share
 

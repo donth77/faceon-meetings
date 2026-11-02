@@ -41,6 +41,7 @@ import { SpeechDownload } from "@/components/notes/speech-download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCapability } from "@/hooks/use-capability";
 import { useMediaDevices } from "@/hooks/use-media-devices";
 import {
   loadDevicePreferences,
@@ -48,12 +49,11 @@ import {
   type DevicePreferences,
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
-import { availableEffect, effectsSupported } from "@/lib/effects/support";
+import { availableEffect } from "@/lib/effects/support";
 import { publicEnv } from "@/lib/env";
 import type { MeetingLimits } from "@/lib/meetings/api";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { browserSuppression } from "@/lib/noise/noise";
-import { canChooseSpeaker } from "@/lib/platform";
 import {
   loadPreferences,
   usePreferences,
@@ -267,7 +267,10 @@ export function PreJoin({
     setDevices((current) => ({ ...current, ...patch }));
     saveDevicePreferences({ ...loadDevicePreferences(), ...patch });
   }
-  const [canUseEffects] = useState(effectsSupported);
+  const canUseEffects = useCapability("effects");
+  // Without WebRTC, joining could only end in "You lost your connection".
+  const canCall = useCapability("calls");
+  const chooseSpeaker = useCapability("chooseSpeaker");
   const [choosingEffect, setChoosingEffect] = useState(false);
   const effect = canUseEffects ? availableEffect(settings.effect) : null;
   // With a background on, the preview shows it, and never the bare camera meanwhile.
@@ -297,7 +300,7 @@ export function PreJoin({
       toggle: () => update({ cameraOn: !devices.cameraOn }),
     },
     speaker: {
-      supported: canChooseSpeaker(),
+      supported: chooseSpeaker,
       devices: lists.speakers,
       selectedId: devices.speakerId,
       select: (speakerId) => update({ speakerId }),
@@ -461,14 +464,15 @@ export function PreJoin({
               />
             ) : null}
 
-            {video.problem ? (
+            {/* Where the browser can't join at all, the note by Join says so instead. */}
+            {video.problem && canCall ? (
               <DeviceProblemNote
                 device="camera"
                 problem={video.problem}
                 onRetry={video.retry}
               />
             ) : null}
-            {audio.problem ? (
+            {audio.problem && canCall ? (
               <DeviceProblemNote
                 device="microphone"
                 problem={audio.problem}
@@ -485,7 +489,7 @@ export function PreJoin({
                 value={devices.micId ?? audio.track?.getSettings().deviceId}
                 onChange={(micId) => update({ micId })}
               />
-              {canChooseSpeaker() ? (
+              {chooseSpeaker ? (
                 <DeviceSelect
                   label={tm("speaker")}
                   devices={lists.speakers}
@@ -710,6 +714,10 @@ export function PreJoin({
               >
                 {t("stopWaiting")}
               </Button>
+            ) : !canCall ? (
+              <p role="alert" className="text-sm leading-normal">
+                {t("cantJoinHere")}
+              </p>
             ) : (
               <>
                 <Button

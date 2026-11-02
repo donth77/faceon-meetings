@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { isChromium } from "@/lib/platform";
+import { useCapability } from "@/hooks/use-capability";
 
 import type { ShareOptions } from "../media";
 import { ControlButton } from "./control-button";
@@ -49,6 +49,9 @@ export function ShareControl({
   onStop: () => void;
 }) {
   const t = useTranslations("Meeting");
+  // Chrome and Edge take hints for their picker and can share sound; elsewhere the
+  // browser's own picker opens straight away.
+  const options = useCapability("shareOptions");
   const [sound, setSound] = useState(true);
   const [motion, setMotion] = useState(false);
 
@@ -91,7 +94,7 @@ export function ShareControl({
       />,
     );
   }
-  if (onBlocked || !isChromium()) {
+  if (onBlocked || !options) {
     return frame(
       <ControlButton
         icon={MonitorUp}
@@ -101,7 +104,7 @@ export function ShareControl({
     );
   }
 
-  const options = new Set([
+  const chosen = new Set([
     ...(sound ? ["sound"] : []),
     ...(motion ? ["motion"] : []),
   ]);
@@ -140,7 +143,7 @@ export function ShareControl({
           <DropdownMenuGroup
             aria-label={t("share.options")}
             selectionMode="multiple"
-            selectedKeys={options}
+            selectedKeys={chosen}
             onSelectionChange={handleOptions}
           >
             <DropdownMenuItem id="sound">{t("share.sound")}</DropdownMenuItem>

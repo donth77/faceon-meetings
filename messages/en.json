@@ -742,6 +742,7 @@
     "joinNow": "Join now",
     "joining": "Joining…",
     "joinWithout": "Join without audio and video",
+    "cantJoinHere": "This browser can’t join video meetings. Open the link in a recent Chrome, Edge, Firefox or Safari.",
     "stopWaiting": "Stop waiting",
     "testSound": "Play a test sound",
     "micWorking": "Your mic is working",
@@ -784,14 +785,16 @@
       "notFound": "No microphone found. Connect one, then select Try again.",
       "inUse": "Your microphone is being used by another app. Close that app, then select Try again.",
       "unavailableSetting": "The microphone you chose isn’t available, so {appName} is using another one.",
-      "unknown": "Your microphone didn’t start. Select Try again."
+      "unknown": "Your microphone didn’t start. Select Try again.",
+      "unsupported": "This browser can’t use a microphone on this page. To talk, open the link in a recent Chrome, Edge, Firefox or Safari."
     },
     "camera": {
       "blocked": "Your browser is blocking your camera. Allow it in the site settings (the icon in the address bar), then select Try again.",
       "notFound": "No camera found. Connect one, then select Try again.",
       "inUse": "Your camera is being used by another app. Close that app, then select Try again.",
       "unavailableSetting": "The camera you chose isn’t available, so {appName} is using another one.",
-      "unknown": "Your camera didn’t start. Select Try again."
+      "unknown": "Your camera didn’t start. Select Try again.",
+      "unsupported": "This browser can’t use a camera on this page. To be seen, open the link in a recent Chrome, Edge, Firefox or Safari."
     }
   },
   "Emails": {
@@ -1268,7 +1271,8 @@
       "intro": "{appName} follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
       "singleKeys": "Single-key shortcuts (Space to talk, ? for shortcuts)",
       "singleKeysHelp": "Turn this off if you use speech input or a switch device, so a single key never triggers an action by accident.",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "noKeyboard": "Keyboard shortcuts show up here when you use {appName} with a keyboard."
     },
     "calendar": {
       "title": "Calendar",
@@ -1446,7 +1450,8 @@
         "askBody": "To be reminded when {appName} isn’t the tab you’re in, let your browser show notifications.",
         "allow": "Allow notifications",
         "blocked": "Your browser blocks {appName}’s notifications, so reminders show only in {appName}’s tab. Allow them in the site settings (the icon in the address bar).",
-        "allowed": "Reminders also show as notifications from your browser."
+        "allowed": "Reminders also show as notifications from your browser.",
+        "homeScreen": "On iPhone and iPad, reminders can show as notifications once {appName} is on your Home Screen. <link>How to add it</link>"
       }
     }
   },

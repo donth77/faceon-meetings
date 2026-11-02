@@ -13,11 +13,13 @@ If you start talking while muted, {appName} reminds you that you're muted.
 
 ## Talk while muted
 
-Turn on **Push to talk** in **Settings**, under **Audio**. Then, while you're muted, hold `Space` to talk and let go to mute again. It works when you're not typing in a box.
+Turn on **Push to talk** in **Settings**, under **Audio**. Then, while you're muted, hold `Space` to talk and let go to mute again. It works when you're not typing in a box. It needs a keyboard, so it shows up once you use one.
 
 ## Choose a microphone, speaker or camera
 
 Select the small arrow beside **Mute** or **Stop video**, then pick a device. **Audio settings…** and **Video settings…** at the bottom of each list open the full settings.
+
+Choosing a speaker works in Chrome, Edge and Firefox on a computer. Safari and phone browsers play sound through the speaker your device uses, so there's no speaker list there.
 
 ## Check how you sound and look
 

@@ -1,10 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SelectField, SwitchRow } from "@/components/ui/form-fields";
+import { useCapability } from "@/hooks/use-capability";
 import { publicEnv } from "@/lib/env";
 import {
   chosenSettings,
@@ -82,6 +84,8 @@ function Reminders({ paused }: { paused: boolean }) {
   const t = useTranslations("Settings.notifications.reminders");
   const { reminderMinutes } = chosenSettings(usePreferences());
   const [permission, setPermission] = useState<Permission>(permissionNow);
+  // iPhone and iPad show notifications only from an app on the Home Screen.
+  const onceInstalled = useCapability("notificationsOnceInstalled");
 
   async function allow() {
     if (permission !== "default") return;
@@ -131,6 +135,20 @@ function Reminders({ paused }: { paused: boolean }) {
           </p>
         ) : permission === "granted" ? (
           <p className="text-muted-foreground text-sm">{t("allowed")}</p>
+        ) : onceInstalled ? (
+          <p className="text-muted-foreground text-sm">
+            {t.rich("homeScreen", {
+              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+              link: (chunks) => (
+                <Link
+                  href="/help/install-the-app"
+                  className="text-primary focus-visible:focus-ring rounded font-semibold underline-offset-4 outline-hidden hover:underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
         ) : null
       ) : null}
     </SettingsCard>

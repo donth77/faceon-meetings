@@ -93,6 +93,34 @@ self.addEventListener("fetch", (event) => {
   else if (rule === "fresh") event.respondWith(networkFirst(request));
 });
 
+/** Where a reminder's notification leads: a page of this site, never another. */
+function notificationTarget(data, origin) {
+  try {
+    const url = new URL(data?.url ?? "/", origin);
+    return url.origin === origin ? url.href : `${origin}/`;
+  } catch {
+    return `${origin}/`;
+  }
+}
+
+// Selecting a meeting reminder opens the meeting, in FaceOn's own window if one is open.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = notificationTarget(event.notification.data, self.location.origin);
+  event.waitUntil(
+    (async () => {
+      const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const mine = open.find((client) => new URL(client.url).origin === self.location.origin);
+      if (mine) {
+        await mine.focus();
+        const moved = await mine.navigate?.(url).catch(() => null);
+        if (moved) return;
+      }
+      await self.clients.openWindow(url);
+    })(),
+  );
+});
+
 /** Fetches the offline page and its icon again, past the browser's own cache. */
 async function refreshShell() {
   const cache = await caches.open(SHELL);

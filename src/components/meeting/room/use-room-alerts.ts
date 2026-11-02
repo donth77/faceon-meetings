@@ -77,7 +77,10 @@ export function useMutedNudge(media: RoomMedia, onUnmute: () => void) {
   }, [speakingWhileMuted, allowed, t]);
 }
 
-/** A toast when the mic or camera fails to start, saying what to do, with Try again. */
+/**
+ * A toast when the mic or camera fails to start, saying what to do, with Try again where
+ * trying again can help.
+ */
 export function useDeviceProblemToast(
   device: "microphone" | "camera",
   problem: DeviceProblem | null,
@@ -90,9 +93,9 @@ export function useDeviceProblemToast(
     if (!problem) return;
     toast.error(
       t(`${device}.${problem}`, { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
-      {
-        action: { label: tp("tryAgain"), onClick: () => onRetry() },
-      },
+      problem === "unsupported"
+        ? {}
+        : { action: { label: tp("tryAgain"), onClick: () => onRetry() } },
     );
   }, [device, problem, t, tp]);
 }

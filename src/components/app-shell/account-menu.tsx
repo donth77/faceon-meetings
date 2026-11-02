@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { useCapability } from "@/hooks/use-capability";
 import { signOut } from "@/lib/auth/client";
 
 import { UserAvatar } from "./user-avatar";
@@ -39,12 +40,14 @@ const THEMES = ["system", "light", "dark"] as const;
 
 /**
  * The account row at the bottom of the sidebar, with Profile, Admin (for admins), Theme,
- * Install app (where the browser offers it), Keyboard shortcuts and Sign out.
+ * Install app (where the browser offers it), Keyboard shortcuts (with a keyboard) and
+ * Sign out.
  */
 export function AccountMenu({ user }: { user: AccountUser }) {
   const t = useTranslations("Account");
   const { theme = "system", setTheme } = useTheme();
   const openShortcuts = useOpenShortcuts();
+  const keyboard = useCapability("keyboard");
 
   // Feedback at once, then a full load, so nothing from the session stays in memory. The
   // page can't change first: only the server can clear the sign-in cookie, and until it
@@ -108,10 +111,12 @@ export function AccountMenu({ user }: { user: AccountUser }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <InstallMenuItem />
-        <DropdownMenuItem onAction={openShortcuts}>
-          <Keyboard aria-hidden="true" />
-          {t("shortcuts")}
-        </DropdownMenuItem>
+        {keyboard ? (
+          <DropdownMenuItem onAction={openShortcuts}>
+            <Keyboard aria-hidden="true" />
+            {t("shortcuts")}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onAction={handleSignOut}>
           <LogOut aria-hidden="true" />
           {t("signOut")}

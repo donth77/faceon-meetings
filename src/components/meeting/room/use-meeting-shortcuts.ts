@@ -2,8 +2,8 @@
 
 import { useEffect, useEffectEvent } from "react";
 
+import { supports } from "@/lib/capabilities";
 import {
-  canShareScreen,
   isAppleDevice,
   isInteractiveTarget,
   isTypingTarget,
@@ -87,7 +87,7 @@ export function useMeetingShortcuts(actions: {
       } else if ((meet && key === "e") || (zoom && event.code === "KeyV")) {
         event.preventDefault();
         toggleCamera();
-      } else if (zoom && event.code === "KeyS" && canShareScreen()) {
+      } else if (zoom && event.code === "KeyS" && supports("screenShare")) {
         event.preventDefault();
         toggleShare();
       }

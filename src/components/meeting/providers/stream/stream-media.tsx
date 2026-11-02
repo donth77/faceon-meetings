@@ -21,6 +21,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { supports } from "@/lib/capabilities";
 import { deviceProblem } from "@/lib/device/problems";
 import { createVoiceMeter } from "@/lib/media/voice-meter";
 import {
@@ -28,7 +29,6 @@ import {
   RoomEvent,
   SharedSessionState,
 } from "@/lib/meetings/events";
-import { canChooseSpeaker } from "@/lib/platform";
 import { createReuser } from "@/lib/reuse";
 
 import {
@@ -398,7 +398,7 @@ export function StreamMedia({
       setNoiseSuppression: (on) => setNoiseSuppression(call, on),
       setProcessor: (processor) => setMicrophoneProcessor(call, processor),
       allowed: canSendAudio,
-      problem: micError ? deviceProblem(micError) : null,
+      problem: micError ? deviceProblem(micError, supports("media")) : null,
       devices: micDevices,
       selectedId: micSelected,
       toggle: () => microphone.toggle(),
@@ -421,7 +421,9 @@ export function StreamMedia({
       enabled: !cameraMuted,
       track: cameraMuted ? null : firstTrack(cameraStream, "video"),
       allowed: canSendVideo,
-      problem: cameraError ? deviceProblem(cameraError) : null,
+      problem: cameraError
+        ? deviceProblem(cameraError, supports("media"))
+        : null,
       devices: cameraDevices,
       selectedId: cameraSelected,
       toggle: () => cameraManager.toggle(),
@@ -442,7 +444,7 @@ export function StreamMedia({
   );
   const speaker = useMemo<RoomMedia["speaker"]>(
     () => ({
-      supported: isDeviceSelectionSupported && canChooseSpeaker(),
+      supported: isDeviceSelectionSupported && supports("chooseSpeaker"),
       devices: speakerDevices,
       selectedId: speakerSelected || undefined,
       select: (deviceId) => speakerManager.select(deviceId),

@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { createContext, use, useState } from "react";
+import { createContext, use } from "react";
 import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
 
 import { MicMeter } from "@/components/device/mic-meter";
@@ -33,6 +33,7 @@ import { ReactionsSettings } from "@/components/settings/reactions-settings";
 import { SettingsChrome } from "@/components/settings/settings-nav";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
+import { useCapability } from "@/hooks/use-capability";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   loadDevicePreferences,
@@ -40,7 +41,6 @@ import {
   type DevicePreferences,
 } from "@/lib/device/preferences";
 import { playTestSound } from "@/lib/device/test-sound";
-import { effectsSupported } from "@/lib/effects/support";
 import { aiNotesEnabled } from "@/lib/env";
 import { oneOf } from "@/lib/narrow";
 import { setPreference, usePreferences, withDefaults } from "@/lib/preferences";
@@ -209,13 +209,8 @@ function VideoSection() {
 
 /** The same choices as the meeting's panel, applied to the call at once. */
 function EffectsSection() {
-  const t = useTranslations("Effects");
   const { camera } = useDevices();
   const { mirrorVideo, effect } = withDefaults(usePreferences());
-  const [supported] = useState(effectsSupported);
-  if (!supported) {
-    return <p className="text-muted-foreground text-sm">{t("unsupported")}</p>;
-  }
   return (
     <EffectsChooser
       track={camera.track}
@@ -307,6 +302,18 @@ export function SettingsDialog({
 }: SettingsDialogProps & { devices: SettingsDevices }) {
   const t = useTranslations("Settings");
   const phone = useIsMobile();
+  // Only the sections this browser and device can use: backgrounds need the browser's
+  // support, and Accessibility is about keyboard shortcuts.
+  const keyboard = useCapability("keyboard");
+  const effects = useCapability("effects");
+  const sections = SECTIONS.filter(
+    ({ id }) =>
+      (id !== "accessibility" || keyboard) && (id !== "effects" || effects),
+  );
+  const shown =
+    section !== null && sections.some(({ id }) => id === section)
+      ? section
+      : "audio";
 
   return (
     <Dialog
@@ -323,10 +330,10 @@ export function SettingsDialog({
         <SettingsChrome value="dialog">
           <Tabs
             orientation={phone ? "horizontal" : "vertical"}
-            selectedKey={section ?? "audio"}
+            selectedKey={shown}
             onSelectionChange={(key) => {
               const next = oneOf(
-                SECTIONS.map(({ id }) => id),
+                sections.map(({ id }) => id),
                 key,
               );
               if (next) onSectionChange(next);
@@ -344,7 +351,7 @@ export function SettingsDialog({
                 aria-label={t("sections")}
                 className="flex gap-1 max-md:-mx-3 max-md:overflow-x-auto max-md:px-3 md:flex-col"
               >
-                {SECTIONS.map(({ id, icon: Icon }) => (
+                {sections.map(({ id, icon: Icon }) => (
                   <Tab
                     key={id}
                     id={id}
@@ -356,7 +363,7 @@ export function SettingsDialog({
                 ))}
               </TabList>
             </div>
-            {SECTIONS.map(({ id }) => (
+            {sections.map(({ id }) => (
               <TabPanel
                 key={id}
                 id={id}

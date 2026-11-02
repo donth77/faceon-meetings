@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { GitHubIcon } from "@/components/auth/provider-icons";
 import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
 import { Button } from "@/components/ui/button";
+import { useCapability } from "@/hooks/use-capability";
 import { publicEnv } from "@/lib/env";
 import type { HelpEntry, HelpSection } from "@/lib/help/sections";
 
@@ -49,6 +50,8 @@ export function HelpIndex({
 }) {
   const t = useTranslations("Help");
   const openShortcuts = useOpenShortcuts();
+  // The server's page has the shortcuts; a phone or tablet without a keyboard drops them.
+  const keyboard = useCapability("keyboard", true);
 
   return (
     <main className="mx-auto flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
@@ -83,34 +86,36 @@ export function HelpIndex({
         ))}
       </div>
 
-      <section
-        aria-labelledby="help-shortcuts"
-        className="bg-card ring-border flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5 ring-1"
-      >
-        <div className="flex items-start gap-3">
-          <span className="bg-secondary text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
-            <Keyboard className="size-5" aria-hidden="true" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h2 id="help-shortcuts" className="font-semibold">
-              {t("shortcutsTitle")}
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              {t.rich("shortcutsBody", {
-                key: (chunks) => (
-                  <kbd className="bg-muted rounded border px-1.5 font-sans text-xs font-semibold">
-                    {chunks}
-                  </kbd>
-                ),
-              })}
-            </p>
+      {keyboard ? (
+        <section
+          aria-labelledby="help-shortcuts"
+          className="bg-card ring-border flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5 ring-1"
+        >
+          <div className="flex items-start gap-3">
+            <span className="bg-secondary text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+              <Keyboard className="size-5" aria-hidden="true" />
+            </span>
+            <div className="flex flex-col gap-1">
+              <h2 id="help-shortcuts" className="font-semibold">
+                {t("shortcutsTitle")}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {t.rich("shortcutsBody", {
+                  key: (chunks) => (
+                    <kbd className="bg-muted rounded border px-1.5 font-sans text-xs font-semibold">
+                      {chunks}
+                    </kbd>
+                  ),
+                })}
+              </p>
+            </div>
           </div>
-        </div>
-        <Button variant="outline" size="lg" onPress={openShortcuts}>
-          <Keyboard aria-hidden="true" />
-          {t("showShortcuts")}
-        </Button>
-      </section>
+          <Button variant="outline" size="lg" onPress={openShortcuts}>
+            <Keyboard aria-hidden="true" />
+            {t("showShortcuts")}
+          </Button>
+        </section>
+      ) : null}
     </main>
   );
 }

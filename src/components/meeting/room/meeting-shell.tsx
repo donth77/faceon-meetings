@@ -14,9 +14,9 @@ import {
 import { UNSAFE_PortalProvider } from "react-aria/PortalProvider";
 import { toast } from "sonner";
 
+import { useCapability } from "@/hooks/use-capability";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { effectsSupported } from "@/lib/effects/support";
 import type {
   AdmittedMeetingInfo,
   ModerateRequest,
@@ -126,7 +126,7 @@ export function MeetingShell({
   const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const [removing, setRemoving] = useState<RoomParticipant | null>(null);
   const [mutingAll, setMutingAll] = useState(false);
-  const [canUseEffects] = useState(effectsSupported);
+  const canUseEffects = useCapability("effects");
 
   // Roles and policies come from the shared state our server publishes; until it
   // arrives, you have the role you were admitted with.

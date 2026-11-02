@@ -11,14 +11,10 @@ import {
   VideoOff,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
+
+import { useCapability } from "@/hooks/use-capability";
 
 import {
   TrackView,
@@ -35,8 +31,6 @@ type DocumentPictureInPicture = {
 const documentPip = (): DocumentPictureInPicture | undefined =>
   (globalThis as { documentPictureInPicture?: DocumentPictureInPicture })
     .documentPictureInPicture;
-
-const noSubscribe = () => () => {};
 
 /**
  * The page's styles, copied into the picture-in-picture window so it looks the same,
@@ -71,11 +65,7 @@ function copyStyles(into: Window, title: string) {
  * Chrome's Document Picture-in-Picture. Null where the browser has none.
  */
 export function usePictureInPicture(title: string) {
-  const supported = useSyncExternalStore(
-    noSubscribe,
-    () => documentPip() !== undefined,
-    () => false,
-  );
+  const supported = useCapability("pictureInPicture");
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
 
   /** Opens it; the browser allows that only right after a click or a key. */
