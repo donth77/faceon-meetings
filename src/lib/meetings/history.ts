@@ -1,0 +1,187 @@
+import "server-only";
+
+import { and, desc, eq, exists, gt, inArray, or } from "drizzle-orm";
+
+import { db } from "@/lib/db";
+import {
+  meeting,
+  meetingMember,
+  meetingRule,
+  meetingSession,
+  participantSession,
+  user,
+} from "@/lib/db/schema";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Someone who came to a past meeting, with their first join and last leave. */
+export type Attendee = {
+  name: string;
+  image: string | null;
+  isHost: boolean;
+  isGuest: boolean;
+  isYou: boolean;
+  joinedAt: string;
+  leftAt: string;
+  minutes: number;
+};
+
+/** A past meeting for Previous, ready for the browser (times in ISO 8601). */
+export type PastMeeting = {
+  sessionId: string;
+  code: string;
+  title: string | null;
+  hostName: string;
+  hostedByYou: boolean;
+  recurring: boolean;
+  start: string;
+  end: string;
+  minutes: number;
+  attendees: Attendee[];
+};
+
+const minutesBetween = (from: Date, to: Date) =>
+  Math.max(1, Math.round((to.getTime() - from.getTime()) / 60_000));
+
+/**
+ * Previous: sessions from the last 90 days that someone hosted or attended, newest
+ * first, with who came and for how long (from the media provider's webhooks, or from
+ * admissions when no attendance arrived).
+ */
+export async function previousMeetings(viewer: {
+  id: string;
+}): Promise<PastMeeting[]> {
+  const since = new Date(Date.now() - 90 * DAY_MS);
+  const attended = or(
+    eq(meeting.hostId, viewer.id),
+    exists(
+      db()
+        .select({ one: meetingMember.sessionId })
+        .from(meetingMember)
+        .where(
+          and(
+            eq(meetingMember.sessionId, meetingSession.id),
+            eq(meetingMember.userId, viewer.id),
+          ),
+        ),
+    ),
+  );
+  const sessions = await db()
+    .select({
+      session: meetingSession,
+      meeting,
+      hostName: user.name,
+    })
+    .from(meetingSession)
+    .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
+    .innerJoin(user, eq(user.id, meeting.hostId))
+    .where(
+      and(
+        eq(meetingSession.status, "ended"),
+        gt(meetingSession.startedAt, since),
+        attended,
+      ),
+    )
+    .orderBy(desc(meetingSession.startedAt))
+    .limit(200);
+  if (sessions.length === 0) return [];
+
+  const ids = sessions.map((s) => s.session.id);
+  const meetingIds = [...new Set(sessions.map((s) => s.meeting.id))];
+  const [connections, members, series] = await Promise.all([
+    db()
+      .select()
+      .from(participantSession)
+      .where(inArray(participantSession.sessionId, ids)),
+    db()
+      .select()
+      .from(meetingMember)
+      .where(inArray(meetingMember.sessionId, ids)),
+    db()
+      .select({ meetingId: meetingRule.meetingId })
+      .from(meetingRule)
+      .where(inArray(meetingRule.meetingId, meetingIds)),
+  ]);
+
+  return sessions.map(({ session, meeting: row, hostName }) => {
+    const sessionEnd = session.endedAt ?? session.startedAt;
+    const people = new Map<string, Attendee & { joined: Date; left: Date }>();
+    const roleOf = (mediaUserId: string) =>
+      members.find(
+        (m) => m.sessionId === session.id && m.mediaUserId === mediaUserId,
+      );
+    const add = (
+      mediaUserId: string,
+      name: string,
+      image: string | null,
+      joined: Date,
+      left: Date,
+    ) => {
+      const member = roleOf(mediaUserId);
+      const current = people.get(mediaUserId);
+      const minutes = minutesBetween(joined, left);
+      if (current) {
+        current.joined = joined < current.joined ? joined : current.joined;
+        current.left = left > current.left ? left : current.left;
+        current.minutes += minutes;
+        return;
+      }
+      people.set(mediaUserId, {
+        name,
+        image,
+        isHost: member?.role === "host",
+        isGuest: mediaUserId.startsWith("g_"),
+        isYou: member?.userId === viewer.id,
+        joinedAt: "",
+        leftAt: "",
+        minutes,
+        joined,
+        left,
+      });
+    };
+
+    const own = connections.filter((c) => c.sessionId === session.id);
+    if (own.length > 0) {
+      for (const c of own) {
+        add(
+          c.mediaUserId,
+          c.displayName,
+          c.image,
+          c.joinedAt,
+          c.leftAt ?? sessionEnd,
+        );
+      }
+    } else {
+      for (const m of members.filter((m) => m.sessionId === session.id)) {
+        add(m.mediaUserId, m.displayName, null, m.admittedAt, sessionEnd);
+      }
+    }
+
+    const list = [...people.values()]
+      .sort((a, b) => a.joined.getTime() - b.joined.getTime())
+      .map(({ joined, left, ...person }) => ({
+        ...person,
+        joinedAt: joined.toISOString(),
+        leftAt: left.toISOString(),
+      }));
+    const start = list.length
+      ? new Date(Math.min(...list.map((p) => new Date(p.joinedAt).getTime())))
+      : session.startedAt;
+    const end = list.length
+      ? new Date(Math.max(...list.map((p) => new Date(p.leftAt).getTime())))
+      : sessionEnd;
+
+    return {
+      sessionId: session.id,
+      code: row.code,
+      title: row.title,
+      hostName,
+      hostedByYou: row.hostId === viewer.id,
+      recurring: series.some((s) => s.meetingId === row.id),
+      start: start.toISOString(),
+      end: end.toISOString(),
+      minutes: minutesBetween(start, end),
+      attendees: list,
+    };
+  });
+}

@@ -247,3 +247,36 @@ export const meetingException = pgTable(
   },
   (table) => [primaryKey({ columns: [table.meetingId, table.originalStart] })],
 );
+
+/**
+ * Attendance: one row per connection to a session, from the media provider's webhooks.
+ * Previous shows who came, when they joined and when they left.
+ */
+export const participantSession = pgTable(
+  "participant_session",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => meetingSession.id, { onDelete: "cascade" }),
+    /** The provider's ID for this connection; a rejoin is a new one. */
+    connectionId: text("connection_id").notNull().unique(),
+    mediaUserId: text("media_user_id").notNull(),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    displayName: text("display_name").notNull(),
+    image: text("image"),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull(),
+    leftAt: timestamp("left_at", { withTimezone: true }),
+  },
+  (table) => [index("participant_session_session").on(table.sessionId)],
+);
+
+/** Webhook deliveries already handled, so a retry or replay changes nothing. */
+export const webhookEvent = pgTable("webhook_event", {
+  id: text("id").primaryKey(),
+  receivedAt: timestamp("received_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

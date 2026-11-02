@@ -3,6 +3,7 @@ import "server-only";
 import { StreamClient, StreamError } from "@stream-io/node-sdk";
 
 import type {
+  AttendanceEvent,
   JoinInfo,
   MediaProvider,
   MediaUser,
@@ -202,3 +203,57 @@ export const streamProvider: MediaProvider = {
     });
   },
 };
+
+/** Whether a webhook really came from Stream: its body signed with our API secret. */
+export function verifyStreamWebhook(body: string, signature: string): boolean {
+  try {
+    return stream().verifyWebhook(body, signature);
+  } catch {
+    return false;
+  }
+}
+
+const STREAM_WEBHOOK = {
+  joined: "call.session_participant_joined",
+  left: "call.session_participant_left",
+};
+
+/** Attendance from a Stream webhook, or null for events we don't keep. */
+export function parseStreamWebhook(body: unknown): AttendanceEvent | null {
+  if (typeof body !== "object" || body === null) return null;
+  const event = body as {
+    type?: string;
+    call_cid?: string;
+    created_at?: string;
+    participant?: {
+      user_session_id?: string;
+      joined_at?: string;
+      user?: { id?: string; name?: string; image?: string };
+    };
+  };
+  const [type, sessionId] = (event.call_cid ?? "").split(":");
+  const participant = event.participant;
+  if (type !== CALL_TYPE || !sessionId || !participant?.user_session_id) {
+    return null;
+  }
+  if (event.type === STREAM_WEBHOOK.joined && participant.user?.id) {
+    return {
+      type: "joined",
+      sessionId,
+      connectionId: participant.user_session_id,
+      mediaUserId: participant.user.id,
+      name: participant.user.name || participant.user.id,
+      image: participant.user.image ?? null,
+      at: new Date(participant.joined_at ?? event.created_at ?? Date.now()),
+    };
+  }
+  if (event.type === STREAM_WEBHOOK.left) {
+    return {
+      type: "left",
+      sessionId,
+      connectionId: participant.user_session_id,
+      at: new Date(event.created_at ?? Date.now()),
+    };
+  }
+  return null;
+}

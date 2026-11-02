@@ -825,5 +825,31 @@
     "dayWithMeetings": "{date}, has meetings",
     "nothingThatDay": "No meetings this day.",
     "todayButton": "Today"
+  },
+  "Previous": {
+    "title": "Previous",
+    "subtitle": "Meetings from the last 90 days.",
+    "search": "Search",
+    "searchPlaceholder": "Title or person",
+    "show": "Show",
+    "all": "All",
+    "hostedByMe": "Hosted by me",
+    "minutes": "{count} min",
+    "people": "{count, plural, one {# person} other {# people}}",
+    "viewDetails": "View details",
+    "scheduleAgain": "Schedule again",
+    "closeDetails": "Close details",
+    "hostedBy": "hosted by {name}",
+    "attendance": "Attendance",
+    "name": "Name",
+    "joined": "Joined",
+    "left": "Left",
+    "time": "Time",
+    "host": "Host",
+    "you": "You",
+    "guest": "Guest",
+    "untitled": "{name}’s meeting",
+    "empty": "Meetings you host or join show up here afterwards.",
+    "noMatch": "No meetings match that."
   }
 }

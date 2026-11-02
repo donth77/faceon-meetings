@@ -325,11 +325,14 @@ function ScheduledDialog({
 export function ScheduleForm({
   hostName,
   draft,
+  initial,
   edit,
 }: {
   hostName: string;
   /** New meetings: the ID and passcode the invitation previews. */
   draft?: ScheduleDraft;
+  /** New meetings: values to start from (Schedule again). */
+  initial?: Partial<ScheduleFormValues>;
   edit?: {
     code: string;
     passcode: string | null;
@@ -344,7 +347,7 @@ export function ScheduleForm({
   const router = useRouter();
   const ids = { title: useId(), date: useId(), description: useId() };
   const [values, setValues] = useState<ScheduleFormValues>(
-    () => edit?.values ?? defaultValues(),
+    () => edit?.values ?? { ...defaultValues(), ...initial },
   );
   const [saving, setSaving] = useState(false);
   const [scoping, setScoping] = useState(false);

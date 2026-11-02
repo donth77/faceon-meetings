@@ -61,6 +61,20 @@ export type ServerEvent =
   | { type: "lobby.updated"; count: number }
   | { type: "host.request_unmute"; target: string };
 
+/** Attendance, as a provider's webhooks report it. */
+export type AttendanceEvent =
+  | {
+      type: "joined";
+      sessionId: string;
+      /** The provider's ID for this connection; a rejoin is a new one. */
+      connectionId: string;
+      mediaUserId: string;
+      name: string;
+      image: string | null;
+      at: Date;
+    }
+  | { type: "left"; sessionId: string; connectionId: string; at: Date };
+
 /** What a provider knows about a session's call right now. */
 export type SessionSnapshot = {
   /** The call has ended for everyone: a host ended it, or it reached its time limit. */

@@ -2,6 +2,7 @@ import "server-only";
 
 import { pruneAttempts } from "@/lib/rate-limit";
 
+import { pruneWebhookEvents } from "./attendance";
 import {
   deleteExpiredMeetings,
   openSessionsStartedBefore,
@@ -48,6 +49,9 @@ export async function sweep(now = new Date()) {
     ),
     prunedAttemptCounters: await pruneAttempts(
       new Date(now.getTime() - DAY_MS),
+    ),
+    prunedWebhookEvents: await pruneWebhookEvents(
+      new Date(now.getTime() - 7 * DAY_MS),
     ),
   };
 }

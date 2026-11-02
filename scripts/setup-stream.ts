@@ -5,6 +5,8 @@
  * - Stream's built-in call types are locked down. Call tokens add access rather than confine
  *   it, so only call grants keep a user's token from reaching other calls.
  * - The `system` user, which sends server events.
+ * - With STREAM_WEBHOOK_URL set, the app's webhook (attendance for Previous), for example
+ *   https://joinfaceon.vercel.app/api/webhooks/stream. Stream can't reach localhost.
  *
  * Usage:
  *   node --env-file=.env.local scripts/setup-stream.ts           apply
@@ -112,6 +114,18 @@ if (!checkOnly) {
     { id: systemUserId, name: "FaceOn", role: "admin" },
   ]);
   console.log(`ok       user "${systemUserId}"`);
+}
+
+const webhookUrl = process.env.STREAM_WEBHOOK_URL;
+if (webhookUrl && !checkOnly) {
+  await client.updateApp({
+    webhook_url: webhookUrl,
+    webhook_events: [
+      "call.session_participant_joined",
+      "call.session_participant_left",
+    ],
+  });
+  console.log(`ok       webhook → ${webhookUrl}`);
 }
 
 if (checkOnly && drift > 0) process.exit(1);
