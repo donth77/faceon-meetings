@@ -27,6 +27,10 @@ export const isReactionCode = (value: unknown): value is ReactionCode =>
 export const emojiFor = (code: ReactionCode) =>
   REACTIONS.find((reaction) => reaction.code === code)?.emoji ?? "";
 
+/** A reaction's message key under Meeting.reactions.names, such as "thumbsUp". */
+export const reactionName = (code: ReactionCode) =>
+  REACTIONS.find((reaction) => reaction.code === code)?.name ?? "thumbsUp";
+
 /** Chat messages are short; custom events are capped at 5 KB anyway. */
 export const MAX_CHAT_LENGTH = 1000;
 

@@ -15,7 +15,9 @@ Select **Chat** to open it. Messages go to everyone in the meeting.
 
 ## Reactions
 
-Select **Reactions** and pick 👍, ❤️, 😂, 😮, 👏 or 🎉. Your reaction floats up the screen and shows on your tile for a few seconds.
+Select **Reactions** and pick 👍, ❤️, 😂, 😮, 👏 or 🎉. Your reaction floats up the screen with your name and shows on your tile for a few seconds. Send as many as you like: each one floats up on its own.
+
+To hide other people's reactions, stop them moving, add a sound, or choose what screen readers hear, go to **Settings**, then **Reactions**.
 
 ## Raise your hand
 

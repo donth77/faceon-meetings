@@ -75,6 +75,57 @@
 /* Reactions float up and fade, as in Meet and Zoom; with reduced motion they only fade. */
 @theme {
   --animate-reaction-float: reaction-float 3.5s ease-out forwards;
+  /* Reactions rise the stage's height (cqh: the container's), sway and wiggle. */
+  --animate-reaction-rise: reaction-rise var(--rise-for, 4s)
+    cubic-bezier(0.2, 0.6, 0.35, 1) forwards;
+  --animate-reaction-sway: reaction-sway var(--sway-for, 1.4s) ease-in-out
+    infinite alternate;
+  --animate-reaction-wiggle: reaction-wiggle 0.9s ease-out;
+  @keyframes reaction-rise {
+    0% {
+      transform: translateY(0) scale(0.6);
+      opacity: 0;
+    }
+    8% {
+      transform: translateY(-4cqh) scale(1.08);
+      opacity: 1;
+    }
+    14% {
+      transform: translateY(-8cqh) scale(1);
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-82cqh) scale(1);
+      opacity: 0;
+    }
+  }
+  @keyframes reaction-sway {
+    from {
+      transform: translateX(calc(var(--sway, 12px) * -1));
+    }
+    to {
+      transform: translateX(var(--sway, 12px));
+    }
+  }
+  @keyframes reaction-wiggle {
+    0% {
+      transform: rotate(0deg) scale(0.7);
+    }
+    25% {
+      transform: rotate(-14deg) scale(1.15);
+    }
+    50% {
+      transform: rotate(11deg) scale(1);
+    }
+    75% {
+      transform: rotate(-6deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
   @keyframes reaction-float {
     0% {
       transform: translateY(0) scale(0.8);

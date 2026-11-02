@@ -464,7 +464,8 @@
     "hidePreview": "Hide preview",
     "showPreview": "Show preview",
     "previewHidden": "Preview hidden. Everyone else still sees your screen.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "reactionFrom": "{name}: {reaction}"
   },
   "PreJoin": {
     "readyToJoin": "Ready to join?",
@@ -858,6 +859,7 @@
       "general": "General",
       "audio": "Audio",
       "video": "Video",
+      "reactions": "Reactions",
       "effects": "Backgrounds and effects",
       "calendar": "Calendar",
       "aiNotes": "AI notes",
@@ -918,11 +920,9 @@
     "accessibility": {
       "title": "Accessibility",
       "intro": "FaceOn follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
-      "keyboard": "Keyboard and announcements",
+      "keyboard": "Keyboard",
       "singleKeys": "Single-key shortcuts (Space to talk, ? for shortcuts)",
       "singleKeysHelp": "Turn this off if you use speech input or a switch device, so a single key never triggers an action by accident.",
-      "announceReactions": "Announce reactions",
-      "announceReactionsHelp": "Screen readers hear a short summary at most every 10 seconds, such as “3 reactions”.",
       "shortcuts": "Keyboard shortcuts",
       "orPress": "Or press <kbd>{key}</kbd> anywhere."
     },
@@ -991,7 +991,25 @@
       "signInAgain": "Sign in again"
     },
     "close": "Close settings",
-    "forThisDevice": "For this device"
+    "forThisDevice": "For this device",
+    "reactions": {
+      "title": "Reactions",
+      "onScreen": "On screen",
+      "showOthers": "Show reactions from others",
+      "showOthersHelp": "When off, your own reactions still appear",
+      "animation": "Animation",
+      "animationHelp": "Reactions float up the screen",
+      "sound": "Sound",
+      "soundHelp": "A soft sound plays with each reaction",
+      "screenReaders": "Screen readers",
+      "announce": "How screen readers hear reactions",
+      "announceHelp": "Only other people’s reactions are announced.",
+      "announceOptions": {
+        "off": "Don’t announce reactions",
+        "summary": "A short summary, at most every 10 seconds",
+        "each": "Each reaction as it comes"
+      }
+    }
   },
   "Legal": {
     "updated": "Last updated {date}"

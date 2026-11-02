@@ -43,6 +43,8 @@ const SOUNDS = {
   },
   /** A hand went up (hosts hear it). */
   handRaised: { notes: [[1319, 0]], volume: 0.1 },
+  /** A reaction, when Settings → Reactions → Sound is on. */
+  reaction: { notes: [[1175, 0]], volume: 0.05 },
   /** A message arrived while Chat is closed. */
   message: {
     notes: [

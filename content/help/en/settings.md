@@ -24,12 +24,15 @@ Choose your microphone and speaker, watch the microphone meter, and select **Tes
 
 See your camera, choose which one to use, and decide whether to mirror your video, send HD video, or start meetings with your camera off.
 
+## Reactions
+
+Choose whether others' reactions show (yours always do), whether reactions float up the screen, whether a soft sound plays with each, and what screen readers hear: nothing, a short summary at most every 10 seconds, or each reaction.
+
 ## Accessibility
 
 {appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know:
 
 - **Single-key shortcuts**, such as holding `Space` to talk and `?` for the list of shortcuts. Turn them off if you use speech input or a switch device.
-- **Announce reactions**, so screen readers hear a short summary such as "3 reactions", at most every 10 seconds.
 
 ## Account
 

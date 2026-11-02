@@ -19,6 +19,11 @@ const Video = dynamic(
   () => import("./video-settings").then((module) => module.VideoSettings),
   { ssr: false, loading },
 );
+const Reactions = dynamic(
+  () =>
+    import("./reactions-settings").then((module) => module.ReactionsSettings),
+  { ssr: false, loading },
+);
 const Accessibility = dynamic(
   () =>
     import("./accessibility-settings").then(
@@ -30,7 +35,7 @@ const Accessibility = dynamic(
 export function SettingsLoader({
   section,
 }: {
-  section: "general" | "audio" | "video" | "accessibility";
+  section: "general" | "audio" | "video" | "reactions" | "accessibility";
 }) {
   switch (section) {
     case "general":
@@ -39,6 +44,8 @@ export function SettingsLoader({
       return <Audio />;
     case "video":
       return <Video />;
+    case "reactions":
+      return <Reactions />;
     case "accessibility":
       return <Accessibility />;
   }

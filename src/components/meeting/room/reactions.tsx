@@ -2,6 +2,7 @@
 
 import { SmilePlus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import {
   Button,
   Dialog,
@@ -51,9 +52,23 @@ export function ReactionsControl({
   onSend: (code: ReactionCode) => void;
 }) {
   const t = useTranslations("Meeting.reactions");
+  const [open, setOpen] = useState(false);
+
+  // The bar stays open for a burst, as in Meet. Escape closes it: listened for on the
+  // window, first, because an emoji's tooltip takes Escape for itself, and pressing a
+  // key shows the focused emoji's tooltip again, so Escape would never get past it.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open]);
+
   return (
     <div className="flex">
-      <DialogTrigger>
+      <DialogTrigger isOpen={open} onOpenChange={setOpen}>
         <ControlButton icon={SmilePlus} label={t("label")} />
         <Popover
           placement="top"
@@ -69,36 +84,83 @@ export function ReactionsControl({
   );
 }
 
+/** A steady spread for each reaction, from its ID: where it starts and how it sways. */
+const spreadOf = (id: number) => ({
+  // Inside the area, with room for the sway and the name chip on either side.
+  x: 28 + ((id * 53) % 150),
+  sway: 8 + ((id * 17) % 16),
+  rise: 3.6 + (id % 5) * 0.22,
+  swayFor: 1.3 + (id % 3) * 0.25,
+});
+
 /**
- * Reactions float up from the bottom-left of the stage with the sender's name; with
- * reduced motion they appear without moving. Decorative: tiles carry the same news.
+ * Reactions float up the stage, as in Meet: each its own bubble with the sender's name
+ * ("You" for yours), rising and swaying, the emoji wiggling as it goes, so a burst is a
+ * stream. Without animation (Settings → Reactions, or reduced motion) they appear and
+ * fade in place. Decorative: tiles carry the same news, and screen readers hear it.
  */
 export function FloatingReactions({
   reactions,
   nameOf,
+  selfId,
+  animate,
 }: {
   reactions: LiveReaction[];
   nameOf: (userId: string) => string;
+  selfId: string;
+  animate: boolean;
 }) {
+  const t = useTranslations("Meeting.chat");
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute bottom-4 left-4 z-10 h-[400px] w-60 overflow-hidden"
+      className="[container-type:size] pointer-events-none absolute top-4 bottom-4 left-2 z-10 w-80 max-w-[calc(100%-1rem)] overflow-hidden"
     >
-      {reactions.slice(-12).map((reaction) => (
-        <div
-          key={reaction.id}
-          style={{ left: (reaction.id % 4) * 12 }}
-          className="animate-reaction-float absolute bottom-0 flex items-center gap-1.5 motion-reduce:animate-[reaction-fade_3.5s_ease-out_forwards]"
-        >
-          <span className={`${EMOJI_FONT} text-[38px] leading-none`}>
-            {emojiFor(reaction.code)}
-          </span>
-          <span className="rounded-[10px] bg-[#0e1013]/85 px-2 py-0.5 text-xs font-semibold text-white">
-            {nameOf(reaction.userId)}
-          </span>
-        </div>
-      ))}
+      {reactions.map((reaction) => {
+        const spread = spreadOf(reaction.id);
+        const mine = reaction.userId === selfId;
+        return (
+          <div
+            key={reaction.id}
+            style={
+              {
+                left: spread.x,
+                "--rise-for": `${spread.rise}s`,
+                "--sway": `${spread.sway}px`,
+                "--sway-for": `${spread.swayFor}s`,
+              } as React.CSSProperties
+            }
+            className={
+              animate
+                ? "animate-reaction-rise absolute bottom-0 motion-reduce:animate-[reaction-fade_3.5s_ease-out_forwards]"
+                : "absolute bottom-0 animate-[reaction-fade_3.5s_ease-out_forwards]"
+            }
+          >
+            <div
+              className={
+                animate
+                  ? "animate-reaction-sway flex flex-col items-center gap-1 motion-reduce:animate-none"
+                  : "flex flex-col items-center gap-1"
+              }
+            >
+              <span
+                className={`${EMOJI_FONT} ${animate ? "animate-reaction-wiggle motion-reduce:animate-none" : ""} text-[38px] leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]`}
+              >
+                {emojiFor(reaction.code)}
+              </span>
+              <span
+                className={
+                  mine
+                    ? "max-w-28 truncate rounded-full bg-[#a8c7fa] px-2.5 py-0.5 text-xs font-semibold text-[#062e6f]"
+                    : "max-w-28 truncate rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-[#12161c]"
+                }
+              >
+                {mine ? t("you") : nameOf(reaction.userId)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

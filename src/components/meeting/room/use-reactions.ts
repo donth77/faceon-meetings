@@ -17,9 +17,11 @@ export type LiveReaction = {
 export const FLOAT_MS = 3500;
 export const BADGE_MS = 5000;
 /** At most this many float at once; older ones drop first. */
-const MAX_FLOATING = 12;
+const MAX_FLOATING = 30;
 /** Each sender gets at most this many through per 10 seconds. */
-const PER_SENDER_PER_10S = 10;
+const PER_SENDER_PER_10S = 25;
+/** The shortest gap between two of your own reactions: quick bursts work, as in Meet. */
+const MIN_GAP_MS = 120;
 
 /**
  * Everyone's reactions over the last few seconds. With reactions off, only hosts' get
@@ -74,55 +76,68 @@ export function useReactionSender(send: RoomMedia["sendReaction"]) {
     const now = Date.now();
     const recent = sent.current.filter((at) => now - at < 10_000);
     const last = recent.at(-1) ?? 0;
-    if (now - last < 500 || recent.length >= PER_SENDER_PER_10S) return false;
+    if (now - last < MIN_GAP_MS || recent.length >= PER_SENDER_PER_10S) {
+      return false;
+    }
     sent.current = [...recent, now];
     void send(code).catch(() => {});
     return true;
   };
 }
 
-/** Screen readers hear about reactions at most this often. */
-const ANNOUNCE_EVERY_MS = 10_000;
+/** A summary comes at most this often; one by one, at most every 1.5 seconds. */
+const SUMMARY_EVERY_MS = 10_000;
+const EACH_EVERY_MS = 1_500;
 
 /**
- * A short summary of other people's reactions for screen readers ("3 reactions"), at most
- * every 10 seconds. Empty when announcements are off (Settings → Accessibility).
+ * What screen readers hear about other people's reactions (Settings → Reactions): a short
+ * summary at most every 10 seconds ("3 reactions"), or each one ("Ana: Thumbs up", or a
+ * summary when several come at once), or nothing.
  */
 export function useReactionAnnouncement(
   reactions: LiveReaction[],
   selfId: string,
-  enabled: boolean,
-  summarize: (count: number) => string,
+  mode: "off" | "summary" | "each",
+  words: {
+    summary: (count: number) => string;
+    each: (reaction: LiveReaction) => string;
+  },
 ): string {
   const [message, setMessage] = useState("");
   const counted = useRef(-1);
-  const waiting = useRef(0);
+  const waiting = useRef<LiveReaction[]>([]);
   const lastAt = useRef(0);
   const timers = useRef<{ announce?: Timer; clear?: Timer }>({});
-  const summary = useEffectEvent(summarize);
+  const say = useEffectEvent((pending: LiveReaction[]) => {
+    const [only] = pending;
+    return pending.length === 1 && only && mode === "each"
+      ? words.each(only)
+      : words.summary(pending.length);
+  });
 
   useEffect(() => {
-    let fresh = 0;
+    const fresh: LiveReaction[] = [];
     for (const reaction of reactions) {
       if (reaction.id > counted.current) {
         counted.current = reaction.id;
-        if (reaction.userId !== selfId) fresh++;
+        if (reaction.userId !== selfId) fresh.push(reaction);
       }
     }
-    if (!enabled || fresh === 0) return;
-    waiting.current += fresh;
-    if (timers.current.announce) return; // a summary is on its way
-    const delay = Math.max(0, lastAt.current + ANNOUNCE_EVERY_MS - Date.now());
+    if (mode === "off" || fresh.length === 0) return;
+    waiting.current.push(...fresh);
+    if (timers.current.announce) return; // an announcement is on its way
+    const every = mode === "each" ? EACH_EVERY_MS : SUMMARY_EVERY_MS;
+    const delay = Math.max(0, lastAt.current + every - Date.now());
     timers.current.announce = setTimeout(() => {
       timers.current.announce = undefined;
       lastAt.current = Date.now();
-      setMessage(summary(waiting.current));
-      waiting.current = 0;
+      setMessage(say(waiting.current));
+      waiting.current = [];
       // Cleared again, so the same words next time still count as news.
       clearTimeout(timers.current.clear);
       timers.current.clear = setTimeout(() => setMessage(""), 3000);
     }, delay);
-  }, [reactions, selfId, enabled]);
+  }, [reactions, selfId, mode]);
 
   useEffect(() => {
     const pending = timers.current;
@@ -132,7 +147,7 @@ export function useReactionAnnouncement(
     };
   }, []);
 
-  return enabled ? message : "";
+  return mode === "off" ? "" : message;
 }
 
 type Timer = ReturnType<typeof setTimeout>;

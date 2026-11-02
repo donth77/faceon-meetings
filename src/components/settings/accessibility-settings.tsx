@@ -22,8 +22,7 @@ import { SectionTitle, SettingsCard } from "./settings-nav";
 export function AccessibilitySettings() {
   const t = useTranslations("Settings.accessibility");
   const openShortcuts = useOpenShortcuts();
-  const { singleKeyShortcuts, announceReactions } =
-    withDefaults(usePreferences());
+  const { singleKeyShortcuts } = withDefaults(usePreferences());
   // Without single-key shortcuts, ? does nothing; Ctrl+/ or ⌘/ still opens the list.
   const key = singleKeyShortcuts ? "?" : isAppleDevice() ? "⌘/" : "Ctrl+/";
 
@@ -38,14 +37,6 @@ export function AccessibilitySettings() {
             isSelected={singleKeyShortcuts}
             onChange={(on) =>
               savePreferences({ singleKeyShortcuts: on ? undefined : false })
-            }
-          />
-          <SwitchRow
-            label={t("announceReactions")}
-            help={t("announceReactionsHelp")}
-            isSelected={announceReactions}
-            onChange={(on) =>
-              savePreferences({ announceReactions: on ? undefined : false })
             }
           />
         </div>

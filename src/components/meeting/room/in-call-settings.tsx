@@ -4,6 +4,7 @@ import {
   Accessibility,
   Mic,
   Settings,
+  SmilePlus,
   Sparkles,
   Video,
   VideoOff,
@@ -19,6 +20,7 @@ import { SwitchRow } from "@/components/schedule/fields";
 import { AccessibilitySettings } from "@/components/settings/accessibility-settings";
 import { DeviceField } from "@/components/settings/device-fields";
 import { GeneralSettings } from "@/components/settings/general-settings";
+import { ReactionsSettings } from "@/components/settings/reactions-settings";
 import { SettingsChrome } from "@/components/settings/settings-nav";
 import { MirroredVideo } from "@/components/settings/video-settings";
 import { Button } from "@/components/ui/button";
@@ -39,11 +41,18 @@ import {
 import { useRoomMedia } from "../media";
 
 export type InCallSection =
-  "audio" | "video" | "effects" | "general" | "accessibility" | "aiNotes";
+  | "audio"
+  | "video"
+  | "reactions"
+  | "effects"
+  | "general"
+  | "accessibility"
+  | "aiNotes";
 
 const SECTIONS: Array<{ id: InCallSection; icon: LucideIcon }> = [
   { id: "audio", icon: Mic },
   { id: "video", icon: Video },
+  { id: "reactions", icon: SmilePlus },
   { id: "effects", icon: WandSparkles },
   { id: "general", icon: Settings },
   { id: "accessibility", icon: Accessibility },
@@ -224,6 +233,12 @@ function SectionContent({ section }: { section: InCallSection }) {
       return (
         <div className="flex flex-col gap-5">
           <GeneralSettings inMeeting />
+        </div>
+      );
+    case "reactions":
+      return (
+        <div className="flex flex-col gap-5">
+          <ReactionsSettings />
         </div>
       );
     case "accessibility":

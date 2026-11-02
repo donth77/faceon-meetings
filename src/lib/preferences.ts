@@ -24,8 +24,14 @@ export type Preferences = {
   cameraOffOnJoin?: boolean;
   /** "?" for shortcuts and Space to talk. Default on. */
   singleKeyShortcuts?: boolean;
-  /** Screen readers hear a summary of reactions. Default on. */
-  announceReactions?: boolean;
+  /** Others' reactions show (yours always do). Default on. */
+  showOthersReactions?: boolean;
+  /** Reactions float up the screen; off, they appear in place. Default on. */
+  reactionAnimation?: boolean;
+  /** A soft sound with each reaction. Default off, as in Meet. */
+  reactionSound?: boolean;
+  /** What screen readers hear about reactions. Default a summary. */
+  reactionAnnouncements?: "off" | "summary" | "each";
   /** Short sounds as people join and leave, hands go up and messages arrive. Default on. */
   meetingSounds?: boolean;
 };
@@ -38,7 +44,9 @@ const BOOLEANS = [
   "hdVideo",
   "cameraOffOnJoin",
   "singleKeyShortcuts",
-  "announceReactions",
+  "showOthersReactions",
+  "reactionAnimation",
+  "reactionSound",
   "meetingSounds",
 ] as const;
 
@@ -59,6 +67,13 @@ export function loadPreferences(): Preferences {
       if (typeof p.timeZone === "string") value.timeZone = p.timeZone;
       for (const key of BOOLEANS) {
         if (typeof p[key] === "boolean") value[key] = p[key];
+      }
+      const announce = p.reactionAnnouncements;
+      if (announce === "off" || announce === "summary" || announce === "each") {
+        value.reactionAnnouncements = announce;
+      } else if (p.announceReactions === false) {
+        // The earlier Accessibility switch, turned off.
+        value.reactionAnnouncements = "off";
       }
     }
     cached = { raw, value };
@@ -105,7 +120,10 @@ export function withDefaults(preferences: Preferences) {
     hdVideo: preferences.hdVideo ?? true,
     cameraOffOnJoin: preferences.cameraOffOnJoin ?? false,
     singleKeyShortcuts: preferences.singleKeyShortcuts ?? true,
-    announceReactions: preferences.announceReactions ?? true,
+    showOthersReactions: preferences.showOthersReactions ?? true,
+    reactionAnimation: preferences.reactionAnimation ?? true,
+    reactionSound: preferences.reactionSound ?? false,
+    reactionAnnouncements: preferences.reactionAnnouncements ?? "summary",
     meetingSounds: preferences.meetingSounds ?? true,
   };
 }

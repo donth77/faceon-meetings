@@ -15,6 +15,7 @@ import type {
   SelfInfo,
   SessionInfo,
 } from "@/lib/meetings/api";
+import { reactionName } from "@/lib/meetings/events";
 import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import { meetingApi } from "../api-client";
@@ -214,6 +215,9 @@ export function MeetingShell({
     },
   });
 
+  const nameOf = (userId: string) =>
+    media.participants.find((p) => p.userId === userId)?.name ?? "";
+
   // Raised hands and reactions.
   const hands = useMemo(() => state?.hands ?? {}, [state]);
   const reactionsAllowed = (state?.reactions ?? true) || isHost;
@@ -222,22 +226,49 @@ export function MeetingShell({
     (userId) => (state?.reactions ?? true) || sentByHost(userId),
   );
   const sendReaction = useReactionSender(media.sendReaction);
-  const { announceReactions } = withDefaults(usePreferences());
-  const reactionNews = useReactionAnnouncement(
-    reactions,
-    self.id,
-    announceReactions,
-    (count) => t("reactionsSummary", { count }),
+  const {
+    showOthersReactions,
+    reactionAnimation,
+    reactionSound,
+    reactionAnnouncements,
+  } = withDefaults(usePreferences());
+  // Settings → Reactions: others' can be hidden; yours always show.
+  const shownReactions = useMemo(
+    () =>
+      showOthersReactions
+        ? reactions
+        : reactions.filter((reaction) => reaction.userId === self.id),
+    [reactions, showOthersReactions, self.id],
   );
+  const reactionNews = useReactionAnnouncement(
+    shownReactions,
+    self.id,
+    reactionAnnouncements,
+    {
+      summary: (count) => t("reactionsSummary", { count }),
+      each: (reaction) =>
+        t("reactionFrom", {
+          name: nameOf(reaction.userId),
+          reaction: t(`reactions.names.${reactionName(reaction.code)}`),
+        }),
+    },
+  );
+  const lastSounded = useRef(-1);
+  useEffect(() => {
+    const newest = shownReactions.at(-1);
+    if (!newest || newest.id <= lastSounded.current) return;
+    lastSounded.current = newest.id;
+    if (reactionSound) playSound("reaction");
+  }, [shownReactions, reactionSound]);
   const badges = useMemo(
     () => ({
       hands,
-      reactions: new Map(reactions.map((r) => [r.userId, r.code] as const)),
+      reactions: new Map(
+        shownReactions.map((r) => [r.userId, r.code] as const),
+      ),
     }),
-    [hands, reactions],
+    [hands, shownReactions],
   );
-  const nameOf = (userId: string) =>
-    media.participants.find((p) => p.userId === userId)?.name ?? "";
 
   async function changeHand(
     request: Parameters<typeof meetingApi.hand>[1],
@@ -432,7 +463,12 @@ export function MeetingShell({
               <RoomBadgesProvider value={badges}>
                 <Stage layout={layout} />
               </RoomBadgesProvider>
-              <FloatingReactions reactions={reactions} nameOf={nameOf} />
+              <FloatingReactions
+                reactions={shownReactions}
+                nameOf={nameOf}
+                selfId={self.id}
+                animate={reactionAnimation}
+              />
               <div role="status" className="sr-only">
                 {reactionNews}
               </div>
