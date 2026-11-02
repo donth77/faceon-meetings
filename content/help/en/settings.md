@@ -43,6 +43,7 @@ How AI notes are made: **On this computer**, with Chrome's built-in AI, or with 
 {appName} follows your device for reduced motion, contrast and text size. These settings cover what your device can't know:
 
 - **Single-key shortcuts**, such as `?` for the list of shortcuts, and holding `Space` to talk when Push to talk is on. Turn them off if you use speech input or a switch device.
+- **Keyboard shortcuts**: every shortcut, with your computer's keys, listed right there. See [Keyboard shortcuts](/help/keyboard-shortcuts).
 
 ## Account
 

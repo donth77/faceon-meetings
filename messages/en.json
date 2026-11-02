@@ -976,11 +976,9 @@
     "accessibility": {
       "title": "Accessibility",
       "intro": "FaceOn follows your device for reduced motion, contrast and text size. These settings are for things your device can’t know.",
-      "keyboard": "Keyboard",
       "singleKeys": "Single-key shortcuts (Space to talk, ? for shortcuts)",
       "singleKeysHelp": "Turn this off if you use speech input or a switch device, so a single key never triggers an action by accident.",
-      "shortcuts": "Keyboard shortcuts",
-      "orPress": "Or press <kbd>{key}</kbd> anywhere."
+      "shortcuts": "Keyboard shortcuts"
     },
     "calendar": {
       "title": "Calendar",

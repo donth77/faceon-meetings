@@ -1,35 +1,33 @@
 "use client";
 
-import { Keyboard } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { use } from "react";
 
 import { SwitchRow } from "@/components/schedule/fields";
-import { useOpenShortcuts } from "@/components/shortcuts/shortcuts-dialog";
-import { Button } from "@/components/ui/button";
-import { isAppleDevice } from "@/lib/platform";
+import { ShortcutsList } from "@/components/shortcuts/shortcuts-list";
 import {
   savePreferences,
   usePreferences,
   withDefaults,
 } from "@/lib/preferences";
 
-import { SectionTitle, SettingsCard } from "./settings-nav";
+import { SectionTitle, SettingsCard, SettingsChrome } from "./settings-nav";
 
 /**
- * Settings → Accessibility: only what the device can't tell us. Reduced motion, contrast
- * and text size follow the device's own settings.
+ * Settings → Accessibility: only what the device can't tell us (reduced motion, contrast
+ * and text size follow the device's own settings), and the keyboard shortcuts, listed
+ * right here; ? and the menus still open them in their own dialog.
  */
 export function AccessibilitySettings() {
   const t = useTranslations("Settings.accessibility");
-  const openShortcuts = useOpenShortcuts();
+  const ts = useTranslations("Shortcuts");
+  const chrome = use(SettingsChrome);
   const { singleKeyShortcuts } = withDefaults(usePreferences());
-  // Without single-key shortcuts, ? does nothing; Ctrl+/ or ⌘/ still opens the list.
-  const key = singleKeyShortcuts ? "?" : isAppleDevice() ? "⌘/" : "Ctrl+/";
 
   return (
     <>
       <SectionTitle title={t("title")} intro={t("intro")} />
-      <SettingsCard title={t("keyboard")}>
+      <SettingsCard title={t("shortcuts")}>
         <div className="divide-y divide-[#e2e5ea] dark:divide-white/10">
           <SwitchRow
             label={t("singleKeys")}
@@ -40,26 +38,8 @@ export function AccessibilitySettings() {
             }
           />
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
-            className="h-[38px] gap-2 rounded-[10px] border-[#c9cfd8] px-3.5 text-sm font-semibold dark:border-white/15"
-            onPress={openShortcuts}
-          >
-            <Keyboard className="size-[18px]" aria-hidden="true" />
-            {t("shortcuts")}
-          </Button>
-          <span className="text-muted-foreground text-[13px]">
-            {t.rich("orPress", {
-              key,
-              kbd: (chunks) => (
-                <kbd className="bg-muted text-foreground rounded-[5px] border px-1.5 py-px font-sans text-xs font-semibold">
-                  {chunks}
-                </kbd>
-              ),
-            })}
-          </span>
-        </div>
+        <p className="text-muted-foreground text-sm">{ts("description")}</p>
+        <ShortcutsList headingLevel={chrome === "dialog" ? 4 : 3} />
       </SettingsCard>
     </>
   );
