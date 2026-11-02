@@ -7,15 +7,11 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { requestPasswordReset } from "@/lib/auth/client";
+import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
 
 import { AuthCard } from "./auth-card";
-import {
-  focusFirstInvalid,
-  FormNotice,
-  isEmailAddress,
-  TextField,
-} from "./fields";
+import { focusFirstInvalid, FormNotice, TextField } from "./fields";
 
 /**
  * "Reset your password": sends a reset link. The reply is the same whether or not the

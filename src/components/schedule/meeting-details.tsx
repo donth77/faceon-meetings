@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SwitchRow } from "@/components/ui/form-fields";
+import { copyText } from "@/lib/clipboard";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule } from "@/lib/meetings/describe";
 import type { SeriesScope } from "@/lib/meetings/schedule";
@@ -132,14 +133,8 @@ export function MeetingDetailsView({ details }: { details: MeetingDetails }) {
       day: "numeric",
     });
 
-  async function copy(value: string, done: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(done);
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
+  const copy = (value: string, done: string) =>
+    copyText(value, { copied: done, failed: t("copyFailed") });
 
   async function changeSetting(key: keyof typeof settings, value: boolean) {
     const previous = settings;

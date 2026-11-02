@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useOrigin } from "@/hooks/use-origin";
+import { copyText } from "@/lib/clipboard";
 import { createInstantMeeting } from "@/lib/meetings/actions";
 
 type Created = { code: string; passcode: string | null };
@@ -37,14 +38,8 @@ function MeetingLinkDialog({
   const t = useTranslations("Home");
   const link = inviteLink(useOrigin(), meeting);
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(link);
-      toast.success(t("linkCopied"));
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
+  const copy = () =>
+    copyText(link, { copied: t("linkCopied"), failed: t("copyFailed") });
 
   return (
     <Dialog

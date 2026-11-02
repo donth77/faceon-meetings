@@ -2,9 +2,9 @@
 
 import { Copy, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { copyText } from "@/lib/clipboard";
 import { downloadFile } from "@/lib/download";
 import { notesMarkdown, type MeetingNotes } from "@/lib/notes/notes";
 
@@ -46,14 +46,8 @@ export function NotesFileButtons({
 }) {
   const t = useTranslations("Notes");
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(markdown());
-      toast.success(t("copied"));
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
+  const copy = () =>
+    copyText(markdown(), { copied: t("copied"), failed: t("copyFailed") });
 
   return (
     <>

@@ -9,12 +9,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth/client";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
+import { isEmailAddress } from "@/lib/email-address";
 import { safeRedirectPath } from "@/lib/routes";
 
 import {
   focusFirstInvalid,
   FormNotice,
-  isEmailAddress,
   PasswordField,
   TextField,
 } from "./fields";

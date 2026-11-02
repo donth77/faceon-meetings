@@ -9,11 +9,9 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
-import { z } from "zod";
 
+import { isEmailAddress } from "@/lib/email-address";
 import { MAX_INVITEES } from "@/lib/meetings/schedule";
-
-const isEmail = (text: string) => z.email().safeParse(text).success;
 
 /** A stable default avatar for an address, from the same set as everyone else's. */
 function avatarFor(email: string): string {
@@ -49,7 +47,7 @@ export function InviteesField({
       .split(/[\s,;]+/)
       .map((part) => part.trim().toLowerCase())
       .filter(Boolean);
-    const bad = emails.find((email) => !isEmail(email));
+    const bad = emails.find((email) => !isEmailAddress(email));
     if (bad) {
       setInvalid(bad);
       return false;

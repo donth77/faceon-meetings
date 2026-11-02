@@ -10,13 +10,13 @@ import { Button } from "@/components/ui/button";
 import { sendVerificationEmail, signUp } from "@/lib/auth/client";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
+import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
 
 import { AuthCard, AuthCardIcon, OrDivider } from "./auth-card";
 import {
   focusFirstInvalid,
   FormNotice,
-  isEmailAddress,
   PasswordField,
   TextField,
 } from "./fields";

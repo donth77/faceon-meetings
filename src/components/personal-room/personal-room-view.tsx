@@ -10,6 +10,7 @@ import { useInvitation } from "@/components/meeting/invitation";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SwitchRow } from "@/components/ui/form-fields";
+import { copyText } from "@/lib/clipboard";
 import {
   regeneratePersonalRoom,
   updatePersonalRoomSettings,
@@ -32,15 +33,6 @@ type Setting = keyof PersonalRoom["settings"];
 
 const card =
   "bg-card ring-border flex flex-col gap-3.5 rounded-2xl px-6 py-5.5 ring-1";
-
-async function copyText(text: string, done: string, failed: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success(done);
-  } catch {
-    toast.error(failed);
-  }
-}
 
 function DetailRow({
   label,
@@ -84,7 +76,7 @@ export function PersonalRoomView({ room: initial }: { room: PersonalRoom }) {
   const { link, copyInvitation } = useInvitation(room);
 
   const copy = (text: string) =>
-    void copyText(text, t("copied"), t("copyFailed"));
+    void copyText(text, { copied: t("copied"), failed: t("copyFailed") });
 
   async function regenerate() {
     setRegenerating(true);

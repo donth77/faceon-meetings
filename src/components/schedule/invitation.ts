@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 import { useOrigin } from "@/hooks/use-origin";
+import { copyText } from "@/lib/clipboard";
 import { downloadFile } from "@/lib/download";
 import { publicEnv } from "@/lib/env";
 import {
@@ -101,14 +101,12 @@ export function useScheduledInvitation(meeting: ScheduledMeeting) {
     reminderMinutes: withDefaults(loadPreferences()).reminderMinutes,
   };
 
-  async function copy(value: string, done: string, unsaved?: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(done, unsaved ? { description: unsaved } : undefined);
-    } catch {
-      toast.error(t("copyFailed"));
-    }
-  }
+  const copy = (value: string, done: string, unsaved?: string) =>
+    copyText(value, {
+      copied: done,
+      failed: t("copyFailed"),
+      description: unsaved,
+    });
 
   function downloadIcs() {
     downloadFile({

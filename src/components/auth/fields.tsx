@@ -171,6 +171,3 @@ export function FormNotice({
     </div>
   );
 }
-
-export const isEmailAddress = (value: string) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
