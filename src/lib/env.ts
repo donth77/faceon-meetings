@@ -17,6 +17,10 @@ const PublicEnv = z.object({
   NEXT_PUBLIC_OPERATOR_JURISDICTION: z.string().min(1).optional(),
   /** AI notes, on unless this copy turns them off. */
   NEXT_PUBLIC_AI_NOTES: z.enum(["on", "off"]).default("on"),
+  /** Cloudflare Turnstile's site key: with TURNSTILE_SECRET_KEY, checks for a person. */
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+  /** Where error reports go (Sentry, or GlitchTip); none without it. */
+  NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
 });
 
 export const publicEnv = PublicEnv.parse({
@@ -28,6 +32,9 @@ export const publicEnv = PublicEnv.parse({
   NEXT_PUBLIC_OPERATOR_JURISDICTION:
     process.env.NEXT_PUBLIC_OPERATOR_JURISDICTION || undefined,
   NEXT_PUBLIC_AI_NOTES: process.env.NEXT_PUBLIC_AI_NOTES || undefined,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY:
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || undefined,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || undefined,
 });
 
 /** Whether this copy offers AI notes. */

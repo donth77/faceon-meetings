@@ -33,6 +33,8 @@ export const MEETING_ERRORS = {
   SESSION_ENDED: 410,
   RATE_LIMITED: 429,
   DEMO_LIMIT: 429,
+  /** A new guest's check for a person (Cloudflare Turnstile) didn't pass. */
+  HUMAN_CHECK_FAILED: 403,
   UNAVAILABLE: 503,
 } as const;
 
@@ -51,6 +53,8 @@ export const JoinRequest = z.object({
   passcode: z.string().trim().max(32).optional(),
   /** A guest's avatar, as the join screen showed it; an account keeps its own. */
   avatarSeed: AvatarSeed.optional(),
+  /** A guest's Turnstile token on their first join, where this copy checks for a person. */
+  humanCheck: z.string().max(4096).optional(),
 });
 export type JoinRequest = z.input<typeof JoinRequest>;
 

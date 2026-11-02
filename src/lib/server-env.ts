@@ -37,6 +37,8 @@ const ServerEnv = z.object({
   ALLOW_GUESTS: z.stringbool().default(true),
   /** Authorizes the scheduled sweep (sent as "Authorization: Bearer <secret>"). */
   CRON_SECRET: z.string().optional(),
+  /** Cloudflare Turnstile's secret key, with NEXT_PUBLIC_TURNSTILE_SITE_KEY (lib/human-check). */
+  TURNSTILE_SECRET_KEY: z.string().optional(),
   /** Resend, for account emails (verify your address, reset your password). */
   RESEND_API_KEY: z.string().optional(),
   /** The sender, e.g. "FaceOn <no-reply@mail.example.com>", on a domain verified in Resend. */

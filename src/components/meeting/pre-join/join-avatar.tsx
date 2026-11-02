@@ -29,6 +29,8 @@ export type Viewer =
       avatarSeed: string;
       /** No avatar of their own yet: the default follows the name they type. */
       firstVisit: boolean;
+      /** No guest ID yet, where this copy checks for a person before the first join. */
+      humanCheck?: boolean;
     };
 
 /** The avatar you join with, and the ways to change it on the join screen. */

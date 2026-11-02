@@ -3,7 +3,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { haveIBeenPwned, oAuthProxy } from "better-auth/plugins";
+import { captcha, haveIBeenPwned, oAuthProxy } from "better-auth/plugins";
 
 import { endHostedCalls, forgetMediaUser } from "@/lib/account/deletion";
 import { lookForName } from "@/lib/avatars/name-look";
@@ -20,6 +20,8 @@ import { publicEnv } from "@/lib/env";
 import { refreshGoogleToken } from "@/lib/google-calendar/refresh";
 import { hasCalendarScope } from "@/lib/google-calendar/shared";
 import { forgetApprovedHost } from "@/lib/hosting/allowlist";
+import { ACCOUNT_EMAIL_ENDPOINTS } from "@/lib/human-check";
+import { humanCheckSecret } from "@/lib/human-check/verify";
 import { siteUrl } from "@/lib/site";
 
 import { dropUnverifiedPassword } from "./linking";
@@ -28,6 +30,9 @@ import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
 /** Production origin. Preview deployments send OAuth through it (oAuthProxy). */
 const productionUrl = siteUrl();
+
+/** Cloudflare Turnstile's secret, where this copy checks for a person (lib/human-check). */
+const turnstileSecret = humanCheckSecret();
 
 /** Calendar sync reads its tokens through `auth`, so the hooks load it when they run. */
 const googleCalendar = () => import("@/lib/google-calendar/connection");
@@ -212,6 +217,19 @@ export const auth = betterAuth({
         "/set-password",
       ],
     }),
+    // Requests that send email need a person behind them, where Turnstile is set up:
+    // signing up, a password reset, and the verification email again. No expected
+    // action: the plugin would need an exact match, Cloudflare's test keys answer
+    // without one, and each token works only once anyway.
+    ...(turnstileSecret
+      ? [
+          captcha({
+            provider: "cloudflare-turnstile",
+            secretKey: turnstileSecret,
+            endpoints: ACCOUNT_EMAIL_ENDPOINTS,
+          }),
+        ]
+      : []),
     nextCookies(),
   ],
 });

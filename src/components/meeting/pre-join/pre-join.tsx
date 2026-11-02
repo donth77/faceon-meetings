@@ -36,6 +36,7 @@ import { useNoiseSuppression } from "@/components/device/use-noise-suppression";
 import { useNoiseTrack } from "@/components/device/use-noise-track";
 import { useEffectProblems } from "@/components/effects/use-effect-problems";
 import { useEffectsTrack } from "@/components/effects/use-effects-track";
+import { useHumanCheck } from "@/components/human-check/use-human-check";
 import { LegalConsent } from "@/components/legal/legal-links";
 import { SpeechDownload } from "@/components/notes/speech-download";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,8 @@ export type JoinInput = {
   devices: DevicePreferences;
   /** A guest's avatar, as the join screen showed it. */
   avatarSeed: string | undefined;
+  /** The check's token, for a guest's first join from this browser. */
+  humanCheck?: string | undefined;
 };
 
 /** Why the last join attempt failed, in the terms the error messages use. */
@@ -115,6 +118,7 @@ export type JoinErrorKind =
   | "BUSY"
   | "DEMO_LIMIT"
   | "RATE_LIMITED"
+  | "HUMAN_CHECK_FAILED"
   | "NETWORK"
   | "UNAVAILABLE"
   | "BAD_REQUEST";
@@ -223,6 +227,13 @@ export function PreJoin({
   const passcodeId = useId();
   const passcodeHintId = useId();
   const errorId = useId();
+  // A guest's first join from this browser needs a person behind it, where this copy
+  // checks (Turnstile).
+  const humanCheck = useHumanCheck(
+    "guest-join",
+    viewer.kind === "guest" && viewer.humanCheck === true,
+  );
+  const [checking, setChecking] = useState(false);
 
   const settings = withDefaults(usePreferences());
   // Settings → Video can start every meeting with the camera off.
@@ -349,8 +360,13 @@ export function PreJoin({
     passcodeField.current?.select();
   }, [error]);
 
-  function join(withDevices: DevicePreferences) {
+  async function join(withDevices: DevicePreferences) {
     if (viewer.kind === "guest") saveGuestName(name.trim());
+    setChecking(true);
+    const token = await humanCheck.take();
+    setChecking(false);
+    // The check says what went wrong, with Try again.
+    if (token === null) return;
     avatar.keep();
     const sent = passcode.trim() || undefined;
     setSentPasscode(sent);
@@ -359,12 +375,13 @@ export function PreJoin({
       passcode: sent,
       devices: withDevices,
       avatarSeed: avatar.joinSeed,
+      humanCheck: token,
     });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    join(devices);
+    void join(devices);
   }
 
   return (
@@ -698,6 +715,8 @@ export function PreJoin({
               </p>
             ) : null}
 
+            {status === "idle" ? humanCheck.view : null}
+
             {status === "asking" ? (
               <Button
                 variant="outline"
@@ -722,7 +741,7 @@ export function PreJoin({
               <>
                 <Button
                   type="submit"
-                  isPending={status === "joining"}
+                  isPending={status === "joining" || checking}
                   isDisabled={!canJoin}
                   className="h-[52px] rounded-xl text-[17px] font-semibold"
                 >
@@ -742,7 +761,7 @@ export function PreJoin({
                   variant="link"
                   isDisabled={busy || !canJoin}
                   onPress={() =>
-                    join({ ...devices, micOn: false, cameraOn: false })
+                    void join({ ...devices, micOn: false, cameraOn: false })
                   }
                   className="self-center text-[15px] font-semibold"
                 >

@@ -83,6 +83,7 @@ const RETRYABLE = [
   "BUSY",
   "DEMO_LIMIT",
   "RATE_LIMITED",
+  "HUMAN_CHECK_FAILED",
   "NETWORK",
   "BAD_REQUEST",
 ] as const satisfies readonly JoinErrorKind[];
@@ -233,7 +234,8 @@ export default function MeetingEntry({
 
   const join = useCallback(
     async (input: JoinInput, { quiet = false, rejoin = false } = {}) => {
-      lastJoin.current = input;
+      // A check's token works once; by a rejoin, this browser is a known guest.
+      lastJoin.current = { ...input, humanCheck: undefined };
       if (!quiet) setStep({ name: "joining", rejoin });
       try {
         // An avatar just chosen is saved to the account first, so the room shows it.
@@ -242,6 +244,7 @@ export default function MeetingEntry({
           name: input.name,
           passcode: input.passcode,
           avatarSeed: input.avatarSeed,
+          humanCheck: input.humanCheck,
         });
         if (result.state === "waiting_for_host") {
           setStep({ name: "waiting" });

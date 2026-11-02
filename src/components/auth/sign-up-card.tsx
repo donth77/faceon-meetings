@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { useHumanCheck } from "@/components/human-check/use-human-check";
 import { LegalConsent } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import { sendVerificationEmail, signUp } from "@/lib/auth/client";
@@ -13,6 +14,7 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
 import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
+import { humanCheckFetchOptions, isHumanCheckError } from "@/lib/human-check";
 
 import { AuthCard, AuthCardIcon, OrDivider } from "./auth-card";
 import {
@@ -40,14 +42,30 @@ function CheckEmail({
 }) {
   const t = useTranslations("Auth.checkEmail");
   const te = useTranslations("Auth.errors");
-  const [resend, setResend] = useState<"idle" | "sending" | "sent" | "tooMany">(
-    "idle",
-  );
+  const [resend, setResend] = useState<
+    "idle" | "sending" | "sent" | "tooMany" | "checkFailed"
+  >("idle");
+  const check = useHumanCheck("account");
 
   async function sendAgain() {
     setResend("sending");
-    const { error } = await sendVerificationEmail({ email, callbackURL });
-    setResend(error?.status === 429 ? "tooMany" : "sent");
+    const token = await check.take();
+    if (token === null) {
+      setResend("idle");
+      return;
+    }
+    const { error } = await sendVerificationEmail({
+      email,
+      callbackURL,
+      fetchOptions: humanCheckFetchOptions(token),
+    });
+    setResend(
+      error?.status === 429
+        ? "tooMany"
+        : isHumanCheckError(error)
+          ? "checkFailed"
+          : "sent",
+    );
   }
 
   return (
@@ -74,11 +92,14 @@ function CheckEmail({
         <FormNotice icon={Clock3} tone="warning">
           {te("tooMany")}
         </FormNotice>
+      ) : resend === "checkFailed" ? (
+        <FormNotice icon={Info}>{te("humanCheck")}</FormNotice>
       ) : (
         <p className="text-muted-foreground text-[13px] leading-normal">
           {t("spam")}
         </p>
       )}
+      {check.view}
       <Button
         variant="outline"
         onPress={() => void sendAgain()}
@@ -115,6 +136,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
   const [problem, setProblem] = useState<AuthProblem | null>(null);
   const [pending, setPending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const check = useHumanCheck("account", emailEnabled);
 
   function validate(): FieldErrors {
     const found: FieldErrors = {};
@@ -138,11 +160,17 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
     }
 
     setPending(true);
+    const token = await check.take();
+    if (token === null) {
+      setPending(false);
+      return;
+    }
     const { error } = await signUp.email({
       name: name.trim(),
       email: email.trim(),
       password,
       callbackURL,
+      fetchOptions: humanCheckFetchOptions(token),
     });
     setPending(false);
     if (!error) {
@@ -197,7 +225,13 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
                 {t("errors.tooMany")}
               </FormNotice>
             ) : problem ? (
-              <FormNotice icon={Info}>{t("errors.generic")}</FormNotice>
+              <FormNotice icon={Info}>
+                {t(
+                  problem === "humanCheck"
+                    ? "errors.humanCheck"
+                    : "errors.generic",
+                )}
+              </FormNotice>
             ) : null}
             <TextField
               label={t("name")}
@@ -225,6 +259,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
               error={errors.password}
               pending={pending}
             />
+            {check.view}
             <Button
               type="submit"
               isPending={pending}

@@ -11,6 +11,7 @@ import { getSession } from "@/lib/auth/session";
 import { accountAvatar } from "@/lib/avatars/account";
 import { createAvatarSeed } from "@/lib/avatars/seed";
 import { currentGuest, guestsEnabled } from "@/lib/guest-session";
+import { humanCheckOn } from "@/lib/human-check/verify";
 import { meetingPageAttempts } from "@/lib/meetings/attempts";
 import { guestMediaId, userMediaId } from "@/lib/meetings/principal";
 import { getMeetingSummary } from "@/lib/meetings/queries";
@@ -105,6 +106,7 @@ async function MeetingGate({
                 kind: "guest",
                 avatarSeed: createAvatarSeed("n"),
                 firstVisit: true,
+                humanCheck: humanCheckOn(),
               }
       }
     />

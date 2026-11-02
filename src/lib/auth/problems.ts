@@ -7,6 +7,8 @@ export type AuthProblem =
   | "passwordBreached"
   | "invalidEmail"
   | "invalidToken"
+  /** The check for a person (Cloudflare Turnstile) didn't pass. */
+  | "humanCheck"
   | "generic";
 
 /** Maps a Better Auth error (HTTP status and code) to the message we show. */
@@ -28,6 +30,9 @@ export function authProblem(error: {
       return "invalidEmail";
     case "INVALID_TOKEN":
       return "invalidToken";
+    case "VERIFICATION_FAILED":
+    case "MISSING_RESPONSE":
+      return "humanCheck";
     default:
       return error.status === 401 ? "wrongCredentials" : "generic";
   }
