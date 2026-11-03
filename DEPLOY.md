@@ -374,7 +374,7 @@ Restore into a new, empty database, such as a new Neon branch, rather than over 
 
 ## Make it yours
 
-Your copy can have its own name, logo and colors, and a public one should: [BRAND.md](BRAND.md) says why.
+Your copy can have its own name, logo and colors:
 
 - **Name:** `NEXT_PUBLIC_APP_NAME` ([step 8](#8-add-the-environment-variables-to-vercel)). Pages, Help, emails, the legal pages, calendar files and the installed app all use it.
 - **Logo, icons and colors:** `pnpm brand`, below.
