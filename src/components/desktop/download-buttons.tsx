@@ -19,10 +19,13 @@ import {
 import { publicEnv } from "@/lib/env";
 import { useIntlLocale } from "@/lib/preferences";
 
-/** Both builds, as they read: the place they take, kept unseen until the real ones are known. */
+/**
+ * Both builds, as they read: the place they take, kept unseen until the real ones are
+ * known. No date: the server and the browser would write it in their own time zones.
+ */
 const HOLDER: DesktopRelease = {
   version: "0.0.0",
-  publishedAt: "2026-01-01T00:00:00Z",
+  publishedAt: null,
   releases: "#",
   windows: { url: "#", size: 200 * 1_048_576, signed: false },
   mac: { url: "#", size: 200 * 1_048_576, signed: false },
