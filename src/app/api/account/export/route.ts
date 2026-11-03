@@ -5,6 +5,7 @@ import { emailLocale } from "@/lib/email/templates";
 import { publicEnv } from "@/lib/env";
 import { attachment, fileName, spreadsheetDay } from "@/lib/exports/format";
 import { yourDataLabels } from "@/lib/exports/labels";
+import { exportLimits } from "@/lib/exports/limits";
 import { yourData } from "@/lib/exports/your-data";
 import { yourDataFiles } from "@/lib/exports/your-data-files";
 import { zipStream } from "@/lib/exports/zip";
@@ -13,21 +14,17 @@ import { isLimited, recordAttempt } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/same-origin";
 import { isTimeZone } from "@/lib/time";
 
-/** A few downloads every ten minutes is plenty; each one reads everything. */
-const DOWNLOADS_PER_WINDOW = 3;
-
 /**
  * GET /api/account/export?tz=…: Settings → Account's "Download your data". A zip of
  * everything kept about the signed-in person that they may see, made on request and
- * streamed, with nothing stored and no one else involved. Limited per account.
+ * streamed, with nothing stored and no one else involved. It shares Download history's
+ * budget per account.
  */
 export async function GET(request: Request) {
   if (!isSameOrigin(request)) return new Response(null, { status: 403 });
   const session = await getSession();
   if (!session) return new Response(null, { status: 401 });
-  const limits = [
-    { key: `export:${session.user.id}`, max: DOWNLOADS_PER_WINDOW },
-  ];
+  const limits = exportLimits(session.user.id);
   try {
     if (await isLimited(limits)) {
       return Response.json({ error: "tooMany" }, { status: 429 });

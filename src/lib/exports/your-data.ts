@@ -1,6 +1,6 @@
 import "server-only";
 
-import { aliasedTable, and, asc, desc, eq, inArray, or } from "drizzle-orm";
+import { aliasedTable, asc, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -10,33 +10,19 @@ import {
   meeting,
   meetingException,
   meetingInvitee,
-  meetingNotes,
   meetingRule,
-  meetingSession,
   session,
   user,
 } from "@/lib/db/schema";
 import { hostingPlanOf } from "@/lib/hosting/access";
-import { isGuestMediaId } from "@/lib/meetings/attendees";
-import { pastSessions } from "@/lib/meetings/history";
 import { approvedBySettings, isAdmin } from "@/lib/meetings/hosting";
-import { attendedBy } from "@/lib/meetings/queries";
 import type { MeetingSettings } from "@/lib/meetings/settings";
-import type { MeetingNotes } from "@/lib/notes/notes";
 
-import { attendanceOf } from "./attendance-data";
-
-/** A person in a past meeting, as the reader may see them. Times in ISO 8601. */
-export type ExportedPerson = {
-  name: string;
-  /** Only the reader's own, and invitees' in meetings the reader hosts. */
-  email: string | null;
-  joinedAs: "host" | "account" | "guest";
-  firstJoined: string;
-  lastLeft: string;
-  minutes: number;
-  visits: Array<{ joinedAt: string; leftAt: string }>;
-};
+import {
+  historyData,
+  type NoteEntry,
+  type PreviousEntry,
+} from "./history-data";
 
 /** Everything "Download your data" holds, before it's written out. Times in ISO 8601. */
 export type YourData = {
@@ -113,30 +99,8 @@ export type YourData = {
     onGoogleCalendar: boolean;
     createdAt: string;
   }>;
-  previous: Array<{
-    meetingId: string;
-    title: string | null;
-    hostName: string;
-    hostedByYou: boolean;
-    start: string;
-    end: string;
-    people: ExportedPerson[];
-  }>;
-  notes: Array<{
-    meetingId: string;
-    title: string | null;
-    hostName: string;
-    start: string;
-    end: string;
-    savedByYou: boolean;
-    shared: boolean;
-    madeWith: string;
-    provider: string | null;
-    madeAt: string;
-    savedAt: string;
-    notes: MeetingNotes;
-    transcript: string | null;
-  }>;
+  previous: PreviousEntry[];
+  notes: NoteEntry[];
 };
 
 const iso = (date: Date) => date.toISOString();
@@ -154,7 +118,6 @@ export async function yourData(reader: {
 }): Promise<YourData> {
   const decider = aliasedTable(user, "decider");
   const adder = aliasedTable(user, "adder");
-  const host = aliasedTable(user, "host");
   const [
     [person],
     methods,
@@ -162,8 +125,7 @@ export async function yourData(reader: {
     hosted,
     [approval],
     requests,
-    notes,
-    past,
+    history,
     plan,
   ] = await Promise.all([
     db().select().from(user).where(eq(user.id, reader.id)).limit(1),
@@ -213,28 +175,7 @@ export async function yourData(reader: {
       .leftJoin(decider, eq(decider.id, hostingRequest.decidedBy))
       .where(eq(hostingRequest.userId, reader.id))
       .orderBy(asc(hostingRequest.createdAt)),
-    // The AI notes the reader may read: theirs, their meetings', and shared ones they were in.
-    db()
-      .select({
-        notes: meetingNotes,
-        session: meetingSession,
-        code: meeting.code,
-        title: meeting.title,
-        hostName: host.name,
-      })
-      .from(meetingNotes)
-      .innerJoin(meetingSession, eq(meetingSession.id, meetingNotes.sessionId))
-      .innerJoin(meeting, eq(meeting.id, meetingSession.meetingId))
-      .innerJoin(host, eq(host.id, meeting.hostId))
-      .where(
-        or(
-          eq(meetingNotes.savedBy, reader.id),
-          eq(meeting.hostId, reader.id),
-          and(eq(meetingNotes.shared, true), attendedBy(reader.id)),
-        ),
-      )
-      .orderBy(asc(meetingSession.startedAt)),
-    pastSessions(reader.id, { limit: null }),
+    historyData(reader),
     hostingPlanOf(reader),
   ]);
   if (!person) throw new Error("The account to export wasn't found.");
@@ -258,7 +199,6 @@ export async function yourData(reader: {
           .orderBy(asc(meetingInvitee.addedAt)),
       ])
     : [[], [], []];
-  const attendance = await attendanceOf(past, reader);
 
   return {
     generatedAt: iso(new Date()),
@@ -348,44 +288,7 @@ export async function yourData(reader: {
         createdAt: iso(row.createdAt),
       };
     }),
-    previous: attendance.map(
-      ({ session: past, people, emails, hostMediaId }) => ({
-        meetingId: past.meeting.code,
-        title: past.meeting.title,
-        hostName: past.hostName,
-        hostedByYou: past.meeting.hostId === reader.id,
-        start: iso(past.session.startedAt),
-        end: iso(past.session.endedAt ?? past.session.startedAt),
-        people: people.map((who) => ({
-          name: who.name,
-          email: emails.get(who.mediaUserId) ?? null,
-          joinedAs:
-            who.mediaUserId === hostMediaId
-              ? "host"
-              : isGuestMediaId(who.mediaUserId)
-                ? "guest"
-                : "account",
-          firstJoined: iso(who.joined),
-          lastLeft: iso(who.left),
-          minutes: who.minutes,
-          visits: who.visits,
-        })),
-      }),
-    ),
-    notes: notes.map((row) => ({
-      meetingId: row.code,
-      title: row.title,
-      hostName: row.hostName,
-      start: iso(row.session.startedAt),
-      end: iso(row.session.endedAt ?? row.notes.madeAt),
-      savedByYou: row.notes.savedBy === reader.id,
-      shared: row.notes.shared,
-      madeWith: row.notes.engine,
-      provider: row.notes.provider,
-      madeAt: iso(row.notes.madeAt),
-      savedAt: iso(row.notes.savedAt),
-      notes: row.notes.notes,
-      transcript: row.notes.transcript,
-    })),
+    previous: history.previous,
+    notes: history.notes,
   };
 }

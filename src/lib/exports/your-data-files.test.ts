@@ -142,8 +142,10 @@ const data: YourData = {
       title: null,
       hostName: "Maya",
       hostedByYou: true,
+      yourRole: "host",
       start: "2026-11-01T15:00:00.000Z",
       end: "2026-11-01T15:30:00.000Z",
+      minutes: 30,
       people: [
         {
           name: "Maya",

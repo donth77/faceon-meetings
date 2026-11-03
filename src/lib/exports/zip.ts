@@ -1,6 +1,6 @@
 import { strToU8, Zip, ZipDeflate } from "fflate";
 
-import type { ExportFile } from "./your-data-files";
+import type { ExportFile } from "./files";
 
 /**
  * Files as a zip, made as it's read: each one compressed and passed on, so nothing is

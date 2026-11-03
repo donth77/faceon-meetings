@@ -4,15 +4,23 @@ import { cn } from "cn";
 import {
   CalendarPlus,
   Clock3,
+  FileSpreadsheet,
+  FileText,
   Repeat,
+  ScrollText,
   Search,
   Sparkles,
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 
-import { DownloadButton } from "@/components/exports/download-button";
+import {
+  DownloadButton,
+  DownloadMenu,
+  type DownloadItem,
+} from "@/components/exports/download-button";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Segment, Segments } from "@/components/ui/segments";
@@ -225,6 +233,36 @@ function TimeOf({ time, day }: { time: string; day: string | null }) {
 }
 
 /**
+ * What a meeting's Download menu offers: attendance for its host (like Meet's attendance
+ * report), and the saved AI notes, with their transcript, to whoever may read them.
+ */
+function downloads(
+  meeting: PastMeeting,
+  labels: { attendance: string; notes: string; notesTranscript: string },
+): DownloadItem[] {
+  const items: DownloadItem[] = [];
+  if (meeting.hostedByYou) {
+    items.push({
+      id: "attendance",
+      label: labels.attendance,
+      icon: FileSpreadsheet,
+      href: `/api/history/${meeting.sessionId}/attendance`,
+      fallbackName: "attendance.csv",
+    });
+  }
+  if (meeting.notes) {
+    items.push({
+      id: "notes",
+      label: meeting.notes.transcript ? labels.notesTranscript : labels.notes,
+      icon: FileText,
+      href: `/api/history/${meeting.sessionId}/notes`,
+      fallbackName: "notes.md",
+    });
+  }
+  return items;
+}
+
+/**
  * The details panel: who came, when they joined and left, and Schedule again. It's a
  * sheet, so focus moves into it, stays there and goes back when it closes.
  */
@@ -257,6 +295,12 @@ function Details({ meeting }: { meeting: PastMeeting }) {
           <Chip tone="ai">
             <Sparkles className="size-3.5" aria-hidden="true" />
             {meeting.notes.shared ? t("notesShared") : t("notesSaved")}
+          </Chip>
+        ) : null}
+        {meeting.notes?.transcript ? (
+          <Chip tone="ai">
+            <ScrollText className="size-3.5" aria-hidden="true" />
+            {t("transcriptSaved")}
           </Chip>
         ) : null}
       </div>
@@ -335,16 +379,14 @@ function Details({ meeting }: { meeting: PastMeeting }) {
         </tbody>
       </table>
       <div className="mt-auto flex flex-wrap justify-end gap-2 pt-4">
-        {meeting.hostedByYou ? (
-          // Like Meet's attendance report: for the meeting's host.
-          <DownloadButton
-            href={`/api/history/${meeting.sessionId}/attendance`}
-            fallbackName="attendance.csv"
-            className="h-[38px] rounded-[10px]"
-          >
-            {t("downloadAttendance")}
-          </DownloadButton>
-        ) : null}
+        <DownloadMenu
+          items={downloads(meeting, {
+            attendance: t("downloadAttendance"),
+            notes: t("downloadNotes"),
+            notesTranscript: t("downloadNotesTranscript"),
+          })}
+          className="h-[38px] rounded-[10px]"
+        />
         {meeting.notes ? (
           <LinkButton
             href={`/previous/${meeting.sessionId}/notes`}
@@ -352,7 +394,9 @@ function Details({ meeting }: { meeting: PastMeeting }) {
             className="h-[38px] rounded-[10px]"
           >
             <Sparkles aria-hidden="true" />
-            {t("viewNotes")}
+            {meeting.notes.transcript
+              ? t("viewNotesTranscript")
+              : t("viewNotes")}
           </LinkButton>
         ) : null}
         <LinkButton
@@ -440,6 +484,16 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
               <Segment value="hosted">{t("hostedByMe")}</Segment>
             </Segments>
           </div>
+          {meetings.length > 0 ? (
+            // Like Google Takeout's Meet history: every meeting here, in one zip.
+            <DownloadButton
+              href="/api/history/export"
+              fallbackName="history.zip"
+              className="h-10 rounded-[10px]"
+            >
+              {t("downloadHistory")}
+            </DownloadButton>
+          ) : null}
         </div>
       </div>
 
@@ -482,10 +536,21 @@ export function PreviousView({ meetings }: { meetings: PastMeeting[] }) {
                           </Chip>
                         ) : null}
                         {meeting.notes ? (
-                          <Chip tone="ai">
+                          <Link
+                            href={`/previous/${meeting.sessionId}/notes`}
+                            aria-label={t(
+                              meeting.notes.transcript
+                                ? "notesAndTranscriptFor"
+                                : "notesFor",
+                              { title },
+                            )}
+                            className="bg-ai-soft text-ai focus-visible:focus-ring inline-flex h-6 items-center gap-1 rounded-xl px-2 text-xs font-bold whitespace-nowrap outline-hidden hover:underline"
+                          >
                             <Sparkles className="size-3.5" aria-hidden="true" />
-                            {t("notes")}
-                          </Chip>
+                            {meeting.notes.transcript
+                              ? t("notesAndTranscript")
+                              : t("notes")}
+                          </Link>
                         ) : null}
                       </div>
                       <span className="text-muted-foreground flex items-center gap-3 text-[13px]">

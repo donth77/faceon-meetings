@@ -254,19 +254,21 @@ export async function savedNotesFor(
 }
 
 /**
- * Which of these sessions have saved notes the viewer may see, and whether they're shared.
- * Previous lists only sessions the viewer hosted or was in.
+ * Which of these sessions have saved notes the viewer may see, whether they're shared,
+ * and whether their transcript was saved with them. Previous lists only sessions the
+ * viewer hosted or was in.
  */
 export async function notesInPrevious(
   sessions: Array<{ id: string; hostId: string }>,
   viewerId: string,
-): Promise<Map<string, { shared: boolean }>> {
+): Promise<Map<string, { shared: boolean; transcript: boolean }>> {
   if (sessions.length === 0) return new Map();
   const rows = await db()
     .select({
       sessionId: meetingNotes.sessionId,
       savedBy: meetingNotes.savedBy,
       shared: meetingNotes.shared,
+      transcript: sql<boolean>`${meetingNotes.transcript} is not null`,
     })
     .from(meetingNotes)
     .where(
@@ -287,7 +289,10 @@ export async function notesInPrevious(
           attended: true,
         }),
       )
-      .map((row) => [row.sessionId, { shared: row.shared }]),
+      .map((row) => [
+        row.sessionId,
+        { shared: row.shared, transcript: row.transcript },
+      ]),
   );
 }
 

@@ -139,7 +139,7 @@ When you **delete your account**, {appName} deletes your account, the meetings y
 - **Disconnect Google Calendar** in **Settings**, under **Calendar**.
 - **Turn email reminders on or off** in **Settings**, under **Notifications**, or with the link in any reminder.
 - **Delete your account** and its data at any time, under **Account**.
-- **Download a copy** of your information at any time, under **Account**: **Download your data** gives you your account, the meetings you host, who came to your meetings, the AI notes you can read and your requests to host, in formats other services can read. It's made when you ask, and nothing is kept afterwards.
+- **Download a copy** of your information at any time, under **Account**: **Download your data** gives you your account, the meetings you host, who came to your meetings, the AI notes you can read with their saved transcripts, and your requests to host, in formats other services can read. **Previous** also offers your meeting history on its own (**Download history**), and each meeting's attendance or AI notes. Downloads are made when you ask, and nothing is kept afterwards.
 - **Ask** for anything else, such as a correction, or anything about this policy: {contact} {operator} answers within a month.
 
 Depending on where you live, for example in the European Economic Area, the United Kingdom or California, you may also have the right to object to or limit how your information is used, to get it in a format you can take elsewhere, and to complain to a data protection authority. {appName} doesn't sell or share personal information, as California's privacy law defines those words.

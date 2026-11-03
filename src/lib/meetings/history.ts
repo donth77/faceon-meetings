@@ -38,8 +38,11 @@ export type PastMeeting = {
   end: string;
   minutes: number;
   attendees: Attendee[];
-  /** AI notes saved to the meeting that you may read, and whether they're shared. */
-  notes: { shared: boolean } | null;
+  /**
+   * AI notes saved to the meeting that you may read, whether they're shared, and whether
+   * their transcript was saved with them.
+   */
+  notes: { shared: boolean; transcript: boolean } | null;
 };
 
 /** A visit, with the account of whoever made it (null for guests). */

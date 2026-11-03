@@ -1213,7 +1213,7 @@
     "endsOn": "Ends {day}",
     "viewDetails": "View details",
     "scheduleAgain": "Schedule again",
-    "downloadAttendance": "Download attendance (CSV)",
+    "downloadAttendance": "Attendance (CSV)",
     "closeDetails": "Close details",
     "hostedBy": "hosted by {name}",
     "attendance": "Attendance",
@@ -1231,7 +1231,15 @@
     "notes": "AI notes",
     "notesSaved": "AI notes saved",
     "notesShared": "AI notes shared",
-    "viewNotes": "View AI notes"
+    "viewNotes": "View AI notes",
+    "downloadNotes": "AI notes (Markdown)",
+    "downloadNotesTranscript": "AI notes and transcript (Markdown)",
+    "downloadHistory": "Download history",
+    "notesAndTranscript": "AI notes and transcript",
+    "notesFor": "AI notes for {title}",
+    "notesAndTranscriptFor": "AI notes and transcript for {title}",
+    "transcriptSaved": "Transcript saved",
+    "viewNotesTranscript": "View AI notes and transcript"
   },
   "Settings": {
     "title": "Settings",
@@ -1926,6 +1934,7 @@
     "failed": "Couldn’t turn them off. Try again."
   },
   "Exports": {
+    "download": "Download",
     "failed": "Couldn’t download that. Try again.",
     "tooMany": "You’ve downloaded your data a few times just now. Try again in a few minutes.",
     "attendanceFile": "{title} {date} attendance",
@@ -1974,7 +1983,7 @@
       "hosting": "`hosting.json`: whether you host full meetings, and your requests to.",
       "meetings": "`meetings.json` and `meetings.csv`: the meetings you host, with their settings, invitees and co-hosts.",
       "previous": "`previous.json` and `previous.csv`: the meetings you hosted or joined in the last {days} days, and who came. Email addresses appear only for you, and for the people you invited to meetings you host.",
-      "notes": "`notes.json` and the `notes` folder: the AI notes you can read, as data and as Markdown.",
+      "notes": "`notes.json` and the `notes` folder: the AI notes you can read, each with its transcript where it was saved with the notes, as data and as Markdown.",
       "notIn": "What isn’t in it, and why",
       "media": "Audio, video and screen sharing: they go between the people in a meeting, and {appName} never records them.",
       "chat": "Chat messages and reactions: {appName} doesn’t store them.",
@@ -1982,6 +1991,31 @@
       "secrets": "Your password and sign-in tokens: secrets that only sign you in.",
       "older": "Meetings older than {days} days: they’re deleted by then, as the privacy policy says.",
       "times": "Times in the JSON files are in UTC. The CSV files use {zone}."
+    },
+    "notesFile": "{title} {date} AI notes",
+    "historyFile": "{appName} history {date}",
+    "history": {
+      "meetingId": "Meeting ID",
+      "started": "Started ({zone})",
+      "title": "Title",
+      "host": "Host",
+      "yourRole": "Your role",
+      "minutes": "Minutes",
+      "people": "People",
+      "roles": {
+        "host": "Host",
+        "cohost": "Co-host",
+        "participant": "Participant"
+      },
+      "readme": {
+        "title": "Your {appName} meeting history",
+        "downloaded": "Downloaded {date} for {name}.",
+        "history": "`history.csv`: one row for each meeting from the last {days} days that you hosted or joined: when it started, its title and host, your role, how long it lasted and how many people came.",
+        "attendance": "`attendance.csv`: who came to the meetings you hosted: their names, how they joined, when they first joined and last left, for how long, and how many times they joined. Email addresses appear only for you, and for the people you invited.",
+        "notes": "The `notes` folder: the AI notes you can read, each with its transcript where it was saved with the notes, as Markdown.",
+        "account": "Your account and the meetings you schedule: they’re in **Download your data**, under **Settings → Account**.",
+        "times": "Times are in {zone}."
+      }
     }
   }
 }
