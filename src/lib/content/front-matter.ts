@@ -1,3 +1,12 @@
+/**
+ * A value as written: a pair of quotes around it, as YAML wants for one that starts with
+ * `{` (a title beginning with {appName}), isn't part of it.
+ */
+function unquote(value: string): string {
+  const quoted = /^(["'])(.*)$/.exec(value);
+  return quoted ? (quoted[2] ?? "") : value;
+}
+
 /** A Markdown file's front matter (simple `key: value` lines) and its body. */
 export function parseFrontMatter(raw: string): {
   fields: Map<string, string>;
@@ -11,7 +20,7 @@ export function parseFrontMatter(raw: string): {
       const colon = line.indexOf(":");
       return [
         line.slice(0, colon).trim(),
-        line.slice(colon + 1).trim(),
+        unquote(line.slice(colon + 1).trim()),
       ] as const;
     }),
   );
