@@ -196,42 +196,25 @@ export function meetingCard(t: Translate, meeting: AddonMeeting): CardModel {
   };
 }
 
-/** FaceOn doesn't know this Google account: sign in with Google, or connect it in Settings. */
-export function signInCard(
-  t: Translate,
-  link: string,
-  site: string,
-): CardModel {
+/**
+ * This copy of the add-on isn't the person's own, connected to their FaceOn account:
+ * they add theirs in FaceOn's Settings → Calendar, and the card reloads when they're back.
+ */
+export function notConnectedCard(t: Translate, link: string): CardModel {
   return {
-    name: "signIn",
-    title: t("signIn.title"),
+    name: "notConnected",
+    title: t("notConnected.title"),
     sections: [
       {
         widgets: [
-          { kind: "text", text: escapeText(t("signIn.body")) },
+          { kind: "text", text: escapeText(t("notConnected.body")) },
           {
             kind: "buttons",
             buttons: [
               {
-                text: t("signIn.button"),
+                text: t("notConnected.button"),
                 style: "filled",
                 action: open(link, true),
-              },
-            ],
-          },
-        ],
-      },
-      {
-        header: t("signIn.emailTitle"),
-        widgets: [
-          { kind: "text", text: escapeText(t("signIn.emailBody")) },
-          {
-            kind: "buttons",
-            buttons: [
-              {
-                text: t("signIn.emailButton"),
-                style: "outlined",
-                action: open(`${site}/settings/calendar`, true),
               },
             ],
           },
@@ -241,8 +224,11 @@ export function signInCard(
   };
 }
 
-/** What went wrong, and what to do: try again, or read about limits. */
+/** What went wrong, and what to do: add the add-on, read about limits, or try again. */
 export function errorCard(t: Translate, error: AddonError): CardModel {
+  if (error.code === "NOT_CONNECTED" && error.link) {
+    return notConnectedCard(t, error.link);
+  }
   if (error.code === "PERMANENT" && error.reason === "dailyLimit") {
     return {
       name: "error",
@@ -266,37 +252,23 @@ export function errorCard(t: Translate, error: AddonError): CardModel {
       ],
     };
   }
-  const misconfigured =
-    error.code === "NOT_AVAILABLE" || error.code === "INVALID_TOKEN";
   return {
     name: "error",
     title: t("home.open"),
     sections: [
       {
         widgets: [
+          { kind: "text", text: escapeText(t("errors.unreachable")) },
           {
-            kind: "text",
-            text: escapeText(
-              t(misconfigured ? "errors.notAvailable" : "errors.unreachable"),
-            ),
+            kind: "buttons",
+            buttons: [
+              {
+                text: t("errors.tryAgain"),
+                style: "outlined",
+                action: { kind: "run", handler: "onReloadHome" },
+              },
+            ],
           },
-          ...(misconfigured
-            ? []
-            : [
-                {
-                  kind: "buttons" as const,
-                  buttons: [
-                    {
-                      text: t("errors.tryAgain"),
-                      style: "outlined" as const,
-                      action: {
-                        kind: "run" as const,
-                        handler: "onReloadHome" as const,
-                      },
-                    },
-                  ],
-                },
-              ]),
         ],
       },
     ],

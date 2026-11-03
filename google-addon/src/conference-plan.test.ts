@@ -45,15 +45,19 @@ describe("conferencePlan", () => {
   it("turns FaceOn's errors into Google's", () => {
     const plan = (error: Parameters<typeof conferencePlan>[0]) =>
       conferencePlan(error, t);
+    // Someone else's copy, or one not connected: Calendar's prompt opens Settings.
     expect(
       plan({
         ok: false,
-        error: { code: "AUTHENTICATION", link: "https://faceon.test/sign-in" },
+        error: {
+          code: "NOT_CONNECTED",
+          link: "https://faceon.test/settings/calendar",
+        },
       }),
     ).toEqual({
       kind: "error",
       type: "AUTHENTICATION",
-      authenticationUrl: "https://faceon.test/sign-in",
+      authenticationUrl: "https://faceon.test/settings/calendar",
     });
     expect(
       plan({ ok: false, error: { code: "PERMANENT", reason: "dailyLimit" } }),
@@ -82,6 +86,7 @@ describe("errorOf", () => {
       reason: "dailyLimit",
     });
     expect(errorOf(401, "<html>")).toEqual({ code: "INVALID_TOKEN" });
+    expect(errorOf(403, "<html>")).toEqual({ code: "NOT_CONNECTED" });
     expect(errorOf(502, "Bad gateway")).toEqual({ code: "TEMPORARY" });
   });
 });

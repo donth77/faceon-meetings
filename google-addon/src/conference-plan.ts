@@ -37,12 +37,14 @@ export function conferencePlan(
     };
   }
   const { code, link } = result.error;
-  if (code === "AUTHENTICATION" && link) {
+  // Not the person's own copy: Calendar's sign-in prompt opens FaceOn's Settings →
+  // Calendar, where they add theirs.
+  if (code === "NOT_CONNECTED" && link) {
     return { kind: "error", type: "AUTHENTICATION", authenticationUrl: link };
   }
   if (
     code === "PERMANENT" ||
-    code === "NOT_AVAILABLE" ||
+    code === "NOT_CONNECTED" ||
     code === "INVALID_TOKEN" ||
     code === "BAD_REQUEST" ||
     code === "NOT_FOUND"

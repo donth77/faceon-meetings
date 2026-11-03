@@ -9,14 +9,15 @@ import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
 
 import { ADDON_ERRORS } from "./api";
+import { addonAvailable } from "./available";
 import { verifyAddonToken } from "./identity";
+import { AddonNotFound, AddonRefusal, type AddonUser } from "./service";
+import { addonFor, keepAddonCurrent } from "./setup";
 import {
-  AddonNotFound,
-  AddonRefusal,
-  userForGoogleSub,
-  type AddonUser,
-} from "./service";
-import type { AddonErrorBody, AddonErrorCode } from "./types";
+  ADDON_HEADERS,
+  type AddonErrorBody,
+  type AddonErrorCode,
+} from "./types";
 
 /** A request the add-on API turns down, with its error. */
 export class AddonFailure extends Error {
@@ -53,16 +54,16 @@ function hashedSub(sub: string): string {
 
 /**
  * Runs an add-on API request. Requests come from Google's servers, so there's no
- * Origin to check: the Google identity token is what authenticates them. Each is
- * limited by Google account and, more loosely, by address (Google's servers carry
- * everyone's), and bad tokens are counted. Errors come back as AddonErrorBody.
+ * Origin to check: the Google identity token is what authenticates them, and it must
+ * come from someone's own copy of the add-on, used from their Google account (setup.ts,
+ * addonFor). Each is limited by Google account and, more loosely, by address (Google's
+ * servers carry everyone's), and bad tokens are counted. A copy running an older build
+ * is updated after the answer. Errors come back as AddonErrorBody.
  */
 export async function handleAddonRequest(
   request: Request,
   handler: (host: AddonUser) => Promise<Response>,
 ): Promise<Response> {
-  const audience = serverEnv().GOOGLE_ADDON_CLIENT_ID;
-  if (!audience) return addonError("NOT_AVAILABLE");
   try {
     const ip = hashedClientIp(request);
     const badTokens = { key: `addon:bad:${ip}`, max: 40 };
@@ -73,7 +74,7 @@ export async function handleAddonRequest(
     const token = /^Bearer (\S+)$/.exec(
       request.headers.get("authorization") ?? "",
     )?.[1];
-    const identity = token ? await verifyAddonToken(token, audience) : null;
+    const identity = token ? await verifyAddonToken(token) : null;
     if (!identity) {
       await recordAttempt([badTokens]);
       return addonError("INVALID_TOKEN");
@@ -81,13 +82,16 @@ export async function handleAddonRequest(
     const byAccount = { key: `addon:sub:${hashedSub(identity.sub)}`, max: 120 };
     if (await isLimited([byAccount])) return addonError("RATE_LIMITED");
     await recordAttempt([byAccount, fromAddress]);
-    const host = await userForGoogleSub(identity.sub);
-    if (!host) {
-      return addonError("AUTHENTICATION", {
-        link: `${siteUrl()}/sign-in?next=${encodeURIComponent("/settings/calendar")}`,
+    const addon = addonAvailable()
+      ? await addonFor(identity, request.headers.get(ADDON_HEADERS.connect))
+      : null;
+    if (!addon) {
+      return addonError("NOT_CONNECTED", {
+        link: `${siteUrl()}/settings/calendar`,
       });
     }
-    return await handler(host);
+    await keepAddonCurrent(addon, request.headers.get(ADDON_HEADERS.version));
+    return await handler(addon.host);
   } catch (error) {
     if (error instanceof AddonFailure) return addonError(error.code);
     if (error instanceof AddonNotFound) return addonError("NOT_FOUND");

@@ -18,7 +18,11 @@ import {
 } from "@/lib/email/templates";
 import { publicEnv } from "@/lib/env";
 import { refreshGoogleToken } from "@/lib/google-calendar/refresh";
-import { hasCalendarScope } from "@/lib/google-calendar/shared";
+import {
+  GOOGLE_SCRIPT_SCOPE,
+  hasCalendarScope,
+  hasScope,
+} from "@/lib/google-calendar/shared";
 import { forgetApprovedHost } from "@/lib/hosting/allowlist";
 import { ACCOUNT_EMAIL_ENDPOINTS } from "@/lib/human-check";
 import { humanCheckSecret } from "@/lib/human-check/verify";
@@ -35,12 +39,29 @@ const productionUrl = siteUrl();
 /** Cloudflare Turnstile's secret, where this copy checks for a person (lib/human-check). */
 const turnstileSecret = humanCheckSecret();
 
-/** Calendar sync reads its tokens through `auth`, so the hooks load it when they run. */
+/**
+ * Calendar sync and the add-on read their tokens through `auth`, so the hooks load them
+ * when they run.
+ */
 const googleCalendar = () => import("@/lib/google-calendar/connection");
-const revokeGoogleCalendar = async (userId: string) =>
-  (await googleCalendar()).revokeGoogleCalendar(userId);
-const disconnectGoogleCalendar = async (userId: string) =>
-  (await googleCalendar()).disconnectGoogleCalendar(userId);
+const revokeGoogleAccess = async (userId: string) =>
+  (await googleCalendar()).revokeGoogleAccess(userId);
+/**
+ * Google is removed as a way to sign in: FaceOn's tokens go with it, so it revokes its
+ * access, stops syncing the calendar, and forgets an add-on that account had.
+ */
+const googleUnlinked = async (removed: {
+  userId: string;
+  accountId: string;
+  scope?: string | null;
+}) => {
+  const calendar = await googleCalendar();
+  await calendar.revokeGoogleAccess(removed.userId);
+  if (hasCalendarScope(removed.scope)) {
+    await calendar.stopCalendarSync(removed.userId);
+  }
+  await (await import("@/lib/addon/google/setup")).forgetAddonOf(removed);
+};
 const cancelUpcomingEvents = async (userId: string) =>
   (await import("@/lib/google-calendar/sync")).cancelUpcomingEvents(userId);
 
@@ -133,7 +154,7 @@ export const auth = betterAuth({
       beforeDelete: async (deleted) => {
         await endHostedCalls(deleted.id);
         await cancelUpcomingEvents(deleted.id);
-        await revokeGoogleCalendar(deleted.id);
+        await revokeGoogleAccess(deleted.id);
       },
       afterDelete: async (deleted) => {
         await forgetMediaUser(deleted.id);
@@ -181,13 +202,15 @@ export const auth = betterAuth({
         },
       },
       delete: {
-        // Removing Google as a sign-in method also disconnects Google Calendar.
+        // Removing Google as a sign-in method also disconnects Google Calendar, and
+        // forgets an add-on that Google account had.
         before: async (removed) => {
+          if (removed.providerId !== "google") return;
           if (
-            removed.providerId === "google" &&
-            hasCalendarScope(removed.scope)
+            hasCalendarScope(removed.scope) ||
+            hasScope(removed.scope, GOOGLE_SCRIPT_SCOPE)
           ) {
-            await disconnectGoogleCalendar(removed.userId);
+            await googleUnlinked(removed);
           }
         },
       },

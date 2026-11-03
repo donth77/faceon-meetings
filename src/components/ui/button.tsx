@@ -76,6 +76,7 @@ function LinkButton({
   size = "default",
   ...props
 }: Omit<LinkPrimitiveProps, "className"> &
+  React.RefAttributes<HTMLAnchorElement> &
   VariantProps<typeof buttonVariants> & {
     className?: string;
   }) {

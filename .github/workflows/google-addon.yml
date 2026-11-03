@@ -1,8 +1,8 @@
 name: Google Workspace add-on
 
-# A google-addon-v* tag builds the add-on for this copy, attaches it to the tag's GitHub
-# release, and, once the CLASP_* secrets exist, pushes it to the Apps Script project as
-# a new version of the add-on's deployment (DEPLOY.md: The Google Workspace add-on).
+# A google-addon-v* tag tests the add-on and attaches a developer's build of it to the
+# tag's GitHub release. People get their own copy from FaceOn itself (Settings →
+# Calendar), which keeps it up to date (google-addon/SETUP.md).
 on:
   push:
     tags: ["google-addon-v*"]
@@ -17,7 +17,7 @@ jobs:
     env:
       FACEON_URL: ${{ vars.FACEON_URL || 'https://joinfaceon.app' }}
       NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME || 'FaceOn' }}
-      FACEON_CONFERENCE_LOGO_URL: ${{ vars.FACEON_CONFERENCE_LOGO_URL }}
+      GOOGLE_ADDON_CONFERENCE_LOGO_URL: ${{ vars.GOOGLE_ADDON_CONFERENCE_LOGO_URL }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
@@ -36,22 +36,5 @@ jobs:
           (cd google-addon/dist && zip -q "../../$GITHUB_REF_NAME.zip" Code.js appsscript.json)
           gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 ||
             gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" \
-              --notes "The Google Workspace add-on, built for $FACEON_URL: push Code.js and appsscript.json to your own Apps Script project with clasp (DEPLOY.md)."
+              --notes "The Google Workspace add-on, a developer's build for $FACEON_URL (google-addon/SETUP.md). People add their own copy from FaceOn's Settings → Calendar."
           gh release upload "$GITHUB_REF_NAME" "$GITHUB_REF_NAME.zip" --clobber
-
-      - name: Push it as a new version of the add-on's deployment
-        env:
-          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          CLASP_SCRIPT_ID: ${{ secrets.CLASP_SCRIPT_ID }}
-          CLASP_DEPLOYMENT_ID: ${{ secrets.CLASP_DEPLOYMENT_ID }}
-        run: |
-          if [ -z "$CLASPRC_JSON" ] || [ -z "$CLASP_SCRIPT_ID" ] || [ -z "$CLASP_DEPLOYMENT_ID" ]; then
-            echo "::notice title=Google Workspace add-on::Built and attached, not pushed. Set the CLASPRC_JSON, CLASP_SCRIPT_ID and CLASP_DEPLOYMENT_ID secrets to push releases to Apps Script from here."
-            exit 0
-          fi
-          umask 077
-          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
-          printf '{"scriptId":"%s","rootDir":"dist"}' "$CLASP_SCRIPT_ID" > google-addon/.clasp.json
-          cd google-addon
-          pnpm dlx @google/clasp@3.4.1 push --force
-          pnpm dlx @google/clasp@3.4.1 create-deployment --deploymentId "$CLASP_DEPLOYMENT_ID" --description "$GITHUB_REF_NAME"

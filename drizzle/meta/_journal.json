@@ -148,6 +148,13 @@
       "when": 1793661158102,
       "tag": "0020_email_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793678484459,
+      "tag": "0021_google_addon",
+      "breakpoints": true
     }
   ]
 }

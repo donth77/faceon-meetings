@@ -1,11 +1,5 @@
 import { api } from "./api";
-import {
-  errorCard,
-  homeCard,
-  meetingCard,
-  meetingIdFrom,
-  signInCard,
-} from "./cards";
+import { errorCard, homeCard, meetingCard, meetingIdFrom } from "./cards";
 import { FACEON_URL } from "./config";
 import { inputOf, localeOf, textFor, type AddonEvent } from "./i18n";
 import { notify, openUrl, pushCard, render, updateCard } from "./render";
@@ -31,9 +25,6 @@ function homeModel(event: AddonEvent) {
     event.commonEventObject?.timeZone?.id,
   );
   if (result.ok) return homeCard(t, result.data, FACEON_URL);
-  if (result.error.code === "AUTHENTICATION" && result.error.link) {
-    return signInCard(t, result.error.link, FACEON_URL);
-  }
   return errorCard(t, result.error);
 }
 

@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile --filter=!@faceon/desktop",
-  "ignoreCommand": "case \"$VERCEL_GIT_COMMIT_MESSAGE\" in Redeploy:*) exit 1 ;; esac; git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)google-addon' ':(exclude)desktop'",
+  "ignoreCommand": "case \"$VERCEL_GIT_COMMIT_MESSAGE\" in Redeploy:*) exit 1 ;; esac; git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)desktop'",
   "crons": [
     {
       "path": "/api/cron/sweep",

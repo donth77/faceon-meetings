@@ -1,9 +1,29 @@
 # Add-on QA checklist
 
-Google's own pages can't be driven by tests, so check these by hand before each
-`google-addon-v*` release: on a personal Google account, and on a Google Workspace
-account once there is one. The unit tests cover the cards, the conference data, reading
-Calendar's changes and the API's checks.
+Google's own pages can't be driven by tests, so check these by hand before a change to
+the add-on goes out (FaceOn updates everyone's copy the next time they use it): on a
+personal Google account, and on a Google Workspace account once there is one. The unit
+tests cover the cards, the conference data, reading Calendar's changes, the API's checks,
+connecting a copy and the Apps Script API calls; the end-to-end tests cover Settings →
+Calendar.
+
+## Adding it (Settings → Calendar)
+
+- [ ] **Add FaceOn**: Google's consent screen asks to create and update Apps Script
+      projects; back in Settings, **Open in Apps Script** and the install steps.
+- [ ] In Apps Script: **Deploy → Test deployments → Install**. The first use in Calendar
+      asks to allow it, with Google's "isn't verified" warning, and **Advanced → Go to
+      FaceOn** gets through.
+- [ ] Back in Settings (switch to its tab): "FaceOn is in your Google Calendar and Gmail".
+- [ ] With your Apps Script API setting off (script.google.com/home/usersettings): Settings
+      says so, links there, and **Try again** works once it's on.
+- [ ] Declining on Google's screen: Settings says it wasn't added, with **Try again**.
+- [ ] After a change to the add-on is deployed: the next use updates the copy (the
+      project's code in Apps Script changes).
+- [ ] **Remove**: Settings says how to uninstall it in Apps Script, and the copy's side
+      panel then sends you to Settings to add it again.
+- [ ] From the desktop app: **Add FaceOn** finishes in the browser, and the app's
+      Settings shows it added.
 
 ## Calendar: FaceOn meeting
 
@@ -40,9 +60,8 @@ Calendar's changes and the API's checks.
 - [ ] **Your personal room**: its ID, Join, and **Show invitation**.
 - [ ] **Settings** opens FaceOn's Settings → Calendar; Calendar's own settings → FaceOn
       opens it too.
-- [ ] A Google account FaceOn doesn't know: **Sign in to FaceOn**, and "Signed up with
-      email?" with **Open Settings**. After signing in (or connecting Google Calendar),
-      the sidebar reloads signed in.
+- [ ] Your copy used from another Google account (shared with it in Apps Script): "FaceOn
+      isn't connected", with **Open Settings**, and Calendar's error leads there too.
 - [ ] FaceOn unreachable: "can't be reached right now" with **Try again**.
 
 ## Gmail: compose
@@ -59,4 +78,4 @@ Calendar's changes and the API's checks.
 ## A Google Workspace account
 
 - [ ] Everything above.
-- [ ] An admin installs it for the organization (a private listing, or the public one).
+- [ ] With Apps Script turned off by the organization's admin: Settings says so plainly.

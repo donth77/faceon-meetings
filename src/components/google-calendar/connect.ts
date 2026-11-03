@@ -2,13 +2,15 @@
 
 import { z } from "zod";
 
+import type { AddonReply, AddonSetup } from "@/lib/addon/google/setup-shared";
 import { authClient, linkSocial } from "@/lib/auth/client";
 import type { FaceonDesktop } from "@/lib/desktop/bridge";
 import { desktopBridge } from "@/lib/desktop/use-desktop";
 import {
-  GOOGLE_CALENDAR_CONSENT,
   GOOGLE_CALENDAR_SCOPE,
+  GOOGLE_OFFLINE_CONSENT,
   type CalendarConnection,
+  type GoogleScope,
 } from "@/lib/google-calendar/shared";
 
 /** Settings → Calendar, where Google sends people back after its consent screen. */
@@ -39,43 +41,74 @@ let waitingForBrowser: Promise<ConnectReport | null> | null = null;
 export function connectInBrowser(): Promise<ConnectReport | null> | null {
   const desktop = desktopBridge();
   if (!desktop) return null;
-  void openInBrowser(desktop);
-  waitingForBrowser ??= waitForConnection().finally(() => {
+  void openInBrowser(desktop, DESKTOP_CALENDAR_ROUTE);
+  waitingForBrowser ??= waitFor(currentConnection, (connection) =>
+    connection.status === "connected" ? { connection, error: null } : null,
+  ).finally(() => {
     waitingForBrowser = null;
   });
   return waitingForBrowser;
 }
 
-/** The browser's page, for this account: it says so when the browser's is another. */
-async function openInBrowser(desktop: FaceonDesktop) {
-  const { data } = await authClient.getSession().catch(() => ({ data: null }));
-  const account = data ? `?for=${encodeURIComponent(data.user.id)}` : "";
-  desktop.openInBrowser(`${DESKTOP_CALENDAR_ROUTE}${account}`);
+/**
+ * Adding FaceOn to Google Calendar and Gmail from the desktop app, or updating it: the
+ * same way, through the browser, where Settings → Calendar does it after Google's
+ * consent. Waits until the add-on shows added and up to date (null after a while).
+ * Null outside the app.
+ */
+export function addAddonInBrowser(
+  action: "add" | "update",
+): Promise<AddonSetup | null> | null {
+  const desktop = desktopBridge();
+  if (!desktop) return null;
+  void openInBrowser(desktop, `${DESKTOP_CALENDAR_ROUTE}?addon=${action}`);
+  return waitFor(currentAddon, (addon) =>
+    (addon.status === "created" || addon.status === "connected") &&
+    !addon.needsUpdate
+      ? addon
+      : null,
+  );
 }
 
-/** Looks every few seconds, and when the window comes back to the front. */
-function waitForConnection(): Promise<ConnectReport | null> {
+/** The browser's page, for this account: it says so when the browser's is another. */
+async function openInBrowser(desktop: FaceonDesktop, path: string) {
+  const { data } = await authClient.getSession().catch(() => ({ data: null }));
+  const account = data
+    ? `${path.includes("?") ? "&" : "?"}for=${encodeURIComponent(data.user.id)}`
+    : "";
+  desktop.openInBrowser(`${path}${account}`);
+}
+
+/**
+ * Looks every few seconds, and when the window comes back to the front, until `done`
+ * makes something of what it found (null after a while).
+ */
+function waitFor<T, R>(
+  look: () => Promise<T | null>,
+  done: (value: T) => R | null,
+): Promise<R | null> {
   return new Promise((resolve) => {
     const since = Date.now();
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const finish = (report: ConnectReport | null) => {
+    const finish = (result: R | null) => {
       clearTimeout(timer);
-      window.removeEventListener("focus", look);
-      resolve(report);
+      window.removeEventListener("focus", again);
+      resolve(result);
     };
-    async function look() {
+    async function again() {
       clearTimeout(timer);
-      const connection = await currentConnection();
-      if (connection?.status === "connected") {
-        finish({ connection, error: null });
+      const value = await look();
+      const result = value === null ? null : done(value);
+      if (result !== null) {
+        finish(result);
       } else if (Date.now() - since >= WAIT_MS) {
         finish(null);
       } else {
-        timer = setTimeout(look, POLL_MS);
+        timer = setTimeout(again, POLL_MS);
       }
     }
-    window.addEventListener("focus", look);
-    timer = setTimeout(look, POLL_MS);
+    window.addEventListener("focus", again);
+    timer = setTimeout(again, POLL_MS);
   });
 }
 
@@ -89,6 +122,59 @@ async function currentConnection(): Promise<CalendarConnection | null> {
   } catch {
     return null;
   }
+}
+
+const AddonSetupReply = z.object({
+  addon: z.discriminatedUnion("status", [
+    z.object({ status: z.literal("unavailable") }),
+    z.object({ status: z.literal("none"), granted: z.boolean() }),
+    z.object({
+      status: z.enum(["created", "connected"]),
+      scriptId: z.string(),
+      needsUpdate: z.boolean(),
+    }),
+  ]),
+  problem: z
+    .enum([
+      "consent",
+      "userApiOff",
+      "serviceDisabled",
+      "blocked",
+      "missing",
+      "failed",
+    ])
+    .optional(),
+  consoleUrl: z.url().optional(),
+}) satisfies z.ZodType<AddonReply>;
+
+/**
+ * Asks FaceOn where the person's add-on stands (GET), or adds, updates (POST) or removes
+ * it (DELETE). Null when FaceOn couldn't answer.
+ */
+export async function addonRequest(
+  method: "GET" | "POST" | "DELETE",
+  action?: "add" | "update",
+): Promise<AddonReply | null> {
+  try {
+    const response = await fetch("/api/integrations/google-addon", {
+      method,
+      cache: "no-store",
+      ...(action
+        ? {
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action }),
+          }
+        : {}),
+    });
+    if (!response.ok) return null;
+    return AddonSetupReply.parse(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+async function currentAddon(): Promise<AddonSetup | null> {
+  return (await addonRequest("GET"))?.addon ?? null;
 }
 
 /** How the consent window tells the page that opened it how connecting went. */
@@ -108,11 +194,12 @@ function startConsent(options: {
   back: string;
   loginHint?: string;
   inPopup: boolean;
+  scope?: GoogleScope;
 }) {
   return linkSocial({
     provider: "google",
-    scopes: [GOOGLE_CALENDAR_SCOPE],
-    additionalParams: { ...GOOGLE_CALENDAR_CONSENT },
+    scopes: [options.scope ?? GOOGLE_CALENDAR_SCOPE],
+    additionalParams: { ...GOOGLE_OFFLINE_CONSENT },
     loginHint: options.loginHint,
     callbackURL: options.back,
     errorCallbackURL: options.back,
@@ -121,12 +208,14 @@ function startConsent(options: {
 }
 
 /**
- * Connect (or reconnect) Google Calendar from Settings: this page goes to Google's
- * consent screen and comes back to `back`. False if it couldn't start.
+ * Connect (or reconnect) Google Calendar from Settings, or give FaceOn another `scope`
+ * (the add-on's): this page goes to Google's consent screen and comes back to `back`.
+ * False if it couldn't start.
  */
 export async function connectInPage(options: {
   back: string;
   loginHint?: string;
+  scope?: GoogleScope;
 }): Promise<boolean> {
   const { error } = await startConsent({ ...options, inPopup: false });
   return !error;

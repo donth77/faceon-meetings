@@ -45,7 +45,7 @@
       },
       "googleWorkspace": {
         "title": "In Google Calendar and Gmail",
-        "short": "Google Calendar",
+        "short": "Calendar and Gmail",
         "body": "Add a meeting to any event or email, right from Google’s own menus."
       }
     },
@@ -1350,10 +1350,7 @@
       "disconnectFailed": "Couldn’t disconnect Google Calendar. Try again.",
       "otherCalendars": "Each meeting’s page also has buttons to add it to Outlook or any calendar app.",
       "popupConnected": "Google Calendar is connected. You can close this window.",
-      "popupNotConnected": "Google Calendar wasn’t connected. You can close this window and try again.",
-      "addonTitle": "{appName} in Google Calendar and Gmail",
-      "addonBody": "Add a {appName} meeting to any event from Google Calendar’s Add video conferencing, and insert one into an email in Gmail. On a computer, in your browser.",
-      "addonGet": "Get {appName} for Google Workspace"
+      "popupNotConnected": "Google Calendar wasn’t connected. You can close this window and try again."
     },
     "effects": {
       "title": "Backgrounds and effects",
@@ -1807,20 +1804,16 @@
       "invitation": "Invitation",
       "invitationHint": "Select the text to copy it."
     },
-    "signIn": {
-      "title": "Sign in to {appName}",
-      "body": "{appName} doesn’t know this Google account yet. Sign in to {appName} with Google, then come back here.",
-      "button": "Sign in to {appName}",
-      "emailTitle": "Signed up with email?",
-      "emailBody": "Connect Google Calendar in {appName}’s Settings, with this Google account.",
-      "emailButton": "Open Settings"
+    "notConnected": {
+      "title": "{appName} isn’t connected",
+      "body": "This add-on isn’t connected to your {appName} account. Add your own from {appName}’s Settings, under Calendar, signed in with this Google account.",
+      "button": "Open Settings"
     },
     "errors": {
       "unreachable": "{appName} can’t be reached right now.",
       "tryAgain": "Try again",
       "dailyLimit": "You’ve made as many meetings as {appName} allows in a day. Try again tomorrow.",
-      "limits": "About meeting limits",
-      "notAvailable": "{appName} isn’t set up for Google Calendar and Gmail on this site."
+      "limits": "About meeting limits"
     },
     "compose": {
       "title": "Insert a {appName} meeting",
@@ -1829,6 +1822,52 @@
       "personalRoom": "My personal room",
       "meetingTitle": "Title (optional)",
       "insert": "Insert"
+    }
+  },
+  "AddonSetup": {
+    "title": "{appName} in Google Calendar and Gmail",
+    "addTitle": "Add {appName} to Google Calendar and Gmail",
+    "addBody": "Choose {appName} meeting when you add video conferencing to an event, and start a meeting or put one in an email from a side panel in Calendar and Gmail. On a computer, in your browser.",
+    "addHelp": "{appName} makes you your own copy of its add-on, in your Google account. Google asks you to allow that first.",
+    "add": "Add {appName}",
+    "adding": "Adding {appName} to your Google account…",
+    "inBrowser": "Finish in your browser. It shows here once it’s done.",
+    "createdTitle": "One more step: install it in Google",
+    "createdIntro": "Your copy of the {appName} add-on is in your Google account. Install it once:",
+    "stepOpen": "Select Open in Apps Script.",
+    "stepInstall": "In Apps Script, select Deploy, then Test deployments, then Install.",
+    "stepUse": "Open Google Calendar. The first time you use {appName} there, Google asks you to allow it and warns that it isn’t verified: that’s because it’s your own copy, not one from Google’s Marketplace. Select Advanced, then Go to {appName}, then Allow.",
+    "whyInstall": "Google installs an add-on that isn’t in its Marketplace only this way.",
+    "openScript": "Open in Apps Script",
+    "connectedTitle": "{appName} is in your Google Calendar and Gmail",
+    "connectedBody": "Choose {appName} meeting under Add video conferencing, or open {appName} from the side panel in Calendar and Gmail. It keeps itself up to date.",
+    "openCalendar": "Open Google Calendar",
+    "updateTitle": "Update your add-on",
+    "updateBody": "There’s a newer version of the add-on, and Google needs you to allow {appName} again to put it in your copy.",
+    "update": "Update the add-on",
+    "updated": "Add-on updated",
+    "remove": "Remove",
+    "removeLabel": "Remove {appName} from Google Calendar and Gmail",
+    "removeTitle": "Remove {appName} from Google Calendar and Gmail?",
+    "removeBody": "{appName} stops answering your add-on. To take it out of Google too, uninstall it in Apps Script afterwards.",
+    "cancel": "Cancel",
+    "removed": "{appName} removed from Google Calendar and Gmail",
+    "removedNotice": "To take it out of Google too, open it in Apps Script and select Deploy, then Test deployments, then Uninstall. You can then delete the project from your Apps Script projects.",
+    "removeFailed": "Couldn’t remove it. Try again.",
+    "tryAgain": "Try again",
+    "openUserSettings": "Open Apps Script settings",
+    "turnOnApi": "Turn it on in Google Cloud",
+    "desktopTitle": "Add {appName} to Google Calendar and Gmail",
+    "desktopSignIn": "Sign in to {appName} in this browser to add it to Google Calendar and Gmail.",
+    "desktopUnavailable": "This copy of {appName} doesn’t offer its add-on for Google Calendar and Gmail.",
+    "problems": {
+      "consent": "{appName} wasn’t added, because Google didn’t give it permission. Try again, and allow it on Google’s screen.",
+      "denied": "{appName} wasn’t added to Google Calendar and Gmail.",
+      "userApiOff": "First turn on the Apps Script API for your Google account: in Apps Script’s settings, switch Google Apps Script API on. Then try again.",
+      "serviceDisabled": "{appName} can’t add it yet: whoever runs {appName} needs to turn on the Apps Script API in its Google Cloud project.",
+      "blocked": "Google didn’t allow it. If an organization manages your Google account, its admin may not allow Apps Script.",
+      "missing": "Your add-on isn’t in Apps Script any more. Remove it here, then add it again.",
+      "failed": "That didn’t work. Try again."
     }
   },
   "DesktopSignIn": {

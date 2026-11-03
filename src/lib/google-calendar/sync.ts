@@ -18,7 +18,7 @@ import { meetingPath } from "@/lib/routes";
 import { siteUrl } from "@/lib/site";
 
 import { calendarApi, GoogleCalendarError } from "./api";
-import { calendarAccess, forgetCalendarTokens } from "./connection";
+import { calendarAccess, forgetGoogleTokens } from "./connection";
 import {
   cancellationOnLeaving,
   desiredEvents,
@@ -151,7 +151,7 @@ export async function syncGoogleCalendar(
       error instanceof GoogleCalendarError &&
       (error.problem === "auth" || error.problem === "scope")
     ) {
-      if (access.ok) await forgetCalendarTokens(access.accountId);
+      if (access.ok) await forgetGoogleTokens(access.accountId);
       return "reconnect";
     }
     logFailure(error);

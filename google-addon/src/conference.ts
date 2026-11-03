@@ -32,13 +32,6 @@ export function onCreateConference(
     locale: localeOf(),
     ...(timing ? { event: timing } : {}),
   });
-  if (
-    !result.ok &&
-    ["NOT_AVAILABLE", "INVALID_TOKEN"].includes(result.error.code)
-  ) {
-    // FaceOn doesn't accept this add-on's tokens yet: log what it needs to (SPIKE.md).
-    logIdentityClaims();
-  }
   if (result.ok) {
     rememberEvent(eventId, result.data.code);
     try {
@@ -93,19 +86,4 @@ function build(
     )
     .setNotes(plan.notes)
     .build();
-}
-
-/**
- * The identity token's audience and subject (not the token), in the project's
- * executions: `aud` is what FaceOn's GOOGLE_ADDON_CLIENT_ID must be.
- */
-function logIdentityClaims(): void {
-  const payload = ScriptApp.getIdentityToken().split(".")[1];
-  if (!payload) return;
-  const claims = JSON.parse(
-    Utilities.newBlob(Utilities.base64DecodeWebSafe(payload)).getDataAsString(),
-  ) as Record<string, unknown>;
-  console.log(
-    JSON.stringify({ aud: claims.aud, sub: claims.sub, iss: claims.iss }),
-  );
 }

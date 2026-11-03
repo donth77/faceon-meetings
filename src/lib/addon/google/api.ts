@@ -58,9 +58,8 @@ export const HomeQuery = z.object({
 
 /** Each error's HTTP status. */
 export const ADDON_ERRORS: Record<AddonErrorCode, number> = {
-  NOT_AVAILABLE: 404,
   INVALID_TOKEN: 401,
-  AUTHENTICATION: 403,
+  NOT_CONNECTED: 403,
   RATE_LIMITED: 429,
   BAD_REQUEST: 400,
   NOT_FOUND: 404,

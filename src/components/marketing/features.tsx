@@ -9,9 +9,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
+import { addonAvailable } from "@/lib/addon/google/available";
 import { latestDesktopRelease } from "@/lib/desktop/releases";
-import { publicEnv } from "@/lib/env";
 
 type Feature = {
   key:
@@ -23,13 +25,15 @@ type Feature = {
     | "openSource"
     | "googleWorkspace";
   icon: LucideIcon;
+  /** Where to read more: its Help article. */
+  href?: string;
 };
 
 /**
  * The desktop app once it's out (lib/desktop/releases.ts); until then, the languages.
- * The Google Workspace add-on once it's listed (NEXT_PUBLIC_GOOGLE_ADDON_URL).
+ * Google Calendar and Gmail where this copy offers the add-on, with how to add it.
  */
-const features = (desktopApp: boolean): Feature[] => [
+const features = (desktopApp: boolean, addon: boolean): Feature[] => [
   { key: "anyDevice", icon: TabletSmartphone },
   { key: "screenShare", icon: MonitorUp },
   { key: "safety", icon: DoorOpen },
@@ -37,10 +41,29 @@ const features = (desktopApp: boolean): Feature[] => [
     ? { key: "desktopApp", icon: Monitor }
     : { key: "languages", icon: Languages },
   { key: "openSource", icon: CodeXml },
-  ...(publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL
-    ? [{ key: "googleWorkspace" as const, icon: CalendarPlus }]
+  ...(addon
+    ? [
+        {
+          key: "googleWorkspace" as const,
+          icon: CalendarPlus,
+          href: "/help/google-workspace",
+        },
+      ]
     : []),
 ];
+
+/** A feature's name, as a link to its Help article when it has one. */
+function Title({ href, children }: { href?: string; children: ReactNode }) {
+  if (!href) return children;
+  return (
+    <Link
+      href={href}
+      className="focus-visible:focus-ring rounded-[2px] underline-offset-4 outline-hidden hover:underline"
+    >
+      {children}
+    </Link>
+  );
+}
 
 /** What FaceOn does, below the join card: titles only on phones, with a line each above. */
 export async function Features() {
@@ -56,25 +79,27 @@ export async function Features() {
         {t("featuresTitle")}
       </h2>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:gap-x-10 sm:gap-y-7 lg:grid-cols-3">
-        {features(desktopApp).map(({ key, icon: Icon }) => (
-          <li
-            key={key}
-            className="flex min-w-0 items-center gap-2.5 sm:flex-col sm:items-start sm:gap-2"
-          >
-            <span className="bg-secondary text-primary flex size-8 shrink-0 items-center justify-center rounded-[10px] sm:size-10 sm:rounded-xl">
-              <Icon className="size-[18px] sm:size-5" aria-hidden="true" />
-            </span>
-            <span className="text-sm leading-tight font-semibold sm:hidden">
-              {t(`features.${key}.short`)}
-            </span>
-            <span className="hidden text-base font-bold sm:block">
-              {t(`features.${key}.title`)}
-            </span>
-            <span className="text-muted-foreground hidden text-sm leading-[1.45] sm:block">
-              {t(`features.${key}.body`)}
-            </span>
-          </li>
-        ))}
+        {features(desktopApp, addonAvailable()).map(
+          ({ key, icon: Icon, href }) => (
+            <li
+              key={key}
+              className="flex min-w-0 items-center gap-2.5 sm:flex-col sm:items-start sm:gap-2"
+            >
+              <span className="bg-secondary text-primary flex size-8 shrink-0 items-center justify-center rounded-[10px] sm:size-10 sm:rounded-xl">
+                <Icon className="size-[18px] sm:size-5" aria-hidden="true" />
+              </span>
+              <span className="text-sm leading-tight font-semibold sm:hidden">
+                <Title href={href}>{t(`features.${key}.short`)}</Title>
+              </span>
+              <span className="hidden text-base font-bold sm:block">
+                <Title href={href}>{t(`features.${key}.title`)}</Title>
+              </span>
+              <span className="text-muted-foreground hidden text-sm leading-[1.45] sm:block">
+                {t(`features.${key}.body`)}
+              </span>
+            </li>
+          ),
+        )}
       </ul>
     </section>
   );

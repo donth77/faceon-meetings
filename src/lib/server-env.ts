@@ -69,13 +69,19 @@ const ServerEnv = z.object({
   RESEND_API_KEY: z.string().optional(),
   /** The sender, e.g. "FaceOn <no-reply@mail.example.com>", on a domain verified in Resend. */
   EMAIL_FROM: z.string().optional(),
-  /**
-   * The Google Workspace add-on's OAuth client ID: the `aud` of the identity tokens it
-   * sends. Unset, the add-on's API (/api/addon/google/*) is off.
-   */
-  GOOGLE_ADDON_CLIENT_ID: z.string().min(1).optional(),
   /** Google Calendar sync for hosts who connect it ("on" or "off"); off leaves the calendar links. */
   GOOGLE_CALENDAR_SYNC: z.enum(["on", "off"]).default("on"),
+  /**
+   * FaceOn in Google Calendar and Gmail: the add-on people put in their own Google
+   * account from Settings → Calendar ("on" or "off"). It needs Google sign-in and the
+   * Apps Script API (DEPLOY.md).
+   */
+  GOOGLE_ADDON: z.enum(["on", "off"]).default("on"),
+  /**
+   * The logo Calendar shows beside a meeting from the add-on. Google shows one only
+   * from its own servers; a copy named FaceOn has FaceOn's already.
+   */
+  GOOGLE_ADDON_CONFERENCE_LOGO_URL: z.url().optional(),
   /**
    * Wake a sleeping database as someone shows intent: "auto" (the default) for Neon only,
    * "on" or "off" (lib/db/wake-rule.ts).

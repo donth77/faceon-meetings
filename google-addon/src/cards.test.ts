@@ -8,7 +8,7 @@ import {
   homeCard,
   meetingCard,
   meetingIdFrom,
-  signInCard,
+  notConnectedCard,
   type CardModel,
   type Widget,
 } from "./cards";
@@ -37,20 +37,16 @@ const t = translator(
         invitation: "Invitation",
         invitationHint: "Select",
       },
-      signIn: {
-        title: "Sign in to {appName}",
-        body: "Body",
-        button: "Sign in",
-        emailTitle: "Email?",
-        emailBody: "Connect",
-        emailButton: "Open Settings",
+      notConnected: {
+        title: "{appName} isn’t connected",
+        body: "Add yours",
+        button: "Open Settings",
       },
       errors: {
         unreachable: "Unreachable",
         tryAgain: "Try again",
         dailyLimit: "Limit",
         limits: "About limits",
-        notAvailable: "Not set up",
       },
       compose: {
         title: "Insert",
@@ -151,24 +147,17 @@ describe("the other cards", () => {
     });
   });
 
-  it("send people who aren't known to sign in, coming back to a reloaded card", () => {
-    const card = signInCard(
-      t,
-      "https://faceon.test/sign-in?next=x",
-      "https://faceon.test",
-    );
+  it("send people whose copy isn't connected to add their own, coming back to a reloaded card", () => {
+    const settings = "https://faceon.test/settings/calendar";
+    const card = notConnectedCard(t, settings);
+    expect(card.title).toBe("FaceOn isn’t connected");
     expect(buttons(card).map((b) => b.action)).toEqual([
-      {
-        kind: "open",
-        url: "https://faceon.test/sign-in?next=x",
-        reloadOnClose: true,
-      },
-      {
-        kind: "open",
-        url: "https://faceon.test/settings/calendar",
-        reloadOnClose: true,
-      },
+      { kind: "open", url: settings, reloadOnClose: true },
     ]);
+    // Any card that meets the error says the same.
+    expect(errorCard(t, { code: "NOT_CONNECTED", link: settings })).toEqual(
+      card,
+    );
   });
 
   it("explain errors: limits with a link, a passing problem with Try again", () => {
@@ -185,8 +174,8 @@ describe("the other cards", () => {
       kind: "run",
       handler: "onReloadHome",
     });
-    const off = errorCard(t, { code: "NOT_AVAILABLE" });
-    expect(widgets(off)).toEqual([{ kind: "text", text: "Not set up" }]);
+    const refused = errorCard(t, { code: "INVALID_TOKEN" });
+    expect(widgets(refused)[0]).toEqual({ kind: "text", text: "Unreachable" });
   });
 
   it("let Gmail insert a new meeting or the personal room", () => {

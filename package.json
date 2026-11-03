@@ -8,12 +8,12 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next dev",
-    "build": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && next build",
+    "dev": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && node google-addon/build.mjs --bundle && next dev",
+    "build": "node scripts/effects-assets.ts && node scripts/noise-assets.ts && node google-addon/build.mjs --bundle && next build",
     "start": "next start",
     "lint": "eslint src scripts tests google-addon desktop/src desktop/tests desktop/scripts *.ts *.mjs",
-    "typecheck": "next typegen && tsc --noEmit && tsc -p google-addon && tsc -p desktop/tsconfig.json",
-    "test": "vitest run",
+    "typecheck": "node google-addon/build.mjs --bundle && next typegen && tsc --noEmit && tsc -p google-addon && tsc -p desktop/tsconfig.json",
+    "test": "node google-addon/build.mjs --bundle && vitest run",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:nightly": "playwright test --project=nightly-chromium --project=nightly-firefox",
     "format": "prettier --write src scripts tests google-addon desktop *.ts *.mjs *.json *.md",

@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
-import { account, meeting, user } from "@/lib/db/schema";
+import { meeting } from "@/lib/db/schema";
 import { publicEnv } from "@/lib/env";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { generateMeetingCode, generatePasscode } from "@/lib/meetings/generate";
@@ -49,7 +49,7 @@ import type {
   MeetingCreate,
 } from "./types";
 
-/** The FaceOn account a Google identity belongs to. */
+/** The FaceOn account whose add-on a request comes from. */
 export type AddonUser = {
   id: string;
   name: string;
@@ -66,26 +66,6 @@ export class AddonRefusal extends Error {
 
 /** The meeting isn't one this person made from Google Calendar (or it's gone). */
 export class AddonNotFound extends Error {}
-
-/**
- * The account a Google account's ID belongs to: someone who signed up with Google, or
- * who connected Google Calendar in Settings. Better Auth keeps Google's `sub` as the
- * account ID, so nothing new is stored.
- */
-export async function userForGoogleSub(sub: string): Promise<AddonUser | null> {
-  const [row] = await db()
-    .select({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      emailVerified: user.emailVerified,
-    })
-    .from(account)
-    .innerJoin(user, eq(user.id, account.userId))
-    .where(and(eq(account.providerId, "google"), eq(account.accountId, sub)))
-    .limit(1);
-  return row ?? null;
-}
 
 /** A supported language for text, from Google's locale ("en-GB" → "en"). */
 export function addonLocale(locale: string | undefined): Locale {

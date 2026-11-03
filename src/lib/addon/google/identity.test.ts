@@ -57,28 +57,43 @@ describe("verifyAddonToken", () => {
       email: "ada@example.com",
       email_verified: true,
     });
-    expect(await verifyAddonToken(valid, AUDIENCE, keys)).toEqual({
+    expect(await verifyAddonToken(valid, keys)).toEqual({
       sub: "1077",
       email: "ada@example.com",
       emailVerified: true,
+      audience: AUDIENCE,
     });
     const bare = await token(
       { sub: "1077" },
       { issuer: "accounts.google.com" },
     );
-    expect(await verifyAddonToken(bare, AUDIENCE, keys)).toEqual({
+    expect(await verifyAddonToken(bare, keys)).toEqual({
       sub: "1077",
       email: null,
       emailVerified: false,
+      audience: AUDIENCE,
     });
   });
 
-  it("refuses a token made for another app", async () => {
+  it("says which app the token was made for, so the caller can check it's a known add-on", async () => {
     const elsewhere = await token(
       { sub: "1077" },
       { audience: "another-client" },
     );
-    expect(await verifyAddonToken(elsewhere, AUDIENCE, keys)).toBeNull();
+    expect((await verifyAddonToken(elsewhere, keys))?.audience).toBe(
+      "another-client",
+    );
+  });
+
+  it("refuses a token for several audiences", async () => {
+    const several = await new SignJWT({ sub: "1077" })
+      .setProtectedHeader({ alg: "RS256", kid: "g1" })
+      .setIssuer("https://accounts.google.com")
+      .setAudience([AUDIENCE, "another-client"])
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(googleKey);
+    expect(await verifyAddonToken(several, keys)).toBeNull();
   });
 
   it("refuses another issuer, a wrong signature and an expired token", async () => {
@@ -89,11 +104,11 @@ describe("verifyAddonToken", () => {
     const forged = await token({ sub: "1077" }, { key: otherKey });
     const expired = await token({ sub: "1077" }, { expires: "-2m" });
     for (const bad of [issuer, forged, expired, "not.a.token", ""]) {
-      expect(await verifyAddonToken(bad, AUDIENCE, keys)).toBeNull();
+      expect(await verifyAddonToken(bad, keys)).toBeNull();
     }
   });
 
   it("refuses a token without a subject", async () => {
-    expect(await verifyAddonToken(await token({}), AUDIENCE, keys)).toBeNull();
+    expect(await verifyAddonToken(await token({}), keys)).toBeNull();
   });
 });

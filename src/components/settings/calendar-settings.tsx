@@ -1,17 +1,15 @@
 "use client";
 
-import { cn } from "cn";
 import {
   CalendarCheck,
   CalendarDays,
   CircleCheck,
-  ExternalLink,
   Info,
   TriangleAlert,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { FormNotice } from "@/components/auth/fields";
@@ -21,19 +19,18 @@ import {
   connectInPage,
   reportToOpener,
 } from "@/components/google-calendar/connect";
-import { Button, LinkButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { NewTabNote } from "@/components/ui/new-tab-note";
+import type { AddonSetup } from "@/lib/addon/google/setup-shared";
 import { publicEnv } from "@/lib/env";
 import {
   connectProblem,
   type CalendarConnection,
 } from "@/lib/google-calendar/shared";
 
+import { AddonSettings, type AddonReturn } from "./addon-settings";
+import { ConnectionState, OUTLINE } from "./connection-state";
 import { SectionTitle, SettingsCard } from "./settings-nav";
-
-const OUTLINE =
-  "h-[38px] rounded-[10px] border-[#c9cfd8] px-3.5 text-sm font-semibold dark:border-white/15";
 
 /** Back from Google's consent screen: in the consent window, or in this page. */
 export type ConsentReturn = {
@@ -45,56 +42,28 @@ export type ConsentReturn = {
   error: string | null;
 };
 
-function ConnectionState({
-  icon,
-  tone,
-  title,
-  children,
-  actions,
-}: {
-  icon: ReactNode;
-  tone: "primary" | "warning";
-  title: string;
-  children: ReactNode;
-  actions: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2.5">
-      <span
-        className={cn(
-          "flex size-10 items-center justify-center rounded-full",
-          tone === "primary"
-            ? "bg-primary/10 text-primary"
-            : "bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200",
-        )}
-      >
-        {icon}
-      </span>
-      <span className="text-[17px] leading-snug font-bold">{title}</span>
-      <div className="text-muted-foreground flex max-w-[64ch] flex-col gap-1.5 text-sm leading-normal">
-        {children}
-      </div>
-      <div className="mt-1 flex flex-wrap gap-2">{actions}</div>
-    </div>
-  );
-}
-
 /**
  * Settings → Calendar: connect Google Calendar (once), see which account, reconnect
- * when Google asks, or disconnect. Also the page Google's consent window comes back
- * to, which reports to the form that opened it and closes.
+ * when Google asks, or disconnect; and FaceOn in Google Calendar and Gmail, the add-on.
+ * Also the page Google's consent window comes back to, which reports to the form that
+ * opened it and closes.
  */
 export function CalendarSettings({
   connection,
   email,
   googleSignIn,
   consent,
+  addon,
+  addonReturn,
 }: {
   connection: CalendarConnection;
   email: string;
   /** Google is already a way to sign in to this account. */
   googleSignIn: boolean;
   consent: ConsentReturn;
+  addon: AddonSetup;
+  /** Back from Google's consent screen for the add-on. */
+  addonReturn: AddonReturn;
 }) {
   const t = useTranslations("Settings.calendar");
   const tc = useTranslations("GoogleCalendar");
@@ -252,27 +221,7 @@ export function CalendarSettings({
           </p>
         ) : null}
       </SettingsCard>
-      {publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL ? (
-        <SettingsCard
-          title={t("addonTitle", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-muted-foreground max-w-[56ch] text-sm leading-normal">
-              {t("addonBody", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-            </span>
-            <LinkButton
-              href={publicEnv.NEXT_PUBLIC_GOOGLE_ADDON_URL}
-              target="_blank"
-              rel="noreferrer"
-              variant="outline"
-            >
-              <ExternalLink aria-hidden="true" />
-              {t("addonGet", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-              <NewTabNote />
-            </LinkButton>
-          </div>
-        </SettingsCard>
-      ) : null}
+      <AddonSettings initial={addon} email={email} returned={addonReturn} />
       <ConfirmDialog
         isOpen={confirming}
         onClose={() => setConfirming(false)}

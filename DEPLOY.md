@@ -140,6 +140,15 @@ Hosts who connect Google Calendar (Settings → Calendar) get their meetings add
 
 The scope is sensitive. Until Google verifies your app, only test users can connect, and Google asks them to reconnect every 7 days. Google's verification reviews your home page, privacy policy and how the app uses the scope, and needs a domain you own. With sync off, or for anyone who doesn't connect, each meeting's page still has buttons to add it to Google Calendar, Outlook or any calendar app.
 
+### FaceOn in Google Calendar and Gmail
+
+People can also add FaceOn to Google Calendar and Gmail themselves, from Settings → Calendar: **FaceOn meeting** in Calendar's **Add video conferencing**, a side panel in Calendar and Gmail, and **Insert a FaceOn meeting** in Gmail. FaceOn puts each person's own copy of its add-on in their Google account and keeps it up to date ([The Google Workspace add-on](#the-google-workspace-add-on-optional)). It's on unless `GOOGLE_ADDON=off`, uses the same Google client, and needs your site on `https://`:
+
+1. In the same Google Cloud project, open **APIs & Services → Library**, find the **Apps Script API** and enable it.
+2. In **Google Auth Platform → Data access**, select **Add or remove scopes** and add `https://www.googleapis.com/auth/script.projects`. FaceOn only touches the add-on it makes.
+
+This scope is sensitive too, with the same limits until Google verifies your app.
+
 ## 6. Set up Sign in with GitHub
 
 A GitHub OAuth app has one callback address, so make one for your site and, for local development, a second one.
@@ -194,8 +203,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | From [step 5](#5-set-up-sign-in-with-google-and-google-calendar)                                                                                                                                  |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | From [step 6](#6-set-up-sign-in-with-github)                                                                                                                                                      |
 | `GOOGLE_CALENDAR_SYNC`                     | Optional: `off` turns Google Calendar sync off                                                                                                                                                    |
-| `GOOGLE_ADDON_CLIENT_ID`                   | Optional: the Google Workspace add-on's OAuth client ID, which turns on its API ([The Google Workspace add-on](#the-google-workspace-add-on-optional))                                            |
-| `NEXT_PUBLIC_GOOGLE_ADDON_URL`             | Optional: the add-on's Marketplace listing, once it's listed                                                                                                                                      |
+| `GOOGLE_ADDON`                             | Optional: `off` stops offering FaceOn in Google Calendar and Gmail ([The Google Workspace add-on](#the-google-workspace-add-on-optional))                                                         |
+| `GOOGLE_ADDON_CONFERENCE_LOGO_URL`         | Optional: the logo Calendar shows beside your meetings, for a copy with its own name. Google shows one only from its own servers                                                                  |
 | `BETTER_AUTH_TRUSTED_ORIGINS`              | Optional: more addresses allowed to use sign-in, as exact origins separated by commas (a second domain, say). Your address and each Vercel deployment's own are already allowed. Never a wildcard |
 
 **Guests**
@@ -423,28 +432,17 @@ The desktop app for macOS and Windows lives in `desktop/`. A copy builds its own
 
 ## The Google Workspace add-on (optional)
 
-The add-on in `google-addon/` puts **FaceOn meeting** in Google Calendar's **Add video conferencing**, a sidebar in Calendar and Gmail, and **Insert a FaceOn meeting** in Gmail's compose window ([google-addon/README.md](google-addon/README.md)). It talks only to the copy it's built for (`FACEON_URL`), so a copy makes its own:
+The add-on in `google-addon/` puts **FaceOn meeting** in Google Calendar's **Add video conferencing**, a side panel in Calendar and Gmail, and **Insert a FaceOn meeting** in Gmail's compose window ([google-addon/README.md](google-addon/README.md)). Nothing is published anywhere: people add it themselves, from Settings → Calendar.
 
-| Who                             | How                                                                                                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| You, for yourself               | A test deployment from your own Apps Script project. No review                                                                                              |
-| A Google Workspace organization | Its own add-on, listed privately for the organization (a Workspace account can; an @gmail.com account can't). The admin installs it for everyone. No review |
-| Anyone                          | A public Marketplace listing: Google reviews it, and verifies the OAuth consent screen, which needs your verified domain                                    |
+1. **Add.** FaceOn asks Google for permission to create Apps Script projects in the person's account, then makes their own copy of the add-on there (an Apps Script project named after your copy, built for your address).
+2. **Install.** In Google's Apps Script editor, **Deploy → Test deployments → Install**. Settings links straight to it. Google installs an add-on that isn't in its Marketplace only this way, so this one click can't be skipped.
+3. **Use.** The first time, Google asks them to allow it and warns that it isn't verified, since it's their own unlisted copy: **Advanced → Go to FaceOn**. The copy then connects itself to their account. FaceOn accepts it only from that person's Google account, so a copy someone shares doesn't work for anyone else.
 
-Set it up:
+After you deploy a change to the add-on, each copy is updated the next time it's used. If Google no longer lets FaceOn write to someone's copy, Settings → Calendar asks them to allow it again. **Remove** in Settings stops FaceOn accepting it; they uninstall it in Apps Script (**Deploy → Test deployments → Uninstall**).
 
-1. Follow [google-addon/SPIKE.md](google-addon/SPIKE.md): the Apps Script API, `pnpm addon:login`, a new Apps Script project linked to your Google Cloud project (the one Sign in with Google uses), `pnpm addon:push` (with `FACEON_URL` set to your site), and a test deployment.
-2. The first time you add **FaceOn meeting** to an event, Apps Script's **Executions** logs the add-on's `aud`. Set `GOOGLE_ADDON_CLIENT_ID` to it in Vercel and redeploy: that turns on the add-on's API (`/api/addon/google/*`).
-3. Give FaceOn meetings your logo in Calendar. Google takes the conference logo only from the Marketplace listing's 32 × 32 application icon, so: in the Google Cloud console, **APIs & Services → Library → Google Workspace Marketplace SDK → Enable**; in the SDK's **Store Listing → Graphic assets**, upload `google-addon/assets/icon-32.png` (32 × 32), `icon-128.png` (128 × 128) and `banner-220x140.png` (the card banner), all written by `pnpm brand`, and **Save draft**; right-click the uploaded 32 × 32 icon, **Copy image address** (`https://lh3.googleusercontent.com/…`); then push with it: `FACEON_CONFERENCE_LOGO_URL="<that address>" pnpm addon:push`. Set the repository variable `FACEON_CONFERENCE_LOGO_URL` to it too, for releases. [google-addon/SPIKE.md](google-addon/SPIKE.md) has the same steps.
+Your part is in [step 5](#faceon-in-google-calendar-and-gmail): the Apps Script API and the `script.projects` scope. If someone's own Apps Script API setting is off, Settings sends them to <https://script.google.com/home/usersettings> to turn it on. Calendar shows FaceOn's logo beside a meeting only from Google's servers: a copy named FaceOn has it already, and one with another name can set `GOOGLE_ADDON_CONFERENCE_LOGO_URL` to an image Google hosts (a [draft Marketplace listing](google-addon/SETUP.md#your-own-logo-in-calendar)'s icon, for one).
 
-To list it, in the Google Cloud console:
-
-1. Turn on the **Google Workspace Marketplace SDK**. In **App Configuration**, choose Google Workspace add-on, paste the **deployment ID** (Apps Script: **Deploy → New deployment**, type Add-on), allow Individual and Admin install, and pick the visibility. **Public can't be changed later.**
-2. Fill in the **Store Listing**: name, descriptions, the 32 and 128 px icons, the 220×140 banner, 1280×800 screenshots, and your terms, privacy and support links.
-3. Submit the OAuth consent screen for verification (its scopes are sensitive, not restricted, so no paid assessment), then submit the listing for review.
-4. Once it's listed, set `NEXT_PUBLIC_GOOGLE_ADDON_URL` to the listing in Vercel: Settings → Calendar and the landing page then offer it.
-
-Releases: a `google-addon-v*` tag builds the add-on and attaches it to the tag's GitHub release. With three repository secrets it also pushes it as a new version of your deployment: `CLASPRC_JSON` (the contents of `~/.clasprc.json` after `pnpm addon:login`), `CLASP_SCRIPT_ID` (from `google-addon/.clasp.json`) and `CLASP_DEPLOYMENT_ID`. Repository variables `FACEON_URL` and `FACEON_CONFERENCE_LOGO_URL` say what to build it for. [google-addon/QA.md](google-addon/QA.md) is the checklist before each release.
+Working on the add-on itself is in [google-addon/SETUP.md](google-addon/SETUP.md), and [google-addon/QA.md](google-addon/QA.md) is the checklist before a change. A `google-addon-v*` tag attaches a developer's build to that GitHub release.
 
 ## CI secrets (optional)
 
@@ -516,5 +514,7 @@ Then:
 **The database stops answering.** Neon's free compute or data transfer for the month is used up. It comes back next month, or on a paid plan.
 
 **Google Calendar says it couldn't update.** Check that the Google Calendar API is enabled in the same project as the OAuth client. A test user also has to reconnect every 7 days until Google verifies the app.
+
+**Adding FaceOn to Google Calendar says whoever runs FaceOn needs to turn on the Apps Script API.** Enable the **Apps Script API** in the same Google Cloud project as the OAuth client (admins see a link to it in Settings → Calendar).
 
 **Sign-in fails on a second address.** Add it to `BETTER_AUTH_TRUSTED_ORIGINS` as an exact origin, such as `https://other.example.com`.

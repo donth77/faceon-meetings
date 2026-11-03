@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { PanelLoading } from "@/components/app-shell/loading";
 import { CalendarSettings } from "@/components/settings/calendar-settings";
+import { addonSetup } from "@/lib/addon/google/setup";
 import { auth } from "@/lib/auth/server";
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
@@ -26,18 +27,21 @@ export default function Page({
 
 /**
  * Settings → Calendar, for the signed-in user. Google's consent screen comes back here:
- * `?connected=1` in this page, `?popup=1` in the consent window a form opened, with
- * `?error=` when connecting failed.
+ * for Calendar sync `?connected=1` in this page, `?popup=1` in the consent window a form
+ * opened; for the add-on `?addon=add` or `?addon=update`; with `?error=` when it failed.
  */
 async function Calendar({
   searchParams,
 }: Pick<PageProps<"/[locale]/settings/calendar">, "searchParams">) {
   const session = await requireSession("/settings/calendar");
-  const { popup, connected, error } = await searchParams;
-  const [connection, accounts] = await Promise.all([
+  const { popup, connected, error, addon } = await searchParams;
+  const [connection, accounts, setup] = await Promise.all([
     calendarConnection(session.user),
     auth.api.listUserAccounts({ headers: await headers() }),
+    addonSetup(session.user.id),
   ]);
+  const problem = typeof error === "string" ? error.slice(0, 100) : null;
+  const addonAction = addon === "add" || addon === "update" ? addon : null;
   return (
     <CalendarSettings
       connection={connection}
@@ -46,7 +50,12 @@ async function Calendar({
       consent={{
         popup: popup === "1",
         returned: connected === "1",
-        error: typeof error === "string" ? error.slice(0, 100) : null,
+        error: addonAction ? null : problem,
+      }}
+      addon={setup}
+      addonReturn={{
+        action: addonAction,
+        error: addonAction ? problem : null,
       }}
     />
   );

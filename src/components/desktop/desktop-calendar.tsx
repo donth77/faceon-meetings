@@ -4,13 +4,17 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import {
+  CALENDAR_SETTINGS_ROUTE,
   connectInPage,
   DESKTOP_CALENDAR_ROUTE,
 } from "@/components/google-calendar/connect";
 import { Button, LinkButton } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/client";
 import { publicEnv } from "@/lib/env";
-import { connectProblem } from "@/lib/google-calendar/shared";
+import {
+  connectProblem,
+  GOOGLE_SCRIPT_SCOPE,
+} from "@/lib/google-calendar/shared";
 
 export type DesktopCalendarState =
   | { step: "signIn"; next: string }
@@ -23,20 +27,34 @@ export type DesktopCalendarState =
 /**
  * /desktop/calendar in the browser: on to Google's consent screen at once, then how it
  * went. Signed out, or signed in to another account than the app's, it says so first.
+ * For the add-on (`addon`), Google comes back to Settings → Calendar, which adds it.
  */
-export function DesktopCalendar({ state }: { state: DesktopCalendarState }) {
+export function DesktopCalendar({
+  state,
+  addon,
+}: {
+  state: DesktopCalendarState;
+  addon: "add" | "update" | null;
+}) {
   const t = useTranslations("DesktopCalendar");
   const tc = useTranslations("GoogleCalendar");
+  const ta = useTranslations("AddonSetup");
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
   const [problem, setProblem] = useState(false);
   const started = useRef(false);
+  const title = addon ? ta("desktopTitle", { appName }) : t("title");
 
   async function start(email: string) {
     setProblem(false);
-    const ok = await connectInPage({
-      back: `${DESKTOP_CALENDAR_ROUTE}?done=1`,
-      loginHint: email,
-    });
+    const ok = await connectInPage(
+      addon
+        ? {
+            back: `${CALENDAR_SETTINGS_ROUTE}?addon=${addon}`,
+            loginHint: email,
+            scope: GOOGLE_SCRIPT_SCOPE,
+          }
+        : { back: `${DESKTOP_CALENDAR_ROUTE}?done=1`, loginHint: email },
+    );
     if (!ok) setProblem(true);
   }
 
@@ -49,8 +67,12 @@ export function DesktopCalendar({ state }: { state: DesktopCalendarState }) {
   switch (state.step) {
     case "signIn":
       return (
-        <Card title={t("title")}>
-          <p>{t("signIn", { appName })}</p>
+        <Card title={title}>
+          <p>
+            {addon
+              ? ta("desktopSignIn", { appName })
+              : t("signIn", { appName })}
+          </p>
           <LinkButton href={`/sign-in?next=${encodeURIComponent(state.next)}`}>
             {t("signInButton")}
           </LinkButton>
@@ -58,7 +80,7 @@ export function DesktopCalendar({ state }: { state: DesktopCalendarState }) {
       );
     case "otherAccount":
       return (
-        <Card title={t("title")}>
+        <Card title={title}>
           <p>{t("otherAccount", { email: state.email, appName })}</p>
           <Button
             variant="outline"
@@ -75,13 +97,17 @@ export function DesktopCalendar({ state }: { state: DesktopCalendarState }) {
       );
     case "unavailable":
       return (
-        <Card title={t("title")}>
-          <p>{t("unavailable", { appName })}</p>
+        <Card title={title}>
+          <p>
+            {addon
+              ? ta("desktopUnavailable", { appName })
+              : t("unavailable", { appName })}
+          </p>
         </Card>
       );
     case "start":
       return (
-        <Card title={t("title")}>
+        <Card title={title}>
           <p role="status">{problem ? tc("problems.generic") : t("opening")}</p>
           {problem ? (
             <Button onPress={() => void start(state.email)}>

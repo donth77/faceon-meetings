@@ -29,10 +29,12 @@
 # misc
 .DS_Store
 
-# the Google Workspace add-on's build and its clasp settings (each deployment's own)
+# the Google Workspace add-on's build and its clasp settings (each developer's own), and
+# the bundle FaceOn writes into people's accounts (made by google-addon/build.mjs --bundle)
 /google-addon/dist/
 /google-addon/.clasp.json
 /google-addon/.clasprc.json
+/src/lib/addon/google/bundle.generated.json
 *.pem
 
 # debug

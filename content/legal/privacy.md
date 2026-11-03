@@ -47,9 +47,14 @@ AI notes are kept only when a host or co-host chooses to save them, or when the 
 
 ### Google Calendar and Gmail, with the add-on
 
-If you use {appName}'s add-on for Google Workspace, {appName} keeps what it keeps for any meeting you schedule (its title, times, repeat and settings). For a meeting made from a Calendar event, it also keeps that **event's ID** and its **calendar's ID** (for your main calendar, that's your email address), to follow the event and link to it. It doesn't keep the event's guests: Google Calendar invites them.
+If you add {appName} to Google Calendar and Gmail (in **Settings**, under **Calendar**), {appName} puts your own copy of its add-on in your Google account, as an Apps Script project. For that it keeps:
 
-The add-on runs on Google's servers. It reads the event you add a {appName} meeting to while you have it open, and the events that change in that calendar afterwards, telling {appName} only about the ones with {appName} meetings. In Gmail it adds an invitation where you're writing, and never reads the email. To know who you are, it sends {appName} a token from Google with your Google account's ID, which {appName} uses for that request and never keeps.
+- **Permission to create and update Apps Script projects**, which you give on Google's own screen, and the **tokens** for it, encrypted. {appName} uses it only to create your copy of the add-on and to keep it up to date. It never reads or changes your other projects.
+- Your copy's **project ID**, the **ID of your Google account** it's in, and its **Google client ID**, so {appName} accepts it only from you.
+
+For meetings you make with the add-on, {appName} keeps what it keeps for any meeting you schedule (its title, times, repeat and settings). For a meeting made from a Calendar event, it also keeps that **event's ID** and its **calendar's ID** (for your main calendar, that's your email address), to follow the event and link to it. It doesn't keep the event's guests: Google Calendar invites them.
+
+The add-on runs on Google's servers, under your Google account. In Google Calendar it reads the event it's opened on, and, to keep meetings in step, the events that change in that calendar afterwards, telling {appName} only about the ones with {appName} meetings. In Gmail it only inserts the text you choose into the email you're writing, and never reads your mail. To know who you are, it sends {appName} a token from Google with your Google account's ID, which {appName} uses for that request and never keeps.
 
 ### People without an account
 
@@ -116,7 +121,7 @@ These services may handle your information in the United States and other countr
 
 ### Information from Google
 
-{appName}'s use and transfer of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. {appName} uses Google sign-in only for your account, Google Calendar only for the meetings you schedule, and the add-on only for the meetings you add from Google Calendar and Gmail. It doesn't use information from Google for advertising and doesn't sell it, and nobody reads it unless you ask them to, security requires it, or the law does.
+{appName}'s use and transfer of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. {appName} uses Google sign-in only for your account, Google Calendar only for the meetings you schedule, your Apps Script permission only for your copy of its add-on, and the add-on only for the meetings you add from Google Calendar and Gmail. It doesn't use information from Google for advertising and doesn't sell it, and nobody reads it unless you ask them to, security requires it, or the law does.
 
 ## How long it's kept
 
@@ -128,15 +133,16 @@ These services may handle your information in the United States and other countr
 - **Waiting room requests and admission records** are deleted a week after the meeting. That someone was removed is kept as long as who joined (90 days).
 - **Attempt counters and sign-in limits** are deleted after a day.
 - **Records of reminder emails sent** are deleted two days after their meeting's start.
+- **Your add-on's IDs**, until you remove it in **Settings** or remove Google from your account.
 - **Requests to host full meetings** are deleted 90 days after they're answered. An approved address stays approved until an admin moves it back to demo meetings, or you delete your account.
 - **A guest's cookie** expires 90 days after its last use.
 
-When you **delete your account**, {appName} deletes your account, the meetings you host with their records, the AI notes you saved, your requests to host full meetings, and your address on the list of approved hosts. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar. Before it does, it cancels your upcoming meetings there, so Google tells the people you invited; past events stay in your calendar. Meetings other people host keep your name in who joined until that's deleted after 90 days.
+When you **delete your account**, {appName} deletes your account, the meetings you host with their records, the AI notes you saved, your requests to host full meetings, and your address on the list of approved hosts. It ends any meeting you're hosting at that moment, asks Stream to delete your profile, and withdraws its access to your Google Calendar and Apps Script. Before it does, it cancels your upcoming meetings there, so Google tells the people you invited; past events stay in your calendar. Meetings other people host keep your name in who joined until that's deleted after 90 days.
 
 ## Your choices and rights
 
 - **See and change** your name, picture and sign-in methods in **Settings**, under **Account**.
-- **Disconnect Google Calendar** in **Settings**, under **Calendar**.
+- **Disconnect Google Calendar**, or **remove {appName} from Google Calendar and Gmail**, in **Settings**, under **Calendar**.
 - **Turn email reminders on or off** in **Settings**, under **Notifications**, or with the link in any reminder.
 - **Delete your account** and its data at any time, under **Account**.
 - **Download a copy** of your information at any time, under **Account**: **Download your data** gives you your account, the meetings you host, who came to your meetings, the AI notes you can read with their saved transcripts, and your requests to host, in formats other services can read. **Previous** also offers your meeting history on its own (**Download history**), and each meeting's attendance or AI notes. Downloads are made when you ask, and nothing is kept afterwards.
