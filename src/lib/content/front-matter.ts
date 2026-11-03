@@ -3,8 +3,15 @@
  * `{` (a title beginning with {appName}), isn't part of it.
  */
 function unquote(value: string): string {
-  const quoted = /^(["'])(.*)$/.exec(value);
-  return quoted ? (quoted[2] ?? "") : value;
+  const first = value[0];
+  if (
+    value.length >= 2 &&
+    (first === '"' || first === "'") &&
+    value.endsWith(first)
+  ) {
+    return value.slice(1, -1);
+  }
+  return value;
 }
 
 /** A Markdown file's front matter (simple `key: value` lines) and its body. */
