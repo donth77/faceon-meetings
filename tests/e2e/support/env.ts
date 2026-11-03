@@ -40,6 +40,14 @@ export const hasStream = Boolean(
   process.env.NEXT_PUBLIC_STREAM_API_KEY && process.env.STREAM_API_SECRET,
 );
 
+/**
+ * Whether the build shows the check for a person: it has a Turnstile site key (any key
+ * will do, since the tests stand in for Cloudflare's script). CI uses Cloudflare's test key.
+ */
+export const hasHumanCheck = Boolean(
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+);
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 /** A database's host and name, the same for its pooled and direct addresses. */

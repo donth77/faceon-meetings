@@ -8,7 +8,8 @@ import {
 } from "@playwright/test";
 
 import { createUser, deleteUsers, type TestUser } from "./db";
-import { hasStream } from "./env";
+import { hasHumanCheck, hasStream } from "./env";
+import { fakeHumanCheck } from "./human-check";
 
 export { expect };
 
@@ -89,6 +90,8 @@ export const test = base.extend<{ people: People }>({
       if (user) {
         await context.addCookies([{ ...user.cookie, domain: host, path: "/" }]);
       }
+      // Cloudflare's script is a stand-in whose checks pass (support/human-check.ts).
+      await fakeHumanCheck(context);
       const page = await context.newPage();
       return { page, context, user, errors: watch(page) };
     };
@@ -110,6 +113,11 @@ export const test = base.extend<{ people: People }>({
 /** For tests that join a real call: they need Stream's development keys. */
 export function needsStream() {
   test.skip(!hasStream, "Stream's development keys aren't set");
+}
+
+/** For tests of the check for a person: the build needs a Turnstile site key. */
+export function needsHumanCheck() {
+  test.skip(!hasHumanCheck, "The build has no Turnstile site key");
 }
 
 /** No console errors or uncaught exceptions on anyone's page. */

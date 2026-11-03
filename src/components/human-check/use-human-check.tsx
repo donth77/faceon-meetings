@@ -31,7 +31,10 @@ const SCRIPT_URL =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 /** How long Cloudflare's script may take to load before we offer Try again. */
 const LOAD_TIMEOUT_MS = 15_000;
-/** How long Join or Send waits for the check to finish before saying it couldn't. */
+/**
+ * How long Join or Send waits for Cloudflare to finish the check before saying it
+ * couldn't. Time spent waiting for the person to answer it doesn't count.
+ */
 const WAIT_MS = 30_000;
 
 let loading: Promise<Turnstile> | null = null;
@@ -69,9 +72,9 @@ type CheckState = "checking" | "ready" | "interactive" | "failed";
  * so most people never see it. Where this copy has no site key, or `wanted` is false,
  * there's no check: `view` is empty and `take()` resolves to undefined.
  *
- * `take()` gives the token for one request (waiting for the check if it's still going),
- * or null when the check couldn't finish; tokens work once, so a new check starts behind
- * it. `view` holds Cloudflare's widget (seen only when it asks something) and our own
+ * `take()` gives the token for one request (waiting for the check if it's still going,
+ * and for the person if it's asking them something), or null when the check couldn't
+ * finish; tokens work once, so a new check starts behind it. `view` holds Cloudflare's widget (seen only when it asks something) and our own
  * lines: what to do, and Try again when Cloudflare can't load.
  */
 export function useHumanCheck(
@@ -132,6 +135,7 @@ export function useHumanCheck(
           "after-interactive-callback": () => setState("checking"),
           "timeout-callback": () => {
             token.current = null;
+            setState("checking");
             if (id) window.turnstile?.reset(id);
           },
           "error-callback": () => {
@@ -161,6 +165,17 @@ export function useHumanCheck(
     };
   }, [enabled, siteKey, action, locale, attempt]);
 
+  // Join or Send is waiting: Cloudflare gets WAIT_MS to finish. While it's asking the
+  // person something the clock stops, and it starts over once they've answered.
+  useEffect(() => {
+    if (!waiting || state === "interactive") return;
+    const timer = setTimeout(() => {
+      setState("failed");
+      settle(null);
+    }, WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [waiting, state]);
+
   function take(): Promise<string | null | undefined> {
     if (!enabled) return Promise.resolve(undefined);
     const ready = token.current;
@@ -176,21 +191,13 @@ export function useHumanCheck(
     if (state === "failed") return Promise.resolve(null);
     setWaiting(true);
     return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        waiters.current = waiters.current.filter((w) => w !== finish);
-        setWaiting(false);
-        setState("failed");
-        resolve(null);
-      }, WAIT_MS);
-      function finish(value: string | null) {
-        clearTimeout(timer);
+      waiters.current.push((value) => {
         if (value && widget.current) {
           window.turnstile?.reset(widget.current);
           setState("checking");
         }
         resolve(value);
-      }
-      waiters.current.push(finish);
+      });
     });
   }
 

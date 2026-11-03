@@ -36,6 +36,10 @@ jobs:
       DATABASE_URL_UNPOOLED: postgresql://faceon:faceon@localhost:5432/faceon
       # The build bakes in the app's address; the browser tests serve it there.
       NEXT_PUBLIC_APP_URL: http://localhost:3100
+      # Cloudflare's public test site key, so the build shows the check for a person. The
+      # browser tests stand in for Cloudflare's script, and with no secret key the server
+      # doesn't check.
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
       # Stream's development app, for the tests that join calls. Without these
       # repository secrets those tests are skipped, and everything else still runs.
       NEXT_PUBLIC_STREAM_API_KEY: ${{ secrets.STREAM_DEV_API_KEY }}
