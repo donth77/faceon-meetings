@@ -26,6 +26,10 @@ module.exports = {
   copyright: `Copyright © ${new Date().getFullYear()} ${name} contributors`,
   directories: { output: "release", buildResources: "build" },
   files: ["dist/**/*", "package.json"],
+  // The app takes no node_modules: scripts/build.mjs bundles everything it runs into
+  // dist/. Resolving false says so; otherwise electron-builder, finding no dependencies
+  // here, packs the workspace root's (Next.js and the rest of the web app's).
+  beforeBuild: async () => false,
   asar: true,
   protocols: [{ name: `${name} links`, schemes: ["faceon"] }],
   electronFuses: {
