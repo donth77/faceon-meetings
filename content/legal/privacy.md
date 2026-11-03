@@ -93,7 +93,7 @@ Your browser also keeps some things for {appName} that aren't sent to its server
 
 ## The desktop app
 
-If you use {appName}'s app for Mac or Windows, it keeps on your computer its settings (**Settings → Desktop app**), the size and place of its window, your reminder time, and its own sign-in, separate from your browser's. While it runs, it asks {appName} for your next day's meetings about every ten minutes, to remind you of them, and checks for a new version of itself every six hours. Signing the app in with Google or GitHub happens in your browser, which hands the app a code that works once, within a minute; {appName} keeps only a scrambled copy of that code, for that minute.
+If you use {appName}'s app for Mac or Windows, it keeps on your computer its settings (**Settings → Desktop app**), the size and place of its window, your reminder time, and its own sign-in, separate from your browser's. While it runs, it asks {appName} for your next day's meetings about every ten minutes, to remind you of them, and checks for a new version of itself every six hours. Signing the app in with Google or GitHub happens in your browser, which hands the app a code that works once, within ten minutes; {appName} keeps only a scrambled copy of that code, for those ten minutes.
 
 ## Who else handles your information
 

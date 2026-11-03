@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   challengeMatches,
+  handoffExpiresAt,
   handoffKey,
+  handoffUsable,
   newHandoffToken,
   readHandoff,
 } from "./handoff";
@@ -50,5 +52,16 @@ describe("tokens", () => {
     expect(newHandoffToken()).not.toBe(token);
     expect(handoffKey(token)).not.toContain(token);
     expect(handoffKey(token)).toBe(handoffKey(token));
+  });
+});
+
+describe("a token's life", () => {
+  it("outlasts the browser asking to open the app, and no more", () => {
+    const now = Date.parse("2026-11-03T09:00:00Z");
+    const expiresAt = handoffExpiresAt(now);
+    // Someone reading "Open FaceOn?" for the first time: the token must still work.
+    expect(handoffUsable(expiresAt, now + 2 * 60_000)).toBe(true);
+    expect(handoffUsable(expiresAt, now + 9 * 60_000)).toBe(true);
+    expect(handoffUsable(expiresAt, now + 11 * 60_000)).toBe(false);
   });
 });

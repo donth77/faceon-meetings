@@ -12,7 +12,18 @@ import { CHALLENGE } from "./handoff-params";
  */
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const VERIFIER = /^[A-Za-z0-9_-]{43,128}$/;
-export const HANDOFF_TTL_MS = 60_000;
+/**
+ * Ten minutes. Between the token and the app, the browser asks whether to open the app
+ * ("Open FaceOn?"), and a first-time prompt can take a person a while: at a minute, slow
+ * readers found the token gone. The verifier keeps a longer life safe.
+ */
+export const HANDOFF_TTL_MS = 10 * 60 * 1000;
+
+export const handoffExpiresAt = (now: number) => new Date(now + HANDOFF_TTL_MS);
+
+/** Whether a stored token can still be used. */
+export const handoffUsable = (expiresAt: Date, now: number) =>
+  expiresAt.getTime() > now;
 
 export const newHandoffToken = () => randomBytes(32).toString("base64url");
 

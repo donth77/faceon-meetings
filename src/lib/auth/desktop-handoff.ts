@@ -7,9 +7,10 @@ import { z } from "zod";
 
 import {
   challengeMatches,
-  HANDOFF_TTL_MS,
+  handoffExpiresAt,
   handoffKey,
   HandoffRecord,
+  handoffUsable,
   newHandoffToken,
   readHandoff,
 } from "@/lib/desktop/handoff";
@@ -54,7 +55,7 @@ export const desktopHandoff = () =>
               userId: ctx.context.session.user.id,
               challenge: ctx.body.challenge,
             }),
-            expiresAt: new Date(Date.now() + HANDOFF_TTL_MS),
+            expiresAt: handoffExpiresAt(Date.now()),
           });
           return ctx.json({ token });
         },
@@ -69,7 +70,7 @@ export const desktopHandoff = () =>
             await ctx.context.internalAdapter.consumeVerificationValue(
               handoffKey(handoff.token),
             );
-          if (!stored || stored.expiresAt < new Date()) {
+          if (!stored || !handoffUsable(stored.expiresAt, Date.now())) {
             throw ctx.redirect(FAILED);
           }
           const record = readRecord(stored.value);
