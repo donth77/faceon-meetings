@@ -382,7 +382,7 @@ Edit [`brand/brand.json`](brand/brand.json), put your mark in `brand/` as SVG, t
 pnpm brand
 ```
 
-It writes the logo files in `public/brand/` (the mark, and the mark beside the name, for light and dark backgrounds and in one color), the browser tab icon (`src/app/icon.svg`, `favicon.ico`), the icons for phones and installed apps (`src/app/apple-icon.png`, `public/icons/`), the link preview (`src/app/opengraph-image.png`), and the brand colors for both themes (`src/app/brand.css`, with a copy in `src/lib/brand.ts` for emails and the offline page). Commit them and push. The smallest config:
+It writes the logo files in `public/brand/` (the mark, and the mark beside the name, for light and dark backgrounds and in one color), the browser tab icon (`src/app/icon.svg`, `favicon.ico`), the icons for phones and installed apps (`src/app/apple-icon.png`, `public/icons/`), the link preview (`src/app/opengraph-image.png`), the Google Workspace add-on's Marketplace icons and banner (`google-addon/assets/`), and the brand colors for both themes (`src/app/brand.css`, with a copy in `src/lib/brand.ts` for emails and the offline page). Commit them and push. The smallest config:
 
 ```json
 {
@@ -435,7 +435,7 @@ Set it up:
 
 1. Follow [google-addon/SPIKE.md](google-addon/SPIKE.md): the Apps Script API, `pnpm addon:login`, a new Apps Script project linked to your Google Cloud project (the one Sign in with Google uses), `pnpm addon:push` (with `FACEON_URL` set to your site), and a test deployment.
 2. The first time you add **FaceOn meeting** to an event, Apps Script's **Executions** logs the add-on's `aud`. Set `GOOGLE_ADDON_CLIENT_ID` to it in Vercel and redeploy: that turns on the add-on's API (`/api/addon/google/*`).
-3. Google asks for the conference logo to be hosted on Google. If Calendar shows none, set `FACEON_CONFERENCE_LOGO_URL` to such an image and push again.
+3. Give FaceOn meetings your logo in Calendar. Google takes the conference logo only from the Marketplace listing's 32 × 32 application icon, so: in the Google Cloud console, **APIs & Services → Library → Google Workspace Marketplace SDK → Enable**; in the SDK's **Store Listing → Graphic assets**, upload `google-addon/assets/icon-32.png` (32 × 32), `icon-128.png` (128 × 128) and `banner-220x140.png` (the card banner), all written by `pnpm brand`, and **Save draft**; right-click the uploaded 32 × 32 icon, **Copy image address** (`https://lh3.googleusercontent.com/…`); then push with it: `FACEON_CONFERENCE_LOGO_URL="<that address>" pnpm addon:push`. Set the repository variable `FACEON_CONFERENCE_LOGO_URL` to it too, for releases. [google-addon/SPIKE.md](google-addon/SPIKE.md) has the same steps.
 
 To list it, in the Google Cloud console:
 

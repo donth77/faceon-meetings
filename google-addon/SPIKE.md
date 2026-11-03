@@ -65,11 +65,38 @@ Google's servers, so that copy must be reachable on the internet.
       sign-in, and the sidebar says **Sign in to FaceOn**.
 - [ ] On a phone, the event's join details show in the Google Calendar app. Note
       whether the app offers **FaceOn meeting** when you add conferencing there.
-- [ ] If Calendar shows no FaceOn logo: Google wants the conference logo hosted on
-      Google. Set `FACEON_CONFERENCE_LOGO_URL` to one (for example, an image uploaded
-      with the Marketplace listing) and push again.
+- [ ] FaceOn's logo shows beside the meeting, once it's set (section 3).
 - [ ] Look up whether Google's docs now let HTTP add-ons (the "alternate runtime") define
       conference solutions. If they do, the add-on could move into FaceOn's own server.
+
+## 3. FaceOn's logo in Calendar
+
+Calendar shows a FaceOn meeting with a plain camera icon until the conference has its
+logo. Google takes that logo only from the add-on's Marketplace listing: its 32 × 32
+application icon, at the address the listing gives it. `pnpm brand` writes the listing's
+images to `google-addon/assets/`.
+
+1. In the Google Cloud console, with FaceOn's project selected, open **APIs & Services →
+   Library**, search for **Google Workspace Marketplace SDK**, and select **Enable**.
+2. Open the SDK's **Store Listing**. Under **Graphic assets**, upload
+   `google-addon/assets/icon-32.png` as the 32 × 32 application icon and
+   `google-addon/assets/icon-128.png` as the 128 × 128 one, and
+   `google-addon/assets/banner-220x140.png` as the card banner. Select **Save draft**.
+   The listing doesn't need to be published for this.
+3. Copy the uploaded 32 × 32 icon's address: right-click it and choose **Copy image
+   address**. It starts with `https://lh3.googleusercontent.com/`.
+4. Push the add-on with that address:
+
+   ```sh
+   FACEON_CONFERENCE_LOGO_URL="https://lh3.googleusercontent.com/…" pnpm addon:push
+   ```
+
+   In PowerShell: `$env:FACEON_CONFERENCE_LOGO_URL = "https://lh3.googleusercontent.com/…"; pnpm addon:push`.
+   For releases from a `google-addon-v*` tag, set the repository variable
+   `FACEON_CONFERENCE_LOGO_URL` to the same address.
+
+FaceOn meetings added from then on show FaceOn's logo; ones added before keep the icon
+Calendar stored with them.
 
 The fuller checklist for each release, including a Google Workspace account, is
 [QA.md](QA.md).

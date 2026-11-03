@@ -7,7 +7,7 @@
  *
  * It writes nothing when a color fails WCAG 2.2 AA contrast, and says what to change.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as prettier from "prettier";
@@ -306,6 +306,21 @@ async function main(args: string[]) {
       : "") +
     "</svg>";
 
+  // The Google Workspace add-on's Marketplace card banner: the lockup on the page's color.
+  const BANNER = { width: 220, height: 140 };
+  const bannerScale =
+    Math.round(
+      Math.min(
+        (BANNER.width * 0.78) / box.width,
+        (BANNER.height * 0.36) / box.height,
+      ) * 1e6,
+    ) / 1e6;
+  const bannerSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${BANNER.width}" height="${BANNER.height}" viewBox="0 0 ${BANNER.width} ${BANNER.height}">` +
+    `<rect width="${BANNER.width}" height="${BANNER.height}" fill="${paint(SURFACES.light.background)}"/>` +
+    `<g transform="translate(${num((BANNER.width - box.width * bannerScale) / 2)} ${num((BANNER.height - box.height * bannerScale) / 2)}) scale(${bannerScale}) translate(${-box.x} ${-box.y})">${mark.inner}${wordmarkPaths(lightColors)}</g>` +
+    "</svg>";
+
   const css = `/*
  * The brand's colors, written by \`pnpm brand\` from brand/brand.json: change that and run
  * it again rather than editing this file. src/app/globals.css gives them their roles.
@@ -379,6 +394,11 @@ export const LOCKUP_SIZE = ${JSON.stringify(lockupSize)} as const;
         () => icon(180, 0.64, paint(config.iconBackground)),
       ],
       ["src/app/opengraph-image.png", () => renderPng(previewSvg)],
+      // The Google Workspace add-on's Marketplace listing (DEPLOY.md). Google Calendar
+      // shows the 32 px icon as the conference logo, from the address the listing gives it.
+      ["google-addon/assets/icon-32.png", () => icon(32, 14 / 16)],
+      ["google-addon/assets/icon-128.png", () => icon(128, 14 / 16)],
+      ["google-addon/assets/banner-220x140.png", () => renderPng(bannerSvg)],
       [
         "src/app/brand.css",
         () => formatted(resolve(ROOT, "src/app/brand.css"), css),
@@ -401,6 +421,7 @@ export const LOCKUP_SIZE = ${JSON.stringify(lockupSize)} as const;
       // A new file.
     }
     if (before && before.equals(bytes)) continue;
+    mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, bytes);
     changed.push(path);
   }

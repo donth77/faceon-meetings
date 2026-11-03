@@ -37,7 +37,8 @@ describe("conferencePlan", () => {
       meetingId: "123 456 7890",
       joinUrl: "https://faceon.test/j/1234567890#pwd=K7XQ2M",
       passcode: "K7XQ2M",
-      notes: "Join from any browser, on a computer or a phone. No download needed.",
+      notes:
+        "Join from any browser, on a computer or a phone. No download needed.",
     });
   });
 

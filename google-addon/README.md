@@ -36,8 +36,9 @@ pnpm addon:push    # builds, then pushes dist/ to the Apps Script project in .cl
 ```
 
 Settings for the build (environment variables): `FACEON_URL`, `NEXT_PUBLIC_APP_NAME`,
-`FACEON_ADDON_LOGO_URL` and `FACEON_CONFERENCE_LOGO_URL` (Google asks for a conference
-logo it hosts).
+`FACEON_ADDON_LOGO_URL` and `FACEON_CONFERENCE_LOGO_URL`. Calendar takes the conference
+logo only from the Marketplace listing's 32 × 32 icon ([SPIKE.md](SPIKE.md), section 3).
+`pnpm brand` writes the listing's icons and banner to `assets/`.
 
 Setting it up the first time, and what to check then, is in [SPIKE.md](SPIKE.md).
 The checklist for each release is [QA.md](QA.md).
