@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ownerOf, shouldUpdate, UPDATE_RETRY_MS } from "./setup-rules";
+import {
+  copyVersion,
+  ownerOf,
+  shouldUpdate,
+  UPDATE_RETRY_MS,
+} from "./setup-rules";
 
 const ada = { userId: "u_ada", googleSub: "1077" };
 const bo = { userId: "u_bo", googleSub: "2088" };
@@ -56,5 +61,39 @@ describe("shouldUpdate", () => {
     expect(shouldUpdate({ ...base, triedAt: justTried })).toBe(false);
     const longAgo = new Date(now.getTime() - UPDATE_RETRY_MS);
     expect(shouldUpdate({ ...base, triedAt: longAgo })).toBe(true);
+  });
+});
+
+describe("copyVersion", () => {
+  const copy = {
+    url: "https://faceon.test",
+    name: "FaceOn",
+    logoUrl: "https://faceon.test/icons/icon-192.png",
+    conferenceLogoUrl: "https://lh3.googleusercontent.com/one",
+  };
+
+  it("is the same for the same build and copy", () => {
+    expect(copyVersion("766aeb6c7ce2", copy)).toBe(
+      copyVersion("766aeb6c7ce2", { ...copy }),
+    );
+  });
+
+  it("changes with the build, and with what FaceOn writes into the copy", () => {
+    const version = copyVersion("766aeb6c7ce2", copy);
+    expect(copyVersion("0a1b2c3d4e5f", copy)).not.toBe(version);
+    // A new logo reaches copies whose code hasn't changed.
+    expect(
+      copyVersion("766aeb6c7ce2", {
+        ...copy,
+        conferenceLogoUrl: "https://lh3.googleusercontent.com/two",
+      }),
+    ).not.toBe(version);
+    expect(
+      copyVersion("766aeb6c7ce2", { ...copy, url: "https://meet.test" }),
+    ).not.toBe(version);
+  });
+
+  it("never matches a developer's build", () => {
+    expect(copyVersion("766aeb6c7ce2", copy)).not.toBe("dev");
   });
 });

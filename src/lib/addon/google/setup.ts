@@ -26,10 +26,20 @@ import {
 } from "./apps-script";
 import { addonAvailable } from "./available";
 import { ADDON_BUNDLE } from "./bundle";
-import { addonFiles, conferenceLogo, type ScriptFile } from "./content";
+import {
+  addonFiles,
+  conferenceLogo,
+  type AddonCopy,
+  type ScriptFile,
+} from "./content";
 import type { GoogleIdentity } from "./identity";
 import type { AddonUser } from "./service";
-import { ownerOf, shouldUpdate, UPDATE_RETRY_MS } from "./setup-rules";
+import {
+  copyVersion,
+  ownerOf,
+  shouldUpdate,
+  UPDATE_RETRY_MS,
+} from "./setup-rules";
 import type { AddonProblem, AddonSetup } from "./setup-shared";
 
 /*
@@ -40,12 +50,12 @@ import type { AddonProblem, AddonSetup } from "./setup-shared";
  * there's no other way). The copy connects itself the first time it's used.
  */
 
-/** The add-on's files, made for this FaceOn, with a connect token or none. */
-function filesFor(connectToken: string): ScriptFile[] {
+/** This FaceOn, as its add-on shows it in Google: its address, name and logos. */
+function thisCopy(): AddonCopy {
   const url = siteUrl();
   const name = publicEnv.NEXT_PUBLIC_APP_NAME;
   const icon = `${url}/icons/icon-192.png`;
-  const copy = {
+  return {
     url,
     name,
     logoUrl: icon,
@@ -55,10 +65,18 @@ function filesFor(connectToken: string): ScriptFile[] {
       icon,
     }),
   };
+}
+
+/** The version of a copy written now (setup-rules.ts, copyVersion). */
+const currentVersion = () => copyVersion(ADDON_BUNDLE.version, thisCopy());
+
+/** The add-on's files, made for this FaceOn, with a connect token or none. */
+function filesFor(connectToken: string): ScriptFile[] {
+  const copy = thisCopy();
   return addonFiles(ADDON_BUNDLE, copy, {
-    url,
-    name,
-    version: ADDON_BUNDLE.version,
+    url: copy.url,
+    name: copy.name,
+    version: copyVersion(ADDON_BUNDLE.version, copy),
     connectToken,
   });
 }
@@ -174,7 +192,7 @@ export async function addAddon(userId: string): Promise<SetupOutcome> {
     googleSub: created.googleSub,
     clientId: null,
     connectTokenHash: hashOf(connectToken),
-    version: ADDON_BUNDLE.version,
+    version: currentVersion(),
     createdAt: now,
     updatedAt: now,
     connectedAt: null,
@@ -211,7 +229,7 @@ export async function updateAddon(userId: string): Promise<SetupOutcome> {
     await db()
       .update(googleAddon)
       .set({
-        version: ADDON_BUNDLE.version,
+        version: currentVersion(),
         updatedAt: now,
         updateTriedAt: now,
         updateRefusedAt: null,
@@ -355,7 +373,7 @@ export async function keepAddonCurrent(
   const now = new Date();
   const due = shouldUpdate({
     reported,
-    current: ADDON_BUNDLE.version,
+    current: currentVersion(),
     refusedAt: addon.updateRefusedAt,
     triedAt: addon.updateTriedAt,
     now,

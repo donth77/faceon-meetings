@@ -2,7 +2,9 @@
  * The add-on's rules, without the database: whose add-on a request comes from, and
  * when FaceOn updates one.
  */
-import { DEV_VERSION } from "./content";
+import { createHash } from "node:crypto";
+
+import { DEV_VERSION, type AddonCopy } from "./content";
 
 /** An add-on FaceOn made: whose it is, and the Google account it's in. */
 export type AddonOwner = { userId: string; googleSub: string };
@@ -27,6 +29,18 @@ export function ownerOf(request: {
   }
   if (byToken?.googleSub === sub) return { ...byToken, connects: true };
   return null;
+}
+
+/**
+ * A copy's version: the build, and what this FaceOn writes into it (its address, name
+ * and logos). A change to either reaches every copy, as the build's version alone
+ * wouldn't for a new logo.
+ */
+export function copyVersion(bundleVersion: string, copy: AddonCopy): string {
+  return createHash("sha256")
+    .update(`${bundleVersion}\n${JSON.stringify(copy)}`)
+    .digest("hex")
+    .slice(0, 12);
 }
 
 /** How long a background update that didn't get through waits before another try. */

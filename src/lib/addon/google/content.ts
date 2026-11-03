@@ -34,9 +34,11 @@ export const DEV_VERSION = "dev";
 /**
  * FaceOn's logo where Google hosts it, for Calendar to show beside a FaceOn meeting
  * (Google's manifest docs: a conference logo "must be hosted on Google infrastructure").
- * Null until there is one; a copy with another name sets its own.
+ * It's the 128 × 128 icon of FaceOn's draft Marketplace listing, which is never
+ * published; a copy with another name sets its own.
  */
-export const FACEON_CONFERENCE_LOGO_URL: string | null = null;
+export const FACEON_CONFERENCE_LOGO_URL: string | null =
+  "https://lh3.googleusercontent.com/marketplace/AF9YtxqV8rXd_6sFmV7UDfxbyUfhZFUm7SpigbR5-oZEmPYcySoiUMY0P-tTLgr0";
 
 /** A copy's conference logo: the one it set, FaceOn's for FaceOn, or else its icon. */
 export function conferenceLogo(copy: {
