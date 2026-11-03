@@ -5,7 +5,7 @@ import { PendingSignIns } from "./sign-in-flow";
 
 /**
  * Google and GitHub sign-in through the system browser (Google refuses sign-in inside
- * embedded browsers). See "Signing in" in desktop/README.md.
+ * embedded browsers). See "Signing in" in desktop/DEVELOPING.md.
  */
 export class SignIn {
   private readonly pending = new PendingSignIns();

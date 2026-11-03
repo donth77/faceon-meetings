@@ -1,8 +1,35 @@
 # Working on the add-on
 
-People don't set this add-on up by hand: they add their own copy from FaceOn's
-**Settings → Calendar**, and FaceOn keeps it up to date ([DEPLOY.md](../DEPLOY.md#the-google-workspace-add-on-optional)).
-This page is for working on the add-on itself. Run the commands from the repository's root.
+This page is for working on the add-on itself. People add their own copy from FaceOn's
+**Settings → Calendar** ([README.md](README.md)), and a FaceOn turns it on as
+[DEPLOY.md](../DEPLOY.md#the-google-workspace-add-on-optional) says. Run the commands
+from the repository's root.
+
+## What's in it
+
+It's an Apps Script add-on (Google documents conferencing add-ons only for Apps Script),
+written in TypeScript and bundled with esbuild. It's a thin client: every action is one
+call to FaceOn's API (`/api/addon/google/*`) with the person's Google identity token, and
+it keeps no data of its own.
+
+|                                               |                                                                             |
+| --------------------------------------------- | --------------------------------------------------------------------------- |
+| `src/main.ts`, `src/handlers.ts`              | Every handler Google calls; the build makes each a global function          |
+| `src/conference.ts`, `src/conference-plan.ts` | **FaceOn meeting** in Calendar: the conference data, or Google's error      |
+| `src/sync.ts`, `src/calendar-events.ts`       | The Calendar trigger that keeps FaceOn's meetings in step with their events |
+| `src/home.ts`, `src/compose.ts`               | The side panel, and Gmail's **Insert a FaceOn meeting**                     |
+| `src/cards.ts`, `src/render.ts`               | The cards as plain values (tested), and as CardService cards                |
+| `src/api.ts`, `src/api-errors.ts`             | Calls to FaceOn's API, with the person's Google identity token              |
+| `src/settings.ts`                             | Calendar's settings link to FaceOn's Settings → Calendar                    |
+| `src/text.ts`, `src/i18n.ts`                  | Card text from `messages/<language>.json` (`GoogleAddon`)                   |
+| `src/config.ts`                               | The copy's own settings, from the first line of its `Code.js`               |
+| `appsscript.json`                             | The manifest template, filled in for each FaceOn                            |
+| `build.mjs`                                   | The bundle FaceOn writes into people's accounts, or a developer's `dist/`   |
+
+The API's request and response types are shared with FaceOn's server
+(`src/lib/addon/google/types.ts`), which makes and updates people's copies
+(`src/lib/addon/google/setup.ts`). `pnpm brand` writes the add-on's icons and banner to
+`assets/`.
 
 ## How FaceOn makes each copy
 
@@ -22,13 +49,25 @@ This page is for working on the add-on itself. Run the commands from the reposit
   own OAuth client, which FaceOn learns from the copy's first request, the one with the
   connect token. After that, FaceOn accepts that client only from the Google account the
   copy was made in (`setup-rules.ts`, `ownerOf`).
-- Each request also says the copy's version. When it's behind, FaceOn writes the current
-  build into the project after answering, and the next use runs it: a test deployment
-  always runs the project's latest code.
+- Each request also says the copy's version: the build's, plus what this FaceOn writes into
+  it (its address, name and logos). When it's behind, FaceOn writes the current one into
+  the project after answering, and the next use runs it: a test deployment always runs the
+  project's latest code.
+
+## Build and push
+
+```sh
+node google-addon/build.mjs --bundle   # what FaceOn writes into people's accounts
+pnpm addon:build                       # dist/, a developer's build for FACEON_URL (https://joinfaceon.app by default)
+pnpm addon:push                        # builds, then pushes dist/ to the Apps Script project in .clasp.json
+```
+
+A developer's build reads `FACEON_URL`, `NEXT_PUBLIC_APP_NAME`,
+`GOOGLE_ADDON_CONFERENCE_LOGO_URL` and `FACEON_CONNECT_TOKEN`.
 
 ## Try your changes
 
-You push your own build to a copy you made in FaceOn. FaceOn's servers can't call
+You push your own build to a copy you made in FaceOn. Google's servers can't call
 `localhost`, so use a FaceOn on the internet (production, or a preview on `https://`).
 
 1. In that FaceOn, add the add-on in Settings → Calendar, install it, and use it once in

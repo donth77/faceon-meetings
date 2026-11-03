@@ -10,7 +10,6 @@
 **Free, open-source video meetings that run in your browser.**
 
 [![Desktop app](https://img.shields.io/github/v/release/donth77/faceon-desktop-releases?include_prereleases&style=flat-square&label=desktop&color=1F5EFF)](https://github.com/donth77/faceon-desktop-releases/releases)
-[![CI](https://img.shields.io/github/actions/workflow/status/donth77/faceon-meetings/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/donth77/faceon-meetings/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-1F5EFF?style=flat-square)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
@@ -38,43 +37,18 @@ If you've used Zoom or Google Meet, you already know how to use FaceOn. Try it a
 
 ## What works
 
-**Meetings**
+- Instant and scheduled meetings, and a personal room
+- Join by link or meeting ID; guests need only a name
+- Passcodes, a waiting room and host controls
+- Chat, reactions, raised hands and screen sharing
+- Background blur, backgrounds and noise suppression
+- Google Calendar invitations and meeting reminders
+- AI notes, if you want them
+- Previous meetings, attendance and your data to download
+- A [desktop app](desktop/README.md) for Windows and Mac
+- FaceOn in [Google Calendar and Gmail](google-addon/README.md)
 
-- Instant and scheduled meetings, recurring ones too, and a personal room
-- Join by link or meeting ID; guests join with just a name
-- Passcodes, a waiting room and host controls, with co-hosts named ahead of time or made during the meeting
-
-**In the meeting**
-
-- Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
-- Background blur and backgrounds: paintings, places, moving backgrounds, or your own image or looping video
-- Noise suppression that takes out typing, traffic and background voices (RNNoise)
-- Keyboard shortcuts
-
-**Calendar**
-
-- Invitations through Google Calendar: connect it once, and Google emails the people you invite and keeps their calendars up to date
-- Links for Google Calendar, Outlook and any calendar app (.ics) that work without connecting
-- Meeting reminders in the browser, and by email if you want them
-- FaceOn in Google Calendar and Gmail: FaceOn meeting in Calendar's Add video conferencing, a side panel in both, and Insert a FaceOn meeting in Gmail. Each person adds their own copy from Settings ([google-addon/](google-addon/README.md))
-
-**AI notes** (optional)
-
-- A summary, action items and decisions, made with Chrome's built-in AI or your own AI key
-- Saved, or shared with the participants
-
-**Afterwards**
-
-- Previous meetings with who came, and an attendance spreadsheet for hosts
-- Download your data: your account, meetings, attendance and AI notes, as JSON, CSV and Markdown
-- A searchable Help center
-
-**Apps**
-
-- Installs as an app from Chrome or Edge, or with Add to Home Screen and Add to Dock in Safari
-- A desktop app for Windows and macOS ([desktop/](desktop/README.md))
-
-**On the way:** Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
+**On the way:** more languages, and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
 
 ## Tech stack
 
@@ -107,6 +81,8 @@ Useful scripts:
 | `pnpm test`      | Unit tests (Vitest)                                      |
 | `pnpm test:e2e`  | Browser tests (Playwright) against `pnpm build`'s output |
 | `pnpm format`    | Format with Prettier                                     |
+
+The desktop app and the Google add-on have their own guides: [desktop/DEVELOPING.md](desktop/DEVELOPING.md) and [google-addon/DEVELOPING.md](google-addon/DEVELOPING.md).
 
 ## Deploy your own
 

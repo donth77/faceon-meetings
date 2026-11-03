@@ -1,6 +1,6 @@
 name: Desktop
 
-# The desktop app's releases (desktop/README.md). A desktop-v* tag builds the Windows
+# The desktop app's releases (desktop/RELEASING.md). A desktop-v* tag builds the Windows
 # installer and uploads it to the releases repository's draft; the Mac build is signed
 # and published from the owner's Mac. "Run workflow" builds without publishing, and can
 # add an unsigned Mac test build (macOS minutes count ten times while this is private).

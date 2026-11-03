@@ -5,7 +5,7 @@
 // keychain it signs (hardened runtime and entitlements); with a notary profile or an
 // App Store Connect key it also notarizes and staples. Without them it builds an
 // unsigned app and says so. --publish uploads to the releases repository.
-// Every step is in desktop/README.md.
+// Every step is in desktop/RELEASING.md.
 import { execFileSync, spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -57,14 +57,14 @@ else {
   console.warn(
     '\n  UNSIGNED BUILD: no "Developer ID Application" certificate in your keychain.\n' +
       "  macOS will warn when it opens, and it can't update itself.\n" +
-      '  To sign, follow "Signing on your Mac" in desktop/README.md.\n',
+      '  To sign, follow "Signing on your Mac" in desktop/RELEASING.md.\n',
   );
 }
 if (identity && notary) console.log(`Notarizing with the ${notary}.`);
 else if (identity) {
   console.warn(
     "\n  NOT NOTARIZED: set APPLE_KEYCHAIN_PROFILE (or an App Store Connect key) in\n" +
-      "  desktop/.env.local. See desktop/README.md.\n",
+      "  desktop/.env.local. See desktop/RELEASING.md.\n",
   );
 }
 if (publish && !(identity && notary) && !allowUnsigned) {
@@ -75,7 +75,7 @@ if (publish && !(identity && notary) && !allowUnsigned) {
   process.exit(1);
 }
 if (publish && !process.env.GH_TOKEN) {
-  console.error("Publishing needs GH_TOKEN (see desktop/README.md).");
+  console.error("Publishing needs GH_TOKEN (see desktop/RELEASING.md).");
   process.exit(1);
 }
 

@@ -1,5 +1,5 @@
 // electron-builder's settings for FaceOn's desktop app. scripts/mac.mjs and
-// scripts/windows.mjs build with them; desktop/README.md explains each step.
+// scripts/windows.mjs build with them; desktop/RELEASING.md explains each step.
 const name = process.env.NEXT_PUBLIC_APP_NAME || "FaceOn";
 const releases = process.env.DESKTOP_RELEASES_REPO || "";
 const [owner, repo] = releases.split("/");

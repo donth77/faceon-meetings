@@ -7,7 +7,7 @@ export const desktopDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
  * The owner's settings for building the app: desktop/.env.local (git-ignored), then
- * the environment. See desktop/README.md for each one.
+ * the environment. See desktop/RELEASING.md for each one.
  */
 export function loadDesktopEnv() {
   const file = join(desktopDir, ".env.local");

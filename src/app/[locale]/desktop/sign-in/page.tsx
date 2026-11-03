@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Where the desktop app sends people to sign in with Google or GitHub, in their
- * browser; desktop/README.md has the whole flow. Inside the app, it explains a sign-in
+ * browser; desktop/DEVELOPING.md has the whole flow. Inside the app, it explains a sign-in
  * that didn't finish.
  */
 export default function DesktopSignInPage({

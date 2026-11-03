@@ -2,7 +2,7 @@ name: Google Workspace add-on
 
 # A google-addon-v* tag tests the add-on and attaches a developer's build of it to the
 # tag's GitHub release. People get their own copy from FaceOn itself (Settings →
-# Calendar), which keeps it up to date (google-addon/SETUP.md).
+# Calendar), which keeps it up to date (google-addon/DEVELOPING.md).
 on:
   push:
     tags: ["google-addon-v*"]
@@ -36,5 +36,5 @@ jobs:
           (cd google-addon/dist && zip -q "../../$GITHUB_REF_NAME.zip" Code.js appsscript.json)
           gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 ||
             gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" \
-              --notes "The Google Workspace add-on, a developer's build for $FACEON_URL (google-addon/SETUP.md). People add their own copy from FaceOn's Settings → Calendar."
+              --notes "The Google Workspace add-on, a developer's build for $FACEON_URL (google-addon/DEVELOPING.md). People add their own copy from FaceOn's Settings → Calendar."
           gh release upload "$GITHUB_REF_NAME" "$GITHUB_REF_NAME.zip" --clobber

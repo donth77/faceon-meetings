@@ -1,4 +1,4 @@
-/** Fixed when the app is built (scripts/build.mjs); see desktop/README.md. */
+/** Fixed when the app is built (scripts/build.mjs); see desktop/RELEASING.md. */
 declare const __APP_URL__: string;
 declare const __APP_NAME__: string;
 declare const __APP_ID__: string;
