@@ -74,8 +74,9 @@ type CheckState = "checking" | "ready" | "interactive" | "failed";
  *
  * `take()` gives the token for one request (waiting for the check if it's still going,
  * and for the person if it's asking them something), or null when the check couldn't
- * finish; tokens work once, so a new check starts behind it. `view` holds Cloudflare's widget (seen only when it asks something) and our own
- * lines: what to do, and Try again when Cloudflare can't load.
+ * finish; tokens work once, so a new check starts behind it. `view` holds Cloudflare's
+ * widget (seen only when it asks something) and our own lines: what to do, and Try
+ * again when Cloudflare can't load.
  */
 export function useHumanCheck(
   action: HumanCheckAction,
