@@ -64,7 +64,7 @@ export function SettingsNav({ admin = false }: { admin?: boolean }) {
   return (
     <nav
       aria-label={t("sections")}
-      className="-m-0.5 flex gap-0.5 overflow-x-auto p-0.5 xl:m-0 xl:flex-[0_0_236px] xl:flex-col xl:overflow-visible xl:p-0"
+      className="-m-0.5 flex gap-0.5 overflow-x-auto p-0.5 @3xl:m-0 @3xl:flex-[0_0_236px] @3xl:flex-col @3xl:overflow-visible @3xl:p-0"
     >
       {SETTINGS_SECTIONS.filter(
         // A copy can turn AI notes off; their settings go with them.
