@@ -1,7 +1,24 @@
 import { auth } from "@/lib/auth/server";
-import { disconnectGoogleCalendar } from "@/lib/google-calendar/connection";
+import {
+  calendarConnection,
+  disconnectGoogleCalendar,
+} from "@/lib/google-calendar/connection";
 import { loggable } from "@/lib/log";
 import { isSameOrigin } from "@/lib/same-origin";
+
+/**
+ * GET /api/integrations/google-calendar: where the caller's Google Calendar stands. The
+ * desktop app asks while someone connects it in their browser.
+ */
+export async function GET(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return new Response(null, { status: 401 });
+  const connection = await calendarConnection(session.user);
+  return Response.json(
+    { connection },
+    { headers: { "cache-control": "no-store" } },
+  );
+}
 
 /**
  * DELETE /api/integrations/google-calendar: disconnect Google Calendar. Revokes

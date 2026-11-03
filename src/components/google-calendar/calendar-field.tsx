@@ -14,7 +14,7 @@ import {
   type CalendarConnection,
 } from "@/lib/google-calendar/shared";
 
-import { connectInBrowserInstead, connectInPopup } from "./connect";
+import { connectInBrowser, connectInPopup } from "./connect";
 
 const OUTLINE =
   "h-[38px] shrink-0 rounded-[10px] border-[#c9cfd8] px-3.5 text-sm font-semibold dark:border-white/15";
@@ -115,15 +115,16 @@ export function GoogleCalendarField({
   if (connection.status === "unavailable") return null;
 
   async function connect() {
-    if (connectInBrowserInstead()) {
-      toast(t("inBrowser"));
-      return;
-    }
-    setConnecting(true);
-    const report = await connectInPopup({
-      back: `${window.location.pathname}${window.location.search}`,
-      loginHint: email,
-    });
+    // The desktop app: the browser connects, and this waits (the button stays free,
+    // to open the browser again).
+    const inBrowser = connectInBrowser();
+    if (inBrowser) toast(t("inBrowser"));
+    else setConnecting(true);
+    const report = await (inBrowser ??
+      connectInPopup({
+        back: `${window.location.pathname}${window.location.search}`,
+        loginHint: email,
+      }));
     setConnecting(false);
     if (!report) return;
     setConnection(report.connection);

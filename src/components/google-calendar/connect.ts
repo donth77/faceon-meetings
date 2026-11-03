@@ -1,6 +1,9 @@
 "use client";
 
-import { linkSocial } from "@/lib/auth/client";
+import { z } from "zod";
+
+import { authClient, linkSocial } from "@/lib/auth/client";
+import type { FaceonDesktop } from "@/lib/desktop/bridge";
 import { desktopBridge } from "@/lib/desktop/use-desktop";
 import {
   GOOGLE_CALENDAR_CONSENT,
@@ -11,18 +14,83 @@ import {
 /** Settings → Calendar, where Google sends people back after its consent screen. */
 export const CALENDAR_SETTINGS_ROUTE = "/settings/calendar";
 
+/** Where the desktop app sends people to connect Google Calendar, in their browser. */
+export const DESKTOP_CALENDAR_ROUTE = "/desktop/calendar";
+
+/** How often the desktop app looks while someone connects in their browser. */
+const POLL_MS = 3000;
+
+const ConnectionReply = z.object({
+  connection: z.discriminatedUnion("status", [
+    z.object({ status: z.literal("unavailable") }),
+    z.object({ status: z.literal("disconnected") }),
+    z.object({ status: z.literal("connected"), email: z.string() }),
+    z.object({ status: z.literal("reconnect") }),
+  ]),
+});
+
+let waitingForBrowser: Promise<ConnectReport | null> | null = null;
+
 /**
  * Inside the desktop app, Google refuses its consent screen (as it refuses sign-in in
- * embedded browsers), so Settings → Calendar opens in the browser instead; the connection
- * belongs to the account, and shows in the app when its window is back in front. True
- * when that's what happened.
+ * embedded browsers), so the browser goes straight to it (/desktop/calendar), and this
+ * waits until the account shows connected (null after a while). Null outside the app.
  */
-export function connectInBrowserInstead(): boolean {
+export function connectInBrowser(): Promise<ConnectReport | null> | null {
   const desktop = desktopBridge();
-  if (!desktop) return false;
-  desktop.openInBrowser(CALENDAR_SETTINGS_ROUTE);
-  return true;
+  if (!desktop) return null;
+  void openInBrowser(desktop);
+  waitingForBrowser ??= waitForConnection().finally(() => {
+    waitingForBrowser = null;
+  });
+  return waitingForBrowser;
 }
+
+/** The browser's page, for this account: it says so when the browser's is another. */
+async function openInBrowser(desktop: FaceonDesktop) {
+  const { data } = await authClient.getSession().catch(() => ({ data: null }));
+  const account = data ? `?for=${encodeURIComponent(data.user.id)}` : "";
+  desktop.openInBrowser(`${DESKTOP_CALENDAR_ROUTE}${account}`);
+}
+
+/** Looks every few seconds, and when the window comes back to the front. */
+function waitForConnection(): Promise<ConnectReport | null> {
+  return new Promise((resolve) => {
+    const since = Date.now();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (report: ConnectReport | null) => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", look);
+      resolve(report);
+    };
+    async function look() {
+      clearTimeout(timer);
+      const connection = await currentConnection();
+      if (connection?.status === "connected") {
+        finish({ connection, error: null });
+      } else if (Date.now() - since >= WAIT_MS) {
+        finish(null);
+      } else {
+        timer = setTimeout(look, POLL_MS);
+      }
+    }
+    window.addEventListener("focus", look);
+    timer = setTimeout(look, POLL_MS);
+  });
+}
+
+async function currentConnection(): Promise<CalendarConnection | null> {
+  try {
+    const response = await fetch("/api/integrations/google-calendar", {
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    return ConnectionReply.parse(await response.json()).connection;
+  } catch {
+    return null;
+  }
+}
+
 /** How the consent window tells the page that opened it how connecting went. */
 const CHANNEL = "faceon-google-calendar";
 const WINDOW_NAME = "faceon-google-calendar";

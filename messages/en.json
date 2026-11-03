@@ -2024,5 +2024,18 @@
     "signIn": "Sign in",
     "signUp": "Create an account",
     "noAccount": "You don’t need an account to join."
+  },
+  "DesktopCalendar": {
+    "title": "Connect Google Calendar",
+    "opening": "Taking you to Google…",
+    "connectedTitle": "Google Calendar is connected",
+    "connectedBody": "You can close this tab and go back to {appName}.",
+    "failedTitle": "Google Calendar didn’t connect",
+    "tryAgain": "Try again",
+    "signIn": "Sign in to {appName} in this browser to connect Google Calendar to your account.",
+    "signInButton": "Sign in",
+    "otherAccount": "This browser is signed in as {email}, not the account you use in the {appName} app. Sign out here, then sign in with that account.",
+    "signOut": "Sign out and switch",
+    "unavailable": "This copy of {appName} doesn’t offer Google Calendar."
   }
 }

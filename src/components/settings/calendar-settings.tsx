@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { FormNotice } from "@/components/auth/fields";
 import {
   CALENDAR_SETTINGS_ROUTE,
-  connectInBrowserInstead,
+  connectInBrowser,
   connectInPage,
   reportToOpener,
 } from "@/components/google-calendar/connect";
@@ -118,8 +118,13 @@ export function CalendarSettings({
   }
 
   async function connect() {
-    if (connectInBrowserInstead()) {
+    const inBrowser = connectInBrowser();
+    if (inBrowser) {
       toast(tc("inBrowser"));
+      if ((await inBrowser)?.connection.status === "connected") {
+        toast.success(tc("connected"));
+        router.refresh();
+      }
       return;
     }
     setConnecting(true);

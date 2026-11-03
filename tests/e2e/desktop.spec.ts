@@ -49,4 +49,38 @@ test.describe("the desktop app", () => {
     await expect(app.page).toHaveURL(/\/home$/);
     expectNoErrors(app);
   });
+
+  test("connecting Google Calendar from the app: the browser's page", async ({
+    people,
+  }) => {
+    // Signed out in the browser: sign in first, then back here.
+    const visitor = await people.guest();
+    await visitor.page.goto("/desktop/calendar?for=someone");
+    await expect(
+      visitor.page.getByRole("link", { name: "Sign in" }),
+    ).toHaveAttribute(
+      "href",
+      `/sign-in?next=${encodeURIComponent("/desktop/calendar?for=someone")}`,
+    );
+
+    // Signed in to another account than the app's: it says so, and never connects.
+    const host = await people.signedIn();
+    await host.page.goto("/desktop/calendar?for=someone-else");
+    await expect(
+      host.page.getByRole("button", { name: "Sign out and switch" }),
+    ).toBeVisible();
+
+    // The app asks where the connection stands while the browser connects.
+    const reply = await host.page.request.get(
+      "/api/integrations/google-calendar",
+    );
+    expect(reply.ok()).toBe(true);
+    expect(
+      ["unavailable", "disconnected"].includes(
+        ((await reply.json()) as { connection: { status: string } }).connection
+          .status,
+      ),
+    ).toBe(true);
+    expectNoErrors(host);
+  });
 });
