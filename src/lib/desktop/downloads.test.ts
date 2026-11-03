@@ -5,8 +5,11 @@ import {
   deviceKind,
   downloadView,
   formatSize,
+  homeInstallCard,
+  installOffer,
   pickInstallers,
   versionFromDownloadUrl,
+  type DesktopRelease,
 } from "./downloads";
 
 const AGENTS = {
@@ -160,5 +163,78 @@ describe("what /download offers", () => {
         platforms(downloadView({ ...release, mac: null }, device)),
       ).toEqual(["windows"]);
     }
+  });
+});
+
+describe("how a device gets FaceOn as an app", () => {
+  const download = {
+    url: "https://example.test/FaceOn-Setup.exe",
+    size: null,
+    signed: false,
+  };
+  const windowsOnly: DesktopRelease = {
+    version: "0.1.0",
+    publishedAt: null,
+    releases: "https://example.test/releases",
+    windows: download,
+    mac: null,
+  };
+
+  it("offers the desktop app on a Mac or Windows once its build is out", () => {
+    const offer = (device: "windows" | "mac") =>
+      installOffer({ inApp: false, device, release: windowsOnly });
+    expect(offer("windows")).toBe("download");
+    // The Mac's build isn't out: the web app's install meanwhile.
+    expect(offer("mac")).toBe("web");
+    expect(
+      installOffer({ inApp: false, device: "windows", release: null }),
+    ).toBe("web");
+  });
+
+  it("waits for the device and the release, and offers nothing in the app", () => {
+    expect(
+      installOffer({ inApp: false, device: null, release: windowsOnly }),
+    ).toBe("none");
+    expect(
+      installOffer({ inApp: false, device: "windows", release: undefined }),
+    ).toBe("none");
+    expect(
+      installOffer({ inApp: true, device: "windows", release: windowsOnly }),
+    ).toBe("none");
+  });
+
+  it("keeps the web app's install for phones, and other computers' in Settings", () => {
+    expect(
+      installOffer({
+        inApp: false,
+        device: "phoneOrTablet",
+        release: windowsOnly,
+      }),
+    ).toBe("web");
+    expect(
+      installOffer({
+        inApp: false,
+        device: "otherComputer",
+        release: windowsOnly,
+      }),
+    ).toBe("webInSettings");
+  });
+});
+
+describe("Home's one-time card", () => {
+  it("offers the desktop app until the account uses it", () => {
+    expect(homeInstallCard("download", false)).toBe("desktop");
+    expect(homeInstallCard("download", true)).toBeNull();
+  });
+
+  it("is the web app's install on phones, and never both", () => {
+    expect(homeInstallCard("web", false)).toBe("web");
+    // Using the desktop app doesn't hide a phone's own install.
+    expect(homeInstallCard("web", true)).toBe("web");
+  });
+
+  it("is nothing where the offer is Settings only, or not known yet", () => {
+    expect(homeInstallCard("webInSettings", false)).toBeNull();
+    expect(homeInstallCard("none", false)).toBeNull();
   });
 });

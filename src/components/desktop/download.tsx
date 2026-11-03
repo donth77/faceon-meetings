@@ -1,13 +1,15 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, Monitor } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { OneTimeCard } from "@/components/home/one-time-card";
 import { SettingsCard } from "@/components/settings/settings-nav";
-import { LinkButton } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { formatSize } from "@/lib/desktop/downloads";
 import { useDesktopDownload } from "@/lib/desktop/use-desktop-release";
+import { dismiss, useDismissed } from "@/lib/dismissals";
 import { publicEnv } from "@/lib/env";
 import { useIntlLocale } from "@/lib/preferences";
 
@@ -77,5 +79,54 @@ export function DesktopDownloadMenuItem() {
       <Download aria-hidden="true" />
       {t(`download.${found.platform}`)}
     </DropdownMenuItem>
+  );
+}
+
+/**
+ * Home on a Mac or Windows, once its build is out: a one-time card offering the desktop
+ * app (components/pwa/install-app.tsx decides when). Not now puts it away for good in
+ * this browser; Settings and the account menu still have the download.
+ */
+export function DesktopAppHomeCard() {
+  const t = useTranslations("DesktopApp");
+  const tDownload = useTranslations("Download");
+  const tCard = useTranslations("Pwa.install.card");
+  const found = useDesktopDownload();
+  const dismissed = useDismissed("desktopAppCard", { hiddenOnServer: true });
+  if (!found || dismissed) return null;
+  const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
+  const title = t(`homeCard.${found.platform}`, { appName });
+
+  return (
+    <OneTimeCard
+      label={title}
+      icon={Monitor}
+      title={title}
+      body={t("cardBody", { appName })}
+      onDismiss={() => dismiss("desktopAppCard")}
+      actions={(close) => (
+        <>
+          <LinkButton
+            href={found.download.url}
+            className="h-10 gap-2 rounded-[10px] px-4 text-sm font-semibold"
+          >
+            <Download aria-hidden="true" />
+            {t(`download.${found.platform}`)}
+          </LinkButton>
+          <Button
+            variant="ghost"
+            className="h-10 rounded-[10px]"
+            onPress={close}
+          >
+            {tCard("notNow")}
+          </Button>
+        </>
+      )}
+      note={
+        found.download.signed
+          ? null
+          : tDownload(`unsigned.${found.platform}`, { appName })
+      }
+    />
   );
 }

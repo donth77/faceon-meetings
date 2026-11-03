@@ -14,6 +14,7 @@ import { NewMeetingMenu } from "@/components/home/new-meeting-menu";
 import { JoinForm } from "@/components/meetings/join-form";
 import { InstallCard } from "@/components/pwa/install-app";
 import { requireSession } from "@/lib/auth/session";
+import { desktopAppUsedBy } from "@/lib/desktop/usage";
 import { hostingAccessOf } from "@/lib/hosting/access";
 import { demoTerms, fullTerms } from "@/lib/meetings/hosting";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
@@ -47,7 +48,9 @@ export default async function HomePage() {
             <JoinForm />
           </div>
         </section>
-        <InstallCard />
+        <Suspense fallback={null}>
+          <AppCard />
+        </Suspense>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
           <Suspense fallback={<CardsLoading rows={2} />}>
             <PersonalRoom />
@@ -84,6 +87,14 @@ async function Hosting() {
         full: fullTerms(),
       }}
     />
+  );
+}
+
+/** The one-time app card, which knows whether this account uses the desktop app. */
+async function AppCard() {
+  const session = await requireSession(HOME_ROUTE);
+  return (
+    <InstallCard desktopAppUsed={await desktopAppUsedBy(session.user.id)} />
   );
 }
 

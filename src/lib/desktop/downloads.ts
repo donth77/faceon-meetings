@@ -50,6 +50,41 @@ export function deviceKind(
   return "otherComputer";
 }
 
+/**
+ * How a device gets FaceOn as an app: the desktop app's download on a Mac or Windows once
+ * its build is out, the web app's install on phones and tablets (and on a Mac or Windows
+ * until then), the web app's install in Settings only on other computers, and nothing
+ * inside the desktop app or before the device and the release are known.
+ */
+export type InstallOffer = "none" | "download" | "web" | "webInSettings";
+
+export function installOffer(input: {
+  inApp: boolean;
+  device: DeviceKind | null;
+  /** The latest release: undefined while finding out, null where there's none. */
+  release: DesktopRelease | null | undefined;
+}): InstallOffer {
+  const { inApp, device, release } = input;
+  if (inApp || device === null) return "none";
+  if (device === "phoneOrTablet") return "web";
+  if (device === "otherComputer") return "webInSettings";
+  if (release === undefined) return "none";
+  return release?.[device] ? "download" : "web";
+}
+
+/**
+ * Home's one-time card, never two: the desktop app's where it's offered, unless this
+ * account uses the app already; or the web app's install. None where the offer is
+ * Settings only.
+ */
+export function homeInstallCard(
+  offer: InstallOffer,
+  desktopAppUsed: boolean,
+): "desktop" | "web" | null {
+  if (offer === "download") return desktopAppUsed ? null : "desktop";
+  return offer === "web" ? "web" : null;
+}
+
 /** What /download offers a device (downloadView). */
 export type DownloadView = {
   /** The builds, in order. */

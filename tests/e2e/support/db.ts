@@ -44,15 +44,24 @@ export async function createUser(
     name?: string;
     aiNotes?: boolean;
     signedInAgo?: string;
+    /** Has signed in to the desktop app already. */
+    usedDesktopApp?: boolean;
   } = {},
 ): Promise<TestUser> {
   const id = `e2e_${unique()}`;
   const name = options.name ?? "Test Host";
   const email = `${id}@faceon.test`;
   await database().query(
-    `insert into "user" (id, name, email, email_verified, avatar_seed, avatar_source, ai_notes, created_at, updated_at)
-     values ($1, $2, $3, true, $4, 'dicebear', $5, now(), now())`,
-    [id, name, email, `${unique(8)}-f`, options.aiNotes ?? false],
+    `insert into "user" (id, name, email, email_verified, avatar_seed, avatar_source, ai_notes, desktop_app_at, created_at, updated_at)
+     values ($1, $2, $3, true, $4, 'dicebear', $5, case when $6::boolean then now() end, now(), now())`,
+    [
+      id,
+      name,
+      email,
+      `${unique(8)}-f`,
+      options.aiNotes ?? false,
+      options.usedDesktopApp ?? false,
+    ],
   );
   const token = randomBytes(24).toString("base64url");
   await database().query(
@@ -167,6 +176,15 @@ export async function resetAttempts(): Promise<void> {
 }
 
 /** Whether an account still exists. */
+/** Whether an account is noted as using the desktop app. */
+export async function usesDesktopApp(id: string): Promise<boolean> {
+  const { rows } = await database().query<{ used: boolean }>(
+    `select desktop_app_at is not null as used from "user" where id = $1`,
+    [id],
+  );
+  return rows[0]?.used ?? false;
+}
+
 export async function userExists(id: string): Promise<boolean> {
   const { rows } = await database().query(
     `select 1 from "user" where id = $1`,

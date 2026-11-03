@@ -2,16 +2,24 @@
 
 import { Download, Share, Smartphone } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 import {
+  DesktopAppHomeCard,
   DesktopDownloadCard,
   DesktopDownloadMenuItem,
 } from "@/components/desktop/download";
+import { OneTimeCard } from "@/components/home/one-time-card";
 import { SettingsCard } from "@/components/settings/settings-nav";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { noteDesktopAppAction } from "@/lib/desktop/actions";
+import {
+  homeInstallCard,
+  installOffer,
+  type InstallOffer,
+} from "@/lib/desktop/downloads";
 import { useDesktop } from "@/lib/desktop/use-desktop";
 import {
   useDesktopRelease,
@@ -94,38 +102,20 @@ function InstallCardInBrowser() {
   const t = useTranslations("Pwa.install.card");
   const { way, installApp } = useInstallAction();
   const { dismissed, dismiss } = useInstallCard();
-  const card = useRef<HTMLElement>(null);
   if (dismissed || (way !== "prompt" && way !== "ios")) return null;
 
-  // The card goes away with the button pressed in it: focus moves to the page first.
-  const close = () => {
-    if (card.current?.contains(document.activeElement)) {
-      document.getElementById("main")?.focus();
-    }
-    dismiss();
-  };
-
   return (
-    <section
-      ref={card}
-      aria-label={t("label", { appName })}
-      className="bg-card ring-border flex flex-col gap-3 rounded-2xl p-4.5 ring-1 md:hidden"
-    >
-      <div className="flex items-start gap-3">
-        <span className="bg-chip text-chip-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
-          <Smartphone className="size-5" aria-hidden="true" />
-        </span>
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="text-base font-bold">{t("title", { appName })}</h2>
-          <p className="text-muted-foreground text-sm leading-normal">
-            {way === "prompt"
-              ? t("prompt")
-              : t.rich("ios", { share: shareIcon })}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {way === "prompt" ? (
+    <OneTimeCard
+      label={t("label", { appName })}
+      icon={Smartphone}
+      title={t("title", { appName })}
+      body={
+        way === "prompt" ? t("prompt") : t.rich("ios", { share: shareIcon })
+      }
+      onDismiss={dismiss}
+      className="md:hidden"
+      actions={(close) =>
+        way === "prompt" ? (
           <>
             <Button
               className="h-10 rounded-[10px]"
@@ -154,28 +144,22 @@ function InstallCardInBrowser() {
           >
             {t("gotIt")}
           </Button>
-        )}
-      </div>
-    </section>
+        )
+      }
+    />
   );
 }
 
 /**
- * What to offer, decided once the page runs here (the cached page is everyone's). Never
- * in the desktop app, which is installed already. On a Mac or Windows, the desktop app's
- * download once its build is out, instead of the web app's install. Phones and tablets
- * keep the web app's install; other computers (Linux, ChromeOS) have it only in Settings.
+ * What to offer (lib/desktop/downloads.ts, installOffer), decided once the page runs
+ * here, since the cached page is everyone's.
  */
-function useInstallOffer(): "none" | "download" | "web" | "webInSettings" {
+function useInstallOffer(): InstallOffer {
   const inApp = useDesktop() !== null;
   const device = useDeviceKind();
   const desktopPlatform = device === "windows" || device === "mac";
   const release = useDesktopRelease(desktopPlatform && !inApp);
-  if (inApp || device === null) return "none";
-  if (device === "phoneOrTablet") return "web";
-  if (device === "otherComputer") return "webInSettings";
-  if (release === undefined) return "none";
-  return release?.[device] ? "download" : "web";
+  return installOffer({ inApp, device, release });
 }
 
 export function InstallAppCard() {
@@ -194,5 +178,29 @@ export function InstallMenuItem() {
   return offer === "web" ? <InstallMenuItemInBrowser /> : null;
 }
 
-export const InstallCard = () =>
-  useDesktop() ? null : <InstallCardInBrowser />;
+let notedDesktopApp = false;
+
+/** Notes once per page load that this account uses the desktop app. */
+function noteDesktopApp() {
+  if (notedDesktopApp) return;
+  notedDesktopApp = true;
+  void noteDesktopAppAction().catch(() => {
+    notedDesktopApp = false;
+  });
+}
+
+/**
+ * Home's one-time card (lib/desktop/downloads.ts, homeInstallCard): the desktop app's on
+ * a Mac or Windows, unless this account uses the app already, or the web app's install on
+ * phones. Inside the desktop app, it notes that this account uses it instead.
+ */
+export function InstallCard({ desktopAppUsed }: { desktopAppUsed: boolean }) {
+  const inApp = useDesktop() !== null;
+  const offer = useInstallOffer();
+  useEffect(() => {
+    if (inApp && !desktopAppUsed) noteDesktopApp();
+  }, [inApp, desktopAppUsed]);
+  const card = homeInstallCard(offer, desktopAppUsed);
+  if (card === "desktop") return <DesktopAppHomeCard />;
+  return card === "web" ? <InstallCardInBrowser /> : null;
+}

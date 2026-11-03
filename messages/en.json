@@ -1918,6 +1918,10 @@
   "DesktopApp": {
     "cardTitle": "Desktop app",
     "cardBody": "{appName} in an app of its own: meeting links open in it, you can mute from any app, and reminders come with no browser open.",
+    "homeCard": {
+      "windows": "Get {appName} for Windows",
+      "mac": "Get {appName} for Mac"
+    },
     "download": {
       "windows": "Download for Windows",
       "mac": "Download for Mac"

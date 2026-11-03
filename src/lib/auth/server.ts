@@ -190,6 +190,14 @@ export const auth = betterAuth({
         input: false,
         returned: false,
       },
+      // When this account first used the desktop app, so Home stops suggesting it in
+      // browsers (lib/desktop/usage.ts). Only Home reads it, from the database.
+      desktopAppAt: {
+        type: "date",
+        required: false,
+        input: false,
+        returned: false,
+      },
     },
   },
   databaseHooks: {

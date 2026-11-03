@@ -16,6 +16,8 @@ import {
   readHandoff,
 } from "@/lib/desktop/handoff";
 import { CHALLENGE } from "@/lib/desktop/handoff-params";
+import { noteDesktopAppUsed } from "@/lib/desktop/usage";
+import { loggable } from "@/lib/log";
 
 /** Back to the app's sign-in page, saying only that it didn't work. */
 const FAILED = "/desktop/sign-in?error=expired";
@@ -111,6 +113,13 @@ export const desktopHandoff = () =>
             user.id,
           );
           await setSessionCookie(ctx, { session, user });
+          // Browsers stop suggesting the app to this account. Never in sign-in's way.
+          await noteDesktopAppUsed(user.id).catch((error: unknown) => {
+            console.error(
+              "Couldn't note the desktop app's use",
+              loggable(error),
+            );
+          });
           throw ctx.redirect("/home");
         },
       ),

@@ -1,6 +1,6 @@
 ---
 title: Privacy policy
-updated: 2026-11-02
+updated: 2026-11-03
 ---
 
 {appName} is a free, open-source video meeting service. This policy explains what {appName} at {siteUrl} keeps about you, why, who else handles it, and for how long. {operator} runs this copy of {appName} and is responsible for your information. Anyone can run their own copy of {appName}, and each copy has its own policy.
@@ -16,6 +16,7 @@ updated: 2026-11-02
 - Which **sign-in methods** you've connected. When you sign in with Google or GitHub, {appName} receives your name, email address and photo from them, and keeps the sign-in tokens they send, encrypted.
 - Your **sign-in sessions**, with the IP address and browser each came from, so you stay signed in and sessions can be checked and ended.
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
+- Whether you've **used the desktop app**: when you first signed in to it, so {appName} stops suggesting it on **Home** in your browsers.
 - The **options you last scheduled a meeting with**, such as its length, passcode on or off, and waiting room, so your next meeting starts from them. Never its title, people or passcode.
 - If you turn on **email reminders**: how long before a meeting they come, and the time zone their times are in. They go to your account's email address, before meetings you host or are invited to, and each one has the meeting's title, time, link, ID and passcode. To stop them, select the link at the foot of any reminder, or turn them off in **Settings**, under **Notifications**. {appName} keeps a short record of each reminder it sent (the meeting and its time), so none goes twice.
 - If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
@@ -94,7 +95,7 @@ If you're in the European Economic Area, the United Kingdom or somewhere with si
 - **`NEXT_LOCALE`** remembers the language you picked, for a year.
 - **`sidebar_state`** remembers whether the sidebar is open, for a week.
 
-Your browser also keeps some things for {appName} that aren't sent to its server. Your settings, a guest's name, backgrounds you add, a host's AI key, and whether you've signed the desktop app in from this browser stay until you clear them. A meeting's passcode, and the transcript and notes a host is taking, go when you close the tab.
+Your browser also keeps some things for {appName} that aren't sent to its server. Your settings, a guest's name, backgrounds you add, a host's AI key, suggestions you've put away, and whether you've signed the desktop app in from this browser stay until you clear them. A meeting's passcode, and the transcript and notes a host is taking, go when you close the tab.
 
 ## The desktop app
 

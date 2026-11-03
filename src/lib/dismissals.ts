@@ -5,7 +5,8 @@ import { useSyncExternalStore } from "react";
  * localStorage as faceon.<name>. Where storage is blocked (a private window, say), a
  * dismissal lasts until the page reloads.
  */
-export type Dismissible = "installCard" | "calendarSuggestion";
+export type Dismissible =
+  "installCard" | "desktopAppCard" | "calendarSuggestion";
 
 const listeners = new Set<() => void>();
 const thisVisit = new Set<Dismissible>();

@@ -28,6 +28,8 @@ export const user = pgTable("user", {
   scheduleDefaults: jsonb("schedule_defaults"),
   /** Settings → Notifications: email reminders, when on (lib/reminders). */
   emailReminders: jsonb("email_reminders"),
+  /** When this account first used the desktop app (lib/desktop/usage.ts). */
+  desktopAppAt: timestamp("desktop_app_at"),
 });
 
 export const session = pgTable(

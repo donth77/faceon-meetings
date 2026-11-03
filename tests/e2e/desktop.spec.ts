@@ -1,5 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
+import type { Page } from "@playwright/test";
 
+import { usesDesktopApp } from "./support/db";
 import { expect, expectNoErrors, test } from "./support/fixtures";
 
 test.describe("the desktop app", () => {
@@ -282,6 +284,95 @@ test.describe("the desktop app", () => {
       await expect(
         host.page.getByRole("link", { name: /^Download for/ }),
       ).toHaveCount(0);
+    });
+
+    test.describe("Home's one-time card", () => {
+      const card = (page: Page) =>
+        page.getByRole("region", { name: /^Get .+ for (Windows|Mac)$/ });
+
+      test("Windows: offered once, with its download; Not now puts it away", async ({
+        people,
+      }) => {
+        const host = await people.signedIn({ userAgent: AGENTS.windows });
+        await host.page.route("**/api/desktop/release", (route) =>
+          route.fulfill({ json: RELEASE }),
+        );
+        await host.page.goto("/home");
+        await expect(card(host.page)).toBeVisible();
+        await expect(
+          card(host.page).getByRole("link", { name: "Download for Windows" }),
+        ).toHaveAttribute("href", RELEASE.windows.url);
+        // Unsigned: how to get past Windows' warning.
+        await expect(card(host.page).getByText(/Run anyway/)).toBeVisible();
+
+        await card(host.page).getByRole("button", { name: "Not now" }).click();
+        await expect(card(host.page)).toHaveCount(0);
+        // The button went with the card: focus is on the page, not lost.
+        await expect(host.page.locator("#main")).toBeFocused();
+
+        await host.page.reload();
+        await host.page.waitForLoadState("networkidle");
+        await expect(card(host.page)).toHaveCount(0);
+        expectNoErrors(host);
+      });
+
+      for (const device of ["linux", "phone"] as const) {
+        test(`${device}: no desktop app card`, async ({ people }) => {
+          const host = await people.signedIn({
+            userAgent: AGENTS[device],
+            ...(device === "phone"
+              ? { viewport: { width: 390, height: 844 } }
+              : {}),
+          });
+          await host.page.route("**/api/desktop/release", (route) =>
+            route.fulfill({ json: RELEASE }),
+          );
+          await host.page.goto("/home");
+          await host.page.waitForLoadState("networkidle");
+          await expect(card(host.page)).toHaveCount(0);
+          expectNoErrors(host);
+        });
+      }
+
+      test("inside the desktop app: no card, and the account is noted as using it", async ({
+        people,
+      }) => {
+        const host = await people.signedIn({ userAgent: AGENTS.windows });
+        await host.page.route("**/api/desktop/release", (route) =>
+          route.fulfill({ json: RELEASE }),
+        );
+        await host.page.addInitScript(() => {
+          const none = () => () => {};
+          Object.assign(window, {
+            faceonDesktop: new Proxy(
+              { bridge: 1, platform: "windows", version: "0.0.0" },
+              {
+                get: (bridge, key) =>
+                  key in bridge ? bridge[key as never] : none,
+              },
+            ),
+          });
+        });
+        await host.page.goto("/home");
+        await expect.poll(() => usesDesktopApp(host.user.id)).toBe(true);
+        await expect(card(host.page)).toHaveCount(0);
+      });
+
+      test("an account that uses the desktop app isn't offered it in browsers", async ({
+        people,
+      }) => {
+        const host = await people.signedIn({
+          userAgent: AGENTS.windows,
+          usedDesktopApp: true,
+        });
+        await host.page.route("**/api/desktop/release", (route) =>
+          route.fulfill({ json: RELEASE }),
+        );
+        await host.page.goto("/home");
+        await host.page.waitForLoadState("networkidle");
+        await expect(card(host.page)).toHaveCount(0);
+        expectNoErrors(host);
+      });
     });
   });
 });
