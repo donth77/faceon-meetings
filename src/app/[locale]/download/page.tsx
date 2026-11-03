@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-import { DownloadButtons } from "@/components/desktop/download-buttons";
+import { DownloadPanel } from "@/components/desktop/download-buttons";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { latestDesktopRelease } from "@/lib/desktop/releases";
 import { publicEnv } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,30 +24,18 @@ const ADDS = [
   "updates",
 ] as const;
 
-/** The desktop app for Mac and Windows: every build, this computer's first, and all releases. */
+/**
+ * The desktop app: on Windows or a Mac its own build, elsewhere every build
+ * (DownloadPanel), then what the app adds.
+ */
 export default async function DownloadPage() {
   const t = await getTranslations("Download");
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-  const release = await latestDesktopRelease();
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-[880px] flex-1 flex-col gap-10 px-5 py-10 sm:px-10 sm:py-14">
-        <div className="flex flex-col gap-3">
-          <h1 className="font-display text-4xl font-bold text-balance">
-            {t("title", { appName })}
-          </h1>
-          <p className="text-muted-foreground max-w-[60ch] text-lg leading-normal">
-            {t("intro", { appName })}
-          </p>
-        </div>
-        {release ? (
-          <DownloadButtons release={release} />
-        ) : (
-          <p className="bg-card ring-border max-w-[60ch] rounded-2xl p-5 text-[15px] leading-normal ring-1">
-            {t("notYet", { appName })}
-          </p>
-        )}
+        <DownloadPanel />
         <section aria-labelledby="adds" className="flex flex-col gap-4">
           <h2 id="adds" className="text-xl font-bold">
             {t("addsTitle")}

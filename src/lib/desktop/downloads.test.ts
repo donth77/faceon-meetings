@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   desktopAssetNames,
   deviceKind,
+  downloadView,
   formatSize,
   pickInstallers,
   versionFromDownloadUrl,
@@ -111,5 +112,53 @@ describe("what a download says", () => {
   it("its size in megabytes", () => {
     expect(formatSize(71_303_168, "en-US")).toBe("68 MB");
     expect(formatSize(1000, "en-US")).toBe("1 MB");
+  });
+});
+
+describe("what /download offers", () => {
+  const windows = {
+    url: "https://example.com/FaceOn-Setup.exe",
+    size: 1,
+    signed: false,
+  };
+  const mac = { url: "https://example.com/FaceOn.dmg", size: 1, signed: false };
+  const release = {
+    version: "1.2.3",
+    publishedAt: null,
+    releases: "https://example.com/releases",
+    windows,
+    mac,
+  };
+  const platforms = (view: ReturnType<typeof downloadView>) =>
+    view.builds.map(({ platform }) => platform);
+
+  it("Windows and the Mac: just their own build", () => {
+    expect(downloadView(release, "windows")).toEqual({
+      builds: [{ platform: "windows", download: windows }],
+      coming: null,
+    });
+    expect(platforms(downloadView(release, "mac"))).toEqual(["mac"]);
+  });
+
+  it("before a computer's own build is out: the others, and that it's coming", () => {
+    expect(downloadView({ ...release, mac: null }, "mac")).toEqual({
+      builds: [{ platform: "windows", download: windows }],
+      coming: "mac",
+    });
+  });
+
+  it("anywhere else: every build there is", () => {
+    for (const device of ["otherComputer", "phoneOrTablet"] as const) {
+      expect(downloadView(release, device)).toEqual({
+        builds: [
+          { platform: "windows", download: windows },
+          { platform: "mac", download: mac },
+        ],
+        coming: null,
+      });
+      expect(
+        platforms(downloadView({ ...release, mac: null }, device)),
+      ).toEqual(["windows"]);
+    }
   });
 });

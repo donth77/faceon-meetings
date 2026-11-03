@@ -50,6 +50,34 @@ export function deviceKind(
   return "otherComputer";
 }
 
+/** What /download offers a device (downloadView). */
+export type DownloadView = {
+  /** The builds, in order. */
+  builds: { platform: DesktopPlatform; download: DesktopDownload }[];
+  /** This computer's platform, when its build isn't out yet. */
+  coming: DesktopPlatform | null;
+};
+
+/**
+ * What /download offers a device: on Windows or a Mac just its own build, as other apps'
+ * download pages do; anywhere else every build. Until a computer's own build is out
+ * (Windows can come before the Mac), the ones that are, and which is coming.
+ */
+export function downloadView(
+  release: DesktopRelease,
+  device: DeviceKind,
+): DownloadView {
+  const builds = DESKTOP_PLATFORMS.flatMap((platform) => {
+    const download = release[platform];
+    return download ? [{ platform, download }] : [];
+  });
+  if (device !== "windows" && device !== "mac") return { builds, coming: null };
+  const own = builds.filter(({ platform }) => platform === device);
+  return own.length > 0
+    ? { builds: own, coming: null }
+    : { builds, coming: device };
+}
+
 /**
  * The installers' file names, the same in every release (desktop/electron-builder
  * .config.cjs names them so), so releases/latest/download/<name> always finds the latest.

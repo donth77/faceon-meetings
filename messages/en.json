@@ -1927,6 +1927,14 @@
   },
   "Download": {
     "title": "{appName} for Mac and Windows",
+    "titleFor": {
+      "windows": "{appName} for Windows",
+      "mac": "{appName} for Mac"
+    },
+    "coming": {
+      "windows": "The {appName} app for Windows is coming soon.",
+      "mac": "The {appName} app for Mac is coming soon."
+    },
     "intro": "The {appName} you know, in an app: meeting links open in it, you can mute from any app, and reminders arrive with no browser open.",
     "notYet": "The {appName} app isn’t out yet. You can join and host everything in your browser meanwhile.",
     "platform": {

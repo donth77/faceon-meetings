@@ -156,6 +156,104 @@ test.describe("the desktop app", () => {
       ).toHaveCount(0);
     });
 
+    const DOWNLOAD_PAGE: {
+      on: string;
+      userAgent: string;
+      release: object;
+      heading: string;
+      offers: ("windows" | "mac")[];
+      coming: string | null;
+    }[] = [
+      {
+        on: "Windows: only its build",
+        userAgent: AGENTS.windows,
+        release: RELEASE,
+        heading: "FaceOn for Windows",
+        offers: ["windows"],
+        coming: null,
+      },
+      {
+        on: "a Mac: only its build",
+        userAgent: AGENTS.mac,
+        release: RELEASE,
+        heading: "FaceOn for Mac",
+        offers: ["mac"],
+        coming: null,
+      },
+      {
+        on: "a Mac before its build is out: Windows', and the Mac's to come",
+        userAgent: AGENTS.mac,
+        release: { ...RELEASE, mac: null },
+        heading: "FaceOn for Windows",
+        offers: ["windows"],
+        coming: "The FaceOn app for Mac is coming soon.",
+      },
+      {
+        on: "Linux: every build",
+        userAgent: AGENTS.linux,
+        release: RELEASE,
+        heading: "FaceOn for Mac and Windows",
+        offers: ["windows", "mac"],
+        coming: null,
+      },
+      {
+        on: "a phone: every build",
+        userAgent: AGENTS.phone,
+        release: RELEASE,
+        heading: "FaceOn for Mac and Windows",
+        offers: ["windows", "mac"],
+        coming: null,
+      },
+    ];
+    const DOWNLOAD_FOR = {
+      windows: "Download for Windows",
+      mac: "Download for Mac",
+    } as const;
+
+    for (const {
+      on,
+      userAgent,
+      release,
+      heading,
+      offers,
+      coming,
+    } of DOWNLOAD_PAGE) {
+      test(`/download on ${on}`, async ({ people }) => {
+        const visitor = await people.guest({
+          userAgent,
+          viewport:
+            userAgent === AGENTS.phone
+              ? { width: 375, height: 812 }
+              : { width: 1440, height: 900 },
+        });
+        await visitor.page.route("**/api/desktop/release", (route) =>
+          route.fulfill({ json: release }),
+        );
+        await visitor.page.goto("/download");
+        await expect(
+          visitor.page.getByRole("heading", { level: 1 }),
+        ).toHaveText(heading);
+        const downloads = visitor.page.getByRole("link", {
+          name: /^Download for/,
+        });
+        await expect(downloads).toHaveText(
+          offers.map((platform) => DOWNLOAD_FOR[platform]),
+        );
+        for (const [index, platform] of offers.entries()) {
+          await expect(downloads.nth(index)).toHaveAttribute(
+            "href",
+            RELEASE[platform].url,
+          );
+        }
+        if (coming) {
+          await expect(visitor.page.getByText(coming)).toBeVisible();
+        } else {
+          await expect(visitor.page.getByText(/is coming soon/)).toHaveCount(0);
+        }
+        expectNoErrors(visitor);
+      });
+    }
+
     test("Windows: Settings offers the download, with its version and size", async ({
       people,
     }) => {
