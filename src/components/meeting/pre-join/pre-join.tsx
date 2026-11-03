@@ -366,12 +366,15 @@ export function PreJoin({
 
   async function join(withDevices: DevicePreferences) {
     if (viewer.kind === "guest") saveGuestName(name.trim());
+    // The avatar on screen now is the one they join with: the bot check below can take
+    // a while, and a name's look arriving meanwhile would change the screen but not
+    // what this join sends.
+    avatar.keep();
     setChecking(true);
     const token = await humanCheck.take();
     setChecking(false);
     // The check says what went wrong, with Try again.
     if (token === null) return;
-    avatar.keep();
     const sent = passcode.trim() || undefined;
     setSentPasscode(sent);
     onJoin({
