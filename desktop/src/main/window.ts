@@ -3,6 +3,7 @@ import { app, BrowserWindow, nativeTheme, screen } from "electron";
 
 import { APP_NAME, APP_ORIGIN, HIDDEN, PARTITION } from "./config";
 import type { Store } from "./store";
+import { firstWindowSize } from "./window-size";
 
 /** The main window: the hosted app, at the size and place it was last left. */
 export function createMainWindow(store: Store): BrowserWindow {
@@ -17,11 +18,13 @@ export function createMainWindow(store: Store): BrowserWindow {
         saved.y + saved.height > area.y
       );
     });
-  // At first: 1280×820 where it fits, or about 90% of a smaller screen, never taller.
-  const area = screen.getPrimaryDisplay().workArea;
+  const first = firstWindowSize(
+    screen.getPrimaryDisplay().workArea,
+    process.platform,
+  );
   const win = new BrowserWindow({
-    width: saved?.width ?? Math.min(1280, Math.round(area.width * 0.9)),
-    height: saved?.height ?? Math.min(820, Math.round(area.height * 0.9)),
+    width: saved?.width ?? first.width,
+    height: saved?.height ?? first.height,
     ...(visible && saved ? { x: saved.x, y: saved.y } : {}),
     minWidth: 380,
     minHeight: 560,
@@ -32,7 +35,6 @@ export function createMainWindow(store: Store): BrowserWindow {
       ? {}
       : { icon: join(__dirname, "assets", "icon.png") }),
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0f1115" : "#f5f6f8",
-    autoHideMenuBar: process.platform !== "darwin",
     webPreferences: {
       preload: join(__dirname, "preload.cjs"),
       partition: PARTITION,

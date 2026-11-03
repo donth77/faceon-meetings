@@ -110,9 +110,11 @@ function run() {
 
   function openWindow(): BrowserWindow {
     const created = createMainWindow(store);
-    guardContents(created.webContents, (child) =>
-      child.setAlwaysOnTop(keepPictureOnTop, "floating"),
-    );
+    guardContents(created.webContents, (child) => {
+      // The mini window: too small for a menu bar of its own.
+      child.removeMenu();
+      child.setAlwaysOnTop(keepPictureOnTop, "floating");
+    });
     created.on("close", (event) => {
       const stay = preferences().keepInTray;
       if (!quitting && stay) {

@@ -72,7 +72,8 @@ test.describe("signed-out pages", () => {
   }) => {
     const visitor = await people.guest();
     const { page } = visitor;
-    // The app's first window is 1280×820; this is what's inside its frame on Windows.
+    // What's inside the app's first window on Windows, below its frame and menu bar
+    // (desktop/src/main/window-size.ts).
     await page.setViewportSize({ width: 1264, height: 781 });
     const fits = () =>
       page.evaluate(

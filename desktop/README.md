@@ -28,6 +28,12 @@ version yet.
 Email and password work in the app. **Continue with Google** and **Continue with GitHub**
 open your browser: sign in there, and the app finishes signing you in.
 
+## Quit
+
+Closing the window keeps FaceOn running in the tray (the menu bar on a Mac), so reminders
+still come. To quit, choose **File → Quit FaceOn** (**FaceOn → Quit FaceOn**, ⌘Q, on a
+Mac), or **Quit FaceOn** in the tray icon's menu.
+
 ## Uninstall
 
 - **Windows:** **Settings → Apps → Installed apps → FaceOn → Uninstall**.

@@ -38,6 +38,7 @@ Note the version and the system for each run.
 ## Without a window
 
 - [ ] Closing the window keeps the app in the tray or menu bar; with **Keep FaceOn in the tray** (menu bar) off, it quits.
+- [ ] On Windows the menu bar (File, Edit, View, Window, Help) always shows, and **File → Quit FaceOn** quits even with **Keep FaceOn in the tray** on; so does the tray's **Quit FaceOn**. The mini window has no menu bar.
 - [ ] A reminder arrives for a meeting starting soon, with the window closed; Join opens it.
 - [ ] Launch at login, turned on, opens the app at the next sign-in to the computer.
 

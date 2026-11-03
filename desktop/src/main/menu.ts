@@ -3,7 +3,10 @@ import { Menu, type MenuItemConstructorOptions } from "electron";
 import { APP_NAME, IS_DEV } from "./config";
 import { strings } from "./strings";
 
-/** The application menu: FaceOn's own on macOS, and a window menu (Alt) on Windows. */
+/**
+ * The application menu: FaceOn's own on macOS, and the window's menu bar on Windows and
+ * Linux (File, Edit, View, Window, Help), always showing.
+ */
 export function buildAppMenu(actions: {
   openPath(path: string): void;
   checkForUpdates(): void;
