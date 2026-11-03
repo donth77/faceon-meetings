@@ -8,8 +8,7 @@ const t = translator(
   {
     en: {
       conference: {
-        note: "Meeting ID: {meetingId}",
-        notePasscode: "Meeting ID: {meetingId} · Passcode: {passcode}",
+        note: "Join from any browser, on a computer or a phone. No download needed.",
       },
     },
   },
@@ -35,9 +34,10 @@ describe("conferencePlan", () => {
     ).toEqual({
       kind: "meeting",
       code: "1234567890",
+      meetingId: "123 456 7890",
       joinUrl: "https://faceon.test/j/1234567890#pwd=K7XQ2M",
       passcode: "K7XQ2M",
-      notes: "Meeting ID: 123 456 7890 · Passcode: K7XQ2M",
+      notes: "Join from any browser, on a computer or a phone. No download needed.",
     });
   });
 

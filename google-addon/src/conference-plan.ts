@@ -7,6 +7,8 @@ export type ConferencePlan =
   | {
       kind: "meeting";
       code: string;
+      /** "822 382 5279", as Calendar shows it beside the passcode. */
+      meetingId: string;
       joinUrl: string;
       passcode: string | null;
       notes: string;
@@ -24,14 +26,14 @@ export function conferencePlan(
 ): ConferencePlan {
   if (result.ok) {
     const { code, joinUrl, passcode, meetingId } = result.data;
+    // Calendar already shows the ID and passcode: the note says how joining works.
     return {
       kind: "meeting",
       code,
+      meetingId,
       joinUrl,
       passcode,
-      notes: passcode
-        ? t("conference.notePasscode", { meetingId, passcode })
-        : t("conference.note", { meetingId }),
+      notes: t("conference.note"),
     };
   }
   const { code, link } = result.error;

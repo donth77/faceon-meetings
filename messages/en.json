@@ -1784,8 +1784,7 @@
   },
   "GoogleAddon": {
     "conference": {
-      "note": "Meeting ID: {meetingId}",
-      "notePasscode": "Meeting ID: {meetingId} · Passcode: {passcode}"
+      "note": "Join from any browser, on a computer or a phone. No download needed."
     },
     "home": {
       "open": "Open {appName}",

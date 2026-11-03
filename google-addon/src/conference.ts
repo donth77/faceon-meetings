@@ -80,7 +80,7 @@ function build(
   const video = ConferenceDataService.newEntryPoint()
     .setEntryPointType(ConferenceDataService.EntryPointType.VIDEO)
     .setUri(plan.joinUrl)
-    .setMeetingCode(plan.code);
+    .setMeetingCode(plan.meetingId);
   if (plan.passcode) video.setPasscode(plan.passcode);
   return builder
     .setConferenceSolutionId(CONFERENCE_SOLUTION_ID)
