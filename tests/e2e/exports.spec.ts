@@ -62,9 +62,7 @@ test.describe("exports", () => {
       .getByRole("button", { name: /View details/ })
       .first()
       .click();
-    await page
-      .getByRole("button", { name: "Download", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Download", exact: true }).click();
     await expect(
       page.getByRole("menuitem", { name: "Attendance (CSV)" }),
     ).toBeVisible();
