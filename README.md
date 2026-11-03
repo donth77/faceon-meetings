@@ -1,24 +1,80 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-mark-dark.svg">
+  <img src="public/brand/logo-mark.svg" width="128" alt="">
+</picture>
+
 # FaceOn
 
-Free, open-source video meetings that run in your browser. If you've used Zoom or Google Meet, you already know how to use it.
+**Free, open-source video meetings that run in your browser.**
+
+[![Desktop app](https://img.shields.io/github/v/release/donth77/faceon-desktop-releases?include_prereleases&style=flat-square&label=desktop&color=1F5EFF)](https://github.com/donth77/faceon-desktop-releases/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/donth77/faceon-meetings/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/donth77/faceon-meetings/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT-1F5EFF?style=flat-square)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
+<img src=".github/assets/meeting.png" width="820" alt="A FaceOn meeting in gallery view: six people with their cameras off, shown as illustrated avatars. Priya Raman is speaking, outlined in green, and Lucas Moreau has a hand raised. Along the bottom are Mute, Start video, Share screen, Reactions, Raise hand, More and Leave, with Participants and Chat on the right.">
+
+</div>
+
+---
+
+If you've used Zoom or Google Meet, you already know how to use FaceOn. Try it at [joinfaceon.app](https://joinfaceon.app), or [deploy your own](#deploy-your-own).
+
+**Familiar.** The words and buttons Zoom and Meet users already know.
+
+**Private.** Backgrounds, noise suppression and speech-to-text run on your own device. AI notes are made in your browser, on-device or with your own AI key.
+
+**Free.** MIT licensed, and it runs on free plans: Vercel, Neon and Stream.
+
+**Everywhere.** Any modern browser on Windows, macOS, Linux, iPhone, iPad and Android.
 
 > **Status:** early development. FaceOn is a working name.
 
-## What it does
+---
 
-- Instant and scheduled meetings (including recurring ones), a personal room, and joining by link or meeting ID
-- Invitations through Google Calendar: connect it once, and Google emails the people you invite and keeps their calendars up to date. Links for Google Calendar, Outlook and any calendar app (.ics) work without connecting
-- Guests join with just a name; passcodes, a waiting room and host controls keep meetings safe, with co-hosts named ahead of time or made during the meeting
+## What works
+
+**Meetings**
+
+- Instant and scheduled meetings, recurring ones too, and a personal room
+- Join by link or meeting ID; guests join with just a name
+- Passcodes, a waiting room and host controls, with co-hosts named ahead of time or made during the meeting
+
+**In the meeting**
+
 - Chat, reactions, raise hand and screen sharing, with sound where the browser supports it
-- Background blur and backgrounds (paintings, places, moving backgrounds, or your own image or looping video), processed on your own device
-- Noise suppression that takes typing, traffic and background voices out of your microphone, on your own device (RNNoise)
-- Optional AI notes (a summary, action items and decisions), made in the browser: on your own device with Chrome's built-in AI, or with your own AI key, and saved or shared with the participants
-- Previous meetings with who came, an attendance spreadsheet for hosts, keyboard shortcuts, and a searchable Help center
-- Download your data: your account, meetings, attendance and AI notes, as JSON, CSV and Markdown
-- FaceOn in Google Calendar and Gmail: FaceOn meeting in Calendar's Add video conferencing, a side panel in Calendar and Gmail, and Insert a FaceOn meeting in Gmail. Each person adds their own copy of the add-on from Settings, with nothing to publish ([google-addon/](google-addon/README.md))
-- Works in the browser on Windows, macOS, Linux, iPhone, iPad and Android, and installs as an app (from Chrome or Edge, or Add to Home Screen and Add to Dock in Safari)
+- Background blur and backgrounds: paintings, places, moving backgrounds, or your own image or looping video
+- Noise suppression that takes out typing, traffic and background voices (RNNoise)
+- Keyboard shortcuts
 
-On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
+**Calendar**
+
+- Invitations through Google Calendar: connect it once, and Google emails the people you invite and keeps their calendars up to date
+- Links for Google Calendar, Outlook and any calendar app (.ics) that work without connecting
+- Meeting reminders in the browser, and by email if you want them
+- FaceOn in Google Calendar and Gmail: FaceOn meeting in Calendar's Add video conferencing, a side panel in both, and Insert a FaceOn meeting in Gmail. Each person adds their own copy from Settings ([google-addon/](google-addon/README.md))
+
+**AI notes** (optional)
+
+- A summary, action items and decisions, made with Chrome's built-in AI or your own AI key
+- Saved, or shared with the participants
+
+**Afterwards**
+
+- Previous meetings with who came, and an attendance spreadsheet for hosts
+- Download your data: your account, meetings, attendance and AI notes, as JSON, CSV and Markdown
+- A searchable Help center
+
+**Apps**
+
+- Installs as an app from Chrome or Edge, or with Add to Home Screen and Add to Dock in Safari
+- A desktop app for Windows and macOS ([desktop/](desktop/README.md))
+
+**On the way:** Spanish, Portuguese (Brazil), French, German and Japanese (English only for now), and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
 
 ## Tech stack
 
@@ -26,6 +82,7 @@ On the way: Spanish, Portuguese (Brazil), French, German and Japanese (English o
 - [Tailwind CSS](https://tailwindcss.com) 4 and [shadcn/ui](https://ui.shadcn.com), with [Lucide](https://lucide.dev) icons
 - [Stream Video](https://getstream.io/video/) for media
 - [Better Auth](https://www.better-auth.com) for accounts, [Neon](https://neon.com) Postgres and [Drizzle ORM](https://orm.drizzle.team)
+- [Electron](https://www.electronjs.org) for the desktop app
 
 ## Run it locally
 
