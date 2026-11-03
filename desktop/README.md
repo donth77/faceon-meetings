@@ -111,13 +111,13 @@ repository or CI.
 6. **Build:** `pnpm desktop:mac`. It signs with your certificate (hardened runtime, and the
    camera and microphone entitlements in `build/entitlements.mac.plist`), notarizes
    (a few minutes), staples the ticket, and checks the result. You get
-   `desktop/release/FaceOn-<version>-universal.dmg`, plus the `.zip` and `latest-mac.yml`
+   `desktop/release/FaceOn.dmg`, plus `FaceOn-mac.zip` and `latest-mac.yml`
    that updates need.
 7. **Check it yourself** (the build runs these and shows ✓ or ✗):
    ```bash
    codesign --verify --deep --strict --verbose=2 desktop/release/mac-universal/FaceOn.app
    spctl -a -vvv -t exec desktop/release/mac-universal/FaceOn.app   # "accepted, source=Notarized Developer ID"
-   xcrun stapler validate desktop/release/FaceOn-*.dmg
+   xcrun stapler validate desktop/release/FaceOn.dmg
    ```
 
 Without a certificate, `pnpm desktop:mac` still builds, unsigned, and says so. macOS then
@@ -141,7 +141,7 @@ and links to the download.
 ## Windows
 
 `pnpm desktop:win` builds the per-user installer on a Windows computer, and CI does the
-same for tags: `desktop/release/FaceOn Setup <version>.exe`, one installer for x64 and
+same for tags: `desktop/release/FaceOn-Setup.exe`, one installer for x64 and
 Arm64 (about 225 MB). If it stops with NSIS saying it "could not find" an include, the
 clone's folder path is too long for NSIS (Windows' 260-character limit): clone somewhere
 shorter, such as `C:\src\faceon-meetings`. It's unsigned for now, so Windows SmartScreen shows "Windows

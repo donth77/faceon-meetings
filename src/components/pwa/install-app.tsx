@@ -6,14 +6,17 @@ import { useRef } from "react";
 import { toast } from "sonner";
 
 import {
-  GetDesktopAppCard,
-  GetDesktopAppMenuItem,
-} from "@/components/desktop/get-desktop-app";
+  DesktopDownloadCard,
+  DesktopDownloadMenuItem,
+} from "@/components/desktop/download";
 import { SettingsCard } from "@/components/settings/settings-nav";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useDesktop, useIsComputer } from "@/lib/desktop/use-desktop";
-import { useDesktopRelease } from "@/lib/desktop/use-desktop-release";
+import { useDesktop } from "@/lib/desktop/use-desktop";
+import {
+  useDesktopRelease,
+  useDeviceKind,
+} from "@/lib/desktop/use-desktop-release";
 import { publicEnv } from "@/lib/env";
 import { useInstall, useInstallCard } from "@/lib/pwa/install";
 
@@ -157,23 +160,29 @@ function InstallCardInBrowser() {
   );
 }
 
-// Install offers stay out of the desktop app, which is installed already. On computers,
-// once the desktop app is out, they offer it instead; phones keep these.
-function useInstallOffer(): "none" | "desktop" | "web" {
-  const desktop = useDesktop();
-  const computer = useIsComputer();
-  const release = useDesktopRelease();
-  if (desktop) return "none";
-  if (!computer) return "web";
+/**
+ * What to offer, decided once the page runs here (the cached page is everyone's). Never
+ * in the desktop app, which is installed already. On a Mac or Windows, the desktop app's
+ * download once its build is out, instead of the web app's install. Phones and tablets
+ * keep the web app's install; other computers (Linux, ChromeOS) have it only in Settings.
+ */
+function useInstallOffer(): "none" | "download" | "web" | "webInSettings" {
+  const inApp = useDesktop() !== null;
+  const device = useDeviceKind();
+  const desktopPlatform = device === "windows" || device === "mac";
+  const release = useDesktopRelease(desktopPlatform && !inApp);
+  if (inApp || device === null) return "none";
+  if (device === "phoneOrTablet") return "web";
+  if (device === "otherComputer") return "webInSettings";
   if (release === undefined) return "none";
-  return release ? "desktop" : "web";
+  return release?.[device] ? "download" : "web";
 }
 
 export function InstallAppCard() {
   const offer = useInstallOffer();
   if (offer === "none") return null;
-  return offer === "desktop" ? (
-    <GetDesktopAppCard />
+  return offer === "download" ? (
+    <DesktopDownloadCard />
   ) : (
     <InstallAppCardInBrowser />
   );
@@ -181,12 +190,8 @@ export function InstallAppCard() {
 
 export function InstallMenuItem() {
   const offer = useInstallOffer();
-  if (offer === "none") return null;
-  return offer === "desktop" ? (
-    <GetDesktopAppMenuItem />
-  ) : (
-    <InstallMenuItemInBrowser />
-  );
+  if (offer === "download") return <DesktopDownloadMenuItem />;
+  return offer === "web" ? <InstallMenuItemInBrowser /> : null;
 }
 
 export const InstallCard = () =>

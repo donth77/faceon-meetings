@@ -83,4 +83,107 @@ test.describe("the desktop app", () => {
     ).toBe(true);
     expectNoErrors(host);
   });
+
+  test.describe("download links, by device", () => {
+    const RELEASE = {
+      available: true,
+      version: "1.2.3",
+      publishedAt: "2026-11-01T12:00:00Z",
+      releases: "https://github.com/acme/faceon-releases/releases",
+      windows: {
+        url: "https://github.com/acme/faceon-releases/releases/download/v1.2.3/FaceOn-Setup.exe",
+        size: 71_303_168,
+        signed: false,
+      },
+      mac: {
+        url: "https://github.com/acme/faceon-releases/releases/download/v1.2.3/FaceOn.dmg",
+        size: 98_566_144,
+        signed: false,
+      },
+    };
+    const AGENTS = {
+      windows:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      mac: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      linux:
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      chromeOs:
+        "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      phone:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    } as const;
+
+    for (const [device, userAgent] of Object.entries(AGENTS)) {
+      test(`the landing page on ${device}`, async ({ people }) => {
+        const visitor = await people.guest({
+          userAgent,
+          viewport:
+            device === "phone"
+              ? { width: 375, height: 812 }
+              : { width: 1440, height: 900 },
+        });
+        await visitor.page.route("**/api/desktop/release", (route) =>
+          route.fulfill({ json: RELEASE }),
+        );
+        await visitor.page.goto("/");
+        await visitor.page.waitForLoadState("networkidle");
+        const downloads = visitor.page.getByRole("link", {
+          name: /^Download for/,
+        });
+        if (device === "windows" || device === "mac") {
+          // Only this computer's: the other's is on /download.
+          await expect(downloads).toHaveCount(1);
+          await expect(downloads).toHaveText(
+            device === "windows" ? "Download for Windows" : "Download for Mac",
+          );
+          await expect(downloads).toHaveAttribute("href", RELEASE[device].url);
+        } else {
+          await expect(downloads).toHaveCount(0);
+        }
+        expectNoErrors(visitor);
+      });
+    }
+
+    test("a Mac before its build is out: no download", async ({ people }) => {
+      const visitor = await people.guest({ userAgent: AGENTS.mac });
+      await visitor.page.route("**/api/desktop/release", (route) =>
+        route.fulfill({ json: { ...RELEASE, mac: null } }),
+      );
+      await visitor.page.goto("/");
+      await visitor.page.waitForLoadState("networkidle");
+      await expect(
+        visitor.page.getByRole("link", { name: /^Download for/ }),
+      ).toHaveCount(0);
+    });
+
+    test("Windows: Settings offers the download, with its version and size", async ({
+      people,
+    }) => {
+      const host = await people.signedIn({ userAgent: AGENTS.windows });
+      await host.page.route("**/api/desktop/release", (route) =>
+        route.fulfill({ json: RELEASE }),
+      );
+      await host.page.goto("/settings");
+      await expect(
+        host.page.getByRole("link", { name: "Download for Windows" }),
+      ).toHaveAttribute("href", RELEASE.windows.url);
+      await expect(host.page.getByText("Version 1.2.3 · 68 MB")).toBeVisible();
+      await expect(
+        host.page.getByRole("link", { name: "Download for Mac" }),
+      ).toHaveCount(0);
+      expectNoErrors(host);
+    });
+
+    test("Linux: Settings has no desktop download", async ({ people }) => {
+      const host = await people.signedIn({ userAgent: AGENTS.linux });
+      await host.page.route("**/api/desktop/release", (route) =>
+        route.fulfill({ json: RELEASE }),
+      );
+      await host.page.goto("/settings");
+      await host.page.waitForLoadState("networkidle");
+      await expect(
+        host.page.getByRole("link", { name: /^Download for/ }),
+      ).toHaveCount(0);
+    });
+  });
 });

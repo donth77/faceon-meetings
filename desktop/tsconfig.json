@@ -17,6 +17,7 @@
     "src/**/*.ts",
     "tests/**/*.ts",
     "../src/lib/desktop/bridge.ts",
-    "../src/lib/desktop/accelerator.ts"
+    "../src/lib/desktop/accelerator.ts",
+    "../src/lib/desktop/downloads.ts"
   ]
 }

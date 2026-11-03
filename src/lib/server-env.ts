@@ -44,6 +44,14 @@ const ServerEnv = z.object({
     .regex(/^([\w.-]+\/[\w.-]+)?$/)
     .optional(),
   /**
+   * The desktop builds that are signed (Windows) or notarized (Mac), comma-separated:
+   * "windows", "mac" or both. /download explains how to open the others the first time.
+   */
+  DESKTOP_SIGNED: z
+    .string()
+    .regex(/^((windows|mac)(,(windows|mac))*)?$/)
+    .optional(),
+  /**
    * Authorizes the schedulers (sent as "Authorization: Bearer <secret>"): the daily sweep,
    * and meeting reminder emails every few minutes.
    */

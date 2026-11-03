@@ -20,7 +20,7 @@ order: 6
 
 ## Install it
 
-Get it from the **Download** page: [/download](/download). On a Mac, open the `.dmg` and drag {appName} to Applications. On Windows, run the installer; it installs just for you, without asking for an administrator.
+On a Mac or a Windows PC, **Download for Mac** or **Download for Windows** (on the home page, in your account menu, or in **Settings → General**) gets the installer for your computer; the **Download** page, [/download](/download), has every build and all releases. On a Mac, open the `.dmg` and drag {appName} to Applications. On Windows, run the installer; it installs just for you, without asking for an administrator.
 
 If your copy of the app isn't signed yet, your computer warns you the first time:
 

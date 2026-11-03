@@ -25,7 +25,7 @@ const ADDS = [
   "updates",
 ] as const;
 
-/** The desktop app for Mac and Windows: this computer's download first, then the other. */
+/** The desktop app for Mac and Windows: every build, this computer's first, and all releases. */
 export default async function DownloadPage() {
   const t = await getTranslations("Download");
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
@@ -43,13 +43,7 @@ export default async function DownloadPage() {
           </p>
         </div>
         {release ? (
-          <DownloadButtons
-            version={release.version}
-            publishedAt={release.publishedAt}
-            mac={release.mac}
-            windows={release.windows}
-            page={release.page}
-          />
+          <DownloadButtons release={release} />
         ) : (
           <p className="bg-card ring-border max-w-[60ch] rounded-2xl p-5 text-[15px] leading-normal ring-1">
             {t("notYet", { appName })}

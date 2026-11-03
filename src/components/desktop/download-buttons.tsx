@@ -1,85 +1,97 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { ChevronRight, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSyncExternalStore } from "react";
 
+import { LinkButton } from "@/components/ui/button";
+import {
+  DESKTOP_PLATFORMS,
+  formatSize,
+  type DesktopRelease,
+} from "@/lib/desktop/downloads";
+import { useDeviceKind } from "@/lib/desktop/use-desktop-release";
+import { publicEnv } from "@/lib/env";
 import { useIntlLocale } from "@/lib/preferences";
 
-type Platform = "mac" | "windows";
-
-const detect = (): Platform | null =>
-  /Macintosh/.test(navigator.userAgent)
-    ? "mac"
-    : /Windows/.test(navigator.userAgent)
-      ? "windows"
-      : null;
-const subscribeNever = () => () => {};
-
-/** The downloads, this computer's first (decided in the browser; Mac first before that). */
-export function DownloadButtons({
-  version,
-  publishedAt,
-  mac,
-  windows,
-  page,
-}: {
-  version: string;
-  publishedAt: string | null;
-  mac: string | null;
-  windows: string | null;
-  page: string;
-}) {
+/**
+ * /download: every build of the latest release, this computer's first and in front,
+ * each with its kind, size and (unsigned) how to open it the first time; then the
+ * version and all releases.
+ */
+export function DownloadButtons({ release }: { release: DesktopRelease }) {
   const t = useTranslations("Download");
+  const tApp = useTranslations("DesktopApp");
   const locale = useIntlLocale();
-  const platform = useSyncExternalStore(subscribeNever, detect, () => null);
-  const files: Array<{ platform: Platform; url: string }> = [
-    ...(mac ? [{ platform: "mac" as const, url: mac }] : []),
-    ...(windows ? [{ platform: "windows" as const, url: windows }] : []),
-  ];
-  if (platform === "windows") files.reverse();
-  const date = publishedAt
+  const device = useDeviceKind();
+  const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
+  const builds = DESKTOP_PLATFORMS.flatMap((platform) => {
+    const download = release[platform];
+    return download ? [{ platform, download }] : [];
+  }).sort(
+    (a, b) => Number(b.platform === device) - Number(a.platform === device),
+  );
+  const { version } = release;
+  const date = release.publishedAt
     ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
-        new Date(publishedAt),
+        new Date(release.publishedAt),
       )
     : null;
-
   return (
     <div className="flex flex-col gap-4">
       <ul className="grid gap-4 sm:grid-cols-2">
-        {files.map((file, index) => (
-          <li
-            key={file.platform}
-            className="bg-card ring-border flex flex-col gap-3 rounded-2xl p-5 ring-1"
-          >
-            <span className="text-lg font-bold">
-              {t(`for.${file.platform}`)}
-            </span>
-            <span className="text-muted-foreground text-sm leading-normal">
-              {t(`requires.${file.platform}`)}
-            </span>
-            <a
-              href={file.url}
-              className={
-                (index === 0
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "ring-border hover:bg-muted ring-1") +
-                " focus-visible:focus-ring inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-semibold outline-hidden"
-              }
+        {builds.map(({ platform, download }) => {
+          const kind = t(`build.${platform}.kind`);
+          const arch = t(`build.${platform}.arch`);
+          return (
+            <li
+              key={platform}
+              className="bg-card ring-border flex flex-col gap-2.5 rounded-2xl p-5 ring-1"
             >
-              <Download className="size-[18px]" aria-hidden="true" />
-              {t("download", { platform: t(`platform.${file.platform}`) })}
-            </a>
-          </li>
-        ))}
+              <h2 className="text-lg font-bold">
+                {t(`build.${platform}.title`)}
+              </h2>
+              <p className="text-muted-foreground text-sm leading-normal">
+                {download.size
+                  ? t("detailSize", {
+                      kind,
+                      arch,
+                      size: formatSize(download.size, locale),
+                    })
+                  : t("detail", { kind, arch })}
+                <br />
+                {t(`requires.${platform}`)}
+              </p>
+              <LinkButton
+                href={download.url}
+                variant={platform === device ? "default" : "outline"}
+                className="mt-1 h-11 gap-2 rounded-xl px-4 text-[15px] font-semibold"
+              >
+                <Download aria-hidden="true" />
+                {tApp(`download.${platform}`)}
+              </LinkButton>
+              {download.signed ? null : (
+                <p className="text-muted-foreground text-[13px] leading-normal">
+                  {t(`unsigned.${platform}`, { appName })}
+                </p>
+              )}
+            </li>
+          );
+        })}
       </ul>
-      <p className="text-muted-foreground text-sm">
-        {date ? t("versionOn", { version, date }) : t("version", { version })}{" "}
+      <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        {version ? (
+          <span>
+            {date
+              ? t("versionOn", { version, date })
+              : t("version", { version })}
+          </span>
+        ) : null}
         <a
-          href={page}
-          className="text-primary focus-visible:focus-ring rounded font-semibold underline-offset-4 outline-hidden hover:underline"
+          href={release.releases}
+          className="text-primary focus-visible:focus-ring inline-flex items-center rounded font-semibold underline-offset-4 outline-hidden hover:underline"
         >
-          {t("allFiles")}
+          {t("allReleases")}
+          <ChevronRight className="size-4" aria-hidden="true" />
         </a>
       </p>
     </div>

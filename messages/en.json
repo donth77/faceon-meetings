@@ -1864,21 +1864,22 @@
     "didntOpen": "Didn’t open?",
     "changeSetting": "Change this in Settings",
     "askEachTime": "Ask me each time instead",
-    "suggest": "Have the {appName} app? <open>Open the meeting there</open> or <get>get the app</get>."
+    "suggest": "Have the {appName} app? <open>Open the meeting there</open>. Not yet? <get>Download for {platform}</get>."
   },
   "DesktopApp": {
     "cardTitle": "Desktop app",
-    "cardBody": "Get {appName} for Mac and Windows: meeting links open in it, you can mute from any app, and reminders come with no browser open.",
-    "get": "Get the desktop app"
+    "cardBody": "{appName} in an app of its own: meeting links open in it, you can mute from any app, and reminders come with no browser open.",
+    "download": {
+      "windows": "Download for Windows",
+      "mac": "Download for Mac"
+    },
+    "version": "Version {version}",
+    "versionSize": "Version {version} · {size}"
   },
   "Download": {
     "title": "{appName} for Mac and Windows",
     "intro": "The {appName} you know, in an app: meeting links open in it, you can mute from any app, and reminders arrive with no browser open.",
     "notYet": "The {appName} app isn’t out yet. You can join and host everything in your browser meanwhile.",
-    "for": {
-      "mac": "For Mac",
-      "windows": "For Windows"
-    },
     "platform": {
       "mac": "Mac",
       "windows": "Windows"
@@ -1887,10 +1888,8 @@
       "mac": "macOS 12 or later, on Apple silicon or Intel.",
       "windows": "Windows 10 or 11, on x64 or Arm."
     },
-    "download": "Download for {platform}",
-    "version": "Version {version}.",
-    "versionOn": "Version {version}, released {date}.",
-    "allFiles": "All files",
+    "version": "Version {version}",
+    "versionOn": "Version {version}, released {date}",
     "addsTitle": "What the app adds",
     "adds": {
       "links": {
@@ -1918,7 +1917,26 @@
         "body": "{appName} updates quietly, and installs when it restarts."
       }
     },
-    "help": "Questions about installing or signing in? <link>Get the desktop app</link> in Help covers them."
+    "help": "Questions about installing or signing in? <link>Get the desktop app</link> in Help covers them.",
+    "build": {
+      "windows": {
+        "title": "Windows",
+        "kind": "Windows installer",
+        "arch": "x64 and Arm64"
+      },
+      "mac": {
+        "title": "Mac",
+        "kind": "macOS universal",
+        "arch": "Apple silicon and Intel"
+      }
+    },
+    "detail": "{kind} · {arch}",
+    "detailSize": "{kind} · {arch} · {size}",
+    "unsigned": {
+      "windows": "Not signed yet: if Windows says it protected your PC, choose More info, then Run anyway.",
+      "mac": "Not notarized by Apple yet: the first time, right-click {appName} in Applications and choose Open."
+    },
+    "allReleases": "All releases"
   },
   "Unsubscribe": {
     "title": "Stop reminder emails?",

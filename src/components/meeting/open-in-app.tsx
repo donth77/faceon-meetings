@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useDesktopRelease } from "@/lib/desktop/use-desktop-release";
+import { useDesktopDownload } from "@/lib/desktop/use-desktop-release";
 import { publicEnv } from "@/lib/env";
 import { savePreferences } from "@/lib/preferences";
 
@@ -140,22 +140,24 @@ export function OpenInApp({
  */
 export function SuggestDesktopApp({ link }: { link: string }) {
   const t = useTranslations("OpenInApp");
+  const tDownload = useTranslations("Download");
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-  const release = useDesktopRelease();
-  if (!release) return null;
+  const found = useDesktopDownload();
+  if (!found) return null;
   return (
     <p className="text-muted-foreground text-center text-[13px] leading-normal">
       {t.rich("suggest", {
         appName,
+        platform: tDownload(`platform.${found.platform}`),
         open: (chunks) => (
           <a href={link} className={LINK}>
             {chunks}
           </a>
         ),
         get: (chunks) => (
-          <Link href="/download" className={LINK}>
+          <a href={found.download.url} className={LINK}>
             {chunks}
-          </Link>
+          </a>
         ),
       })}
     </p>

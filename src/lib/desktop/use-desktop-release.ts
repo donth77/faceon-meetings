@@ -1,29 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { z } from "zod";
 
-export type DesktopReleaseInfo = {
-  version: string;
-  mac: string | null;
-  windows: string | null;
-};
+import {
+  DesktopReleaseSchema,
+  deviceKind,
+  type DesktopDownload,
+  type DesktopPlatform,
+  type DesktopRelease,
+  type DeviceKind,
+} from "./downloads";
+import { useDesktop } from "./use-desktop";
 
-let request: Promise<DesktopReleaseInfo | null> | null = null;
+const Reply = z.union([
+  z.object({ available: z.literal(false) }),
+  DesktopReleaseSchema.extend({ available: z.literal(true) }),
+]);
 
-function loadRelease(): Promise<DesktopReleaseInfo | null> {
+let request: Promise<DesktopRelease | null> | null = null;
+
+function loadRelease(): Promise<DesktopRelease | null> {
   request ??= fetch("/api/desktop/release")
     .then((response) => (response.ok ? response.json() : null))
     .then((body: unknown) => {
-      if (!body || typeof body !== "object" || !("available" in body)) {
-        return null;
-      }
-      const release = body as { available: boolean } & DesktopReleaseInfo;
-      return release.available
-        ? {
-            version: release.version,
-            mac: release.mac,
-            windows: release.windows,
-          }
+      const reply = Reply.safeParse(body);
+      return reply.success && reply.data.available
+        ? DesktopReleaseSchema.parse(reply.data)
         : null;
     })
     .catch(() => null);
@@ -31,14 +34,17 @@ function loadRelease(): Promise<DesktopReleaseInfo | null> {
 }
 
 /**
- * The desktop app's latest release: undefined while finding out, null where this copy
- * has none yet. Asked once per page load.
+ * The desktop app's latest release: undefined while finding out (or not asked), null
+ * where this copy has none yet. Asked once per page load, only when `wanted`.
  */
-export function useDesktopRelease(): DesktopReleaseInfo | null | undefined {
-  const [release, setRelease] = useState<DesktopReleaseInfo | null | undefined>(
+export function useDesktopRelease(
+  wanted = true,
+): DesktopRelease | null | undefined {
+  const [release, setRelease] = useState<DesktopRelease | null | undefined>(
     undefined,
   );
   useEffect(() => {
+    if (!wanted) return;
     let current = true;
     void loadRelease().then((found) => {
       if (current) setRelease(found);
@@ -46,6 +52,38 @@ export function useDesktopRelease(): DesktopReleaseInfo | null | undefined {
     return () => {
       current = false;
     };
-  }, []);
+  }, [wanted]);
   return release;
+}
+
+const subscribeNever = () => () => {};
+
+/**
+ * What this browser runs on (lib/desktop/downloads.ts), once the page runs here: null
+ * before, since the cached page is the same for everyone.
+ */
+export function useDeviceKind(): DeviceKind | null {
+  return useSyncExternalStore(
+    subscribeNever,
+    () => deviceKind(navigator.userAgent, navigator.maxTouchPoints),
+    () => null,
+  );
+}
+
+/**
+ * This computer's download: on a Mac or Windows, outside the desktop app, once its
+ * build is out (Windows may come before the Mac). Null otherwise.
+ */
+export function useDesktopDownload(): {
+  platform: DesktopPlatform;
+  download: DesktopDownload;
+  release: DesktopRelease;
+} | null {
+  const inApp = useDesktop() !== null;
+  const device = useDeviceKind();
+  const platform = device === "windows" || device === "mac" ? device : null;
+  const release = useDesktopRelease(platform !== null && !inApp);
+  if (inApp || !platform || !release) return null;
+  const download = release[platform];
+  return download ? { platform, download, release } : null;
 }

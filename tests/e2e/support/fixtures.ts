@@ -39,7 +39,7 @@ export type Person = {
   errors: string[];
 };
 
-type OpenOptions = { viewport?: ViewportSize };
+type OpenOptions = { viewport?: ViewportSize; userAgent?: string };
 
 type People = {
   /** A new account, signed in, in a browser of its own. */
@@ -77,6 +77,7 @@ export const test = base.extend<{ people: People }>({
       const context = await browser.newContext({
         baseURL,
         viewport: options.viewport ?? { width: 1280, height: 800 },
+        ...(options.userAgent ? { userAgent: options.userAgent } : {}),
         locale: "en-US",
         timezoneId: "America/New_York",
         permissions:

@@ -419,7 +419,7 @@ The four abstract backgrounds are drawn in FaceOn's colors by `scripts/backgroun
 
 ## The desktop app (optional)
 
-The desktop app for macOS and Windows lives in `desktop/`. A copy builds its own: set `FACEON_APP_URL` (your site) and `NEXT_PUBLIC_APP_NAME` in `desktop/.env.local`, run `pnpm desktop:icons` after `pnpm brand`, and follow [desktop/README.md](desktop/README.md) for signing the Mac app on your own Mac, the Windows installer and releases. Once a release is out, set `DESKTOP_RELEASES_REPO` (the releases repository, as `owner/name`) in Vercel too: `/download`, Settings → General and the account menu then offer the app on computers, and the landing page lists it.
+The desktop app for macOS and Windows lives in `desktop/`. A copy builds its own: set `FACEON_APP_URL` (your site) and `NEXT_PUBLIC_APP_NAME` in `desktop/.env.local`, run `pnpm desktop:icons` after `pnpm brand`, and follow [desktop/README.md](desktop/README.md) for signing the Mac app on your own Mac, the Windows installer and releases. Once a release is out, set `DESKTOP_RELEASES_REPO` (the releases repository, as `owner/name`) in Vercel too: `/download`, Settings → General and the account menu then offer **Download for Windows** or **Download for Mac** on those computers only (the landing page, Settings → General, the account menu), straight to the latest installer, and `/download` has every build. The installers keep the same names in every release, so `releases/latest/download/<name>` still finds them when GitHub's API can't be asked. Set `DESKTOP_SIGNED` to `windows`, `mac` or both once those builds are signed or notarized; until then `/download` says how to open them the first time.
 
 ## The Google Workspace add-on (optional)
 

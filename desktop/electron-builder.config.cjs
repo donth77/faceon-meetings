@@ -3,6 +3,10 @@
 const name = process.env.NEXT_PUBLIC_APP_NAME || "FaceOn";
 const releases = process.env.DESKTOP_RELEASES_REPO || "";
 const [owner, repo] = releases.split("/");
+// The installers keep these names in every release, so the website can link to
+// releases/latest/download/<name> (src/lib/desktop/downloads.ts, desktopAssetNames).
+const fileBase =
+  name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "FaceOn";
 
 /** @type {import("electron-builder").Configuration} */
 module.exports = {
@@ -34,6 +38,8 @@ module.exports = {
   },
   mac: {
     category: "public.app-category.productivity",
+    // The updater's zip; the disk image (dmg, below) is the download.
+    artifactName: `${fileBase}-mac.\${ext}`,
     target: [
       { target: "dmg", arch: ["universal"] },
       { target: "zip", arch: ["universal"] },
@@ -48,11 +54,12 @@ module.exports = {
       NSAudioCaptureUsageDescription: `${name} can share your computer's sound with your screen.`,
     },
   },
-  dmg: { writeUpdateInfo: false },
+  dmg: { artifactName: `${fileBase}.\${ext}`, writeUpdateInfo: false },
   win: {
     target: [{ target: "nsis", arch: ["x64", "arm64"] }],
   },
   nsis: {
+    artifactName: `${fileBase}-Setup.\${ext}`,
     oneClick: true,
     perMachine: false,
     allowElevation: false,
