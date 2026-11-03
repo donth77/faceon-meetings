@@ -28,6 +28,7 @@
     "db:check": "node --env-file=.env.local scripts/db-check.ts",
     "brand": "node scripts/brand.ts",
     "addon:build": "pnpm --filter @faceon/google-addon build",
+    "addon:login": "pnpm --filter @faceon/google-addon login",
     "addon:push": "pnpm --filter @faceon/google-addon push",
     "desktop:dev": "pnpm --filter @faceon/desktop dev",
     "desktop:mac": "pnpm --filter @faceon/desktop dist:mac",
