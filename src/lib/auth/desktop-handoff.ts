@@ -11,6 +11,7 @@ import {
   handoffKey,
   HandoffRecord,
   handoffUsable,
+  handoffUsedKey,
   newHandoffToken,
   readHandoff,
 } from "@/lib/desktop/handoff";
@@ -71,6 +72,23 @@ export const desktopHandoff = () =>
               handoffKey(handoff.token),
             );
           if (!stored || !handoffUsable(stored.expiresAt, Date.now())) {
+            // Asked for again (a browser repeating the request, a retry): when this
+            // app (its verifier) already used it, the window is signed in, so Home,
+            // never a false "didn't finish".
+            const used =
+              await ctx.context.internalAdapter.findVerificationValue(
+                handoffUsedKey(handoff.token),
+              );
+            const usedRecord =
+              used && handoffUsable(used.expiresAt, Date.now())
+                ? readRecord(used.value)
+                : null;
+            if (
+              usedRecord &&
+              challengeMatches(usedRecord.challenge, handoff.verifier)
+            ) {
+              throw ctx.redirect("/home");
+            }
             throw ctx.redirect(FAILED);
           }
           const record = readRecord(stored.value);
@@ -84,6 +102,11 @@ export const desktopHandoff = () =>
             record.userId,
           );
           if (!user) throw ctx.redirect(FAILED);
+          await ctx.context.internalAdapter.createVerificationValue({
+            identifier: handoffUsedKey(handoff.token),
+            value: stored.value,
+            expiresAt: stored.expiresAt,
+          });
           const session = await ctx.context.internalAdapter.createSession(
             user.id,
           );

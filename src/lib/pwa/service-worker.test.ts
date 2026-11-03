@@ -3,7 +3,7 @@ import path from "node:path";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 
-type Rule = "bypass" | "page" | "static" | "asset" | "fresh";
+type Rule = "bypass" | "once" | "page" | "static" | "asset" | "fresh";
 
 /** The service worker as shipped (public/sw.js), loaded with just enough of `self`. */
 function loadWorker() {
@@ -65,13 +65,21 @@ describe("the service worker's cache rules", () => {
     expect(rule("/j/1234567890", { mode: "navigate" })).toBe("page");
   });
 
-  it("never touches the API, sign-in included, even as a page", () => {
+  it("never touches the API's requests", () => {
     expect(rule("/api/meetings/1234567890/join", { method: "POST" })).toBe(
       "bypass",
     );
     expect(rule("/api/auth/get-session")).toBe("bypass");
+  });
+
+  it("answers an API page once: a sign-in link works once", () => {
+    // Unanswered, the browser fetches the page again after the navigation preload,
+    // and the second exchange of the desktop app's sign-in failed.
     expect(rule("/api/auth/callback/google", { mode: "navigate" })).toBe(
-      "bypass",
+      "once",
+    );
+    expect(rule("/api/auth/desktop/session", { mode: "navigate" })).toBe(
+      "once",
     );
   });
 

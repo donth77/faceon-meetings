@@ -20,20 +20,26 @@ const SHELL_REFRESH_MS = 6 * 60 * 60 * 1000;
 /**
  * What the worker does with a request:
  * - "bypass": nothing, so the browser fetches it as if there were no worker;
+ * - "once": an API page (signing in, a download): the navigation's early request
+ *   (navigation preload), or the network, and nothing else. Left alone, the browser
+ *   would fetch it again after that early request, and a link that works once (the
+ *   desktop app's sign-in) would fail the second time;
  * - "page": the network, or the offline page when there's no connection;
  * - "static": the cache, else the network (the file never changes);
  * - "asset": the cache at once, refreshed from the network for next time;
  * - "fresh": the network, or the cache when there's no connection.
  *
  * @param {{ url: URL, origin: string, method: string, mode: string, range: boolean, rsc: boolean }} request
- * @returns {"bypass" | "page" | "static" | "asset" | "fresh"}
+ * @returns {"bypass" | "once" | "page" | "static" | "asset" | "fresh"}
  */
 function cacheRule({ url, origin, method, mode, range, rsc }) {
   if (method !== "GET" || url.origin !== origin) return "bypass";
   // A range is part of a video or a sound, which the browser streams itself.
   if (range) return "bypass";
   const path = url.pathname;
-  if (path === "/api" || path.startsWith("/api/")) return "bypass";
+  if (path === "/api" || path.startsWith("/api/")) {
+    return mode === "navigate" ? "once" : "bypass";
+  }
   if (mode === "navigate") return "page";
   // The router's requests for a page's content: always the network, like pages.
   if (rsc || url.searchParams.has("_rsc")) return "bypass";
@@ -46,7 +52,12 @@ function cacheRule({ url, origin, method, mode, range, rsc }) {
     ["/backgrounds/", "/icons/", "/brand/", "/avatar/"].some((prefix) =>
       path.startsWith(prefix),
     ) ||
-    ["/favicon.ico", "/icon.svg", "/apple-icon.png", "/manifest.webmanifest"].includes(path)
+    [
+      "/favicon.ico",
+      "/icon.svg",
+      "/apple-icon.png",
+      "/manifest.webmanifest",
+    ].includes(path)
   ) {
     return "asset";
   }
@@ -68,7 +79,8 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const kept = new Set([SHELL, STATIC, ASSETS]);
       for (const name of await caches.keys()) {
-        if (name.startsWith("faceon-") && !kept.has(name)) await caches.delete(name);
+        if (name.startsWith("faceon-") && !kept.has(name))
+          await caches.delete(name);
       }
       // Lets a page's request start while the worker is still waking up.
       await self.registration.navigationPreload?.enable();
@@ -87,7 +99,8 @@ self.addEventListener("fetch", (event) => {
     range: request.headers.has("range"),
     rsc: request.headers.has("rsc"),
   });
-  if (rule === "page") event.respondWith(page(event));
+  if (rule === "once") event.respondWith(once(event));
+  else if (rule === "page") event.respondWith(page(event));
   else if (rule === "static") event.respondWith(cacheFirst(request));
   else if (rule === "asset") event.respondWith(staleWhileRevalidate(event));
   else if (rule === "fresh") event.respondWith(networkFirst(request));
@@ -109,8 +122,13 @@ self.addEventListener("notificationclick", (event) => {
   const url = notificationTarget(event.notification.data, self.location.origin);
   event.waitUntil(
     (async () => {
-      const open = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      const mine = open.find((client) => new URL(client.url).origin === self.location.origin);
+      const open = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      const mine = open.find(
+        (client) => new URL(client.url).origin === self.location.origin,
+      );
       if (mine) {
         await mine.focus();
         const moved = await mine.navigate?.(url).catch(() => null);
@@ -124,7 +142,9 @@ self.addEventListener("notificationclick", (event) => {
 /** Fetches the offline page and its icon again, past the browser's own cache. */
 async function refreshShell() {
   const cache = await caches.open(SHELL);
-  await cache.addAll(SHELL_FILES.map((path) => new Request(path, { cache: "reload" })));
+  await cache.addAll(
+    SHELL_FILES.map((path) => new Request(path, { cache: "reload" })),
+  );
 }
 
 /** Whether the offline page was fetched long enough ago to fetch it again. */
@@ -134,10 +154,16 @@ async function shellIsOld() {
   return !(Date.now() - fetchedAt < SHELL_REFRESH_MS);
 }
 
+/** An API page: the navigation's early request when there is one, else the network. */
+async function once(event) {
+  return (await event.preloadResponse) ?? fetch(event.request);
+}
+
 /** A page: always from the network, else the offline page. */
 async function page(event) {
   try {
-    const response = (await event.preloadResponse) ?? (await fetch(event.request));
+    const response =
+      (await event.preloadResponse) ?? (await fetch(event.request));
     event.waitUntil(
       shellIsOld()
         .then((old) => (old ? refreshShell() : undefined))

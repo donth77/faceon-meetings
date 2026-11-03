@@ -28,8 +28,16 @@ export const handoffUsable = (expiresAt: Date, now: number) =>
 export const newHandoffToken = () => randomBytes(32).toString("base64url");
 
 /** Where a token is kept: as its hash, so the database never holds a usable one. */
+/** A used hand-off, remembered for the rest of its life: asked for again, it goes Home. */
+export const handoffUsedKey = (token: string) =>
+  `desktop-handoff-used:${hashToken(token)}`;
+
 export const handoffKey = (token: string) =>
-  `desktop-handoff:${createHash("sha256").update(token).digest("base64url")}`;
+  `desktop-handoff:${hashToken(token)}`;
+
+function hashToken(token: string) {
+  return createHash("sha256").update(token).digest("base64url");
+}
 
 export const HandoffRecord = z.object({
   userId: z.string().min(1).max(200),

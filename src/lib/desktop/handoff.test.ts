@@ -5,6 +5,7 @@ import {
   handoffExpiresAt,
   handoffKey,
   handoffUsable,
+  handoffUsedKey,
   newHandoffToken,
   readHandoff,
 } from "./handoff";
@@ -63,5 +64,14 @@ describe("a token's life", () => {
     expect(handoffUsable(expiresAt, now + 2 * 60_000)).toBe(true);
     expect(handoffUsable(expiresAt, now + 9 * 60_000)).toBe(true);
     expect(handoffUsable(expiresAt, now + 11 * 60_000)).toBe(false);
+  });
+});
+
+describe("a used hand-off", () => {
+  it("is remembered apart from a live one, and never as the token itself", () => {
+    const token = "a".repeat(43);
+    expect(handoffUsedKey(token)).toMatch(/^desktop-handoff-used:/);
+    expect(handoffUsedKey(token)).not.toBe(handoffKey(token));
+    expect(handoffUsedKey(token)).not.toContain(token);
   });
 });
