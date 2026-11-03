@@ -230,6 +230,41 @@ test.describe("the join screen's Settings", () => {
     expectNoErrors(guest);
   });
 
+  test("its General has the language before joining, and the header doesn't", async ({
+    people,
+  }) => {
+    const host = await people.signedIn({ name: "Maya Host" });
+    const meeting = await createMeeting(host.user.id, {
+      joinBeforeHost: false,
+    });
+    const guest = await people.guest();
+    const { page } = guest;
+    await openMeeting(page, meeting);
+    const header = page.getByRole("banner");
+    await expect(header.getByRole("link", { name: "Sign in" })).toBeVisible();
+    await expect(header.getByRole("button")).toHaveCount(0);
+
+    const settings = page.getByRole("button", { name: "Settings" });
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    const language = dialog.getByRole("button", { name: /Language/ });
+    await settings.click();
+    await dialog.getByRole("tab", { name: "General" }).click();
+    await expect(language).toBeVisible();
+    await expect(language).toContainText("English");
+    await page.keyboard.press("Escape");
+
+    // Asked to join, a new language would reload the page and lose your place.
+    await page.getByLabel("Your name").fill("Jordan Lee");
+    await page.getByRole("button", { name: "Join now" }).click();
+    await expect(waitingForHost(page)).toBeVisible();
+    await settings.click();
+    await dialog.getByRole("tab", { name: "General" }).click();
+    await expect(dialog.getByText("Time format")).toBeVisible();
+    await expect(language).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    expectNoErrors(guest);
+  });
+
   test("its dialogs fit a phone, in the dark theme too", async ({ people }) => {
     const host = await people.signedIn({ name: "Maya Host" });
     const meeting = await createMeeting(host.user.id);

@@ -9,7 +9,7 @@ Open **Settings** at the bottom of the sidebar. During a meeting, select **More*
 
 ## General
 
-- **Language**: {appName}'s language.
+- **Language**: {appName}'s language. Before you join a meeting, it's also in the join screen's **Settings**, under **General**.
 - **Time format**: 12-hour or 24-hour times.
 - **Time zone**: the zone meeting times show in. It starts as your device's.
 - **Theme**: light, dark, or matching your device. The meeting room is always dark, so video stands out.

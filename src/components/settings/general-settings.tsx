@@ -60,12 +60,19 @@ function ThemePreview({ dark }: { dark: boolean }) {
   );
 }
 
+/**
+ * Where General shows: Settings itself, or the meeting's Settings, which leaves out the
+ * theme (the meeting is always dark) and the app. Choosing a language reloads the page,
+ * so the meeting's Settings offers it only before you ask to join, where that loses
+ * nothing; in the meeting it would take you out of the call.
+ */
+export type GeneralPlace = "settings" | "beforeJoining" | "meeting";
+
 /** Settings → General: language, time format, time zone and theme, for this device. */
 export function GeneralSettings({
-  inMeeting = false,
+  place = "settings",
 }: {
-  /** In the meeting's Settings: no language (it reloads the page) and no theme. */
-  inMeeting?: boolean;
+  place?: GeneralPlace;
 }) {
   const t = useTranslations("Settings.general");
   const locale = useLocale();
@@ -101,7 +108,7 @@ export function GeneralSettings({
     <>
       <SectionTitle title={t("title")} />
       <SettingsCard title={t("region")}>
-        {inMeeting ? null : (
+        {place === "meeting" ? null : (
           <div className="flex max-w-[440px] flex-col gap-1.5">
             <SelectField
               label={t("language")}
@@ -163,7 +170,7 @@ export function GeneralSettings({
         </div>
       </SettingsCard>
 
-      {inMeeting ? null : (
+      {place === "settings" ? (
         <SettingsCard title={t("theme")}>
           <RadioGroup
             aria-label={t("theme")}
@@ -192,10 +199,10 @@ export function GeneralSettings({
             ))}
           </RadioGroup>
         </SettingsCard>
-      )}
+      ) : null}
 
-      {inMeeting ? null : <DesktopLinksSetting />}
-      {inMeeting ? null : <InstallAppCard />}
+      {place === "settings" ? <DesktopLinksSetting /> : null}
+      {place === "settings" ? <InstallAppCard /> : null}
     </>
   );
 }

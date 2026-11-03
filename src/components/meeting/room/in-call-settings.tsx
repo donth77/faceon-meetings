@@ -226,9 +226,11 @@ function EffectsSection() {
 function SectionContent({
   section,
   notesInMeetings,
+  beforeJoining,
 }: {
   section: InCallSection;
   notesInMeetings: boolean | undefined;
+  beforeJoining: boolean;
 }) {
   switch (section) {
     case "audio":
@@ -238,7 +240,9 @@ function SectionContent({
     case "general":
       return (
         <div className="flex flex-col gap-5">
-          <GeneralSettings inMeeting />
+          <GeneralSettings
+            place={beforeJoining ? "beforeJoining" : "meeting"}
+          />
         </div>
       );
     case "reactions":
@@ -299,7 +303,12 @@ export function SettingsDialog({
   onSectionChange,
   onClose,
   devices,
-}: SettingsDialogProps & { devices: SettingsDevices }) {
+  beforeJoining = false,
+}: SettingsDialogProps & {
+  devices: SettingsDevices;
+  /** The join screen's, before you ask to join: General has the language too. */
+  beforeJoining?: boolean;
+}) {
   const t = useTranslations("Settings");
   const phone = useIsMobile();
   // Only the sections this browser and device can use: backgrounds need the browser's
@@ -375,6 +384,7 @@ export function SettingsDialog({
                 <SectionContent
                   section={id}
                   notesInMeetings={notesInMeetings}
+                  beforeJoining={beforeJoining}
                 />
               </TabPanel>
             ))}

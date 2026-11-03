@@ -3,14 +3,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoLockup } from "@/components/brand/logo-lockup";
-import { LanguageMenu } from "@/components/marketing/language-menu";
 import { PUBLIC_CONTAINER } from "@/components/marketing/layout";
 
 import { SignInLink } from "./sign-in-link";
 
 /**
  * Pages around a meeting (pre-join, notices, after leaving): the public header's logo
- * and language menu (plus Sign in for guests), content centered.
+ * (plus Sign in for guests), content centered. The language is in Settings → General,
+ * which the join screen's Settings has too.
  */
 export function MeetingPageFrame({
   signInHref,
@@ -31,10 +31,7 @@ export function MeetingPageFrame({
         <Link href="/" className="inline-flex shrink-0 rounded-md">
           <LogoLockup className="h-7 sm:h-[30px]" />
         </Link>
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          <LanguageMenu />
-          {signInHref ? <SignInLink href={signInHref} /> : null}
-        </div>
+        {signInHref ? <SignInLink href={signInHref} /> : null}
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-14 sm:px-10">
         {children}

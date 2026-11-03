@@ -54,6 +54,19 @@ test.describe("Settings", () => {
     expectNoErrors(host);
   });
 
+  test("General has the language", async ({ people }) => {
+    const person = await people.signedIn();
+    const { page } = person;
+    await page.goto("/settings");
+    const language = page.getByRole("button", { name: /Language/ });
+    await expect(language).toBeVisible();
+    await expect(language).toContainText("English");
+    await language.click();
+    await expect(page.getByRole("option", { name: "English" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    expectNoErrors(person);
+  });
+
   test("AI notes are off until the host turns them on, and the choice is kept with the account", async ({
     people,
   }) => {

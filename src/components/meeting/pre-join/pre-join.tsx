@@ -802,6 +802,7 @@ export function PreJoin({
           onSectionChange={setSettingsSection}
           onClose={() => setSettingsSection(null)}
           devices={previewDevices}
+          beforeJoining={status === "idle"}
         />
       </UNSAFE_PortalProvider>
       <div ref={settingsLayer} className="dark" />
