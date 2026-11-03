@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AuthPage } from "@/components/auth/auth-page";
 import { JoinCard, SignInCard } from "@/components/auth/sign-in-card";
+import { HideInDesktopApp } from "@/components/desktop/hide-in-desktop-app";
 import { publicEnv } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,7 +17,9 @@ export default function SignInPage() {
   return (
     <AuthPage links="sign-up">
       <SignInCard />
-      <JoinCard />
+      <HideInDesktopApp>
+        <JoinCard />
+      </HideInDesktopApp>
     </AuthPage>
   );
 }

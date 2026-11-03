@@ -37,6 +37,9 @@ const common = {
   define: {
     __APP_URL__: JSON.stringify(url.origin),
     __APP_NAME__: JSON.stringify(name),
+    __APP_ID__: JSON.stringify(
+      process.env.DESKTOP_APP_ID || "app.joinfaceon.desktop",
+    ),
     __RELEASES_REPO__: JSON.stringify(releases),
     __DEV__: JSON.stringify(dev),
   },
@@ -76,7 +79,12 @@ await Promise.all([
 for (const file of ["index.html", "picker.css"]) {
   cpSync(join(desktopDir, "src/picker", file), join(dist, "picker", file));
 }
-for (const file of ["tray.png", "trayTemplate.png", "trayTemplate@2x.png"]) {
+for (const file of [
+  "icon.png",
+  "tray.png",
+  "trayTemplate.png",
+  "trayTemplate@2x.png",
+]) {
   cpSync(join(desktopDir, "build", file), join(dist, "assets", file));
 }
 console.log(`Built ${name} for ${url.origin}${dev ? " (development)" : ""}.`);

@@ -18,6 +18,10 @@ Note the version and the system for each run.
 
 ## Links
 
+- [ ] Signed out, the app opens on its first screen (join, sign in, create an account), with no scrolling; signed in, on Home.
+- [ ] Continue with Google: wait a few minutes at the browser's "Open FaceOn?" before allowing it, and the app still signs in.
+- [ ] `pnpm desktop:try`: FaceOn's name and icon in the title bar, the taskbar or Dock and the tray, and browsers ask "Open FaceOn?".
+- [ ] Settings → Desktop app → Open browser settings opens Settings → General in the browser, with "Open meeting links in the desktop app".
 - [ ] A `faceon://j/<id>` link from a browser opens the meeting in the app.
 - [ ] The join page's "Open in the FaceOn app" opens it, passcode included.
 - [ ] A link while a meeting is on asks before leaving it.
@@ -33,7 +37,7 @@ Note the version and the system for each run.
 
 ## Without a window
 
-- [ ] Closing the window keeps the app in the tray or menu bar (Windows: unless that's turned off).
+- [ ] Closing the window keeps the app in the tray or menu bar; with **Keep FaceOn in the tray** (menu bar) off, it quits.
 - [ ] A reminder arrives for a meeting starting soon, with the window closed; Join opens it.
 - [ ] Launch at login, turned on, opens the app at the next sign-in to the computer.
 

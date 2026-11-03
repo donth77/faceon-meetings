@@ -9,11 +9,12 @@
   "scripts": {
     "electron:fetch": "node scripts/fetch-electron.mjs",
     "build": "node scripts/build.mjs",
-    "dev": "node scripts/fetch-electron.mjs && node scripts/build.mjs --dev && electron .",
+    "dev": "node scripts/fetch-electron.mjs && node scripts/build.mjs --dev && node scripts/app-id.mjs --dev && electron .",
     "icons": "node scripts/icons.mjs",
     "dist:mac": "node scripts/mac.mjs",
     "dist:win": "node scripts/windows.mjs",
-    "test:e2e": "node scripts/fetch-electron.mjs && node tests/smoke.mjs"
+    "test:e2e": "node scripts/fetch-electron.mjs && node tests/smoke.mjs",
+    "try": "node scripts/fetch-electron.mjs && node scripts/try.mjs"
   },
   "devDependencies": {
     "electron": "45.2.1",

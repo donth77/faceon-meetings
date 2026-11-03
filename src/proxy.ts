@@ -6,6 +6,7 @@ import { routing } from "./i18n/routing";
 import {
   APP_ROUTES,
   AUTH_ROUTES,
+  DESKTOP_WELCOME_ROUTE,
   HOME_ROUTE,
   matchesRoute,
   SIGN_IN_ROUTE,
@@ -27,7 +28,12 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(signIn);
   }
 
-  if (signedIn && (pathname === "/" || matchesRoute(pathname, AUTH_ROUTES))) {
+  if (
+    signedIn &&
+    (pathname === "/" ||
+      pathname === DESKTOP_WELCOME_ROUTE ||
+      matchesRoute(pathname, AUTH_ROUTES))
+  ) {
     return NextResponse.redirect(new URL(HOME_ROUTE, request.url));
   }
 

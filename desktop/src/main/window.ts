@@ -17,14 +17,20 @@ export function createMainWindow(store: Store): BrowserWindow {
         saved.y + saved.height > area.y
       );
     });
+  // At first: 1280×820 where it fits, or about 90% of a smaller screen, never taller.
+  const area = screen.getPrimaryDisplay().workArea;
   const win = new BrowserWindow({
-    width: saved?.width ?? 1280,
-    height: saved?.height ?? 820,
+    width: saved?.width ?? Math.min(1280, Math.round(area.width * 0.9)),
+    height: saved?.height ?? Math.min(820, Math.round(area.height * 0.9)),
     ...(visible && saved ? { x: saved.x, y: saved.y } : {}),
     minWidth: 380,
     minHeight: 560,
     show: false,
     title: APP_NAME,
+    // macOS uses the app's own icon; elsewhere the window (and taskbar) shows this one.
+    ...(process.platform === "darwin"
+      ? {}
+      : { icon: join(__dirname, "assets", "icon.png") }),
     backgroundColor: nativeTheme.shouldUseDarkColors ? "#0f1115" : "#f5f6f8",
     autoHideMenuBar: process.platform !== "darwin",
     webPreferences: {

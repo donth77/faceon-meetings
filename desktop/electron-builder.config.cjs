@@ -16,6 +16,8 @@ module.exports = {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "") || "faceon",
+    // Windows' publisher (installed apps, the app's file details); otherwise Electron's.
+    author: { name: `${name} contributors` },
   },
   copyright: `Copyright © ${new Date().getFullYear()} ${name} contributors`,
   directories: { output: "release", buildResources: "build" },

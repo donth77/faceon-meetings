@@ -3,8 +3,10 @@
 // the site on localhost. It checks the window, the bridge and where it exists, faceon://
 // links, navigation and permission rules, settings checks and the mute shortcut.
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { _electron as electron } from "@playwright/test";
 
@@ -44,15 +46,25 @@ const check = (label, ok, detail = "") => {
   if (!ok) failures++;
 };
 
+// A profile of its own, so a copy you have open (pnpm desktop:dev) doesn't take over.
+const profile = mkdtempSync(join(tmpdir(), "faceon-smoke-"));
 const app = await electron.launch({
   executablePath: require("electron"),
   args: [desktopDir],
-  env: { ...process.env, FACEON_APP_URL: ORIGIN, FACEON_HIDDEN: "1" },
+  env: {
+    ...process.env,
+    FACEON_APP_URL: ORIGIN,
+    FACEON_HIDDEN: "1",
+    FACEON_USER_DATA: profile,
+  },
 });
 try {
   const page = await app.firstWindow();
-  await page.waitForURL(`${ORIGIN}/home`, { timeout: 30_000 });
-  check("the window opens the site's Home", page.url() === `${ORIGIN}/home`);
+  await page.waitForURL(`${ORIGIN}/desktop/welcome`, { timeout: 30_000 });
+  check(
+    "the window opens the first screen",
+    page.url() === `${ORIGIN}/desktop/welcome`,
+  );
 
   const bridge = await page.evaluate(() => ({
     bridge: window.faceonDesktop?.bridge,
@@ -206,6 +218,7 @@ try {
 } finally {
   await app.close();
   server.close();
+  rmSync(profile, { recursive: true, force: true });
 }
 console.log(`failures: ${failures}`);
 process.exit(failures ? 1 : 0);

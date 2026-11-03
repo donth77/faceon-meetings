@@ -32,6 +32,61 @@ test.describe("signed-out pages", () => {
     expectNoErrors(visitor);
   });
 
+  test("the desktop app's first screen fits its first window", async ({
+    people,
+  }) => {
+    const visitor = await people.guest();
+    const { page } = visitor;
+    // The app's first window is 1280×820; this is what's inside its frame on Windows.
+    await page.setViewportSize({ width: 1264, height: 781 });
+    const fits = () =>
+      page.evaluate(
+        () => document.documentElement.scrollHeight <= window.innerHeight,
+      );
+    await page.goto("/desktop/welcome");
+    await expect(
+      page.getByRole("heading", { level: 1, name: /Welcome to/ }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Enter a meeting ID or link")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+    await expect(
+      page.getByRole("link", { name: "Create an account" }),
+    ).toHaveAttribute("href", "/sign-up");
+    expect(await fits()).toBe(true);
+
+    // Signing in, in the app (its bridge, stood in for): no Join card or footer.
+    await page.addInitScript(() => {
+      const none = () => () => {};
+      Object.assign(window, {
+        faceonDesktop: new Proxy(
+          { bridge: 1, platform: "windows", version: "0.0.0" },
+          {
+            get: (bridge, key) => (key in bridge ? bridge[key as never] : none),
+          },
+        ),
+      });
+    });
+    await page.goto("/sign-in");
+    await expect(
+      page.getByRole("heading", { level: 1, name: /Sign in/ }),
+    ).toBeVisible();
+    await expect(page.getByRole("contentinfo")).toHaveCount(0);
+    expect(await fits()).toBe(true);
+    expectNoErrors(visitor);
+  });
+
+  test("signed in, the desktop app's first screen is Home", async ({
+    people,
+  }) => {
+    const host = await people.signedIn();
+    await host.page.goto("/desktop/welcome");
+    await expect(host.page).toHaveURL(/\/home$/);
+    expectNoErrors(host);
+  });
+
   test("the legal pages and the credits fill in this copy's details", async ({
     people,
   }) => {

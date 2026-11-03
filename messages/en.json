@@ -1531,15 +1531,11 @@
       "intro": "How the {appName} app starts, and what it does while another app is in front.",
       "notInApp": "These settings are in the {appName} app for Mac and Windows.",
       "startup": "Opening and closing",
-      "launchAtLogin": "Open {appName} when you sign in to your computer",
-      "keepInTray": "Keep {appName} in the tray when you close its window",
-      "keepInTrayHelp": "Reminders and the tray menu keep working.",
-      "openLinks": "Open meeting links in this app",
-      "openLinksHelp": "Links that start with faceon://, including the join page's Open in the {appName} app.",
+      "launchAtLogin": "Open {appName} on startup",
+      "keepInTray": "Keep {appName} in the tray",
       "meetings": "During meetings",
-      "muteShortcut": "Mute from any app",
-      "muteShortcutHelp": "Press {shortcut} to mute or unmute while another app is in front. Only during meetings.",
-      "shortcut": "Shortcut",
+      "muteShortcut": "Mute shortcut",
+      "muteShortcutHelp": "Mutes or unmutes you from any app during a meeting.",
       "change": "Change…",
       "pressShortcut": "Press the new shortcut…",
       "shortcutProblem": "Use Ctrl, Alt or ⌘ with a letter, a number or a function key.",
@@ -1558,8 +1554,11 @@
       "download": "Download",
       "failed": "Couldn’t check for updates. Try again later.",
       "updatesOff": "This copy doesn’t look for updates.",
-      "testBuilds": "Test builds",
-      "testBuildsHelp": "Get new versions before everyone else. They may have rough edges."
+      "keepInMenuBar": "Keep {appName} in the menu bar",
+      "keepHelpTray": "Closing the window keeps {appName} running, so reminders and the tray menu keep working.",
+      "keepHelpMenuBar": "Closing the window keeps {appName} running, so reminders and the menu bar menu keep working.",
+      "browserLinks": "Your browser decides whether meeting links open here: in its Settings → General → Open meeting links in the desktop app (Ask each time, Always or Never).",
+      "browserLinksButton": "Open browser settings"
     }
   },
   "GoogleCalendar": {
@@ -2017,5 +2016,14 @@
         "times": "Times are in {zone}."
       }
     }
+  },
+  "DesktopWelcome": {
+    "title": "Welcome to {appName}",
+    "intro": "Join a meeting with its ID or link, or sign in to start your own.",
+    "join": "Join a meeting",
+    "or": "or",
+    "signIn": "Sign in",
+    "signUp": "Create an account",
+    "noAccount": "You don’t need an account to join."
   }
 }

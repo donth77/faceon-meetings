@@ -25,6 +25,8 @@ import {
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useCapability } from "@/hooks/use-capability";
 import { signOut } from "@/lib/auth/client";
+import { isDesktopApp } from "@/lib/desktop/use-desktop";
+import { DESKTOP_WELCOME_ROUTE } from "@/lib/routes";
 
 import { UserAvatar } from "./user-avatar";
 
@@ -57,7 +59,7 @@ export function AccountMenu({ user }: { user: AccountUser }) {
     try {
       await signOut();
     } finally {
-      window.location.replace("/");
+      window.location.replace(isDesktopApp() ? DESKTOP_WELCOME_ROUTE : "/");
     }
   }
 

@@ -1,6 +1,7 @@
 /** Fixed when the app is built (scripts/build.mjs); see desktop/README.md. */
 declare const __APP_URL__: string;
 declare const __APP_NAME__: string;
+declare const __APP_ID__: string;
 declare const __RELEASES_REPO__: string;
 declare const __DEV__: boolean;
 
@@ -12,6 +13,8 @@ export const APP_URL = new URL(
 );
 export const APP_ORIGIN = APP_URL.origin;
 export const APP_NAME = __APP_NAME__;
+/** The installer's app ID (electron-builder's appId): Windows' notifications and taskbar use it. */
+export const APP_ID = __APP_ID__;
 
 /** "owner/name" of the releases repository, or "" where this build has none. */
 export const RELEASES_REPO = __RELEASES_REPO__;

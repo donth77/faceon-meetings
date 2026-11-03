@@ -20,6 +20,23 @@ pnpm desktop:dev    # the app, opening http://localhost:3000
 The first run downloads Electron for your computer (web installs and Vercel never do).
 `FACEON_APP_URL=https://… pnpm desktop:dev` points it at another copy of the site.
 
+## Try the real app
+
+```bash
+pnpm desktop:try
+```
+
+builds the app unpacked (no installer, so no signing and no trouble with long folder
+paths) and opens it. Unlike `pnpm desktop:dev`, it's the real thing: named and pictured as
+FaceOn in the title bar, the taskbar or Dock, and the tray or menu bar, and browsers ask
+"Open FaceOn?" for meeting links and sign-in, not "Open Electron?". It opens
+`https://joinfaceon.app` unless `FACEON_APP_URL` says otherwise, and it takes over
+`faceon://` links on this computer until another copy (an installed one, say) takes them
+back. On Windows, notifications show only from apps Windows knows, which for an installed
+copy is the installer's Start menu shortcut; `pnpm desktop:try` and `pnpm desktop:dev`
+introduce theirs instead, for you only (`scripts/app-id.mjs`, under
+`HKCU\Software\Classes\AppUserModelId`), so reminders show as FaceOn there too.
+
 ## Settings for builds
 
 Builds read `desktop/.env.local` (git-ignored), then the environment. Copy
@@ -118,8 +135,8 @@ and links to the download.
    files to the same draft. It refuses to publish a Mac build that isn't signed and
    notarized.
 4. On GitHub, open the releases repository's draft and **Publish release**. Apps then
-   update themselves within six hours, or right away from **Check for Updates…**. Mark
-   it a pre-release to send it only to people on Test builds.
+   update themselves within six hours, or right away from **Check for Updates…**. Mark it a pre-release to hold it back from everyone except copies run with
+   `FACEON_UPDATE_CHANNEL=beta`.
 
 ## Windows
 

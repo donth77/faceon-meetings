@@ -1,11 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Label, Radio, RadioGroup } from "react-aria-components";
 
 import { RadioDot } from "@/components/ui/form-fields";
-import { useDesktopAppKnown } from "@/lib/desktop/app-known";
+import {
+  markDesktopAppKnown,
+  useDesktopAppKnown,
+} from "@/lib/desktop/app-known";
 import { DESKTOP_LINKS, type DesktopLinks } from "@/lib/desktop/open-in-app";
 import { useDesktop, useIsComputer } from "@/lib/desktop/use-desktop";
 import { publicEnv } from "@/lib/env";
@@ -37,9 +40,20 @@ export function DesktopLinksSetting() {
     loadPreferences,
     () => NONE,
   );
+  // The app's Settings → Desktop app opens this page with #desktop-app: this browser is
+  // on the same computer as the app.
+  useEffect(() => {
+    if (window.location.hash !== "#desktop-app") return;
+    markDesktopAppKnown();
+    requestAnimationFrame(() =>
+      document
+        .getElementById("desktop-app")
+        ?.scrollIntoView({ block: "center" }),
+    );
+  }, []);
   if (inApp || !known || !computer) return null;
   return (
-    <SettingsCard title={t("title")}>
+    <SettingsCard title={t("title")} id="desktop-app">
       <RadioGroup
         value={withDefaults(preferences).desktopLinks}
         onChange={(value) =>

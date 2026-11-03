@@ -138,22 +138,31 @@ export function SectionTitle({
 /** A settings card: a heading and its rows. In the meeting's dialog, a plain group. */
 export function SettingsCard({
   title,
+  id,
   children,
 }: {
   title: string;
+  /** For links to this card (#id). */
+  id?: string;
   children: ReactNode;
 }) {
   const chrome = use(SettingsChrome);
   if (chrome === "dialog") {
     return (
-      <section className="flex flex-col gap-4 border-t border-white/10 pt-5 first:border-t-0 first:pt-0">
+      <section
+        id={id}
+        className="flex flex-col gap-4 border-t border-white/10 pt-5 first:border-t-0 first:pt-0"
+      >
         <h3 className="text-[15px] font-bold">{title}</h3>
         {children}
       </section>
     );
   }
   return (
-    <section className="bg-card ring-border flex flex-col gap-4 rounded-2xl px-6 py-5.5 ring-1">
+    <section
+      id={id}
+      className="bg-card ring-border flex flex-col gap-4 rounded-2xl px-6 py-5.5 ring-1"
+    >
       <h3 className="text-lg font-bold">{title}</h3>
       {children}
     </section>

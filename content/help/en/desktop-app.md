@@ -10,8 +10,8 @@ order: 6
 ## What it adds
 
 - **Meeting links open in the app.** See "Opening meeting links" below.
-- **Mute from any app.** During a meeting, **Ctrl+Shift+A** (**⇧⌘A** on a Mac) mutes and unmutes while another app is in front. You can change it in **Settings → Desktop app**.
-- **The tray or menu bar.** Start or join a meeting, and during one, mute or leave. Closing the window keeps {appName} there.
+- **Mute from any app.** During a meeting, **Ctrl+Shift+A** (**⇧⌘A** on a Mac) mutes and unmutes while another app is in front. Change it, or turn it off, in **Settings → Desktop app → Mute shortcut**.
+- **The tray or menu bar.** Start or join a meeting, and during one, mute or leave. Closing the window keeps {appName} there, unless you turn off **Keep {appName} in the tray** (**in the menu bar** on a Mac).
 - **Your computer's sound** when you share your screen, on Windows.
 - **Reminders with no browser open**, at the time you chose in **Settings → Notifications**, with Join.
 - **Unread chat** on the Dock or taskbar.

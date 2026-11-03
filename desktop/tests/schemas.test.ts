@@ -13,13 +13,11 @@ describe("parseAppState", () => {
       preferences: {
         launchAtLogin: false,
         keepInTray: true,
-        openLinksInApp: true,
         muteShortcut: {
           enabled: true,
           accelerator: "CommandOrControl+Shift+A",
         },
         badge: true,
-        channel: "latest",
       },
       reminderMinutes: 0,
     });

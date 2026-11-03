@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import {
   app,
   BrowserWindow,
@@ -14,9 +15,11 @@ import type {
 } from "../../../src/lib/desktop/bridge";
 import { showUnread } from "./badge";
 import {
+  APP_ID,
   APP_NAME,
   appUrl,
   HIDDEN,
+  IS_DEV,
   PARTITION,
   PROTOCOL,
   RELEASES_REPO,
@@ -36,17 +39,29 @@ import { createTray } from "./tray";
 import { Updates } from "./updates";
 import { createMainWindow } from "./window";
 
+// Windows ties notifications and taskbar buttons to an app ID, and shows notifications
+// only from IDs it knows: the installer's Start menu shortcut introduces this one, and
+// for copies that aren't installed, scripts/app-id.mjs does (".dev" in development).
+if (process.platform === "win32") {
+  app.setAppUserModelId(app.isPackaged ? APP_ID : `${APP_ID}.dev`);
+}
+
+// Development and tests can run beside an installed or running copy with a profile of
+// their own (its own sign-in, settings and single-instance lock).
+if (IS_DEV && process.env.FACEON_USER_DATA) {
+  app.setPath("userData", process.env.FACEON_USER_DATA);
+}
+
 // One app at a time: a second launch (a faceon:// link, on Windows) hands its link to
 // the first and quits.
 if (app.requestSingleInstanceLock()) run();
 else app.quit();
 
-function registerProtocol(on: boolean) {
+/** faceon:// links always come here: meeting links, and signing in through the browser. */
+function registerProtocol() {
   // Tests run hidden, and leave the computer's link handlers alone.
   if (HIDDEN) return;
-  if (!on) {
-    app.removeAsDefaultProtocolClient(PROTOCOL);
-  } else if (process.defaultApp) {
+  if (process.defaultApp) {
     // Development: this Electron, with this folder.
     app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
       app.getAppPath(),
@@ -99,7 +114,7 @@ function run() {
       child.setAlwaysOnTop(keepPictureOnTop, "floating"),
     );
     created.on("close", (event) => {
-      const stay = process.platform === "darwin" || preferences().keepInTray;
+      const stay = preferences().keepInTray;
       if (!quitting && stay) {
         event.preventDefault();
         created.hide();
@@ -110,7 +125,8 @@ function run() {
       meeting = { inMeeting: false, muted: false };
       syncShortcut();
     });
-    void created.loadURL(appUrl("/home"));
+    // Signed out, the first screen; signed in, it sends you Home.
+    void created.loadURL(appUrl("/desktop/welcome"));
     return created;
   }
 
@@ -173,11 +189,14 @@ function run() {
   });
   app.on("will-quit", () => globalShortcut.unregisterAll());
   app.on("window-all-closed", () => {
-    if (process.platform !== "darwin" && !preferences().keepInTray) app.quit();
+    if (!preferences().keepInTray) app.quit();
   });
 
   void app.whenReady().then(() => {
-    registerProtocol(preferences().openLinksInApp);
+    registerProtocol();
+    if (process.platform === "darwin" && !app.isPackaged) {
+      app.dock?.setIcon(join(__dirname, "assets", "icon.png"));
+    }
     const ses = session.fromPartition(PARTITION);
     secureSession(ses);
     installSharePicker(ses, () => win);
@@ -203,8 +222,6 @@ function run() {
         if (app.isPackaged) {
           app.setLoginItemSettings({ openAtLogin: updated.launchAtLogin });
         }
-        registerProtocol(updated.openLinksInApp);
-        updates.setChannel(updated.channel);
         showUnread(win, unread, updated.badge);
         syncShortcut();
         return updated;
@@ -263,7 +280,10 @@ function run() {
         notice.show();
       }
     });
-    if (RELEASES_REPO) void updates.start(preferences().channel);
+    // Test builds (pre-releases), for owners who ask: FACEON_UPDATE_CHANNEL=beta.
+    const channel =
+      process.env.FACEON_UPDATE_CHANNEL === "beta" ? "beta" : "latest";
+    if (RELEASES_REPO) void updates.start(channel);
 
     win = openWindow();
     if (pendingLink) handleLink(pendingLink);

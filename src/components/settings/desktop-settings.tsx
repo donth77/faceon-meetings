@@ -74,41 +74,44 @@ export function DesktopSettings() {
           isSelected={preferences.launchAtLogin}
           onChange={(on) => void change({ launchAtLogin: on })}
         />
-        {platform === "mac" ? null : (
-          <SwitchRow
-            label={t("keepInTray", { appName })}
-            help={t("keepInTrayHelp")}
-            isSelected={preferences.keepInTray}
-            onChange={(on) => void change({ keepInTray: on })}
-          />
-        )}
         <SwitchRow
-          label={t("openLinks")}
-          help={t("openLinksHelp", { appName })}
-          isSelected={preferences.openLinksInApp}
-          onChange={(on) => void change({ openLinksInApp: on })}
+          label={t(platform === "mac" ? "keepInMenuBar" : "keepInTray", {
+            appName,
+          })}
+          help={t(platform === "mac" ? "keepHelpMenuBar" : "keepHelpTray", {
+            appName,
+          })}
+          isSelected={preferences.keepInTray}
+          onChange={(on) => void change({ keepInTray: on })}
         />
+        <div className="flex flex-wrap items-center justify-between gap-3 py-2">
+          <p className="text-muted-foreground max-w-[56ch] text-[13px] leading-normal">
+            {t("browserLinks")}
+          </p>
+          <Button
+            variant="outline"
+            onPress={() => desktop.openInBrowser("/settings#desktop-app")}
+          >
+            {t("browserLinksButton")}
+          </Button>
+        </div>
       </SettingsCard>
       <SettingsCard title={t("meetings")}>
         <SwitchRow
           label={t("muteShortcut")}
-          help={t("muteShortcutHelp", {
-            shortcut: formatAccelerator(shortcut.accelerator, platform),
-          })}
+          help={t("muteShortcutHelp")}
           isSelected={shortcut.enabled}
           onChange={(enabled) =>
             void change({ muteShortcut: { ...shortcut, enabled } })
           }
         />
-        {shortcut.enabled ? (
-          <ShortcutRecorder
-            value={shortcut.accelerator}
-            platform={platform}
-            onChange={(accelerator) =>
-              void change({ muteShortcut: { ...shortcut, accelerator } })
-            }
-          />
-        ) : null}
+        <ShortcutRecorder
+          value={shortcut.accelerator}
+          platform={platform}
+          onChange={(accelerator) =>
+            void change({ muteShortcut: { ...shortcut, accelerator } })
+          }
+        />
         <SwitchRow
           label={t(platform === "mac" ? "badgeDock" : "badgeTaskbar")}
           isSelected={preferences.badge}
@@ -131,18 +134,15 @@ export function DesktopSettings() {
           onCheck={() => desktop.updates.check()}
           onInstall={() => desktop.updates.install()}
         />
-        <SwitchRow
-          label={t("testBuilds")}
-          help={t("testBuildsHelp")}
-          isSelected={preferences.channel === "beta"}
-          onChange={(on) => void change({ channel: on ? "beta" : "latest" })}
-        />
       </SettingsCard>
     </>
   );
 }
 
-/** The mute shortcut: Change…, then the keys to use. Escape keeps the old one. */
+/**
+ * The mute shortcut's keys, and Change… (then the new keys; Escape keeps the old ones),
+ * just under its switch, so the two read as one setting.
+ */
 function ShortcutRecorder({
   value,
   platform,
@@ -177,16 +177,20 @@ function ShortcutRecorder({
   }
 
   return (
-    <div className="flex flex-col gap-2 py-2">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-[15px] font-semibold">{t("shortcut")}</span>
+    <div className="-mt-1 flex flex-col gap-2 pb-3">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2">
-          <kbd className="border-border bg-muted rounded-md border px-2 py-1 font-mono text-sm">
+          <kbd
+            id="shortcut-keys"
+            className="border-border bg-muted rounded-md border px-2 py-1 font-mono text-sm"
+          >
             {formatAccelerator(value, platform)}
           </kbd>
           <button
             type="button"
-            aria-describedby={problem ? "shortcut-problem" : undefined}
+            aria-describedby={
+              problem ? "shortcut-keys shortcut-problem" : "shortcut-keys"
+            }
             onClick={() => {
               setRecording(true);
               setProblem(false);

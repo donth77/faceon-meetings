@@ -15,7 +15,6 @@ export const DEFAULT_ACCELERATOR = "CommandOrControl+Shift+A";
 export const PreferencesSchema = z.object({
   launchAtLogin: z.boolean().default(false),
   keepInTray: z.boolean().default(true),
-  openLinksInApp: z.boolean().default(true),
   muteShortcut: z
     .object({
       enabled: z.boolean().default(true),
@@ -23,7 +22,6 @@ export const PreferencesSchema = z.object({
     })
     .prefault({}),
   badge: z.boolean().default(true),
-  channel: z.enum(["latest", "beta"]).default("latest"),
 }) satisfies z.ZodType<DesktopPreferences>;
 
 /** A change from Settings → Desktop app: only known settings, each checked. */
@@ -31,13 +29,11 @@ export const PreferencesChange = z
   .object({
     launchAtLogin: z.boolean(),
     keepInTray: z.boolean(),
-    openLinksInApp: z.boolean(),
     muteShortcut: z.object({
       enabled: z.boolean(),
       accelerator: Accelerator,
     }),
     badge: z.boolean(),
-    channel: z.enum(["latest", "beta"]),
   })
   .partial()
   .strict();

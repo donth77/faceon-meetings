@@ -21,14 +21,10 @@ export type DesktopPreferences = {
   launchAtLogin: boolean;
   /** Closing the window keeps the app in the tray or menu bar. */
   keepInTray: boolean;
-  /** faceon:// links, and the join page's "Open in the app", open meetings here. */
-  openLinksInApp: boolean;
   /** Mute or unmute from any app during a meeting, e.g. "CommandOrControl+Shift+A". */
   muteShortcut: { enabled: boolean; accelerator: string };
   /** Unread chat on the dock or taskbar. */
   badge: boolean;
-  /** "beta": test builds. */
-  channel: "latest" | "beta";
 };
 
 export type DesktopUpdateState =

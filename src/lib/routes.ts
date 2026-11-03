@@ -35,6 +35,9 @@ export const MEETING_ROUTES = ["/j", "/join"] as const;
 /** The desktop app's pages in the browser (signing it in). */
 export const DESKTOP_ROUTES = ["/desktop"] as const;
 
+/** The desktop app's first screen, signed out (it opens here). */
+export const DESKTOP_WELCOME_ROUTE = "/desktop/welcome";
+
 /** Where a reminder email's "Stop reminder emails" link lands; signed in or not. */
 export const UNSUBSCRIBE_ROUTE = "/unsubscribe";
 
