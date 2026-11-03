@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
+import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { loggable } from "@/lib/log";
@@ -93,6 +94,8 @@ export async function handleAddonRequest(
     await keepAddonCurrent(addon, request.headers.get(ADDON_HEADERS.version));
     return await handler(addon.host);
   } catch (error) {
+    // Next.js's own signals (prerendering stops at the request's headers) aren't failures.
+    unstable_rethrow(error);
     if (error instanceof AddonFailure) return addonError(error.code);
     if (error instanceof AddonNotFound) return addonError("NOT_FOUND");
     if (error instanceof AddonRefusal) {
