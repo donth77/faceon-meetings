@@ -16,6 +16,8 @@ Builds read `desktop/.env.local` (git-ignored), then the environment. Copy
 | `DESKTOP_RELEASES_REPO`                                                                | `owner/name` of the releases repository (below). Without it the app doesn't look for updates, and nothing can be published |
 | `GH_TOKEN`                                                                             | Only for publishing: a token that can write that repository's releases                                                     |
 | `APPLE_KEYCHAIN_PROFILE`, or `APPLE_API_KEY` + `APPLE_API_KEY_ID` + `APPLE_API_ISSUER` | Only for notarizing the Mac app ([Signing on your Mac](#signing-on-your-mac))                                              |
+| `ARTIFACT_SIGNING_ENDPOINT`, `ARTIFACT_SIGNING_ACCOUNT`, `ARTIFACT_SIGNING_PROFILE`    | Only for signing the Windows app ([Signing on Windows](#signing-on-windows))                                               |
+| `WINDOWS_PUBLISHER_NAME`                                                               | The name on that certificate. Installed apps then accept only updates signed with it                                       |
 
 The icons come from the brand: after `pnpm brand`, run `pnpm desktop:icons`.
 
@@ -29,11 +31,11 @@ that holds only releases. The app's updater reads it, and it's free.
 2. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new)
    with access to only that repository and **Contents: Read and write**. This is your
    `GH_TOKEN` for publishing.
-3. In `desktop/.env.local` on your Mac, set `DESKTOP_RELEASES_REPO=<you>/faceon-desktop-releases`
-   and `GH_TOKEN=<the token>`.
-4. For the Windows builds in CI, add the same two in this repository's settings
-   (**Settings → Secrets and variables → Actions**): a variable `DESKTOP_RELEASES_REPO`
-   and a secret `DESKTOP_RELEASES_TOKEN`.
+3. In `desktop/.env.local` on the computers you publish from (your Mac and your Windows
+   PC), set `DESKTOP_RELEASES_REPO=<you>/faceon-desktop-releases` and `GH_TOKEN=<the token>`.
+4. Optionally, add `DESKTOP_RELEASES_REPO` as a variable in this repository's settings
+   (**Settings → Secrets and variables → Actions → Variables**), so CI's test builds look
+   for updates too.
 
 Once the code is public, releases can move to its own repository instead.
 
@@ -92,32 +94,76 @@ asks people to right-click → **Open** the first time (or **System Settings →
 Security → Open Anyway**), and the app can't update itself: it says a new version is out
 and links to the download.
 
-## Windows
+## Signing on Windows
 
-`pnpm desktop:win` builds the per-user installer on a Windows computer, and CI does the
-same for tags: `desktop/release/FaceOn-Setup.exe`, one installer for x64 and Arm64 (about
-240 MB).
+Windows opens an app without a warning only when it's signed, and a PC with Smart App
+Control on (as many new Windows 11 PCs are) won't open an unsigned app at all, with no
+way past it. You sign on your own Windows PC with
+[Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/) (Basic, $9.99
+a month), signed in to Azure as yourself; nothing secret goes in the repository or CI.
+It's open to organizations, and to individuals in the US and Canada. Windows then shows
+your verified name as the publisher.
 
-If it stops with NSIS saying it "could not find" an include, the folder path is too long
-for NSIS (Windows' 260-character limit). Clone somewhere shorter, such as
-`C:\src\faceon-meetings`.
+1. **An Azure subscription**, at [portal.azure.com](https://portal.azure.com). To sign as
+   yourself, its billing account must be an Individual one, with your legal name and
+   address exactly as on your photo ID (check under **Cost Management + Billing**). The
+   city, state and country go on the certificate; the street address doesn't.
+2. **Register the service:** **Subscriptions** → your subscription → **Resource
+   providers** → **Microsoft.CodeSigning** → **Register**.
+3. **An Artifact Signing account:** search the portal for **Artifact Signing Accounts** →
+   **Create**, with a new resource group, a name, a region and the **Basic** pricing tier.
+   The region sets the endpoint: `https://eus.codesigning.azure.net` for East US, the
+   others in [Microsoft's list](https://learn.microsoft.com/azure/artifact-signing/quickstart#azure-regions-that-support-artifact-signing).
+4. **Two roles for yourself:** on the account, **Access control (IAM) → Add → Add role
+   assignment**, once for **Artifact Signing Identity Verifier** and once for **Artifact
+   Signing Certificate Profile Signer**. Being the subscription's owner isn't enough.
+5. **Prove who you are:** on the account, **Identity validations** → choose
+   **Individual** → **New identity → Public** → your billing account → **Create**. When it
+   says **Action Required**, select your name and follow the link: your phone checks your
+   photo ID (AU10TIX), then you add the verified ID to Microsoft Authenticator and share
+   it. A few minutes later it says **Completed**.
+6. **A certificate profile:** **Certificate profiles → Create → Public Trust**, with a name
+   and your identity validation. Leave out the street address and postal code.
+7. **Set up your PC:** the Azure CLI, to sign in, and the .NET 8 SDK, which the signing
+   tools need (they install themselves on the first build):
+   ```powershell
+   winget install -e --id Microsoft.AzureCLI
+   winget install -e --id Microsoft.DotNet.SDK.8
+   az login
+   ```
+   Then clone and install somewhere with a short path, such as `C:\src\faceon-meetings`
+   (NSIS, which makes the installer, fails on long ones), and in `desktop/.env.local` set:
+   ```bash
+   ARTIFACT_SIGNING_ENDPOINT=https://eus.codesigning.azure.net
+   ARTIFACT_SIGNING_ACCOUNT=<the account's name>
+   ARTIFACT_SIGNING_PROFILE=<the certificate profile's name>
+   ```
+8. **Build:** `pnpm desktop:win`. You get `desktop/release/FaceOn-Setup.exe`, one per-user
+   installer for x64 and Arm64 (about 240 MB). It signs the app and the installer, checks
+   each signature (✓ or ✗), and shows the name on the certificate: put that in
+   `WINDOWS_PUBLISHER_NAME`, so installed apps accept only updates signed with it.
+9. **Check it yourself:** in PowerShell,
+   `Get-AuthenticodeSignature desktop\release\FaceOn-Setup.exe` says `Valid`, and the
+   installer's **Properties → Digital Signatures → Details** says "This digital signature
+   is OK."
 
-It's unsigned for now, so Windows SmartScreen shows "Windows protected your PC" (**More
-info → Run anyway**) until it's signed. Two ways to sign it, either going into the
-`desktop-v*` workflow:
+Without the settings, `pnpm desktop:win` still builds, unsigned, and says so, and
+`--publish` refuses it (`--allow-unsigned` overrides). With them, `pnpm desktop:try` signs
+too, so it opens on a PC with Smart App Control on.
 
-- **[SignPath Foundation](https://signpath.org/)**, free for open-source projects once
-  the code is public and releases are built by GitHub Actions from it. Windows shows
-  "SignPath Foundation" as the publisher.
-- **[Azure Artifact Signing](https://azure.microsoft.com/pricing/details/trusted-signing/)**,
-  about $10 a month, open to individuals in the US and Canada. Windows shows your
-  verified name. electron-builder supports it directly.
+CI builds the Windows app for `desktop-v*` tags and **Run workflow**, unsigned, for testing;
+signing in CI can be added later. Once the code is public,
+[SignPath Foundation](https://signpath.org/) signs open-source releases built by GitHub
+Actions for free, as "SignPath Foundation". Since installed apps accept updates only from
+`WINDOWS_PUBLISHER_NAME`, a change of signer needs one release that accepts both names
+(electron-builder's `publisherName` takes a list).
 
 ## Publishing a release
 
 1. Raise `version` in `desktop/package.json` and commit it.
-2. Tag it: `git tag desktop-v1.0.0 && git push origin desktop-v1.0.0`. CI builds the
-   Windows installer and uploads it to a **draft** release in the releases repository.
+2. On your Windows PC: `pnpm desktop:win --publish`. It signs, checks the signatures and
+   uploads the installer to a **draft** release in the releases repository. It refuses to
+   publish a build that isn't signed.
 3. On your Mac: `pnpm desktop:mac --publish`. It signs, notarizes and uploads the Mac
    files to the same draft. It refuses to publish a Mac build that isn't signed and
    notarized.

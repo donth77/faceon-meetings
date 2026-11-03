@@ -1,9 +1,9 @@
 // pnpm desktop:try
 //
 // The real app on this computer, without installing it: builds it unpacked (no
-// installer, so no signing and no long-path trouble) and opens it. It's named and
-// pictured as FaceOn, takes faceon:// links ("Open FaceOn?" in browsers), and opens
-// FACEON_APP_URL (https://joinfaceon.app unless set). See desktop/DEVELOPING.md.
+// installer, so no long-path trouble) and opens it. It's named and pictured as FaceOn,
+// takes faceon:// links ("Open FaceOn?" in browsers), and opens FACEON_APP_URL
+// (https://joinfaceon.app unless set). See desktop/DEVELOPING.md.
 import { spawn, spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -37,7 +37,9 @@ await build({
     process.arch === "arm64" ? Arch.arm64 : Arch.x64,
   ),
   publish: "never",
-  // Unsigned: it runs on the computer that built it.
+  // The Mac app is unsigned, which the Mac that built it runs. Windows signs it when
+  // signing is set up (desktop/RELEASING.md): Smart App Control blocks an unsigned app
+  // even on the PC that built it.
   config: {
     ...config,
     mac: { ...config.mac, identity: null, notarize: false },

@@ -27,10 +27,14 @@ The first run downloads Electron for your computer (web installs and Vercel neve
 pnpm desktop:try
 ```
 
-This builds the app unpacked (no installer, so no signing and no trouble with long folder
-paths) and opens it. Unlike `pnpm desktop:dev`, it's named and pictured as FaceOn in the
-title bar, the taskbar or Dock, and the tray or menu bar, and browsers ask "Open FaceOn?"
-for meeting links and sign-in, not "Open Electron?".
+This builds the app unpacked (no installer, so no trouble with long folder paths) and
+opens it. Unlike `pnpm desktop:dev`, it's named and pictured as FaceOn in the title bar,
+the taskbar or Dock, and the tray or menu bar, and browsers ask "Open FaceOn?" for meeting
+links and sign-in, not "Open Electron?".
+
+On a Windows PC with Smart App Control on, it opens only once Windows signing is set up
+([RELEASING.md](RELEASING.md#signing-on-windows)), which it then uses; until then,
+`pnpm desktop:dev` runs there.
 
 - It opens `https://joinfaceon.app` unless `FACEON_APP_URL` says otherwise.
 - It takes over `faceon://` links on this computer until another copy (an installed one,

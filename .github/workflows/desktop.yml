@@ -1,9 +1,9 @@
 name: Desktop
 
-# The desktop app's releases (desktop/RELEASING.md). A desktop-v* tag builds the Windows
-# installer and uploads it to the releases repository's draft; the Mac build is signed
-# and published from the owner's Mac. "Run workflow" builds without publishing, and can
-# add an unsigned Mac test build (macOS minutes count ten times while this is private).
+# Test builds of the desktop app (desktop/RELEASING.md). A desktop-v* tag, or "Run
+# workflow", builds the Windows installer, unsigned; releases are signed and published from
+# the owner's Windows PC and Mac. "Run workflow" can add an unsigned Mac test build (macOS
+# minutes count ten times while this is private).
 on:
   push:
     tags: ["desktop-v*"]
@@ -25,7 +25,6 @@ jobs:
       DESKTOP_RELEASES_REPO: ${{ vars.DESKTOP_RELEASES_REPO }}
       NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
       FACEON_APP_URL: ${{ vars.FACEON_APP_URL }}
-      GH_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v6
@@ -35,14 +34,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec vitest run --project desktop
-      - name: Build, and publish for a tag when the releases repository is set
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/desktop-v* && -n "$GH_TOKEN" && -n "$DESKTOP_RELEASES_REPO" ]]; then
-            pnpm --filter @faceon/desktop dist:win --publish
-          else
-            pnpm --filter @faceon/desktop dist:win
-          fi
+      # No signing here yet, so it's for trying out, not for release.
+      - run: pnpm --filter @faceon/desktop dist:win
       - uses: actions/upload-artifact@v7
         with:
           name: windows

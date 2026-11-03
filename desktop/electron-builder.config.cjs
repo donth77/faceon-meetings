@@ -1,5 +1,7 @@
 // electron-builder's settings for FaceOn's desktop app. scripts/mac.mjs and
 // scripts/windows.mjs build with them; desktop/RELEASING.md explains each step.
+const { azureSignOptions } = require("./scripts/signing.mjs");
+
 const name = process.env.NEXT_PUBLIC_APP_NAME || "FaceOn";
 const releases = process.env.DESKTOP_RELEASES_REPO || "";
 const [owner, repo] = releases.split("/");
@@ -7,6 +9,7 @@ const [owner, repo] = releases.split("/");
 // releases/latest/download/<name> (src/lib/desktop/downloads.ts, desktopAssetNames).
 const fileBase =
   name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "FaceOn";
+const signing = azureSignOptions(process.env);
 
 /** @type {import("electron-builder").Configuration} */
 module.exports = {
@@ -61,6 +64,9 @@ module.exports = {
   dmg: { artifactName: `${fileBase}.\${ext}`, writeUpdateInfo: false },
   win: {
     target: [{ target: "nsis", arch: ["x64", "arm64"] }],
+    // Signed with Azure Artifact Signing once its settings are set ("Signing on
+    // Windows" in RELEASING.md); unsigned until then.
+    ...(signing ? { azureSignOptions: signing } : {}),
   },
   nsis: {
     artifactName: `${fileBase}-Setup.\${ext}`,

@@ -6,6 +6,8 @@
     "moduleResolution": "Bundler",
     "types": ["node"],
     "strict": true,
+    "allowJs": true,
+    "checkJs": true,
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
@@ -16,6 +18,7 @@
   "include": [
     "src/**/*.ts",
     "tests/**/*.ts",
+    "scripts/signing.mjs",
     "../src/lib/desktop/bridge.ts",
     "../src/lib/desktop/accelerator.ts",
     "../src/lib/desktop/downloads.ts"
