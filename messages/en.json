@@ -14,7 +14,7 @@
     "featuresTitle": "Everything you expect from a meeting app",
     "features": {
       "anyDevice": {
-        "title": "Any device, no download",
+        "title": "Any device",
         "short": "Any device",
         "body": "Join from a link on Windows, Mac, iPhone, iPad or Android, in Chrome, Edge, Safari or Firefox."
       },
@@ -33,20 +33,30 @@
         "short": "Desktop app",
         "body": "For Mac and Windows: meeting links open in it, and you can mute from any app."
       },
-      "languages": {
-        "title": "Six languages",
-        "short": "Six languages",
-        "body": "English, Spanish, Portuguese, French, German and Japanese."
+      "googleWorkspace": {
+        "title": "In Google Calendar and Gmail",
+        "short": "Calendar and Gmail",
+        "body": "Add a meeting to any event or email, right from Google’s own menus."
+      },
+      "desktopAndGoogle": {
+        "title": "Desktop app and Google add-on",
+        "short": "Desktop and Google",
+        "body": "Apps for <desktop>Mac and Windows</desktop>, and meetings right in <google>Google Calendar and Gmail</google>."
+      },
+      "installApp": {
+        "title": "Install it as an app",
+        "short": "Install as an app",
+        "body": "Add it to your computer or phone from the browser, and open it like any other app."
+      },
+      "effects": {
+        "title": "Backgrounds and effects",
+        "short": "Backgrounds",
+        "body": "Blur your background, or swap in a picture or video, all on your own device."
       },
       "openSource": {
         "title": "Free and open source",
         "short": "Free, open source",
         "body": "MIT licensed, with no ads and no tracking. Run your own copy."
-      },
-      "googleWorkspace": {
-        "title": "In Google Calendar and Gmail",
-        "short": "Calendar and Gmail",
-        "body": "Add a meeting to any event or email, right from Google’s own menus."
       }
     },
     "footerLabel": "Footer",

@@ -2,10 +2,11 @@ import {
   CalendarPlus,
   CodeXml,
   DoorOpen,
-  Languages,
   Monitor,
+  MonitorDown,
   MonitorUp,
   TabletSmartphone,
+  WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -21,36 +22,54 @@ type Feature = {
     | "screenShare"
     | "safety"
     | "desktopApp"
-    | "languages"
-    | "openSource"
-    | "googleWorkspace";
+    | "googleWorkspace"
+    | "desktopAndGoogle"
+    | "installApp"
+    | "effects"
+    | "openSource";
   icon: LucideIcon;
-  /** Where to read more: its Help article. */
+  /** Where its name leads: the download, or its Help article. */
   href?: string;
 };
 
+const DOWNLOAD = "/download";
+const ADDON_HELP = "/help/google-workspace";
+
 /**
- * The desktop app once it's out (lib/desktop/releases.ts); until then, the languages.
- * Google Calendar and Gmail where this copy offers the add-on, with how to add it.
+ * FaceOn beyond the browser, in one highlight: the desktop app once it's out
+ * (lib/desktop/releases.ts), Google Calendar and Gmail where this copy offers the
+ * add-on, both, or else installing the web app.
  */
+function apps(desktopApp: boolean, addon: boolean): Feature {
+  if (desktopApp && addon) return { key: "desktopAndGoogle", icon: Monitor };
+  if (desktopApp) return { key: "desktopApp", icon: Monitor, href: DOWNLOAD };
+  if (addon) {
+    return { key: "googleWorkspace", icon: CalendarPlus, href: ADDON_HELP };
+  }
+  return { key: "installApp", icon: MonitorDown };
+}
+
+/** Always six, so the grid fills: two rows of three, or three of two on phones. */
 const features = (desktopApp: boolean, addon: boolean): Feature[] => [
   { key: "anyDevice", icon: TabletSmartphone },
   { key: "screenShare", icon: MonitorUp },
   { key: "safety", icon: DoorOpen },
-  desktopApp
-    ? { key: "desktopApp", icon: Monitor }
-    : { key: "languages", icon: Languages },
+  apps(desktopApp, addon),
+  { key: "effects", icon: WandSparkles },
   { key: "openSource", icon: CodeXml },
-  ...(addon
-    ? [
-        {
-          key: "googleWorkspace" as const,
-          icon: CalendarPlus,
-          href: "/help/google-workspace",
-        },
-      ]
-    : []),
 ];
+
+/** A link inside a feature's line: both places the desktop-and-Google one leads. */
+function InlineLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="text-foreground focus-visible:focus-ring rounded-[2px] underline underline-offset-4 outline-hidden"
+    >
+      {children}
+    </Link>
+  );
+}
 
 /** A feature's name, as a link to its Help article when it has one. */
 function Title({ href, children }: { href?: string; children: ReactNode }) {
@@ -95,7 +114,14 @@ export async function Features() {
                 <Title href={href}>{t(`features.${key}.title`)}</Title>
               </span>
               <span className="text-muted-foreground hidden text-sm leading-[1.45] sm:block">
-                {t(`features.${key}.body`)}
+                {t.rich(`features.${key}.body`, {
+                  desktop: (chunks) => (
+                    <InlineLink href={DOWNLOAD}>{chunks}</InlineLink>
+                  ),
+                  google: (chunks) => (
+                    <InlineLink href={ADDON_HELP}>{chunks}</InlineLink>
+                  ),
+                })}
               </span>
             </li>
           ),

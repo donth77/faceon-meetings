@@ -32,6 +32,41 @@ test.describe("signed-out pages", () => {
     expectNoErrors(visitor);
   });
 
+  test("the landing page has six highlights, one of them FaceOn beyond the browser", async ({
+    people,
+  }) => {
+    const visitor = await people.guest();
+    const { page } = visitor;
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const highlights = page
+      .getByRole("region", { name: "Everything you expect from a meeting app" })
+      .getByRole("listitem");
+    await expect(highlights).toHaveCount(6);
+    for (const title of [
+      "Any device",
+      "Screen sharing with sound",
+      "Waiting room and passcodes",
+      "Backgrounds and effects",
+      "Free and open source",
+    ]) {
+      await expect(
+        highlights.getByText(title, { exact: true }).filter({ visible: true }),
+      ).toBeVisible();
+    }
+    // The desktop app, the Google add-on, both, or installing the web app: whichever
+    // this copy has.
+    await expect(
+      highlights
+        .getByText(
+          /^(Desktop app|In Google Calendar and Gmail|Desktop app and Google add-on|Install it as an app)$/,
+        )
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Six languages")).toHaveCount(0);
+    expectNoErrors(visitor);
+  });
+
   test("the desktop app's first screen fits its first window", async ({
     people,
   }) => {
