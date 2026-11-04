@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { WakeOnIntent } from "@/components/app-shell/wake-on-intent";
 import { LogoMark } from "@/components/brand/logo-lockup";
-import { DownloadForThisComputer } from "@/components/desktop/download";
+import { DownloadForThisComputer } from "@/components/desktop/download-link";
 import { Features } from "@/components/marketing/features";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";

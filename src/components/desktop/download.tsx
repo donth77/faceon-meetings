@@ -14,26 +14,6 @@ import { publicEnv } from "@/lib/env";
 import { useIntlLocale } from "@/lib/preferences";
 
 /**
- * The landing page's Download for Windows (or Mac), under its main actions: on that
- * computer only, once its build is out. Other computers' builds are on /download.
- */
-export function DownloadForThisComputer() {
-  const t = useTranslations("DesktopApp");
-  const found = useDesktopDownload();
-  if (!found) return null;
-  return (
-    <LinkButton
-      href={found.download.url}
-      variant="ghost"
-      className="h-11 gap-2 rounded-xl px-4 text-[15px] font-semibold"
-    >
-      <Download aria-hidden="true" />
-      {t(`download.${found.platform}`)}
-    </LinkButton>
-  );
-}
-
-/**
  * Settings → General on a Mac or Windows, once its build is out: what the app adds, its
  * download and one short line. Phones and other computers get the web app's install.
  */
