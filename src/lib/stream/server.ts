@@ -14,6 +14,7 @@ import { serverEnv } from "@/lib/server-env";
 
 import { CALL_TYPE } from "./constants";
 import { grantsDrift } from "./grants";
+import { resentIfDropped } from "./retry";
 
 /** How long a permissions check waits for Stream before saying it couldn't ask. */
 const CHECK_TIMEOUT_MS = 5000;
@@ -89,22 +90,24 @@ export const streamProvider: MediaProvider = {
 
   async createSession({ sessionId, host, limits, state }) {
     // The call's creator and first member must exist before the call does.
-    await stream().upsertUsers([toStreamUser(host)]);
-    await callOf(sessionId).getOrCreate({
-      data: {
-        created_by_id: host.id,
-        members: [{ user_id: host.id, role: MEMBER_ROLE.host }],
-        custom: { v: 1, ...state },
-        settings_override: {
-          limits: {
-            max_participants: limits.maxParticipants,
-            ...(limits.maxDurationSeconds
-              ? { max_duration_seconds: limits.maxDurationSeconds }
-              : {}),
+    await resentIfDropped(() => stream().upsertUsers([toStreamUser(host)]));
+    await resentIfDropped(() =>
+      callOf(sessionId).getOrCreate({
+        data: {
+          created_by_id: host.id,
+          members: [{ user_id: host.id, role: MEMBER_ROLE.host }],
+          custom: { v: 1, ...state },
+          settings_override: {
+            limits: {
+              max_participants: limits.maxParticipants,
+              ...(limits.maxDurationSeconds
+                ? { max_duration_seconds: limits.maxDurationSeconds }
+                : {}),
+            },
           },
         },
-      },
-    });
+      }),
+    );
   },
 
   async endSession(sessionId) {
@@ -120,7 +123,7 @@ export const streamProvider: MediaProvider = {
   async inspectSession(sessionId): Promise<SessionSnapshot | null> {
     let call;
     try {
-      ({ call } = await callOf(sessionId).get());
+      ({ call } = await resentIfDropped(() => callOf(sessionId).get()));
     } catch (error) {
       if (isNotFound(error)) return null;
       throw error;
@@ -140,10 +143,12 @@ export const streamProvider: MediaProvider = {
   },
 
   async admit({ sessionId, user, role }): Promise<JoinInfo> {
-    await stream().upsertUsers([toStreamUser(user)]);
-    await callOf(sessionId).updateCallMembers({
-      update_members: [{ user_id: user.id, role: MEMBER_ROLE[role] }],
-    });
+    await resentIfDropped(() => stream().upsertUsers([toStreamUser(user)]));
+    await resentIfDropped(() =>
+      callOf(sessionId).updateCallMembers({
+        update_members: [{ user_id: user.id, role: MEMBER_ROLE[role] }],
+      }),
+    );
     return {
       provider: "stream",
       endpoint: serverEnv().NEXT_PUBLIC_STREAM_API_KEY ?? "",
@@ -157,9 +162,11 @@ export const streamProvider: MediaProvider = {
   },
 
   async setRole(sessionId, userId, role) {
-    await callOf(sessionId).updateCallMembers({
-      update_members: [{ user_id: userId, role: MEMBER_ROLE[role] }],
-    });
+    await resentIfDropped(() =>
+      callOf(sessionId).updateCallMembers({
+        update_members: [{ user_id: userId, role: MEMBER_ROLE[role] }],
+      }),
+    );
   },
 
   async setPublishPermissions(sessionId, userId, changes) {
@@ -169,11 +176,13 @@ export const streamProvider: MediaProvider = {
     const grants = (allowed: boolean) =>
       kinds.filter((k) => changes[k] === allowed).map((k) => PUBLISH_GRANTS[k]);
     // Stream turns off whatever someone is no longer allowed to publish.
-    await callOf(sessionId).updateUserPermissions({
-      user_id: userId,
-      grant_permissions: grants(true),
-      revoke_permissions: grants(false),
-    });
+    await resentIfDropped(() =>
+      callOf(sessionId).updateUserPermissions({
+        user_id: userId,
+        grant_permissions: grants(true),
+        revoke_permissions: grants(false),
+      }),
+    );
   },
 
   async mute(sessionId, userIds, kinds: TrackKind[]) {
@@ -196,7 +205,9 @@ export const streamProvider: MediaProvider = {
 
   async setSessionState(sessionId, state) {
     // Always the complete object; clients ignore a lower `rev` than they've seen.
-    await callOf(sessionId).update({ custom: { v: 1, ...state } });
+    await resentIfDropped(() =>
+      callOf(sessionId).update({ custom: { v: 1, ...state } }),
+    );
   },
 
   async sendServerEvent(sessionId, event) {
