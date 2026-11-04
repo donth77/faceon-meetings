@@ -419,6 +419,12 @@
     "body": "The link may be broken, or the page may have moved.",
     "home": "Go to the home page"
   },
+  "PageError": {
+    "title": "Something went wrong",
+    "body": "This page couldn’t be shown. Try again, or go to the home page.",
+    "retry": "Try again",
+    "home": "Go to the home page"
+  },
   "Meeting": {
     "pageTitle": "Join a meeting",
     "stepTitles": {

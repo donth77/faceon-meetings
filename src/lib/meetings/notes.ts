@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { aiNotesEnabled } from "@/lib/env";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import type { NotesRequest, NotesSettingsRequest } from "./api";
@@ -100,7 +100,7 @@ export async function setNotesSettings(input: {
     await changeSession(updated.meeting, session, { meetingSettings: true });
   } catch (error) {
     // Saved; the session's next change publishes it.
-    console.error("Couldn't publish a meeting's settings", loggable(error));
+    reportError("Couldn't publish a meeting's settings", error);
   }
 }
 
@@ -129,7 +129,7 @@ export async function allowNotesInMeetings(
     try {
       await changeSession(meeting, session, { notesAllowed: allowed });
     } catch (error) {
-      console.error("Couldn't publish a session's AI notes", loggable(error));
+      reportError("Couldn't publish a session's AI notes", error);
       await storeNotesAllowed(session.id, allowed);
     }
   }

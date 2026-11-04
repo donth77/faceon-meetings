@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import { reportCspViolation } from "@/lib/monitoring/report";
 import {
   MAX_REPORT_BYTES,
   parseCspReport,
@@ -20,7 +21,9 @@ function source(request: Request): string {
  * POST /api/csp-report: browsers report Content Security Policy violations here (both
  * report-uri's format and the Reporting API's). Each goes to the server log as one line:
  * the rule, what was blocked (a keyword or a site, never a full address) and the page's
- * path with its IDs replaced. Always 204, so a page never learns more than that it sent.
+ * path with its IDs replaced. The same goes to error reports where they're on, each kind
+ * once an hour (lib/monitoring/report.ts); the browser's own report never leaves FaceOn.
+ * Always 204, so a page never learns more than that it sent.
  */
 export async function POST(request: Request) {
   const length = Number(request.headers.get("content-length") ?? 0);
@@ -32,6 +35,9 @@ export async function POST(request: Request) {
   }
   const violations = parseCspReport(request.headers.get("content-type"), body);
   if (violations === null) return new Response(null, { status: 400 });
-  for (const violation of violations) console.warn(violationLine(violation));
+  for (const violation of violations) {
+    console.warn(violationLine(violation));
+    reportCspViolation(violation);
+  }
   return new Response(null, { status: 204 });
 }

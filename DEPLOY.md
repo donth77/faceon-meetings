@@ -319,9 +319,9 @@ None of these needs an account to start with, and each stays off until you set i
 
 Every page is sent with headers that keep other sites from framing FaceOn, keep the camera, microphone, screen capture and full screen to FaceOn's own pages, give other sites only your address's origin as the referrer (never a page's address), and stop browsers guessing file types. Vercel adds HTTPS-only (HSTS) itself.
 
-A Content Security Policy lists where pages may load code and media from and connect to: your site, Stream, the AI providers a host's own key can call, Google and GitHub profile photos, and Turnstile and your error reports when they're on. It starts **report-only**: browsers report anything outside it to `/api/csp-report`, which writes one line per report to the server log, such as `csp report: connect-src blocked https://example.com on /j/:code`, and nothing is blocked. In Vercel, open **Logs** and search for `csp`.
+A Content Security Policy lists where pages may load code and media from and connect to: your site, Stream, the AI providers a host's own key can call, Google and GitHub profile photos, and Turnstile and your error reports when they're on. It starts **report-only**: browsers report anything outside it to `/api/csp-report`, which writes one line per report to the server log, such as `csp report: connect-src blocked https://example.com on /j/:code`, and nothing is blocked. In Vercel, open **Logs** and search for `csp`; Vercel keeps them only briefly. With [error reports](#error-reports-sentry-or-glitchtip) on, each kind of report also goes to Sentry once an hour, as a warning with just that line's rule, site and page, so you can see them for as long as you need.
 
-Once a week of ordinary use has passed with no reports you can't explain, set `CONTENT_SECURITY_POLICY=enforce` and redeploy, so browsers block those too. `off` leaves the policy out. If you change your copy to call another service from the browser, add its address in `src/lib/security/csp.ts`.
+Once a week of ordinary use has passed with no reports you can't explain (in Sentry, the issues titled **Content Security Policy would block**), set `CONTENT_SECURITY_POLICY=enforce` and redeploy, so browsers block those too. `off` leaves the policy out. If you change your copy to call another service from the browser, add its address in `src/lib/security/csp.ts`.
 
 ### Bot checks (Cloudflare Turnstile)
 
@@ -337,12 +337,12 @@ Without both keys there's no check.
 
 ### Error reports (Sentry or GlitchTip)
 
-When something breaks, a report goes to [Sentry](https://sentry.io) so you can fix it. A report holds the error, where in the code it happened, the browser and operating system, and the page's address with meeting IDs and passcodes taken out. It never holds names, email addresses, IP addresses, chat, notes, transcripts or AI keys (`src/lib/monitoring/scrub.ts` removes them first), and there's no performance tracing or session replay. In the browser, Sentry's code loads only once a page is idle.
+When something breaks, a report goes to [Sentry](https://sentry.io) so you can fix it: errors in pages, in the browser and on the server, and failures FaceOn catches and works around, such as an email Resend refused or a Google Calendar sync, each labeled with what failed. A report holds the error, where in the code it happened, the browser and operating system, and the page's address with meeting IDs and passcodes taken out. It never holds names, email addresses, IP addresses, chat, notes, transcripts or AI keys (`src/lib/monitoring/scrub.ts` removes them first), and there's no performance tracing or session replay. In the browser, Sentry's code loads only once a page is idle.
 
 1. Make a Sentry account (the free Developer plan is enough) and an organization. Choose where its data is stored, in the US or the EU.
 2. Create a project for **Next.js** and copy its DSN into `NEXT_PUBLIC_SENTRY_DSN` in Vercel.
 3. In the project's **Settings → Security & Privacy**, turn on **Prevent Storing of IP Addresses**. FaceOn doesn't send them; this makes sure.
-4. For readable stack traces, create an auth token under **Settings → Auth Tokens** and set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` (the organization's slug) and `SENTRY_PROJECT` (the project's) in Vercel. Each build then uploads its source maps to Sentry and deletes them, so they're never served.
+4. For readable stack traces, create a token under **Settings → Developer Settings → Organization Tokens → Create New Token**: organization tokens are limited to uploading source maps and releases. Set it in Vercel as `SENTRY_AUTH_TOKEN`, marked **Sensitive**, with `SENTRY_ORG` (the organization's slug) and `SENTRY_PROJECT` (the project's). Each build then uploads its source maps to Sentry and deletes them, so they're never served. Without the token, reports still arrive, with the minified code's line numbers.
 5. Redeploy.
 
 [GlitchTip](https://glitchtip.com), an open-source service compatible with Sentry that you can host yourself, works the same way: use its DSN, and for source maps also set `SENTRY_URL` to its address.

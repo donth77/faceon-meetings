@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 const PROJECT_URL = "https://console.neon.tech/api/v2/projects";
@@ -72,12 +72,14 @@ export async function neonUsage(): Promise<NeonUsage> {
       },
     );
     if (!response.ok) {
-      console.error(`Neon's API answered HTTP ${response.status}.`);
+      reportError("Neon's API refused a request.", undefined, {
+        status: response.status,
+      });
       return { state: "unavailable" };
     }
     return readNeonProject(await response.json());
   } catch (error) {
-    console.error("Couldn't ask Neon for its usage.", loggable(error));
+    reportError("Couldn't ask Neon for its usage.", error);
     return { state: "unavailable" };
   }
 }

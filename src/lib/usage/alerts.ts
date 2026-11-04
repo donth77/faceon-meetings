@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { usageAlert, user } from "@/lib/db/schema";
 import { sendEmail, type Email } from "@/lib/email/send";
 import { accountEmail, emailLocale } from "@/lib/email/templates";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
 
@@ -117,7 +117,7 @@ export async function warnAboutUsage(now = new Date()): Promise<number> {
       await emailAdmins(alert);
       warned++;
     } catch (error) {
-      console.error("A usage warning failed to send", loggable(error));
+      reportError("A usage warning failed to send", error);
       await db()
         .delete(usageAlert)
         .where(

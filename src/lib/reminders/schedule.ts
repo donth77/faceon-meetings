@@ -11,8 +11,8 @@ import {
 } from "@/lib/email/send";
 import { emailLocale } from "@/lib/email/templates";
 import { publicEnv } from "@/lib/env";
-import { loggable } from "@/lib/log";
 import { upcomingFor } from "@/lib/meetings/scheduling";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
 
@@ -234,7 +234,7 @@ async function reconcilePerson(
       await hand(want, keyFor(row), row.nonce);
       stats.scheduled++;
     } catch (error) {
-      console.error("A reminder email couldn't be scheduled", loggable(error));
+      reportError("A reminder email couldn't be scheduled", error);
       stats.failed++;
     }
     await pause(SPACING_MS);
@@ -255,7 +255,7 @@ async function reconcilePerson(
       await hand(want, key, nonce);
       stats.scheduled++;
     } catch (error) {
-      console.error("A reminder email couldn't be scheduled", loggable(error));
+      reportError("A reminder email couldn't be scheduled", error);
       await forgetReminder(key).catch(() => {});
       const day = startOfUtcDay(want.sendAt).getTime();
       counts.set(day, Math.max(0, (counts.get(day) ?? 0) - 1));
@@ -283,7 +283,7 @@ async function reconcilePeople(
     try {
       perDay = await reconcilePerson(userId, now, perDay, stats);
     } catch (error) {
-      console.error("Reminder emails could not be updated", loggable(error));
+      reportError("Reminder emails could not be updated", error);
       stats.failed++;
     }
   }
@@ -339,7 +339,7 @@ export async function cancelRemindersOfAccount(
       row.emailId,
       now,
     ).catch((error: unknown) => {
-      console.error("A reminder email couldn't be cancelled", loggable(error));
+      reportError("A reminder email couldn't be cancelled", error);
     });
     await pause(SPACING_MS);
   }

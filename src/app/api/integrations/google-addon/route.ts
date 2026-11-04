@@ -9,8 +9,8 @@ import {
 } from "@/lib/addon/google/setup";
 import type { AddonReply } from "@/lib/addon/google/setup-shared";
 import { auth } from "@/lib/auth/server";
-import { loggable } from "@/lib/log";
 import { isAdmin } from "@/lib/meetings/hosting";
+import { reportError } from "@/lib/monitoring/report";
 import { isLimited, recordAttempt } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/same-origin";
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     }
     return reply(answer);
   } catch (error) {
-    console.error("Couldn't set up the add-on.", loggable(error));
+    reportError("Couldn't set up the add-on.", error);
     return new Response(null, { status: 503 });
   }
 }
@@ -82,7 +82,7 @@ export async function DELETE(request: Request) {
   try {
     await removeAddon(session.user.id);
   } catch (error) {
-    console.error("Couldn't remove the add-on.", loggable(error));
+    reportError("Couldn't remove the add-on.", error);
     return new Response(null, { status: 503 });
   }
   return reply({ addon: await addonSetup(session.user.id) });

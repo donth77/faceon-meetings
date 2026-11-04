@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 
 import type { ScriptFile } from "./content";
 
@@ -102,7 +102,7 @@ async function call(
       signal: AbortSignal.timeout(20_000),
     });
   } catch (error) {
-    console.error("Couldn't reach the Apps Script API.", loggable(error));
+    reportError("Couldn't reach the Apps Script API.", error);
     return { ok: false, problem: { kind: "failed" } };
   }
   const text = await response.text().catch(() => "");
@@ -116,9 +116,11 @@ async function call(
   const problem = problemOf(response.status, json);
   if (problem.kind === "failed") {
     const parsed = GoogleError.safeParse(json);
-    console.error(
-      `The Apps Script API answered ${response.status} to ${method} ${path.split("/")[1] ?? ""}.`,
-      parsed.success ? parsed.data.error.message : "",
+    // Google's own message goes to the log only.
+    reportError(
+      "The Apps Script API refused a request.",
+      parsed.success ? parsed.data.error.message : undefined,
+      { status: response.status, method, resource: path.split("/")[1] ?? "" },
     );
   }
   return { ok: false, problem };

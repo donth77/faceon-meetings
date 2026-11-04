@@ -9,7 +9,7 @@ import { historyFiles } from "@/lib/exports/history-files";
 import { historyLabels } from "@/lib/exports/labels";
 import { exportLimits } from "@/lib/exports/limits";
 import { zipStream } from "@/lib/exports/zip";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { isLimited, recordAttempt } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/same-origin";
 import { isTimeZone } from "@/lib/time";
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("History download failed", loggable(error));
+    reportError("History download failed", error);
     return new Response(null, { status: 500 });
   }
 }

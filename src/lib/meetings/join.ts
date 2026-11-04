@@ -2,8 +2,8 @@ import "server-only";
 
 import { avatarUrl } from "@/lib/avatars/seed";
 import { guestsEnabled } from "@/lib/guest-session";
-import { loggable } from "@/lib/log";
 import { mediaProvider } from "@/lib/media";
+import { reportError } from "@/lib/monitoring/report";
 
 import { requireMeeting, requireMember, requirePrincipal } from "./access";
 import { admit } from "./admission";
@@ -160,7 +160,7 @@ export async function joinMeeting(input: {
       await changeSession(meeting, session.row, { roles: true });
     } catch (error) {
       // They're a co-host either way; the session's next change publishes it.
-      console.error("Couldn't publish a named co-host", loggable(error));
+      reportError("Couldn't publish a named co-host", error);
     }
   }
   return admitted;

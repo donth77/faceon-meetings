@@ -1,9 +1,9 @@
 import "server-only";
 
 import { hostingPlanOf } from "@/lib/hosting/access";
-import { loggable } from "@/lib/log";
 import { mediaProvider, pickProvider } from "@/lib/media";
 import type { SessionSnapshot } from "@/lib/media/types";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 import { MeetingError } from "./errors";
@@ -142,7 +142,7 @@ export async function liveMeetingsFor(
     candidates.map(async (meeting): Promise<LiveMeeting | null> => {
       const current = await currentSession(meeting, now).catch(
         (error: unknown) => {
-          console.error("Could not check a meeting's call.", loggable(error));
+          reportError("Could not check a meeting's call.", error);
           return null;
         },
       );

@@ -2,7 +2,7 @@ import "server-only";
 
 import type { z } from "zod";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { isSameOrigin } from "@/lib/same-origin";
 
 import {
@@ -41,7 +41,7 @@ export async function handleMeetingRequest(
     return await handler();
   } catch (error) {
     if (error instanceof MeetingError) return errorResponse(error.code);
-    console.error("Meeting API request failed", loggable(error));
+    reportError("Meeting API request failed", error);
     return errorResponse("UNAVAILABLE");
   }
 }

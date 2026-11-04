@@ -8,12 +8,12 @@ import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
 import { meeting, user } from "@/lib/db/schema";
 import { publicEnv } from "@/lib/env";
-import { loggable } from "@/lib/log";
 import {
   deleteSchedule,
   inviteesOf,
   seriesOf,
 } from "@/lib/meetings/scheduling";
+import { reportError } from "@/lib/monitoring/report";
 import { meetingPath } from "@/lib/routes";
 import { siteUrl } from "@/lib/site";
 
@@ -99,13 +99,19 @@ async function saveIds(meetingId: string, ids: GoogleEventIds) {
 
 function logFailure(error: unknown) {
   if (!(error instanceof GoogleCalendarError)) {
-    console.error("Google Calendar sync failed.", loggable(error));
+    reportError("Google Calendar sync failed.", error);
   } else if (error.problem === "disabled") {
-    console.error(
+    reportError(
       "Google Calendar sync failed: turn on the Google Calendar API in the Google Cloud project.",
     );
-  } else {
+  } else if (error.problem === "gone") {
+    // The event was deleted in Google Calendar: nothing went wrong on FaceOn's side.
     console.error(`Google Calendar sync failed: ${error.message}`);
+  } else {
+    reportError("Google Calendar sync failed.", error, {
+      problem: error.problem,
+      status: error.status,
+    });
   }
 }
 
@@ -195,9 +201,9 @@ export async function cancelUpcomingEvents(
       // Google no longer accepts the access: nothing else can be cancelled.
       if ((await syncGoogleCalendar(row.id)) === "reconnect") return;
     } catch (error) {
-      console.error(
+      reportError(
         "Could not cancel a deleted account's Google Calendar event.",
-        loggable(error),
+        error,
       );
     }
   }

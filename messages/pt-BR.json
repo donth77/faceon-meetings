@@ -419,6 +419,12 @@
     "body": "O link pode estar quebrado ou a página pode ter mudado de lugar.",
     "home": "Ir para a página inicial"
   },
+  "PageError": {
+    "title": "Algo deu errado",
+    "body": "Não foi possível mostrar esta página. Tente de novo ou vá para a página inicial.",
+    "retry": "Tentar de novo",
+    "home": "Ir para a página inicial"
+  },
   "Meeting": {
     "pageTitle": "Participar de uma reunião",
     "stepTitles": {

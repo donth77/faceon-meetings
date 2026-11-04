@@ -3,7 +3,7 @@ import {
   calendarConnection,
   disconnectGoogleCalendar,
 } from "@/lib/google-calendar/connection";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { isSameOrigin } from "@/lib/same-origin";
 
 /**
@@ -33,7 +33,7 @@ export async function DELETE(request: Request) {
   try {
     await disconnectGoogleCalendar(session.user.id);
   } catch (error) {
-    console.error("Could not disconnect Google Calendar.", loggable(error));
+    reportError("Could not disconnect Google Calendar.", error);
     return new Response(null, { status: 503 });
   }
   return new Response(null, { status: 204 });

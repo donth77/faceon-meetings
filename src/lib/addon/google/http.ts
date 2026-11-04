@@ -4,7 +4,7 @@ import { createHmac } from "node:crypto";
 import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { hashedClientIp, isLimited, recordAttempt } from "@/lib/rate-limit";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
@@ -104,7 +104,7 @@ export async function handleAddonRequest(
         link: `${siteUrl()}/help/meeting-limits`,
       });
     }
-    console.error("Add-on API request failed", loggable(error));
+    reportError("Add-on API request failed", error);
     return addonError("TEMPORARY");
   }
 }

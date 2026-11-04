@@ -13,8 +13,8 @@ import {
   releaseScriptAccess,
 } from "@/lib/google-calendar/connection";
 import { GOOGLE_SCRIPT_SCOPE } from "@/lib/google-calendar/shared";
-import { loggable } from "@/lib/log";
 import { isUniqueViolation } from "@/lib/meetings/queries";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
 
@@ -398,7 +398,7 @@ export async function keepAddonCurrent(
     try {
       await updateAddon(addon.host.id);
     } catch (error) {
-      console.error("Couldn't update an add-on.", loggable(error));
+      reportError("Couldn't update an add-on.", error);
     }
   });
 }

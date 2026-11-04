@@ -7,7 +7,7 @@ import { hostAttendance } from "@/lib/exports/attendance-data";
 import { toCsv } from "@/lib/exports/csv";
 import { attachment, fileName, spreadsheetDay } from "@/lib/exports/format";
 import { attendanceLabels } from "@/lib/exports/labels";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { isSameOrigin } from "@/lib/same-origin";
 import { isTimeZone } from "@/lib/time";
 
@@ -61,7 +61,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Attendance download failed", loggable(error));
+    reportError("Attendance download failed", error);
     return new Response(null, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@ import "server-only";
 
 import { after } from "next/server";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 
 /**
  * What changed: someone's reminder settings (or account), or a meeting (its time, title,
@@ -24,7 +24,7 @@ export function remindersChanged(change: ReminderChange): void {
       const { reconcileReminders } = await import("./schedule");
       await reconcileReminders(change);
     } catch (error) {
-      console.error("Reminder emails could not be updated", loggable(error));
+      reportError("Reminder emails could not be updated", error);
     }
   };
   try {

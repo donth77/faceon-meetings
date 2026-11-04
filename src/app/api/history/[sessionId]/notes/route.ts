@@ -4,8 +4,8 @@ import { getSession } from "@/lib/auth/session";
 import { emailLocale } from "@/lib/email/templates";
 import { attachment, fileName, spreadsheetDay } from "@/lib/exports/format";
 import { meetingWhen, notesLabels } from "@/lib/exports/labels";
-import { loggable } from "@/lib/log";
 import { savedNotesFor } from "@/lib/meetings/saved-notes";
+import { reportError } from "@/lib/monitoring/report";
 import { notesMarkdown } from "@/lib/notes/notes";
 import { isSameOrigin } from "@/lib/same-origin";
 import { isTimeZone } from "@/lib/time";
@@ -55,7 +55,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("AI notes download failed", loggable(error));
+    reportError("AI notes download failed", error);
     return new Response(null, { status: 500 });
   }
 }

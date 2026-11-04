@@ -4,7 +4,7 @@ import { and, eq, gt, gte, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meeting, meetingInvitee, reminderSent, user } from "@/lib/db/schema";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { uncountEmail } from "@/lib/usage/emails";
 
 import { remindersChanged } from "./changed";
@@ -209,7 +209,7 @@ export async function forgetReminder(key: ReminderKey): Promise<void> {
     .returning({ sendAt: reminderSent.sendAt, emailId: reminderSent.emailId });
   if (forgotten?.emailId && forgotten.sendAt) {
     await uncountEmail(forgotten.sendAt).catch((error: unknown) => {
-      console.error("Couldn't uncount a cancelled reminder", loggable(error));
+      reportError("Couldn't uncount a cancelled reminder", error);
     });
   }
 }

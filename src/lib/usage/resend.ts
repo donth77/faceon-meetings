@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { emailDay } from "@/lib/db/schema";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 import {
@@ -133,8 +133,10 @@ export async function refreshResendCounts(now = new Date()): Promise<Listing> {
   );
   if (!Array.isArray(listed)) {
     if (latest !== listed) {
-      console.error(
-        `Couldn't list Resend's emails for the usage meter: ${listed}`,
+      reportError(
+        "Couldn't list Resend's emails for the usage meter.",
+        undefined,
+        { state: listed },
       );
     }
     latest = listed;
@@ -184,7 +186,7 @@ export async function freshResendCounts(now = new Date()): Promise<Listing> {
   try {
     return await refreshResendCounts(now);
   } catch (error) {
-    console.error("Couldn't refresh Resend's counts", loggable(error));
+    reportError("Couldn't refresh Resend's counts", error);
     return "unavailable";
   }
 }

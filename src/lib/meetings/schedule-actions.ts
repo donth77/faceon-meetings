@@ -6,7 +6,7 @@ import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 import type { CalendarOutcome } from "@/lib/google-calendar/shared";
 import { syncGoogleCalendar } from "@/lib/google-calendar/sync";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 import { Passcode } from "./codes";
@@ -85,7 +85,7 @@ async function rememberOptions(
       nextScheduleDefaults(stored, used, { aiNotes, calendar }),
     );
   } catch (error) {
-    console.error("Couldn't remember the scheduling options", loggable(error));
+    reportError("Couldn't remember the scheduling options", error);
   }
 }
 

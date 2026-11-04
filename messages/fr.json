@@ -419,6 +419,12 @@
     "body": "Le lien est peut-être cassé, ou la page a peut-être été déplacée.",
     "home": "Aller à la page d’accueil"
   },
+  "PageError": {
+    "title": "Une erreur s’est produite",
+    "body": "Impossible d’afficher cette page. Réessayez ou allez à la page d’accueil.",
+    "retry": "Réessayer",
+    "home": "Aller à la page d’accueil"
+  },
   "Meeting": {
     "pageTitle": "Rejoindre une réunion",
     "stepTitles": {

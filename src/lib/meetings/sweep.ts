@@ -2,7 +2,7 @@ import "server-only";
 
 import { pruneExpiredSessions } from "@/lib/account/sessions";
 import { pruneAnsweredRequests } from "@/lib/hosting/requests";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 import { reconcileAllReminders } from "@/lib/reminders/schedule";
 import { pruneSentReminders } from "@/lib/reminders/store";
@@ -45,7 +45,7 @@ export async function sweep(now = new Date()) {
     // currentSession closes the session when it's no longer usable.
     const result = await currentSession(meeting, now).catch(
       (error: unknown) => {
-        console.error("Sweep could not check a session", loggable(error));
+        reportError("Sweep could not check a session", error);
         return "error" as const;
       },
     );
@@ -76,7 +76,7 @@ export async function sweep(now = new Date()) {
     ),
     reminders: await reconcileAllReminders(now),
     usageWarnings: await warnAboutUsage(now).catch((error: unknown) => {
-      console.error("Sweep could not check usage", loggable(error));
+      reportError("Sweep could not check usage", error);
       return 0;
     }),
     prunedEmailDays: await pruneEmailDays(daysBefore(now, KEEP_DAYS.usage)),

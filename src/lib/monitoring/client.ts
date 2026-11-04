@@ -1,6 +1,7 @@
 import {
   breadcrumbsIntegration,
   browserApiErrorsIntegration,
+  captureException,
   dedupeIntegration,
   eventFiltersIntegration,
   functionToStringIntegration,
@@ -10,13 +11,15 @@ import {
   linkedErrorsIntegration,
 } from "@sentry/browser";
 
+import { startSendingBrowserErrors } from "./browser-errors";
 import { DATA_COLLECTION, scrubBreadcrumb, scrubEvent } from "./scrub";
 
 /**
  * Starts error reports in this browser. instrumentation-client.ts loads this once the
  * page is idle, and only where NEXT_PUBLIC_SENTRY_DSN is set. Errors only: no
  * performance tracing, no session replay and no session counts; no console or click
- * breadcrumbs; every report scrubbed first (scrub.ts).
+ * breadcrumbs; every report scrubbed first (scrub.ts). Errors from before it started, and
+ * those error pages catch, come through browser-errors.ts.
  */
 export function startErrorReports(dsn: string): void {
   init({
@@ -37,5 +40,8 @@ export function startErrorReports(dsn: string): void {
     environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV,
     beforeSend: (event) => scrubEvent(event),
     beforeBreadcrumb: (breadcrumb) => scrubBreadcrumb(breadcrumb),
+  });
+  startSendingBrowserErrors((error) => {
+    captureException(error);
   });
 }

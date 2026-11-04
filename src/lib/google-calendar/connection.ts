@@ -5,7 +5,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { account, meeting } from "@/lib/db/schema";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 import { googleClientConfigured } from "./client";
@@ -155,7 +155,7 @@ export async function googleAccess(
       await forgetGoogleTokens(found.id);
       return { ok: false, problem: "reconnect" };
     }
-    console.error("Could not get a Google token.", loggable(error));
+    reportError("Could not get a Google token.", error);
     return { ok: false, problem: "failed" };
   }
 }
@@ -184,10 +184,12 @@ async function revokeGrant(userId: string, scope: GoogleScope): Promise<void> {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok && response.status !== 400) {
-      console.error(`Google refused to revoke a grant (${response.status}).`);
+      reportError("Google refused to revoke a grant.", undefined, {
+        status: response.status,
+      });
     }
   } catch (error) {
-    console.error("Could not revoke a Google grant.", loggable(error));
+    reportError("Could not revoke a Google grant.", error);
   }
 }
 

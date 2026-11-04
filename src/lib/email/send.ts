@@ -3,7 +3,7 @@ import "server-only";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 import { recordSentEmail } from "@/lib/usage/emails";
 
@@ -88,7 +88,7 @@ export async function sendEmail(
   // Resend reports; a count that fails to save never fails the email.
   await recordSentEmail(response.headers, options.scheduledAt).catch(
     (error: unknown) => {
-      console.error("Couldn't count a sent email", loggable(error));
+      reportError("Couldn't count a sent email", error);
     },
   );
   const sent = Sent.safeParse(await response.json().catch(() => null));
@@ -135,7 +135,7 @@ export async function cancelScheduledEmail(
 export function sendInBackground(email: Promise<Email>): void {
   waitUntil(
     email.then(sendEmail).catch((error: unknown) => {
-      console.error("An account email failed to send", error);
+      reportError("An account email failed to send", error);
     }),
   );
 }

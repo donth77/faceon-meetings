@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loggable } from "./log";
+import { loggable, queryFailure } from "./log";
 
 describe("loggable", () => {
   it("keeps only the database's error from a failed query", () => {
@@ -24,5 +24,20 @@ describe("loggable", () => {
     const error = new Error("Stream is down");
     expect(loggable(error)).toBe(error);
     expect(loggable("text")).toBe("text");
+  });
+});
+
+describe("queryFailure", () => {
+  it("is null for anything but a failed query", () => {
+    expect(queryFailure(new Error("Stream is down"))).toBeNull();
+    expect(queryFailure("text")).toBeNull();
+  });
+
+  it("keeps the database error and code without a cause message", () => {
+    expect(queryFailure(new Error("Failed query: select 1"))).toEqual({
+      name: "Error",
+      message: "Failed query",
+      code: undefined,
+    });
   });
 });

@@ -9,7 +9,7 @@ import { exportLimits } from "@/lib/exports/limits";
 import { yourData } from "@/lib/exports/your-data";
 import { yourDataFiles } from "@/lib/exports/your-data-files";
 import { zipStream } from "@/lib/exports/zip";
-import { loggable } from "@/lib/log";
+import { reportError } from "@/lib/monitoring/report";
 import { isLimited, recordAttempt } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/same-origin";
 import { isTimeZone } from "@/lib/time";
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Data download failed", loggable(error));
+    reportError("Data download failed", error);
     return new Response(null, { status: 500 });
   }
 }

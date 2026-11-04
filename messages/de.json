@@ -419,6 +419,12 @@
     "body": "Der Link ist möglicherweise fehlerhaft, oder die Seite wurde verschoben.",
     "home": "Zur Startseite"
   },
+  "PageError": {
+    "title": "Etwas ist schiefgelaufen",
+    "body": "Diese Seite konnte nicht angezeigt werden. Versuchen Sie es erneut oder gehen Sie zur Startseite.",
+    "retry": "Erneut versuchen",
+    "home": "Zur Startseite"
+  },
   "Meeting": {
     "pageTitle": "An einem Meeting teilnehmen",
     "stepTitles": {

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { meeting, meetingSession } from "@/lib/db/schema";
 import { allProviders, mediaProvider } from "@/lib/media";
 import { userMediaId } from "@/lib/meetings/principal";
+import { reportError } from "@/lib/monitoring/report";
 
 /**
  * Before an account is deleted: end the calls it's hosting right now, so nobody stays in
@@ -22,7 +23,7 @@ export async function endHostedCalls(userId: string): Promise<void> {
       try {
         await mediaProvider(session.provider).endSession(session.id);
       } catch (error) {
-        console.error("Could not end a deleted account's call.", error);
+        reportError("Could not end a deleted account's call.", error);
       }
     }),
   );
@@ -35,7 +36,9 @@ export async function forgetMediaUser(userId: string): Promise<void> {
       try {
         await provider.forgetUser(userMediaId(userId));
       } catch (error) {
-        console.error(`Could not delete a user from ${provider.id}.`, error);
+        reportError("Could not delete a user from a media provider.", error, {
+          provider: provider.id,
+        });
       }
     }),
   );

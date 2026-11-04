@@ -1,11 +1,14 @@
+/** A failed database query's error as it's safe to keep: the database's own error and code. */
+export type QueryFailure = { name: string; message: string; code: unknown };
+
 /**
- * An error, ready for the server log without personal data. A failed database query's
- * message lists the values it ran with (names, emails), so for those only the
- * database's own error and code are kept.
+ * What can be kept of a failed database query's error, or null for any other error. Its
+ * message lists the values the query ran with (names, emails), so only the database's own
+ * error and code are kept.
  */
-export function loggable(error: unknown): unknown {
+export function queryFailure(error: unknown): QueryFailure | null {
   if (!(error instanceof Error) || !error.message.startsWith("Failed query:")) {
-    return error;
+    return null;
   }
   const cause: unknown = error.cause;
   return {
@@ -16,4 +19,9 @@ export function loggable(error: unknown): unknown {
         ? cause.code
         : undefined,
   };
+}
+
+/** An error, ready for the server log without personal data (see queryFailure). */
+export function loggable(error: unknown): unknown {
+  return queryFailure(error) ?? error;
 }
