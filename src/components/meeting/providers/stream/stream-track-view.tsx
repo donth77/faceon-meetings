@@ -1,13 +1,16 @@
 "use client";
 
 import {
+  hasPausedTrack,
+  hasScreenShare,
+  hasVideo,
   useCall,
-  Video,
   type StreamVideoParticipant,
 } from "@stream-io/video-react-sdk";
 import { cn } from "cn";
 import {
   useCallback,
+  useLayoutEffect,
   useState,
   useSyncExternalStore,
   type SyntheticEvent,
@@ -16,22 +19,22 @@ import {
 import { usePreferences, withDefaults } from "@/lib/preferences";
 
 import type { TrackViewProps } from "../../media";
+import { showVideo } from "./video-views";
 
-/** Whether Stream's video element would show the same thing for both. */
+/** Whether the video element would show the same thing for both. */
 const sameVideo = (a: StreamVideoParticipant, b: StreamVideoParticipant) =>
   a.sessionId === b.sessionId &&
-  a.userId === b.userId &&
   a.isLocalParticipant === b.isLocalParticipant &&
   a.videoStream === b.videoStream &&
   a.screenShareStream === b.screenShareStream &&
   a.publishedTracks === b.publishedTracks &&
-  a.pausedTracks === b.pausedTracks &&
-  a.viewportVisibilityState === b.viewportVisibilityState;
+  a.pausedTracks === b.pausedTracks;
 
 /**
- * Renders a participant's camera or screen share with Stream's video element, styled
- * by us (the SDK's own stylesheet isn't loaded): self-view mirrored, hidden until playing.
- * It follows just this participant, and only what the video element uses, so a voice
+ * Renders a participant's camera or screen share in a video element of our own, which
+ * video-views.ts hands to Stream or shows the same stream in (Stream's own element binds
+ * every copy, so a second one would cut the first off): self-view mirrored, hidden until
+ * playing. It follows just this participant, and only what the video uses, so a voice
  * level changing many times a second doesn't redraw it.
  */
 export function StreamTrackView({
@@ -42,6 +45,8 @@ export function StreamTrackView({
 }: TrackViewProps) {
   const call = useCall();
   const { mirrorVideo } = withDefaults(usePreferences());
+  const trackType = kind === "screen" ? "screenShareTrack" : "videoTrack";
+  const sessionId = participant.key;
   const subscribe = useCallback(
     (onChange: () => void) => {
       const subscription = call?.state.participants$.subscribe(() =>
@@ -62,10 +67,29 @@ export function StreamTrackView({
   });
   const streamParticipant = useSyncExternalStore(
     subscribe,
-    () => (call ? select(call.state.participants, participant.key) : undefined),
+    () => (call ? select(call.state.participants, sessionId) : undefined),
     () => undefined,
   );
-  if (!streamParticipant) return null;
+  const [element, setElement] = useState<HTMLVideoElement | null>(null);
+  // The element now playing, so a new one starts hidden.
+  const [playing, setPlaying] = useState<HTMLVideoElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (!call || !element) return;
+    return showVideo(call, element, sessionId, trackType);
+  }, [call, element, sessionId, trackType]);
+
+  if (!call || !streamParticipant) return null;
+  const shown = playing !== null && playing === element;
+  const publishing =
+    kind === "screen"
+      ? hasScreenShare(streamParticipant)
+      : hasVideo(streamParticipant);
+  // Paused by the media server to save bandwidth: nothing to show until it resumes.
+  if (!publishing || hasPausedTrack(streamParticipant, trackType)) return null;
+  // Stream mirrors your front camera; Settings → Video can turn that off.
+  const mirror =
+    kind === "video" && streamParticipant.isLocalParticipant && mirrorVideo;
   // The picture's shape, when it first loads and whenever it changes (a rotated phone,
   // a resized shared window).
   const reportShape = onAspectRatio
@@ -78,17 +102,20 @@ export function StreamTrackView({
     : undefined;
 
   return (
-    <Video
-      participant={streamParticipant}
-      trackType={kind === "screen" ? "screenShareTrack" : "videoTrack"}
-      // Stream mirrors your front camera; Settings → Video can turn that off.
-      mirror={kind === "video" && !mirrorVideo ? false : undefined}
-      VideoPlaceholder={null}
-      PictureInPicturePlaceholder={null}
+    <video
+      ref={setElement}
+      autoPlay
+      playsInline
+      muted
+      onPlaying={(event) => setPlaying(event.currentTarget)}
+      onPause={() => setPlaying(null)}
+      onEmptied={() => setPlaying(null)}
       onLoadedMetadata={reportShape}
       onResize={reportShape}
       className={cn(
-        "transition-opacity duration-200 [&.str-video__video--mirror]:-scale-x-100 [&.str-video__video--not-playing]:opacity-0",
+        "transition-opacity duration-200",
+        mirror && "-scale-x-100",
+        !shown && "opacity-0",
         className,
       )}
     />
