@@ -29,13 +29,13 @@ LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Tur
 
 Estimates for a copy with FaceOn's default limits ([step 9](#9-decide-who-hosts-and-set-limits)). Stream's credit is usually the first limit; the database's awake hours come first if meetings are spread across the day. After a busy week, compare with the Usage pages on Vercel and Neon and Stream's dashboard.
 
-| Service       | Free each month                                                                            | What FaceOn uses it for                                                        | Roughly supports                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Stream        | $100 credit, which is 333,000 participant-minutes at $0.30 per 1,000, at any video quality | Every minute each person is connected, camera on or off                        | About 5,550 participant-hours (below)                                                                                                 |
-| Neon          | 100 CU-hours; the database sleeps after 5 idle minutes                                     | Every page and API call that reads data                                        | About 400 hours awake at the smallest size, roughly 13 hours a day                                                                    |
-| Vercel        | 1M function calls, 4 hours of active CPU, 1M CDN requests, 100 GB of transfer              | Pages, API calls, the app's files, backgrounds, the effects and noise runtimes | Roughly 20,000–30,000 people joining a month; a first visit is about 1.5 MB, or 6–8 MB with a background, and later visits are cached |
-| Resend        | 3,000 emails, 100 a day                                                                    | Verification and password-reset emails                                         | About 100 email sign-ups a day                                                                                                        |
-| On the device | Nothing                                                                                    | Backgrounds, noise suppression, AI notes                                       | Unlimited                                                                                                                             |
+| Service       | Free each month                                                                                                                                                              | What FaceOn uses it for                                                                             | Roughly supports                                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Stream        | $100 credit: 333,000 participant-minutes at $0.30 per 1,000 for audio and standard video; HD costs twice that and Full HD four times, by the resolution each person receives | Every minute each person is connected, camera on or off                                             | About 5,550 participant-hours at standard video (below)                                                                               |
+| Neon          | 100 CU-hours; the database sleeps after 5 idle minutes                                                                                                                       | Every page and API call that reads data                                                             | About 400 hours awake at the smallest size, roughly 13 hours a day                                                                    |
+| Vercel        | 1M function calls, 4 hours of active CPU, 1M CDN requests, 100 GB of transfer                                                                                                | Pages, API calls, the app's files, backgrounds, the effects and noise runtimes                      | Roughly 20,000–30,000 people joining a month; a first visit is about 1.5 MB, or 6–8 MB with a background, and later visits are cached |
+| Resend        | 3,000 emails, 100 a day                                                                                                                                                      | Account emails (verifying, password resets), meeting reminders, hosting requests and usage warnings | About 100 emails a day, shared by sign-ups and reminders                                                                              |
+| On the device | Nothing                                                                                                                                                                      | Backgrounds, noise suppression, AI notes                                                            | Unlimited                                                                                                                             |
 
 | Meeting                                | Participant-minutes | Meetings a month within Stream's credit |
 | -------------------------------------- | ------------------- | --------------------------------------- |
@@ -43,6 +43,8 @@ Estimates for a copy with FaceOn's default limits ([step 9](#9-decide-who-hosts-
 | 6 people × 45 minutes                  | 270                 | About 1,230                             |
 | 10 people × 60 minutes                 | 600                 | About 555                               |
 | 20 people × 60 minutes                 | 1,200               | About 277                               |
+
+Those counts are at Stream's audio and standard-video rate: halve them for HD, or quarter them for Full HD.
 
 Going over Vercel's or Neon's free limits pauses your copy until the next month rather than billing you. Stream doesn't say what it does past the credit on its free plan, so keep the limits in step 9 and watch its dashboard.
 
@@ -226,7 +228,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 **Email** (optional): `RESEND_API_KEY` and `EMAIL_FROM`, from [step 7](#7-set-up-account-emails-resend-optional).
 
-**The daily cleanup and reminder emails:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)). `REMINDER_EMAILS_PER_DAY` is optional (50 by default).
+**The daily cleanup:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)); the cleanup also schedules reminder emails. `REMINDER_EMAILS_PER_DAY` is optional (50 by default).
+
+**Usage this month** (optional): `USAGE_STREAM_MINUTES`, `USAGE_EMAILS_PER_DAY`, `USAGE_EMAILS_PER_MONTH` and `USAGE_NEON_CU_HOURS` if your plans differ from the free ones, and `NEON_API_KEY` with `NEON_PROJECT_ID` for the database's meter ([Usage this month](#usage-this-month)).
 
 **Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
 
@@ -276,7 +280,7 @@ The privacy policy and terms (`/privacy` and `/terms`, from [`content/legal/`](c
 
 ## 11. Check the daily cleanup
 
-[`vercel.json`](vercel.json) runs `/api/cron/sweep` once a day at 05:00 UTC (on Vercel's free plan, any time in that hour). It closes meetings left open, deletes meetings that have expired, and drops old records as the privacy policy says, such as attendance and saved AI notes after 90 days.
+[`vercel.json`](vercel.json) runs `/api/cron/sweep` once a day at 05:00 UTC (on Vercel's free plan, any time in that hour). It closes meetings left open, deletes meetings that have expired, drops old records as the privacy policy says, such as attendance and saved AI notes after 90 days, schedules the next two days' reminder emails, and checks usage against the free plans.
 
 Vercel sends `CRON_SECRET` with each run, and without it the cleanup turns every request away. To run it yourself:
 
@@ -288,15 +292,9 @@ It answers with what it did, such as `"closedSessions": 0`. Scheduled runs don't
 
 ### Reminder emails (optional)
 
-People with an account can turn on **Email me before my meetings** in Settings → Notifications. The emails need account emails set up ([step 7](#7-set-up-account-emails-resend-optional)) and something that calls `/api/cron/reminders` every 5 minutes. Vercel's free crons run only once a day, so use [cron-job.org](https://cron-job.org) (free):
+People with an account can turn on **Email me before my meetings** in Settings → Notifications. The emails need only account emails ([step 7](#7-set-up-account-emails-resend-optional)) and the daily cleanup: nothing outside calls FaceOn on a timer. FaceOn hands each reminder to Resend ahead of time with its send time, up to two days ahead, whenever a meeting or someone's reminder settings change and again in the daily cleanup, and Resend holds it until it's due. A changed or cancelled meeting updates or cancels its waiting reminders.
 
-1. Create an account, then open **Settings → API**, create an API key, and put it in `.env.production.local` as `CRON_JOB_DOT_ORG_API_KEY`, with your production `CRON_SECRET` beside it. Both stay on your computer.
-2. Run `pnpm cron:setup --url https://faceon.example.com`. It creates a job called "FaceOn reminders" (with your app's name) that calls the endpoint every 5 minutes with your secret, and emails you if it starts failing. Run it again after changing the secret or the address; it updates the same job.
-3. A few minutes later, `pnpm cron:setup --check` shows its latest runs, each `HTTP 200`.
-
-You can also make the job in cron-job.org's site: a GET to `https://faceon.example.com/api/cron/reminders` every 5 minutes, with the header `Authorization: Bearer <CRON_SECRET>`.
-
-Each reminder goes once, soonest first, and at most `REMINDER_EMAILS_PER_DAY` a day (50 by default), which leaves room for account emails in Resend's free 100 a day. A reminder held back by that cap waits for the next run, and is dropped once its meeting starts. Every email has a link that turns them off, and mail apps offer the same in one click.
+Each reminder goes once, and at most `REMINDER_EMAILS_PER_DAY` go a day (50 by default), counted by the day they're sent, which leaves room for account emails in Resend's free 100 a day; a day that's full gets no more. A meeting saved after its reminder time has passed gets no reminder. Every email has a link that turns them off, and mail apps offer the same in one click.
 
 ## 12. Use your own domain (optional)
 
@@ -352,6 +350,12 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 `/api/health` answers `{"ok":true}` while your copy is up. It doesn't touch the database, so checking it every few minutes never keeps Neon awake. With [UptimeRobot](https://uptimerobot.com)'s free plan, add a monitor: **HTTP(s)**, `https://faceon.example.com/api/health`, every 5 minutes, alerting you by email.
 
 `/api/health?db=1` also checks the database, and answers 503 when it can't reach it. Each check wakes a sleeping database for 5 minutes of Neon's monthly compute, so give it a slow monitor of its own, every 12 hours say.
+
+### Usage this month
+
+**Settings → Admin → Usage this month** shows how much of each free plan this month has used: Stream's participant-minutes (FaceOn's own count; Stream's dashboard is what's billed), emails today and this month (from Resend), Neon's compute hours, and a link to Vercel's usage page, since Vercel emails its own warnings. The daily cleanup emails the admins (`ADMIN_EMAILS`) once when a meter passes 80%, and again at 100%; that needs Resend.
+
+The limits default to the free plans; set the `USAGE_*` settings if yours differ (0 means no limit). For Neon's meter, create a project-scoped API key in the Neon console (your organization's **Settings → API keys → Create new → Project-scoped**, for this project) and copy the project's ID (its **Settings → General**). Set them as `NEON_API_KEY` (sensitive) and `NEON_PROJECT_ID` in Vercel, and redeploy.
 
 ### Backups
 
@@ -478,7 +482,7 @@ Then:
 3. **Google:** in the OAuth client, add the new JavaScript origin and `https://<new domain>/api/auth/callback/google`. Update the home page, privacy policy, terms and authorized domains under **Branding**.
 4. **GitHub:** change the OAuth app's homepage and callback to `https://<new domain>/api/auth/callback/github`. It has only one callback, so Sign in with GitHub stops working at the old address.
 5. **Resend:** nothing changes, unless your email domain does too.
-6. **Reminder emails:** run `pnpm cron:setup --url https://<new domain>`, which points the job at the new address.
+6. **Reminder emails:** nothing to do. The next daily cleanup reschedules waiting reminders with the new address.
 7. **Installed apps** belong to the address they were installed from. People who added FaceOn to their home screen or dock add it again from the new address.
 
 ## Troubleshooting
@@ -506,8 +510,6 @@ Then:
 **Previous stays empty.** The webhook must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: FaceOn turns away deliveries it can't verify. Stream's dashboard shows webhook deliveries.
 
 **The cleanup returns 401.** Set `CRON_SECRET` in Vercel and redeploy.
-
-**cron-job.org shows the reminders job failing with 401.** The job's secret and Vercel's `CRON_SECRET` differ: run `pnpm cron:setup --url …` again with the value that's in Vercel.
 
 **The database stops answering.** Neon's free compute or data transfer for the month is used up. It comes back next month, or on a paid plan.
 
