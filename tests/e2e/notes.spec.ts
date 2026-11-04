@@ -26,6 +26,8 @@ const GUEST_LINES = [
 ];
 /** The host's own key for each provider, as Settings → AI notes keeps them. */
 const keyFor = (provider: ProviderId) => `e2e-${provider}-not-a-real-key`;
+/** Calls with each key: the notes, and for the first, the test as AI notes start. */
+const keyCalls = (provider: ProviderId) => (provider === PROVIDERS[0] ? 2 : 1);
 /** Stream's API, which carries each person's transcript lines to the host. */
 const STREAM_API = "video.stream-io-api.com";
 
@@ -307,18 +309,22 @@ test.describe("AI notes", () => {
         ).toBeVisible();
         const api = APIS[provider];
         const model = defaultModel(provider);
+        // The key AI notes started with was also tested as they started.
+        const times = keyCalls(provider);
         expect(
           asked.filter((request) => request.provider === provider),
-        ).toEqual([
-          {
+        ).toEqual(
+          Array.from({ length: times }, () => ({
             provider,
             host: api.host,
             path: api.path(model),
             model: provider === "google" ? null : model,
             auth: api.auth(keyFor(provider)),
-          },
-        ]);
-        expect(keySentTo[provider]).toEqual([`POST ${api.host}`]);
+          })),
+        );
+        expect(keySentTo[provider]).toEqual(
+          Array.from({ length: times }, () => `POST ${api.host}`),
+        );
         expect(
           transcriptSentTo
             .slice(before)
@@ -330,7 +336,12 @@ test.describe("AI notes", () => {
       }
       // No key went anywhere but its own provider.
       for (const provider of PROVIDERS) {
-        expect(keySentTo[provider]).toEqual([`POST ${APIS[provider].host}`]);
+        expect(keySentTo[provider]).toEqual(
+          Array.from(
+            { length: keyCalls(provider) },
+            () => `POST ${APIS[provider].host}`,
+          ),
+        );
       }
 
       // Saved with the meeting, then shared with its participants.

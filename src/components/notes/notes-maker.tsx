@@ -1,6 +1,13 @@
 "use client";
 
-import { LoaderCircle, Save, Settings, Sparkles, Users } from "lucide-react";
+import {
+  Laptop,
+  LoaderCircle,
+  Save,
+  Settings,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
@@ -9,7 +16,7 @@ import { Button, LinkButton } from "@/components/ui/button";
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { autoSharing } from "@/lib/meetings/rules";
-import type { NotesProgress } from "@/lib/notes/engines";
+import { onDeviceUsable, type NotesProgress } from "@/lib/notes/engines";
 import { PROVIDER_INFO } from "@/lib/notes/providers";
 import {
   transcriptText,
@@ -18,6 +25,7 @@ import {
 } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
 
+import { focusKeyNext } from "./key-focus";
 import {
   NOTES_ACTION as ACTION,
   NotesFileButtons,
@@ -29,7 +37,14 @@ import { useNotesMaker, type SaveState } from "./use-notes-maker";
 /** Where AI notes settings open: the meeting's Settings dialog, or the Settings page. */
 export type SettingsLink = { onPress: () => void } | { href: string };
 
-function SettingsButton({ settings }: { settings: SettingsLink }) {
+/** Settings → AI notes; with `focusKey`, at the key, since that's what needs changing. */
+function SettingsButton({
+  settings,
+  focusKey = false,
+}: {
+  settings: SettingsLink;
+  focusKey?: boolean;
+}) {
   const t = useTranslations("Notes");
   const content = (
     <>
@@ -39,7 +54,7 @@ function SettingsButton({ settings }: { settings: SettingsLink }) {
   );
   return "href" in settings ? (
     <LinkButton
-      href={settings.href}
+      href={focusKey ? `${settings.href}#key` : settings.href}
       target="_blank"
       variant="outline"
       className={ACTION}
@@ -48,7 +63,14 @@ function SettingsButton({ settings }: { settings: SettingsLink }) {
       <NewTabNote />
     </LinkButton>
   ) : (
-    <Button variant="outline" className={ACTION} onPress={settings.onPress}>
+    <Button
+      variant="outline"
+      className={ACTION}
+      onPress={() => {
+        if (focusKey) focusKeyNext();
+        settings.onPress();
+      }}
+    >
       {content}
     </Button>
   );
@@ -288,7 +310,7 @@ export function NotesMaker({
   const started = useRef(false);
   const start = useEffectEvent(() => void maker.make());
   const instant =
-    maker.engine === "onDevice" ? maker.onDevice === "ready" : maker.ready;
+    maker.ready && (maker.engine === "ownKey" || maker.onDevice === "ready");
   const due =
     state.step === "ready" || (state.step === "done" && maker.outdated);
   useEffect(() => {
@@ -373,6 +395,13 @@ export function NotesMaker({
         (onDevice === "update" || onDevice === "enable" || onDevice === "none")
           ? t(`notReady.${onDevice}`)
           : null;
+      const failure = state.step === "failed" ? state.failure.kind : null;
+      /** The key's provider refused: in Chrome, these notes can still be made here, for free. */
+      const insteadHere =
+        failure !== null &&
+        maker.engine === "ownKey" &&
+        onDevice !== null &&
+        onDeviceUsable(onDevice);
       body = (
         <div className="flex flex-col gap-3 text-sm leading-normal">
           {state.step === "failed" ? (
@@ -415,7 +444,25 @@ export function NotesMaker({
                   ? t("downloadAndMake")
                   : t("make")}
             </Button>
-            <SettingsButton settings={settings} />
+            {insteadHere ? (
+              <Button
+                variant="outline"
+                className={ACTION}
+                onPress={() => void maker.make({ onDevice: true })}
+              >
+                <Laptop className="size-4" aria-hidden="true" />
+                {t("onDeviceInstead")}
+              </Button>
+            ) : null}
+            <SettingsButton
+              settings={settings}
+              focusKey={
+                notReady !== null ||
+                failure === "key" ||
+                failure === "model" ||
+                failure === "limit"
+              }
+            />
           </div>
         </div>
       );

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { focusKeyNext } from "@/components/notes/key-focus";
 import { useNotesSentence } from "@/components/notes/notes-here";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { aiNotesEnabled } from "@/lib/env";
@@ -14,6 +15,13 @@ import type {
 } from "@/lib/meetings/api";
 import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
 import { canMakeNotes, engineFor, providerChoice } from "@/lib/notes/engines";
+import {
+  keyProblem,
+  TEST_AFTER_MS,
+  useKeyCheck,
+  type KeyCheck,
+} from "@/lib/notes/key-check";
+import { PROVIDER_INFO } from "@/lib/notes/providers";
 import { useNotesSettings } from "@/lib/notes/settings";
 import { markNotesTurnedOff } from "@/lib/notes/transcript";
 
@@ -26,7 +34,8 @@ import { useTranscript, useTranscription } from "./use-notes";
  * AI notes in the room: everyone hears when they go on, and each device transcribes its
  * own person unless they'd rather not. The notetaker's device collects the transcript.
  * In a meeting set to start them automatically, a host or co-host starts them as they
- * join, if their browser can make notes; otherwise they're told why not.
+ * join, if their browser can make notes; otherwise they're told why not. The notetaker's
+ * AI key is tested as notes start, so a wrong one is said while there's time to fix it.
  */
 export function useMeetingNotes({
   media,
@@ -51,6 +60,7 @@ export function useMeetingNotes({
   onOpenSettings: () => void;
 }) {
   const t = useTranslations("Meeting");
+  const tf = useTranslations("Notes.failed");
   const notes = media.sessionState?.notes ?? null;
   const isNotetaker = notes?.by === self.id;
   /** Hosts and co-hosts run AI notes, where this copy offers them. */
@@ -103,14 +113,16 @@ export function useMeetingNotes({
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
   const state = media.sessionState;
+  const choice = providerChoice(settings);
+  const withKey = engineFor(settings) === "ownKey";
   /** How this browser makes notes, which everyone is told as it turns them on. */
-  const madeWith = {
-    provider:
-      engineFor(settings) === "ownKey"
-        ? providerChoice(settings).provider
-        : null,
-  };
+  const madeWith = { provider: withKey ? choice.provider : null };
   const sentence = useNotesSentence();
+  /** Settings → AI notes, with focus on the key. */
+  function openKey() {
+    focusKeyNext();
+    onOpenSettings();
+  }
 
   // Whether the meeting shares AI notes with its participants as they're made: the
   // session's state brings it to everyone, live. Its host can change it from the room;
@@ -151,10 +163,11 @@ export function useMeetingNotes({
         .notes(code, { on: true, auto: true, madeWith })
         .catch(() => toast.error(t("notes.failed")));
     } else if (action === "cantMake") {
-      toast(t("notes.autoCantMake"), {
+      toast(t("notes.autoDidntStart"), {
         id: "notes-auto",
         duration: 20_000,
-        action: { label: t("notes.autoSettings"), onClick: onOpenSettings },
+        description: sentence.here({ kind: "needsKey" }),
+        action: { label: t("notes.addKey"), onClick: openKey },
       });
     }
   }, [
@@ -166,9 +179,33 @@ export function useMeetingNotes({
     settings,
     code,
     t,
-    onOpenSettings,
+    openKey,
     madeWith,
+    sentence,
   ]);
+
+  // The notetaker's key, tested once as AI notes start (Settings may have done it
+  // already): a key its provider refuses is said now, while the transcript is still kept,
+  // rather than when the notes are made. Nothing's said while it works.
+  const problem = keyProblem(
+    useKeyCheck(isNotetaker && withKey ? choice : null, TEST_AFTER_MS),
+  );
+  const providerName = PROVIDER_INFO[choice.provider].name;
+  const toldProblem = useRef<KeyCheck | null>(null);
+  useEffect(() => {
+    if (problem === toldProblem.current) return;
+    toldProblem.current = problem;
+    if (!problem) {
+      toast.dismiss("notes-key");
+      return;
+    }
+    toast.error(tf(problem.failure, { provider: providerName }), {
+      id: "notes-key",
+      duration: 20_000,
+      description: t("notes.keyProblem"),
+      action: { label: t("notes.fixKey"), onClick: openKey },
+    });
+  }, [problem, providerName, tf, t, openKey]);
 
   // Said up front, so everyone knows where the notes go before they speak.
   const shared = shareNotes;
@@ -284,6 +321,11 @@ export function useMeetingNotes({
     notesOffered,
     /** This browser can make the notes from the transcript; true until that's known. */
     canMake: onDevice === null || canMakeNotes(settings, onDevice),
+    /** The notetaker's key, refused by its provider as AI notes started. */
+    keyProblem: problem
+      ? { failure: problem.failure, provider: choice.provider }
+      : null,
+    openKey,
     autoNotes,
     shareNotes,
     setShareNotes,

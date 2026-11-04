@@ -1,3 +1,4 @@
+import { REFUSED, standInForProviders } from "./support/ai-providers";
 import { createMeeting, database } from "./support/db";
 import { expect, expectNoErrors, needsStream, test } from "./support/fixtures";
 import { joinFromPreJoin, openMeeting } from "./support/meeting";
@@ -33,6 +34,57 @@ const CHROME_WITH_AI = `(() => {
 })();`;
 
 /**
+ * Chrome as above, whose built-in AI makes `NOTES`, and whose speech recognition hears
+ * one of `LINES` each time AI notes start.
+ */
+const LINES = [
+  "Let's launch the beta on March 3rd.",
+  "And drop the old billing page.",
+];
+const NOTES = {
+  summary: "The team settled the beta launch date.",
+  actionItems: [],
+  decisions: ["Launch the beta on March 3rd"],
+};
+const CHROME_MAKING_NOTES = `(() => {
+  Object.defineProperty(navigator, "userAgentData", {
+    get: () => ({
+      brands: [{ brand: "Google Chrome", version: "141" }, { brand: "Chromium", version: "141" }],
+      mobile: false,
+      platform: "Windows",
+      getHighEntropyValues: async () => ({}),
+    }),
+  });
+  window.LanguageModel = {
+    availability: async () => "available",
+    create: async () => ({
+      prompt: async () => ${JSON.stringify(JSON.stringify(NOTES))},
+      destroy() {},
+    }),
+  };
+  const lines = ${JSON.stringify(LINES)};
+  let next = 0;
+  class Recognition {
+    static async available() { return "available"; }
+    static async install() { return true; }
+    start() {
+      this.timer = setTimeout(() => {
+        const line = lines[next];
+        if (line !== undefined && this.onresult) {
+          next += 1;
+          const result = Object.assign([{ transcript: line }], { isFinal: true });
+          this.onresult({ resultIndex: 0, results: [result] });
+        }
+        setTimeout(() => this.onend && this.onend(), 200);
+      }, 1500);
+    }
+    stop() { clearTimeout(this.timer); setTimeout(() => this.onend && this.onend(), 50); }
+    abort() { clearTimeout(this.timer); setTimeout(() => this.onend && this.onend(), 50); }
+  }
+  window.SpeechRecognition = Recognition;
+})();`;
+
+/**
  * Settings → AI notes as an earlier version of FaceOn saved them in this browser: saved
  * once, before the first page, not again as pages load.
  */
@@ -55,6 +107,7 @@ test.describe("AI notes in this browser", () => {
   }) => {
     const host = await people.signedIn({ aiNotes: true });
     await host.context.addInitScript({ content: NO_BUILT_IN_AI });
+    await standInForProviders(host.context);
     await host.page.goto("/settings/ai-notes");
 
     await expect(host.page.getByText(NEEDS_KEY)).toBeVisible();
@@ -83,6 +136,7 @@ test.describe("AI notes in this browser", () => {
     // In Chrome, whose AI runs here, no key is free.
     const chrome = await people.signedIn({ aiNotes: true });
     await chrome.context.addInitScript({ content: CHROME_WITH_AI });
+    await standInForProviders(chrome.context);
     await chrome.page.goto("/settings/ai-notes");
     await expect(chrome.page.getByText(FREE)).toBeVisible();
     await chrome.page.getByLabel("API key", { exact: true }).fill(KEY);
@@ -125,6 +179,7 @@ test.describe("AI notes in this browser", () => {
         keys: { anthropic: KEY },
       })}`,
     });
+    await standInForProviders(keyed.context);
     await keyed.page.goto("/settings/ai-notes");
     await expect(keyed.page.getByText(writes("Anthropic"))).toBeVisible();
     await expect(keyed.page.getByLabel("API key", { exact: true })).toHaveValue(
@@ -147,6 +202,7 @@ test.describe("AI notes in this browser", () => {
     try {
       const meeting = await createMeeting(host.user.id);
       await host.context.addInitScript({ content: NO_BUILT_IN_AI });
+      await standInForProviders(host.context);
       await openMeeting(host.page, meeting);
       await joinFromPreJoin(host.page);
       await host.page.getByRole("button", { name: /^More/ }).click();
@@ -179,11 +235,136 @@ test.describe("AI notes in this browser", () => {
       await addKey.press("Enter");
       const settings = host.page.getByRole("dialog");
       await expect(settings.getByText(NEEDS_KEY)).toBeVisible();
-      await settings.getByLabel("API key", { exact: true }).fill(KEY);
+      // Straight to the key, which is what's missing.
+      const key = settings.getByLabel("API key", { exact: true });
+      await expect(key).toBeFocused();
+      await key.fill(KEY);
       await expect(settings.getByText(writes("OpenAI"))).toBeVisible();
       await host.page.keyboard.press("Escape");
       await expect(start).toBeEnabled();
       await expect(addKey).toHaveCount(0);
+      expectNoErrors(host);
+    } finally {
+      await database().query(`delete from host_allowlist where email = $1`, [
+        host.user.email.toLowerCase(),
+      ]);
+    }
+  });
+
+  test("Settings → AI notes tests a key as it's entered, and a link to #key goes straight to it", async ({
+    people,
+  }) => {
+    const host = await people.signedIn({ aiNotes: true });
+    await host.context.addInitScript({ content: NO_BUILT_IN_AI });
+    const works = "sk-e2e-works";
+    await standInForProviders(host.context, (key) => key === works);
+    await host.page.goto("/settings/ai-notes#key");
+    const key = host.page.getByLabel("API key", { exact: true });
+    await expect(key).toBeFocused();
+
+    // Refused as it's typed, with the provider's reason, before anyone selects Test key.
+    await key.fill("sk-e2e-wrong");
+    const result = host.page
+      .getByRole("status")
+      .filter({ hasText: "OpenAI didn't accept your key." });
+    await expect(result).toContainText(REFUSED);
+    await key.fill(works);
+    await expect(host.page.getByText("Key works")).toBeVisible();
+    await expect(result).toHaveCount(0);
+    expectNoErrors(host);
+  });
+
+  test("a key its provider refuses is said as AI notes start, and in Chrome the notes are still made on this computer", async ({
+    people,
+  }) => {
+    needsStream();
+    test.setTimeout(150_000);
+    const host = await people.signedIn({ name: "Notes Host", aiNotes: true });
+    // Only full meetings offer AI notes.
+    await database().query(
+      `insert into host_allowlist (email, note) values ($1, 'e2e') on conflict do nothing`,
+      [host.user.email.toLowerCase()],
+    );
+    try {
+      const meeting = await createMeeting(host.user.id);
+      await host.context.addInitScript({
+        content: `${CHROME_MAKING_NOTES}${saved({ provider: "openai", keys: { openai: KEY } })}`,
+      });
+      await standInForProviders(host.context, () => false);
+      const toOpenAi: string[] = [];
+      host.page.on("request", (request) => {
+        if (
+          request.method() === "POST" &&
+          request.url().includes("api.openai.com")
+        ) {
+          toOpenAi.push(request.url());
+        }
+      });
+      await openMeeting(host.page, meeting);
+      await joinFromPreJoin(host.page);
+      await host.page.getByRole("button", { name: /^More/ }).click();
+      await host.page.getByRole("menuitem", { name: "AI notes" }).click();
+      await host.page.getByRole("button", { name: "Start AI notes" }).click();
+
+      // Said at once, in a toast and in the panel, while the transcript keeps building.
+      const refused = "OpenAI didn't accept your key.";
+      await expect(
+        host.page.locator("[data-sonner-toast]").filter({ hasText: refused }),
+      ).toContainText("AI notes are still on, and the transcript is kept.");
+      const note = host.page.getByRole("note").filter({ hasText: refused });
+      await expect(note).toBeVisible();
+      await expect(host.page.getByText(LINES[0]!)).toBeVisible({
+        timeout: 30_000,
+      });
+
+      // Fix the key opens Settings at the key.
+      await note.getByRole("button", { name: "Fix the key" }).click();
+      await expect(
+        host.page.getByRole("dialog").getByLabel("API key", { exact: true }),
+      ).toBeFocused();
+      await host.page.keyboard.press("Escape");
+
+      // Left as it is, the key can't make the notes; in Chrome, this computer can, this
+      // once, and the key stays.
+      await host.page.getByRole("button", { name: "Stop AI notes" }).click();
+      await expect(
+        host.page.getByRole("alert").filter({ hasText: refused }),
+      ).toContainText(REFUSED);
+      await host.page
+        .getByRole("button", { name: "Make them on this computer instead" })
+        .click();
+      await expect(
+        host.page.getByText(/^Made on this computer at/),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        host.page.getByText("Launch the beta on March 3rd", { exact: true }),
+      ).toBeVisible();
+      expect(
+        await host.page.evaluate(() => localStorage.getItem("faceon.aiNotes")),
+      ).toContain(KEY);
+
+      // Started again, the key is still said to be refused; stopped, the notes are made
+      // here again, with what's been said since, without trying the key again.
+      await host.page
+        .getByRole("button", { name: "Start AI notes again" })
+        .click();
+      await expect(note).toBeVisible();
+      await expect(host.page.getByText(LINES[1]!)).toBeVisible({
+        timeout: 30_000,
+      });
+      await host.page.getByRole("button", { name: "Stop AI notes" }).click();
+      await expect(
+        host.page.getByText(/^Made on this computer at/),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        host.page.getByText(/^Made before the rest of the transcript/),
+      ).toHaveCount(0);
+      await expect(
+        host.page.getByRole("alert").filter({ hasText: refused }),
+      ).toHaveCount(0);
+      // OpenAI was asked twice: to test the key as AI notes first started, and for the
+      // notes it refused.
+      expect(toOpenAi).toHaveLength(2);
       expectNoErrors(host);
     } finally {
       await database().query(`delete from host_allowlist where email = $1`, [

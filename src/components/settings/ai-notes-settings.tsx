@@ -3,7 +3,7 @@
 import { cn } from "cn";
 import { Check, ChevronDown, ExternalLink, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState, type Ref } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import {
   Button,
   ComboBox,
@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 
 import { EnglishNotesNotice } from "@/components/notes/english-notes-notice";
+import { takeKeyFocus } from "@/components/notes/key-focus";
 import { useNotesSentence } from "@/components/notes/notes-here";
 import { SpeechDownload } from "@/components/notes/speech-download";
 import { Button as UiButton } from "@/components/ui/button";
@@ -36,13 +37,12 @@ import {
 import { useSpeechLanguage } from "@/hooks/use-speech-language";
 import { setNotesInMeetingsAction } from "@/lib/account/actions";
 import { publicEnv } from "@/lib/env";
-import { notesHere, providerChoice, testKey } from "@/lib/notes/engines";
+import { notesHere, providerChoice } from "@/lib/notes/engines";
+import { recheckKey, TEST_AFTER_MS, useKeyCheck } from "@/lib/notes/key-check";
 import {
   defaultModel,
   PROVIDER_INFO,
-  ProviderError,
   PROVIDERS,
-  type ProviderFailure,
   type ProviderId,
 } from "@/lib/notes/providers";
 import {
@@ -135,11 +135,11 @@ function ModelField({
   );
 }
 
-type KeyTest =
-  | { state: "idle" | "testing" | "works" }
-  | { state: "failed"; failure: ProviderFailure; detail: string };
-
-/** The provider's API key, shown on request, with Test key. */
+/**
+ * The provider's API key, shown on request. It's tested as it's entered (and as Settings
+ * opens with one), so a wrong key shows now rather than when notes are made; Test key
+ * asks again.
+ */
 function KeyField({
   provider,
   model,
@@ -155,31 +155,15 @@ function KeyField({
   const t = useTranslations("Settings.aiNotes");
   const tf = useTranslations("Notes.failed");
   const [shown, setShown] = useState(false);
-  const [test, setTest] = useState<KeyTest>({ state: "idle" });
+  const choice = { provider, model, key: value.trim() };
+  const test = useKeyCheck(choice, TEST_AFTER_MS);
   const name = PROVIDER_INFO[provider].name;
-
-  async function runTest() {
-    setTest({ state: "testing" });
-    try {
-      await testKey({ provider, model, key: value });
-      setTest({ state: "works" });
-    } catch (error) {
-      setTest(
-        error instanceof ProviderError
-          ? { state: "failed", failure: error.failure, detail: error.detail }
-          : { state: "failed", failure: "other", detail: "" },
-      );
-    }
-  }
 
   return (
     <div className="flex flex-col gap-2.5">
       <TextField
         value={value}
-        onChange={(next) => {
-          setTest({ state: "idle" });
-          saveForProvider("keys", provider, next);
-        }}
+        onChange={(next) => saveForProvider("keys", provider, next)}
         className="flex min-w-0 flex-col gap-1.5"
       >
         <Label className="text-sm font-semibold">{t("key")}</Label>
@@ -202,12 +186,12 @@ function KeyField({
       </TextField>
       <div className="flex flex-wrap items-center gap-3">
         <Button
-          isDisabled={!value}
-          isPending={test.state === "testing"}
-          onPress={() => void runTest()}
+          isDisabled={!choice.key}
+          isPending={test?.state === "testing"}
+          onPress={() => recheckKey(choice)}
           className={OUTLINE_BUTTON}
         >
-          {test.state === "testing" ? t("testing") : t("test")}
+          {test?.state === "testing" ? t("testing") : t("test")}
         </Button>
         <a
           href={PROVIDER_INFO[provider].keyUrl}
@@ -221,12 +205,12 @@ function KeyField({
         </a>
       </div>
       <p role="status" className="text-[13px] empty:sr-only">
-        {test.state === "works" ? (
+        {test?.state === "works" ? (
           <span className="text-live-text flex items-center gap-1.5 font-semibold">
             <Check className="size-4" aria-hidden="true" />
             {t("works")}
           </span>
-        ) : test.state === "failed" ? (
+        ) : test?.state === "failed" ? (
           <span className="text-destructive-text">
             {tf(test.failure, { provider: name })}
             {test.detail
@@ -309,6 +293,11 @@ export function AiNotesSettings({
   const keyInput = useRef<HTMLInputElement>(null);
   const { provider, model, key } = providerChoice(settings);
   const here = onDevice === null ? null : notesHere(settings, onDevice);
+
+  // Sent here for the key (Add a key, Fix the key): focus goes straight to it.
+  useEffect(() => {
+    if (takeKeyFocus()) keyInput.current?.focus();
+  }, []);
 
   return (
     <>

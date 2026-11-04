@@ -11,10 +11,12 @@ import {
   engineFor,
   notesOnDevice,
   notesWithKey,
+  onDeviceUsable,
   providerChoice,
   UnreadableNotesError,
   type NotesProgress,
 } from "@/lib/notes/engines";
+import { TEST_AFTER_MS, useKeyCheck } from "@/lib/notes/key-check";
 import { MAX_SAVED_NOTES_BYTES, savedNotesBytes } from "@/lib/notes/notes";
 import { ProviderError, type ProviderFailure } from "@/lib/notes/providers";
 import { NotesRun } from "@/lib/notes/run";
@@ -68,9 +70,26 @@ export function useNotesMaker({
   const timeLocale = useIntlLocale();
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
-  const engine = engineFor(settings);
   const choice = providerChoice(settings);
   const [state, setState] = useState<MakerState>(() => settled(sessionId));
+  const withKey = engineFor(settings) === "ownKey";
+  const key = useKeyCheck(withKey ? choice : null, TEST_AFTER_MS);
+  /**
+   * How they're made: as Settings → AI notes says, except that notes made on this
+   * computer after the key's provider refused are made here again (AI notes started
+   * again, say) until the key works. Which it is waits on Chrome's model and the key.
+   */
+  const madeHere =
+    withKey && state.step === "done" && state.made.engine === "onDevice";
+  const known =
+    !madeHere || (onDevice !== null && key !== null && key.state !== "testing");
+  const engine =
+    madeHere &&
+    key?.state !== "works" &&
+    onDevice !== null &&
+    onDeviceUsable(onDevice)
+      ? "onDevice"
+      : engineFor(settings);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   /** The last save left the transcript out: it was too long. */
   const [transcriptLeftOut, setTranscriptLeftOut] = useState(false);
@@ -85,17 +104,22 @@ export function useNotesMaker({
   }, [run]);
 
   /** Whether making notes can start now, without a trip to Settings. */
-  const ready = canMakeNotes(settings, onDevice ?? "none");
+  const ready = known && canMakeNotes(settings, onDevice ?? "none");
   /** Made before the last of the transcript (AI notes went on again since). */
   const outdated = state.step === "done" && notesOutdated(state.made, lines);
 
-  async function make() {
+  /**
+   * Makes the notes the way Settings → AI notes says; `onDevice` makes them on this
+   * computer this once, for when the key's provider refused.
+   */
+  async function make({ onDevice: here = false }: { onDevice?: boolean } = {}) {
+    const using = here ? "onDevice" : engine;
     const signal = run.begin();
     setState({ step: "making", progress: null });
     setSaveState("idle");
     // Chrome reports download progress while it loads a model it already has (0, then
     // 1); only a real download is shown as one.
-    const downloads = engine === "onDevice" && onDevice !== "ready";
+    const downloads = using === "onDevice" && onDevice !== "ready";
     const job = {
       locale,
       title,
@@ -110,7 +134,7 @@ export function useNotesMaker({
     try {
       const api = modelApi();
       let notes;
-      if (engine === "onDevice") {
+      if (using === "onDevice") {
         if (!api) throw new Error("Chrome's built-in model isn't here.");
         notes = await notesOnDevice({ ...job, api });
       } else {
@@ -119,8 +143,8 @@ export function useNotesMaker({
       if (signal.aborted) return;
       const made: MadeNotes = {
         notes,
-        engine,
-        ...(engine === "ownKey" ? { provider: choice.provider } : {}),
+        engine: using,
+        ...(using === "ownKey" ? { provider: choice.provider } : {}),
         madeAt: Date.now(),
       };
       saveMadeNotes(sessionId, made);
@@ -134,7 +158,7 @@ export function useNotesMaker({
             ? { kind: error.failure, detail: error.detail }
             : error instanceof UnreadableNotesError
               ? { kind: "unreadable" }
-              : engine === "onDevice"
+              : using === "onDevice"
                 ? { kind: "onDevice" }
                 : { kind: "other", detail: "" },
       });

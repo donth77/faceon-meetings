@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import type Portuguese from "../../messages/pt-BR.json";
+import { standInForProviders } from "./support/ai-providers";
 import { createMeeting, database } from "./support/db";
 import { expect, expectNoErrors, needsStream, test } from "./support/fixtures";
 
@@ -56,6 +57,7 @@ test.describe("AI notes in a language Chrome's AI doesn't write", () => {
   }) => {
     const host = await people.signedIn({ aiNotes: true });
     await host.context.addInitScript({ content: chromeWhoseAiWrites(WRITES) });
+    await standInForProviders(host.context);
 
     // In English there's nothing to say but that notes here are free.
     await host.page.goto("/settings/ai-notes");

@@ -1,6 +1,12 @@
 "use client";
 
-import { Download, LoaderCircle, Settings, Sparkles } from "lucide-react";
+import {
+  Download,
+  KeyRound,
+  LoaderCircle,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
@@ -8,6 +14,7 @@ import { Button, Dialog } from "react-aria-components";
 import { EnglishNotesNotice } from "@/components/notes/english-notes-notice";
 import { useNotesSentence } from "@/components/notes/notes-here";
 import { NotesMaker } from "@/components/notes/notes-maker";
+import { Button as UiButton } from "@/components/ui/button";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,6 +25,11 @@ import type { NotesState } from "@/lib/media/types";
 import type { TranscriptionStatus } from "@/lib/meetings/events";
 import { notesPanelButton } from "@/lib/meetings/rules";
 import { engineFor } from "@/lib/notes/engines";
+import {
+  PROVIDER_INFO,
+  type ProviderFailure,
+  type ProviderId,
+} from "@/lib/notes/providers";
 import { useNotesSettings } from "@/lib/notes/settings";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
@@ -134,10 +146,12 @@ export function NotesPanel({
   hostName,
   isNotetaker,
   canMake,
+  keyProblem,
   lines,
   notTranscribed,
   onChange,
   onOpenSettings,
+  onOpenKey,
   onDiscard,
   onClose,
 }: {
@@ -162,6 +176,8 @@ export function NotesPanel({
   isNotetaker: boolean;
   /** This browser can make the notes (Chrome's model, or a key); else Start shows disabled, with why. */
   canMake: boolean;
+  /** Your key, refused by its provider as AI notes started: said while there's time to fix it. */
+  keyProblem: { failure: ProviderFailure; provider: ProviderId } | null;
   /** This tab's transcript. */
   lines: readonly TranscriptLine[];
   notTranscribed: readonly NotTranscribed[];
@@ -169,6 +185,8 @@ export function NotesPanel({
   onChange: (on: boolean) => Promise<void>;
   /** Opens Settings → AI notes: making notes, and the host's switch. */
   onOpenSettings: () => void;
+  /** Opens Settings → AI notes, with focus on the key. */
+  onOpenKey: () => void;
   /** Deletes this tab's transcript and notes. */
   onDiscard: () => void;
   onClose: () => void;
@@ -222,6 +240,30 @@ export function NotesPanel({
                 },
               ]}
             />
+          </div>
+        ) : null}
+        {isNotetaker && keyProblem ? (
+          <div className="px-5">
+            <div
+              role="note"
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-950 dark:bg-amber-400/15 dark:text-amber-100"
+            >
+              <KeyRound className="size-5 shrink-0" aria-hidden="true" />
+              <p className="min-w-[min(100%,15rem)] flex-1 leading-normal">
+                {tn(`failed.${keyProblem.failure}`, {
+                  provider: PROVIDER_INFO[keyProblem.provider].name,
+                })}{" "}
+                {t("keyProblem")}
+              </p>
+              <UiButton
+                variant="outline"
+                size="sm"
+                className="border-amber-950/30 bg-transparent hover:bg-amber-950/5 dark:border-amber-100/30 dark:hover:bg-amber-100/10"
+                onPress={onOpenKey}
+              >
+                {t("fixKey")}
+              </UiButton>
+            </div>
           </div>
         ) : null}
         <p className="px-5">
@@ -328,7 +370,7 @@ export function NotesPanel({
           {t.rich("cantMakeYet", {
             settings: (chunks) => (
               <Button
-                onPress={onOpenSettings}
+                onPress={onOpenKey}
                 className="text-foreground focus-visible:focus-ring rounded-sm font-semibold underline underline-offset-2 outline-hidden"
               >
                 {chunks}
