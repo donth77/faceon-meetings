@@ -105,13 +105,17 @@ for (const locale of LOCALES) {
       await expect(page.getByText(shown(m.PreJoin?.readyToJoin))).toBeVisible();
       const join = page.getByRole("button", {
         name: shown(m.PreJoin?.joinNow),
+        exact: true,
       });
       await expect(join).toBeVisible();
       if (hasStream) {
         await hydrated(join);
         await join.click();
         await expect(
-          page.getByRole("button", { name: shown(m.Meeting?.leave) }),
+          page.getByRole("button", {
+            name: shown(m.Meeting?.leave),
+            exact: true,
+          }),
         ).toBeVisible({ timeout: 60_000 });
       }
       expectNoErrors(host);
