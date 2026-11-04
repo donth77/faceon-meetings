@@ -14,6 +14,7 @@ const sentry = vi.hoisted(() => {
       callback(scope),
     ),
     captureException: vi.fn(),
+    captureEvent: vi.fn(),
     captureMessage: vi.fn(),
     flush: vi.fn(async () => true),
   };
@@ -103,10 +104,13 @@ describe("reportError", () => {
     reportError("Neon's API refused a request.", undefined, { status: 401 });
     await sent();
 
-    expect(sentry.captureMessage).toHaveBeenCalledWith(
-      "Neon's API refused a request.",
-      "error",
-    );
+    // A plain event, so Sentry titles it with these words: captureMessage would add a
+    // stack, and the issue would be titled after its top frame ("<anonymous>").
+    expect(sentry.captureEvent).toHaveBeenCalledWith({
+      message: "Neon's API refused a request.",
+      level: "error",
+    });
+    expect(sentry.captureMessage).not.toHaveBeenCalled();
     expect(sentry.scope.setTag).toHaveBeenCalledWith("status", "401");
     expect(sentry.scope.setFingerprint).toHaveBeenCalledWith([
       "Neon's API refused a request.",
@@ -125,11 +129,11 @@ describe("reportError", () => {
       "The Apps Script API refused a request.",
       "Project 123 is gone",
     );
-    expect(sentry.captureMessage).toHaveBeenCalledWith(
-      "The Apps Script API refused a request.",
-      "error",
-    );
-    expect(JSON.stringify(sentry.captureMessage.mock.calls)).not.toContain(
+    expect(sentry.captureEvent).toHaveBeenCalledWith({
+      message: "The Apps Script API refused a request.",
+      level: "error",
+    });
+    expect(JSON.stringify(sentry.captureEvent.mock.calls)).not.toContain(
       "Project 123",
     );
   });
@@ -166,10 +170,11 @@ describe("reportCspViolation", () => {
     reportCspViolation(violation, 0);
     await sent();
 
-    expect(sentry.captureMessage).toHaveBeenCalledWith(
-      "Content Security Policy would block https://evil.example (script-src)",
-      "warning",
-    );
+    expect(sentry.captureEvent).toHaveBeenCalledWith({
+      message:
+        "Content Security Policy would block https://evil.example (script-src)",
+      level: "warning",
+    });
     expect(sentry.scope.setTags).toHaveBeenCalledWith({
       csp_directive: "script-src",
       csp_blocked: "https://evil.example",
@@ -191,7 +196,7 @@ describe("reportCspViolation", () => {
     reportCspViolation(violation, 60 * 60_000);
     await sent();
 
-    expect(sentry.captureMessage).toHaveBeenCalledTimes(3);
+    expect(sentry.captureEvent).toHaveBeenCalledTimes(3);
   });
 
   it("says when the policy blocked rather than only reported", async () => {
@@ -199,10 +204,11 @@ describe("reportCspViolation", () => {
     reportCspViolation({ ...violation, disposition: "enforce" }, 0);
     await sent();
 
-    expect(sentry.captureMessage).toHaveBeenCalledWith(
-      "Content Security Policy blocked https://evil.example (script-src)",
-      "warning",
-    );
+    expect(sentry.captureEvent).toHaveBeenCalledWith({
+      message:
+        "Content Security Policy blocked https://evil.example (script-src)",
+      level: "warning",
+    });
   });
 
   it("sends nothing without a DSN", async () => {

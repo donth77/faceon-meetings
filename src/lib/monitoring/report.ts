@@ -65,6 +65,19 @@ export function reportableError(error: Error): Error {
   return safe;
 }
 
+/**
+ * A report that's only words, sent as a plain event: captureMessage adds a stack to it,
+ * and Sentry then titles the issue after that stack's top frame ("<anonymous>") instead
+ * of the words.
+ */
+function captureText(
+  sentry: typeof Sentry,
+  message: string,
+  level: Sentry.SeverityLevel,
+): void {
+  sentry.captureEvent({ message, level });
+}
+
 /** A tag's value as Sentry takes it: one line, at most 200 characters. */
 const tagValue = (value: string | number) =>
   String(value).replace(/\s+/g, " ").slice(0, 200);
@@ -89,7 +102,7 @@ async function sendError(
         sentry.captureException(reportableError(error));
       } else {
         scope.setFingerprint([what]);
-        sentry.captureMessage(what, "error");
+        captureText(sentry, what, "error");
       }
     });
     await sentry.flush(FLUSH_MS);
@@ -138,7 +151,8 @@ async function sendCspViolation(violation: CspViolation): Promise<void> {
         csp_disposition: violation.disposition,
       });
       scope.setFingerprint(["csp", violation.directive, violation.blocked]);
-      sentry.captureMessage(
+      captureText(
+        sentry,
         `Content Security Policy ${violation.disposition === "enforce" ? "blocked" : "would block"} ${violation.blocked} (${violation.directive})`,
         "warning",
       );
