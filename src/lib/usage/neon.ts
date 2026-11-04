@@ -61,6 +61,23 @@ export function readNeonProject(
   };
 }
 
+/**
+ * What to report when Neon turns a request away: its status, and the setting that's
+ * likely wrong. Neon's console shows branch IDs (br-…) beside the project's ID, and only
+ * the project's works here.
+ */
+export function neonRefusal(status: number, projectId: string): string {
+  const refused = `Neon's API refused a request (${status}).`;
+  if (projectId.startsWith("br-")) {
+    return `${refused} NEON_PROJECT_ID holds a branch ID (br-…), not the project's ID: copy that from the project's Settings → General.`;
+  }
+  if (status === 401 || status === 403) return `${refused} Check NEON_API_KEY.`;
+  if (status === 404) {
+    return `${refused} Check NEON_PROJECT_ID, and that NEON_API_KEY is for that project.`;
+  }
+  return refused;
+}
+
 /** Asks Neon for the project's figures; 8 seconds to answer. */
 async function askNeon(
   key: string,
@@ -79,7 +96,7 @@ async function askNeon(
       },
     );
     if (!response.ok) {
-      reportError("Neon's API refused a request.", undefined, {
+      reportError(neonRefusal(response.status, projectId), undefined, {
         status: response.status,
       });
       return { state: "unavailable" };

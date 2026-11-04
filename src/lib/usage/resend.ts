@@ -111,7 +111,8 @@ const Tried = z.object({
  * today's, noted as from the list. Resend is asked at most every five minutes (the
  * daily check asks regardless, with `force`), and the outcome is kept, so every server
  * knows whether the key can list. RESEND_USAGE_API_KEY is used where it's set, since a
- * key that can only send can't list.
+ * key that can only send can't list. A failure is reported when the outcome changes,
+ * except a sending key that can't list.
  */
 export async function refreshResendCounts(
   now = new Date(),
@@ -130,11 +131,19 @@ export async function refreshResendCounts(
     new Date(month.start.getTime() - SCHEDULED_AHEAD_MS),
   );
   if (!Array.isArray(listed)) {
-    if (tried !== listed) {
+    // A sending key that can't list is how most copies run, and Settings → Admin says
+    // what to add; a usage key that can't, or Resend not answering, is worth a look.
+    const expected = listed === "restricted" && !env.RESEND_USAGE_API_KEY;
+    if (tried !== listed && !expected) {
       reportError(
         "Couldn't list Resend's emails for the usage meter.",
         undefined,
-        { state: listed },
+        {
+          state: listed,
+          key: env.RESEND_USAGE_API_KEY
+            ? "RESEND_USAGE_API_KEY"
+            : "RESEND_API_KEY",
+        },
       );
     }
     await saveReading("resend", { listing: listed }, now);

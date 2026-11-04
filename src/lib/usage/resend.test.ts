@@ -1,6 +1,24 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listResendEmails } from "./resend";
+import { reportError } from "@/lib/monitoring/report";
+
+import { listResendEmails, refreshResendCounts } from "./resend";
+
+// Settings, error reports and the kept reading as stand-ins, for refreshing the counts.
+const stand = vi.hoisted(() => ({
+  env: {} as Record<string, string | undefined>,
+  reading: null as { data: Record<string, unknown>; readAt: Date } | null,
+  saved: [] as Record<string, unknown>[],
+}));
+vi.mock("@/lib/server-env", () => ({ serverEnv: () => stand.env }));
+vi.mock("@/lib/monitoring/report", () => ({ reportError: vi.fn() }));
+vi.mock("./readings", () => ({
+  isFresh: () => false,
+  lastReading: async () => stand.reading,
+  saveReading: async (_source: string, data: Record<string, unknown>) => {
+    stand.saved.push(data);
+  },
+}));
 
 type Item = {
   id: string;
@@ -105,5 +123,69 @@ describe("listing the account's emails", () => {
       }),
     );
     expect(await listResendEmails("re_test", new Date())).toBe("unavailable");
+  });
+});
+
+describe("refreshing Resend's counts", () => {
+  const now = new Date("2026-11-04T16:00:00Z");
+  const sendOnly = () =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            name: "restricted_api_key",
+            message: "This API key is restricted to only send emails",
+          },
+          { status: 401 },
+        ),
+      ),
+    );
+
+  beforeEach(() => {
+    stand.env = {};
+    stand.reading = null;
+    stand.saved = [];
+    vi.mocked(reportError).mockClear();
+  });
+
+  it("stays quiet when the sending key can't list, as most copies' can't", async () => {
+    stand.env = { RESEND_API_KEY: "re_send_only" };
+    sendOnly();
+    expect(await refreshResendCounts(now)).toBe("restricted");
+    expect(stand.saved).toEqual([{ listing: "restricted" }]);
+    expect(reportError).not.toHaveBeenCalled();
+  });
+
+  it("reports a usage key that can't list, once", async () => {
+    stand.env = {
+      RESEND_API_KEY: "re_send_only",
+      RESEND_USAGE_API_KEY: "re_usage",
+    };
+    sendOnly();
+    expect(await refreshResendCounts(now)).toBe("restricted");
+    expect(reportError).toHaveBeenCalledWith(
+      "Couldn't list Resend's emails for the usage meter.",
+      undefined,
+      { state: "restricted", key: "RESEND_USAGE_API_KEY" },
+    );
+    // The next try finds the same outcome kept, and says nothing more.
+    stand.reading = { data: { listing: "restricted" }, readAt: now };
+    expect(await refreshResendCounts(now)).toBe("restricted");
+    expect(reportError).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports Resend not answering", async () => {
+    stand.env = { RESEND_API_KEY: "re_full_access" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("busy", { status: 500 })),
+    );
+    expect(await refreshResendCounts(now)).toBe("unavailable");
+    expect(reportError).toHaveBeenCalledWith(
+      "Couldn't list Resend's emails for the usage meter.",
+      undefined,
+      { state: "unavailable", key: "RESEND_API_KEY" },
+    );
   });
 });
