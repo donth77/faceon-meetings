@@ -8,9 +8,11 @@ on:
 permissions:
   contents: read
 
+# Every push to main gets its own run, so each commit has a result even when several land
+# in a row; on a branch or pull request, a new push cancels the older run.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
