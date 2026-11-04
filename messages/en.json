@@ -325,24 +325,26 @@
       "near": "Near the limit",
       "over": "Limit reached",
       "underOnePercent": "under 1%",
+      "updated": "Updated {when}.",
       "stream": {
         "title": "Stream video minutes",
         "value": "{used, number} of {limit, plural, one {# participant-minute} other {# participant-minutes}}",
         "count": "{used, plural, one {# participant-minute} other {# participant-minutes}}, with no limit set",
-        "note": "{appName}’s own count: each person’s time in each call. Stream charges by the video people receive, with HD at twice the rate of audio and SD, so its dashboard is what’s billed.",
+        "note": "{appName}’s own count: each person’s time in each call. Stream’s API doesn’t report what it bills, which depends on the video people receive (HD costs twice as much as audio and SD), so its dashboard has the billed figure.",
         "dashboard": "Open Stream’s dashboard",
         "off": "Stream isn’t set up, so there are no calls to count."
       },
       "emailsToday": {
-        "title": "Emails today (UTC)",
-        "resend": "{appName} sent {sent, number}. Resend counts {resend, plural, one {# email} other {# emails}} today, including anything else sent from the same Resend account."
+        "title": "Emails today (UTC)"
       },
       "emailsMonth": {
-        "title": "Emails this month",
-        "resend": "{appName} sent {sent, number} this month. Resend counts {resend, plural, one {# email} other {# emails}} this month, including anything else sent from the same Resend account."
+        "title": "Emails this month"
       },
       "emailsValue": "{used, number} of {limit, plural, one {# email} other {# emails}}",
       "emailsCount": "{used, plural, one {# email} other {# emails}}, with no limit set",
+      "emailsAccount": "{used, number} of {limit, plural, one {# email} other {# emails}} · {own, number} from {appName}",
+      "emailsAccountCount": "{used, plural, one {# email} other {# emails}} · {own, number} from {appName}, with no limit set",
+      "emailsVia": "The whole Resend account’s count, from {via, select, list {its list of emails} other {its answer to the last email {appName} sent}}. Updated {when}.",
       "emailsOwn": "{appName}’s own count of the {sent, plural, one {email} other {emails}} it sent.",
       "emailsKey": "The Resend key {appName} sends with can’t list emails, so Resend’s counts here catch up only when {appName} sends one. To count every email on the account right away, other apps’ included, add a full-access Resend key as RESEND_USAGE_API_KEY where {appName} is hosted, and redeploy.",
       "emailsOff": {
@@ -361,7 +363,7 @@
       },
       "vercel": {
         "title": "Hosting (Vercel)",
-        "body": "Vercel emails you itself as you near its free plan’s limits, so there’s nothing to count here.",
+        "body": "Vercel’s API has no read-only key: one that could read usage could also change this site, so {appName} doesn’t ask for one. Vercel emails you itself as you near its free plan’s limits.",
         "link": "Open Vercel’s usage page"
       }
     }

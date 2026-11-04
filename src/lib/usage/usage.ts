@@ -2,7 +2,7 @@ import "server-only";
 
 import { serverEnv } from "@/lib/server-env";
 
-import { emailUsage, type EmailCount } from "./emails";
+import { emailUsage, type EmailCount, type EmailUsage } from "./emails";
 import { utcMonth, type Reading } from "./meters";
 import { neonUsage, type NeonUsage } from "./neon";
 import type { Listing } from "./resend";
@@ -12,12 +12,23 @@ import { streamMinutesThisMonth } from "./stream";
 export type UsageReport = {
   /** The UTC month counted, as YYYY-MM. */
   month: string;
-  stream: { configured: boolean; minutes: number; limit: number };
+  /**
+   * Stream's participant-minutes, by FaceOn's own count from its attendance records,
+   * counted when the report was made (`countedAt`): Stream's server API reports call
+   * statistics, not what it bills.
+   */
+  stream: {
+    configured: boolean;
+    minutes: number;
+    limit: number;
+    countedAt: Date;
+  };
   emails: {
     configured: boolean;
     today: EmailCount;
     yesterday: EmailCount & { day: string };
     month: EmailCount;
+    account: EmailUsage["account"];
     /** Whether Resend's list of the account's emails could be read. */
     listing: Listing;
     perDay: number;
@@ -30,16 +41,23 @@ export type UsageReport = {
 export const emailsUsed = (count: EmailCount) =>
   Math.max(count.sent, count.resend ?? 0);
 
-/** This month's usage of each free allowance, with the allowances themselves. */
-export async function usageReport(now = new Date()): Promise<UsageReport> {
+/**
+ * This month's usage of each free allowance, with the allowances themselves. What comes
+ * from Resend and Neon is asked at most every five minutes; `force` asks regardless, as
+ * the daily check does.
+ */
+export async function usageReport(
+  now = new Date(),
+  force = false,
+): Promise<UsageReport> {
   const env = serverEnv();
   const streamConfigured = Boolean(
     env.NEXT_PUBLIC_STREAM_API_KEY && env.STREAM_API_SECRET,
   );
   const [minutes, emails, neon] = await Promise.all([
     streamConfigured ? streamMinutesThisMonth(now) : 0,
-    emailUsage(now),
-    neonUsage(),
+    emailUsage(now, force),
+    neonUsage(now, force),
   ]);
   return {
     month: utcMonth(now).key,
@@ -47,6 +65,7 @@ export async function usageReport(now = new Date()): Promise<UsageReport> {
       configured: streamConfigured,
       minutes,
       limit: env.USAGE_STREAM_MINUTES,
+      countedAt: now,
     },
     emails: {
       configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),

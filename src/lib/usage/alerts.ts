@@ -67,20 +67,23 @@ async function emailAdmins(alert: Alert): Promise<void> {
 }
 
 /**
- * Warns the admins (ADMIN_EMAILS) when a free allowance reaches 80% and again at 100%,
- * once each per meter and period: run by the daily sweep. A warning is claimed before
- * it's sent, so two runs at once can't both send it, and released if sending fails, so
- * the next run tries again. Returns how many warnings went.
+ * Refreshes every usage figure, then warns the admins (ADMIN_EMAILS) when a free
+ * allowance reaches 80% and again at 100%, once each per meter and period: run by the
+ * daily sweep. A warning is claimed before it's sent, so two runs at once can't both
+ * send it, and released if sending fails, so the next run tries again. Returns how many
+ * warnings went.
  */
 export async function warnAboutUsage(now = new Date()): Promise<number> {
   const env = serverEnv();
+  // The daily check asks Resend and Neon afresh, whatever the page asked lately, so
+  // every figure is at most a day old even when nobody opens Settings → Admin.
+  const readings = readingsOf(await usageReport(now, true));
   const canEmail =
     process.env.NODE_ENV === "development" ||
     Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
-  if (env.ADMIN_EMAILS.length === 0 || !canEmail) return 0;
-
-  const readings = readingsOf(await usageReport(now));
-  if (readings.length === 0) return 0;
+  if (env.ADMIN_EMAILS.length === 0 || !canEmail || readings.length === 0) {
+    return 0;
+  }
   const sentRows = await db()
     .select({
       meter: usageAlert.meter,

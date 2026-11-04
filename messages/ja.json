@@ -325,24 +325,26 @@
       "near": "上限に近づいています",
       "over": "上限に達しました",
       "underOnePercent": "1% 未満",
+      "updated": "最終更新: {when}",
       "stream": {
         "title": "Stream のビデオ時間",
         "value": "{used, number} / {limit, plural, other {# 参加者・分}}",
         "count": "{used, plural, other {# 参加者・分}}（上限なし）",
-        "note": "{appName} 自身の集計で、各通話での各参加者の時間です。Stream は参加者が受信したビデオに応じて課金し、HD は音声や SD の 2 倍の料金のため、請求額は Stream のダッシュボードで確認してください。",
+        "note": "{appName} 自身の集計で、各通話での各参加者の時間です。Stream の API は請求額を報告しません。請求額は参加者が受信したビデオによって変わり（HD は音声や SD の 2 倍の料金）、Stream のダッシュボードで確認できます。",
         "dashboard": "Stream のダッシュボードを開く",
         "off": "Stream が設定されていないため、集計する通話はありません。"
       },
       "emailsToday": {
-        "title": "今日のメール（UTC）",
-        "resend": "{appName} は {sent, number} 通を送信しました。Resend の集計では今日 {resend, plural, other {# 通}}で、同じ Resend アカウントから送信されたほかのメールも含まれます。"
+        "title": "今日のメール（UTC）"
       },
       "emailsMonth": {
-        "title": "今月のメール",
-        "resend": "{appName} は今月 {sent, number} 通を送信しました。Resend の集計では今月 {resend, plural, other {# 通}}で、同じ Resend アカウントから送信されたほかのメールも含まれます。"
+        "title": "今月のメール"
       },
       "emailsValue": "{used, number} / {limit, plural, other {# 通}}",
       "emailsCount": "{used, plural, other {# 通}}（上限なし）",
+      "emailsAccount": "{used, number} / {limit, plural, other {# 通}}（うち {appName} から {own, number} 通）",
+      "emailsAccountCount": "{used, plural, other {# 通}}（うち {appName} から {own, number} 通、上限なし）",
+      "emailsVia": "Resend アカウント全体の集計です（{via, select, list {Resend のメール一覧から} other {{appName} が最後に送信したメールへの Resend の応答から}}）。最終更新: {when}",
       "emailsOwn": "{appName} 自身による、送信した{sent, plural, other {メール}}の集計です。",
       "emailsKey": "{appName} が送信に使っている Resend のキーではメールの一覧を取得できないため、ここに表示される Resend の集計は {appName} がメールを送信したときにだけ更新されます。ほかのアプリの分も含め、アカウントのすべてのメールをすぐに集計するには、{appName} をホストしている環境でフルアクセスの Resend キーを RESEND_USAGE_API_KEY として追加し、再デプロイしてください。",
       "emailsOff": {
@@ -361,7 +363,7 @@
       },
       "vercel": {
         "title": "ホスティング（Vercel）",
-        "body": "無料プランの上限に近づくと Vercel から直接メールが届くため、ここで集計するものはありません。",
+        "body": "Vercel の API には読み取り専用のキーがありません。使用量を読めるキーはこのサイトも変更できるため、{appName} はキーを求めません。無料プランの上限に近づくと Vercel から直接メールが届きます。",
         "link": "Vercel の使用状況ページを開く"
       }
     }

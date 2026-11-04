@@ -176,6 +176,13 @@
       "when": 1793798257640,
       "tag": "0024_usage_meter",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793804814574,
+      "tag": "0025_usage_readings",
+      "breakpoints": true
     }
   ]
 }

@@ -45,6 +45,8 @@ test.describe("Settings → Admin → Usage this month", () => {
         /^[\d,]+ of 333,000 participant-minutes, /,
       );
       await expect(minutes).toHaveAttribute("aria-valuemax", "333000");
+      // Each figure says when it was last updated.
+      await expect(usage.getByText(/^Updated .+\.$/).first()).toBeVisible();
     } else {
       await expect(
         usage.getByText("Stream isn’t set up, so there are no calls to count."),

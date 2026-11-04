@@ -325,24 +325,26 @@
       "near": "Fast am Limit",
       "over": "Limit erreicht",
       "underOnePercent": "unter 1 %",
+      "updated": "Aktualisiert: {when}.",
       "stream": {
         "title": "Stream-Videominuten",
         "value": "{used, number} von {limit, plural, one {# Teilnehmerminute} other {# Teilnehmerminuten}}",
         "count": "{used, plural, one {# Teilnehmerminute} other {# Teilnehmerminuten}}, ohne festgelegtes Limit",
-        "note": "Die eigene Zählung von {appName}: die Zeit jeder Person in jedem Anruf. Stream berechnet das Video, das Personen empfangen, HD zum doppelten Satz von Audio und SD. Maßgeblich für die Abrechnung ist daher das Dashboard von Stream.",
+        "note": "Die eigene Zählung von {appName}: die Zeit jeder Person in jedem Anruf. Die API von Stream meldet nicht, was Stream berechnet; das hängt vom Video ab, das Personen empfangen (HD kostet doppelt so viel wie Audio und SD). Den abgerechneten Wert zeigt daher das Dashboard von Stream.",
         "dashboard": "Stream-Dashboard öffnen",
         "off": "Stream ist nicht eingerichtet, daher gibt es keine Anrufe zu zählen."
       },
       "emailsToday": {
-        "title": "E-Mails heute (UTC)",
-        "resend": "{appName} hat {sent, number} gesendet. Resend zählt heute {resend, plural, one {# E-Mail} other {# E-Mails}}, einschließlich allem anderen, was über dasselbe Resend-Konto gesendet wird."
+        "title": "E-Mails heute (UTC)"
       },
       "emailsMonth": {
-        "title": "E-Mails in diesem Monat",
-        "resend": "{appName} hat in diesem Monat {sent, number} gesendet. Resend zählt in diesem Monat {resend, plural, one {# E-Mail} other {# E-Mails}}, einschließlich allem anderen, was über dasselbe Resend-Konto gesendet wird."
+        "title": "E-Mails in diesem Monat"
       },
       "emailsValue": "{used, number} von {limit, plural, one {# E-Mail} other {# E-Mails}}",
       "emailsCount": "{used, plural, one {# E-Mail} other {# E-Mails}}, ohne festgelegtes Limit",
+      "emailsAccount": "{used, number} von {limit, plural, one {# E-Mail} other {# E-Mails}} · {own, number} von {appName}",
+      "emailsAccountCount": "{used, plural, one {# E-Mail} other {# E-Mails}} · {own, number} von {appName}, ohne festgelegtes Limit",
+      "emailsVia": "Die Zählung des gesamten Resend-Kontos, {via, select, list {aus seiner Liste der E-Mails} other {aus seiner Antwort auf die letzte E-Mail, die {appName} gesendet hat}}. Aktualisiert: {when}.",
       "emailsOwn": "Die eigene Zählung von {appName} {sent, plural, one {der gesendeten E-Mail} other {der gesendeten E-Mails}}.",
       "emailsKey": "Mit dem Resend-Schlüssel, mit dem {appName} sendet, lassen sich keine E-Mails auflisten. Die Zählungen von Resend hier holen daher nur auf, wenn {appName} eine E-Mail sendet. Um sofort jede E-Mail des Kontos zu zählen, auch die anderer Apps, fügen Sie dort, wo {appName} gehostet wird, einen Resend-Schlüssel mit Vollzugriff als RESEND_USAGE_API_KEY hinzu, und stellen Sie die App neu bereit.",
       "emailsOff": {
@@ -361,7 +363,7 @@
       },
       "vercel": {
         "title": "Hosting (Vercel)",
-        "body": "Vercel schickt Ihnen selbst eine E-Mail, wenn Sie sich den Grenzen des kostenlosen Tarifs nähern, daher gibt es hier nichts zu zählen.",
+        "body": "Die API von Vercel hat keine Schlüssel nur zum Lesen: Ein Schlüssel, der die Nutzung lesen kann, könnte auch diese Website ändern, daher fragt {appName} nicht danach. Vercel schickt Ihnen selbst eine E-Mail, wenn Sie sich den Grenzen des kostenlosen Tarifs nähern.",
         "link": "Vercel-Nutzungsseite öffnen"
       }
     }

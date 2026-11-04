@@ -1,6 +1,7 @@
 import {
   date,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -22,6 +23,23 @@ export const emailDay = pgTable("email_day", {
   resendMonthly: integer("resend_monthly"),
   /** When Resend last reported them. */
   resendAt: timestamp("resend_at", { withTimezone: true }),
+  /**
+   * How: from Resend's list of the account's emails (lib/usage/resend.ts), or from the
+   * headers of its answer to an email FaceOn sent.
+   */
+  resendVia: text("resend_via").$type<"list" | "headers">(),
+});
+
+/**
+ * The latest reading from a service the usage meter asks for its own figures (Neon's
+ * compute hours): what it said and when, so Settings → Admin shows how fresh it is and
+ * asks at most every five minutes (lib/usage). Counts only.
+ */
+export const usageReading = pgTable("usage_reading", {
+  /** The service: "neon". */
+  source: text("source").primaryKey(),
+  data: jsonb("data").$type<Record<string, unknown>>().notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }).notNull(),
 });
 
 /**

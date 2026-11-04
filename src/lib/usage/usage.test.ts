@@ -5,12 +5,18 @@ import { emailsUsed, readingsOf, type UsageReport } from "./usage";
 
 const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
   month: "2026-11",
-  stream: { configured: true, minutes: 1200.5, limit: 333_000 },
+  stream: {
+    configured: true,
+    minutes: 1200.5,
+    limit: 333_000,
+    countedAt: new Date("2026-11-04T09:30:00Z"),
+  },
   emails: {
     configured: true,
     today: { sent: 3, resend: null },
     yesterday: { sent: 90, resend: 95, day: "2026-11-03" },
     month: { sent: 400, resend: 380 },
+    account: { via: "list", at: new Date("2026-11-04T09:28:00Z") },
     listing: "ok",
     perDay: 100,
     perMonth: 3000,
@@ -20,6 +26,7 @@ const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
     cuHours: 50,
     periodStart: new Date("2026-11-01T00:00:00Z"),
     periodEnd: new Date("2026-12-01T00:00:00Z"),
+    readAt: new Date("2026-11-04T09:27:00Z"),
     limit: 100,
   },
   ...changes,
@@ -83,7 +90,12 @@ describe("what the daily sweep checks", () => {
   it("leaves out what isn't set up", () => {
     const readings = readingsOf(
       report({
-        stream: { configured: false, minutes: 0, limit: 333_000 },
+        stream: {
+          configured: false,
+          minutes: 0,
+          limit: 333_000,
+          countedAt: new Date(),
+        },
         emails: { ...report().emails, configured: false },
         neon: { state: "unconfigured", limit: 100 },
       }),

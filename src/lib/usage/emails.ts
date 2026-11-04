@@ -11,7 +11,8 @@ import { freshResendCounts, type Listing } from "./resend";
 /**
  * Counts one email Resend accepted, on the day it goes (UTC): today, or for an email
  * scheduled ahead (a reminder), the day it's due. With it, the counts Resend reported in
- * its response, as of now: its free plan's daily count, and the month's on every plan.
+ * its response, as of now, for the whole account: its free plan's daily count, and the
+ * month's on every plan. Like the list's (resend.ts), they only ever raise what's known.
  */
 export async function recordSentEmail(
   headers: Headers,
@@ -35,13 +36,15 @@ export async function recordSentEmail(
       resendDaily: daily,
       resendMonthly: monthly,
       resendAt: now,
+      resendVia: "headers",
     })
     .onConflictDoUpdate({
       target: emailDay.day,
       set: {
-        resendDaily: sql`coalesce(excluded.resend_daily, ${emailDay.resendDaily})`,
-        resendMonthly: sql`coalesce(excluded.resend_monthly, ${emailDay.resendMonthly})`,
+        resendDaily: sql`greatest(${emailDay.resendDaily}, excluded.resend_daily)`,
+        resendMonthly: sql`greatest(${emailDay.resendMonthly}, excluded.resend_monthly)`,
         resendAt: now,
+        resendVia: "headers",
       },
     });
 }
@@ -67,16 +70,26 @@ export type EmailUsage = {
   yesterday: EmailCount & { day: string };
   /** This month (UTC): FaceOn's count, and Resend's for the whole account. */
   month: EmailCount;
+  /**
+   * Where Resend's latest figures came from and when: its list of the account's emails,
+   * or its answer to the last email FaceOn sent. Null before Resend has said anything
+   * this month.
+   */
+  account: { via: "list" | "headers"; at: Date } | null;
   /** Whether Resend's list of the account's emails could be read (resend.ts). */
   listing: Listing;
 };
 
 /**
  * The emails sent today, yesterday and this month: FaceOn's own count, and Resend's for
- * the whole account, brought up to date from Resend's list first when it's stale.
+ * the whole account, brought up to date from Resend's list first when it's more than
+ * five minutes old (or always, with `force`).
  */
-export async function emailUsage(now = new Date()): Promise<EmailUsage> {
-  const listing = await freshResendCounts(now);
+export async function emailUsage(
+  now = new Date(),
+  force = false,
+): Promise<EmailUsage> {
+  const listing = await freshResendCounts(now, force);
   const today = utcDay(now);
   const yesterday = dayBefore(today);
   const month = utcMonth(now);
@@ -96,7 +109,11 @@ export async function emailUsage(now = new Date()): Promise<EmailUsage> {
       .from(emailDay)
       .where(and(gte(emailDay.day, monthStart), lt(emailDay.day, monthEnd))),
     db()
-      .select({ resendMonthly: emailDay.resendMonthly })
+      .select({
+        resendMonthly: emailDay.resendMonthly,
+        resendAt: emailDay.resendAt,
+        resendVia: emailDay.resendVia,
+      })
       .from(emailDay)
       .where(
         and(
@@ -119,6 +136,9 @@ export async function emailUsage(now = new Date()): Promise<EmailUsage> {
       sent: total?.sent ?? 0,
       resend: latest?.resendMonthly ?? null,
     },
+    account: latest?.resendAt
+      ? { via: latest.resendVia ?? "headers", at: latest.resendAt }
+      : null,
     listing,
   };
 }

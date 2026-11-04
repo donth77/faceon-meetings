@@ -10,6 +10,7 @@ import { emailsUsed, type UsageReport } from "@/lib/usage/usage";
 
 import { AdminCard } from "./admin-card";
 import { UsageAnchor } from "./usage-anchor";
+import { UsageUpdated } from "./usage-updated";
 
 const STREAM_DASHBOARD = "https://dashboard.getstream.io/";
 const NEON_CONSOLE = "https://console.neon.tech/";
@@ -145,10 +146,17 @@ function Note({ children }: { children: ReactNode }) {
 
 /**
  * Settings → Admin → Usage this month, the page's last section: how much of each
- * service's free plan this copy has used, so nothing runs out by surprise. Stream's
- * minutes are FaceOn's own count; emails show FaceOn's count and Resend's for the
- * whole account, from its list of emails where the key can read it (lib/usage/resend.ts); Neon's compute hours come from Neon's API where it's set up; Vercel
- * warns by email itself. The daily sweep emails the admins at 80% and 100%
+ * service's free plan this copy has used, so nothing runs out by surprise, each figure
+ * with when it was last updated.
+ * - Stream: FaceOn's own count of participant-minutes; Stream's API doesn't report what
+ *   it bills.
+ * - Emails: the whole Resend account's count leads, with FaceOn's share beside it, from
+ *   Resend's list of emails where the key can read it, or its answer to FaceOn's last
+ *   email (lib/usage/resend.ts, emails.ts).
+ * - Neon: compute hours from Neon's API, where it's set up.
+ * - Vercel: a link only. Vercel's API has no read-only token, and it warns by email.
+ * Figures from other services refresh at most every five minutes while someone looks,
+ * and daily in the sweep, which also emails the admins at 80% and 100%
  * (lib/usage/alerts.ts), linking here (#usage).
  */
 export function UsageCard({ usage }: { usage: UsageReport }) {
@@ -166,26 +174,34 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
     more?: ReactNode,
   ) => {
     const used = emailsUsed(count);
+    const own = count.sent;
+    // The whole Resend account's count leads, with FaceOn's own share beside it; until
+    // Resend has said anything, FaceOn's count is all there is.
+    const value =
+      count.resend === null
+        ? limit > 0
+          ? t("emailsValue", { used, limit })
+          : t("emailsCount", { used })
+        : limit > 0
+          ? t("emailsAccount", { used, limit, own, appName })
+          : t("emailsAccountCount", { used, own, appName });
     return (
       <MeterRow
         id={id}
         title={t(`${id}.title`)}
         used={used}
         limit={limit}
-        value={
-          limit > 0
-            ? t("emailsValue", { used, limit })
-            : t("emailsCount", { used })
-        }
+        value={value}
       >
         <Note>
-          {count.resend === null
-            ? t("emailsOwn", { appName, sent: count.sent })
-            : t(`${id}.resend`, {
-                appName,
-                sent: count.sent,
-                resend: count.resend,
-              })}
+          {count.resend !== null && emails.account ? (
+            <UsageUpdated
+              at={emails.account.at.toISOString()}
+              via={emails.account.via}
+            />
+          ) : (
+            t("emailsOwn", { appName, sent: own })
+          )}
         </Note>
         {more}
       </MeterRow>
@@ -216,6 +232,9 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
             }
           >
             <Note>{t("stream.note", { appName })}</Note>
+            <Note>
+              <UsageUpdated at={stream.countedAt.toISOString()} />
+            </Note>
             <OutLink href={STREAM_DASHBOARD}>{t("stream.dashboard")}</OutLink>
           </MeterRow>
         ) : (
@@ -267,6 +286,9 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
                     appName,
                   })
                 : t("neon.note", { appName })}
+            </Note>
+            <Note>
+              <UsageUpdated at={neon.readAt.toISOString()} />
             </Note>
           </MeterRow>
         ) : (

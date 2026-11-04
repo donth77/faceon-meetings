@@ -325,24 +325,26 @@
       "near": "Cerca del límite",
       "over": "Límite alcanzado",
       "underOnePercent": "menos del 1 %",
+      "updated": "Actualizado: {when}.",
       "stream": {
         "title": "Minutos de video de Stream",
         "value": "{used, number} de {limit, plural, one {# minuto por participante} other {# minutos por participante}}",
         "count": "{used, plural, one {# minuto por participante} other {# minutos por participante}}, sin límite establecido",
-        "note": "El recuento propio de {appName}: el tiempo de cada persona en cada llamada. Stream cobra por el video que recibe la gente, y el HD cuesta el doble que el audio y el SD, así que lo que se factura es lo que muestra su panel.",
+        "note": "El recuento propio de {appName}: el tiempo de cada persona en cada llamada. La API de Stream no informa lo que cobra, que depende del video que recibe la gente (el HD cuesta el doble que el audio y el SD), así que la cifra facturada está en su panel.",
         "dashboard": "Abrir el panel de Stream",
         "off": "Stream no está configurado, así que no hay llamadas que contar."
       },
       "emailsToday": {
-        "title": "Correos de hoy (UTC)",
-        "resend": "{appName} envió {sent, number}. Resend cuenta {resend, plural, one {# correo} other {# correos}} hoy, incluido cualquier otro envío desde la misma cuenta de Resend."
+        "title": "Correos de hoy (UTC)"
       },
       "emailsMonth": {
-        "title": "Correos de este mes",
-        "resend": "{appName} envió {sent, number} este mes. Resend cuenta {resend, plural, one {# correo} other {# correos}} este mes, incluido cualquier otro envío desde la misma cuenta de Resend."
+        "title": "Correos de este mes"
       },
       "emailsValue": "{used, number} de {limit, plural, one {# correo} other {# correos}}",
       "emailsCount": "{used, plural, one {# correo} other {# correos}}, sin límite establecido",
+      "emailsAccount": "{used, number} de {limit, plural, one {# correo} other {# correos}} · {own, number} de {appName}",
+      "emailsAccountCount": "{used, plural, one {# correo} other {# correos}} · {own, number} de {appName}, sin límite establecido",
+      "emailsVia": "El recuento de toda la cuenta de Resend, {via, select, list {según su lista de correos} other {según su respuesta al último correo que envió {appName}}}. Actualizado: {when}.",
       "emailsOwn": "Recuento propio de {appName} {sent, plural, one {del correo que envió} other {de los correos que envió}}.",
       "emailsKey": "La clave de Resend con la que envía {appName} no puede listar correos, así que los recuentos de Resend aquí solo se ponen al día cuando {appName} envía uno. Para contar al instante todos los correos de la cuenta, incluidos los de otras apps, agrega una clave de Resend con acceso completo como RESEND_USAGE_API_KEY donde esté alojado {appName} y vuelve a implementarlo.",
       "emailsOff": {
@@ -361,7 +363,7 @@
       },
       "vercel": {
         "title": "Hosting (Vercel)",
-        "body": "Vercel te envía un correo por su cuenta cuando te acercas a los límites de su plan gratuito, así que aquí no hay nada que contar.",
+        "body": "La API de Vercel no tiene claves de solo lectura: una que pudiera leer el uso también podría cambiar este sitio, así que {appName} no pide ninguna. Vercel te envía un correo por su cuenta cuando te acercas a los límites de su plan gratuito.",
         "link": "Abrir la página de uso de Vercel"
       }
     }
