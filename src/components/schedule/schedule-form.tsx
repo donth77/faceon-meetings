@@ -520,7 +520,7 @@ export function ScheduleForm({
         <ChevronLeft className="size-4" aria-hidden="true" />
         {edit ? t("backToMeeting") : t("backToUpcoming")}
       </Link>
-      <h1 className="text-[32px] font-bold tracking-[-0.01em]">
+      <h1 className="tracking-snug text-[32px] font-bold">
         {edit ? t("editTitle") : t("title")}
       </h1>
       <div className="flex flex-wrap items-start gap-6">

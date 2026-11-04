@@ -233,7 +233,7 @@ export function MeetingDetailsView({
       </Link>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="text-[34px] font-bold tracking-[-0.01em]">
+          <h1 className="tracking-snug text-[34px] font-bold">
             {details.title}
           </h1>
           <span className="text-base">

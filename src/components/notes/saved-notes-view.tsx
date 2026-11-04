@@ -149,7 +149,7 @@ export function SavedNotesView({ notes }: { notes: SavedNotes }) {
               <Sparkles className="size-4" aria-hidden="true" />
               {tn("title")}
             </span>
-            <h1 className="text-[34px] leading-tight font-bold tracking-[-0.01em] text-balance">
+            <h1 className="tracking-snug text-[34px] leading-tight font-bold text-balance">
               {title}
             </h1>
             <p className="text-muted-foreground text-[15px]">

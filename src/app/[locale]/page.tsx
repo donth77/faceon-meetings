@@ -53,7 +53,7 @@ export default async function LandingPage() {
           <span className="hidden sm:block">
             <LogoMark decorative className="size-14" />
           </span>
-          <h1 className="font-display text-[36px] leading-[1.04] font-[750] tracking-[-0.02em] text-balance sm:text-5xl lg:text-[68px] lg:leading-[1.02] lg:tracking-[-0.025em]">
+          <h1 className="font-display tracking-display text-[36px] leading-[1.04] font-[750] text-balance sm:text-5xl lg:text-[68px] lg:leading-[1.02] lg:tracking-tight">
             {t("headline")}
           </h1>
           <p className="text-muted-foreground text-base leading-[1.45] sm:text-xl">

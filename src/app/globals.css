@@ -183,6 +183,14 @@
   }
 }
 
+/* Headings set a little tighter than text: page titles (snug) and the landing page's
+   headline on phones (display), beside Tailwind's tight and tighter. Japanese sets all
+   of them to 0 (below), so headings use these, never a bracketed value. */
+@theme {
+  --tracking-snug: -0.01em;
+  --tracking-display: -0.02em;
+}
+
 @theme inline {
   --font-sans:
     var(--font-figtree), var(--font-language), ui-sans-serif, system-ui,
@@ -234,17 +242,38 @@
   --radius-2xl: calc(var(--radius) * 1.8);
 }
 
+/* Windows' Yu Gothic at a weight that reads well on screen: its Regular is very thin,
+   so Japanese text uses its Medium, and bold text its Bold. (Not Yu Gothic UI, whose
+   narrow kana make running text look squeezed.) */
+@font-face {
+  font-family: "Yu Gothic Readable";
+  src: local("Yu Gothic Medium"), local("YuGothic-Medium");
+  font-weight: 100 500;
+}
+@font-face {
+  font-family: "Yu Gothic Readable";
+  src: local("Yu Gothic Bold"), local("YuGothic-Bold");
+  font-weight: 600 900;
+}
+
 @layer base {
   /* The system's own fonts for scripts Figtree and Bricolage don't have, by the page's
      language, rather than multi-megabyte web fonts. Japanese uses Japanese fonts, so
-     kanji take their Japanese forms. */
+     kanji take their Japanese forms: Hiragino on Apple's systems, Yu Gothic on Windows
+     (above), Noto elsewhere. */
   :root {
     --font-language: ui-sans-serif;
   }
   :root:lang(ja) {
     --font-language:
-      "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic",
-      Meiryo, "Noto Sans JP", "Noto Sans CJK JP";
+      "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic Readable",
+      "Yu Gothic", Meiryo, "Noto Sans JP", "Noto Sans CJK JP";
+    /* Japanese keeps its natural spacing: headings' tighter letter-spacing squeezes
+       kana and kanji together. */
+    --tracking-tighter: 0em;
+    --tracking-tight: 0em;
+    --tracking-snug: 0em;
+    --tracking-display: 0em;
   }
   /* Japanese breaks lines between phrases, as Japanese text should, where browsers can. */
   :lang(ja) {

@@ -25,9 +25,7 @@ export default async function SettingsLayout({
     <main className="flex flex-1 flex-col p-6 md:p-10">
       <div className="@container mx-auto flex w-full max-w-[1100px] flex-col gap-5.5">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[32px] font-bold tracking-[-0.01em]">
-            {t("title")}
-          </h1>
+          <h1 className="tracking-snug text-[32px] font-bold">{t("title")}</h1>
           <p className="text-muted-foreground text-[15px]">{t("subtitle")}</p>
         </div>
         <div className="flex flex-col gap-5 @3xl:flex-row @3xl:items-start @3xl:gap-7">
