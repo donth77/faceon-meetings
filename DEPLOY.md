@@ -370,7 +370,7 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 
 ### Page views (Vercel Web Analytics)
 
-[Vercel Web Analytics](https://vercel.com/docs/analytics) counts which pages people view, without cookies, and shows the counts in your project's **Analytics** tab by page, referring site, country, browser and device. FaceOn tells it each page's route instead of its address, so it never receives meeting IDs, passcodes, tokens, email addresses or searches: `/j/1234567890#pwd=…` arrives as `/j/[code]`, `/reset-password?token=…` as `/reset-password`, and an address that isn't one of FaceOn's pages as `/[...rest]` (`src/lib/monitoring/page-views.ts`). Its code loads only once a page is interactive.
+[Vercel Web Analytics](https://vercel.com/docs/analytics) counts which pages people view, without cookies, and shows the counts in your project's **Analytics** tab by page, referring site, country, browser and device. FaceOn tells it each page's route instead of its address, so it never receives meeting IDs, passcodes, tokens, email addresses or searches: `/j/1234567890#pwd=…` arrives as `/j/[code]`, `/reset-password?token=…` as `/reset-password`, and an address that isn't one of FaceOn's pages as `/[...rest]` (`src/lib/monitoring/page-views.ts`). Its code loads only a moment after a page has loaded, so it never holds the page up.
 
 1. In Vercel, open the project's **Analytics** tab and select **Enable**.
 2. Set `NEXT_PUBLIC_VERCEL_ANALYTICS=1` in Vercel (Production), and redeploy.
