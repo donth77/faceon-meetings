@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DownloadPanel } from "@/components/desktop/download-buttons";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
+import { latestDesktopRelease } from "@/lib/desktop/releases";
 import { publicEnv } from "@/lib/env";
 import { languageAlternates } from "@/lib/site";
 
@@ -31,16 +32,18 @@ const ADDS = [
 
 /**
  * The desktop app: on Windows or a Mac its own build, elsewhere every build
- * (DownloadPanel), then what the app adds.
+ * (DownloadPanel), then what the app adds. The release the page is made with only lays
+ * the panel out; the browser asks for the current one.
  */
 export default async function DownloadPage() {
   const t = await getTranslations("Download");
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
+  const expected = await latestDesktopRelease();
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-[880px] flex-1 flex-col gap-10 px-5 py-10 sm:px-10 sm:py-14">
-        <DownloadPanel />
+        <DownloadPanel expected={expected} />
         <section aria-labelledby="adds" className="flex flex-col gap-4">
           <h2 id="adds" className="text-xl font-bold">
             {t("addsTitle")}

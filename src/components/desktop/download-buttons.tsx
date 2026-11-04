@@ -20,31 +20,28 @@ import { publicEnv } from "@/lib/env";
 import { useIntlLocale } from "@/lib/preferences";
 
 /**
- * Both builds, as they read: the place they take, kept unseen until the real ones are
- * known. No date: the server and the browser would write it in their own time zones.
- */
-const HOLDER: DesktopRelease = {
-  version: "0.0.0",
-  publishedAt: null,
-  releases: "#",
-  windows: { url: "#", size: 200 * 1_048_576, signed: false },
-  mac: { url: "#", size: 200 * 1_048_576, signed: false },
-};
-
-/**
  * /download's heading and builds (lib/desktop/downloads.ts, downloadView): on Windows or a
  * Mac just its own, anywhere else every build, and the heading names what's offered. Like
  * the other download links, the release comes from /api/desktop/release once the page
  * runs. Until this browser and the release are known, the heading and the builds keep
- * their place unseen, so the heading never changes in front of anyone.
+ * their place unseen, laid out for `expected` (the release the page was made with) as
+ * other computers get it, so the heading never changes in front of anyone and nothing
+ * below moves when they show.
  */
-export function DownloadPanel() {
+export function DownloadPanel({
+  expected,
+}: {
+  expected: DesktopRelease | null;
+}) {
   const t = useTranslations("Download");
   const device = useDeviceKind();
-  const release = useDesktopRelease();
+  const fetched = useDesktopRelease();
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-  const known = device !== null && release !== undefined;
-  const view = known && release ? downloadView(release, device) : null;
+  const known = device !== null && fetched !== undefined;
+  const release = known ? fetched : expected;
+  const view = release
+    ? downloadView(release, device ?? "otherComputer")
+    : null;
   const [first, second] = view?.builds ?? [];
   const only = first && !second ? first.platform : null;
   return (
@@ -62,21 +59,15 @@ export function DownloadPanel() {
           {t("intro", { appName })}
         </p>
       </div>
-      {!known ? (
-        <div className="invisible" inert>
-          <Builds
-            release={HOLDER}
-            view={downloadView(HOLDER, "otherComputer")}
-            device={null}
-          />
-        </div>
-      ) : release && view ? (
-        <Builds release={release} view={view} device={device} />
-      ) : (
-        <p className="bg-card ring-border max-w-[60ch] rounded-2xl p-5 text-[15px] leading-normal ring-1">
-          {t("notYet", { appName })}
-        </p>
-      )}
+      <div className={known ? undefined : "invisible"} inert={!known}>
+        {release && view ? (
+          <Builds release={release} view={view} device={device} />
+        ) : (
+          <p className="bg-card ring-border max-w-[60ch] rounded-2xl p-5 text-[15px] leading-normal ring-1">
+            {t("notYet", { appName })}
+          </p>
+        )}
+      </div>
     </>
   );
 }
@@ -100,10 +91,13 @@ function Builds({
   const locale = useIntlLocale();
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
   const { version } = release;
+  // In UTC: the page is made once for everyone, so its date can't follow the browser's
+  // time zone (and would differ from the server's).
   const date = release.publishedAt
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
-        new Date(release.publishedAt),
-      )
+    ? new Intl.DateTimeFormat(locale, {
+        dateStyle: "long",
+        timeZone: "UTC",
+      }).format(new Date(release.publishedAt))
     : null;
   return (
     <div className="flex flex-col gap-4">
