@@ -24,7 +24,7 @@ En una Mac o una PC con Windows, **Descargar para Mac** o **Descargar para Windo
 
 Tu computadora puede mostrarte una advertencia la primera vez que la abras:
 
-- **Mac:** si tu copia de la app todavía no está firmada, haz clic derecho en {appName} en Aplicaciones y elige **Abrir**, o ve a **Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente**.
+- **Mac:** si tu copia de la app todavía no está notarizada, ábrela una vez y luego ve a **Ajustes del Sistema → Privacidad y seguridad** y elige **Abrir igualmente**. (En versiones anteriores a macOS 15, también funciona hacer clic derecho en {appName} en Aplicaciones y elegir **Abrir**.)
 - **Windows:** si aparece “Windows protegió su PC”, elige **Más información → Ejecutar de todas formas**. Una app firmada puede mostrar este aviso durante un tiempo breve después de que sale una versión nueva. Una app sin firmar lo muestra la primera vez, y no se abre en absoluto en una PC con Control inteligente de aplicaciones activado.
 
 ## Inicia sesión

@@ -24,7 +24,7 @@ Sur un Mac ou un PC Windows, **Télécharger pour Mac** ou **Télécharger pour 
 
 Votre ordinateur peut afficher un avertissement à la première ouverture :
 
-- **Mac :** si votre copie de l’application n’est pas encore signée, faites un clic droit sur {appName} dans Applications et choisissez **Ouvrir**, ou allez dans **Réglages Système → Confidentialité et sécurité → Ouvrir quand même**.
+- **Mac :** si votre copie de l’application n’est pas encore notariée, ouvrez-la une fois, puis allez dans **Réglages Système → Confidentialité et sécurité** et choisissez **Ouvrir quand même**. (Avant macOS 15, un clic droit sur {appName} dans Applications, puis **Ouvrir**, fonctionne aussi.)
 - **Windows :** si « Windows a protégé votre ordinateur » s’affiche, choisissez **Informations complémentaires → Exécuter quand même**. Une application signée peut afficher ce message pendant peu de temps après la sortie d’une nouvelle version. Une application non signée l’affiche à la première ouverture, et ne s’ouvre pas du tout sur un PC où le Contrôle intelligent des applications est activé.
 
 ## Se connecter

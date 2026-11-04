@@ -24,7 +24,7 @@ Auf einem Mac oder einem Windows-PC lädt **Für Mac herunterladen** oder **Für
 
 Ihr Computer warnt Sie beim ersten Öffnen eventuell:
 
-- **Mac:** Wenn Ihre Kopie der App noch nicht signiert ist, klicken Sie in „Programme“ mit der rechten Maustaste auf {appName} und wählen Sie **Öffnen**, oder gehen Sie zu **Systemeinstellungen → Datenschutz & Sicherheit → Trotzdem öffnen**.
+- **Mac:** Wenn Ihre Kopie der App noch nicht notarisiert ist, öffnen Sie sie einmal, gehen Sie dann zu **Systemeinstellungen → Datenschutz & Sicherheit** und wählen Sie **Trotzdem öffnen**. (Vor macOS 15 können Sie auch in „Programme“ mit der rechten Maustaste auf {appName} klicken und **Öffnen** wählen.)
 - **Windows:** Wenn „Der Computer wurde durch Windows geschützt“ erscheint, wählen Sie **Weitere Informationen → Trotzdem ausführen**. Eine signierte App kann diese Meldung kurz nach dem Erscheinen einer neuen Version zeigen. Eine nicht signierte App zeigt sie beim ersten Mal und öffnet sich auf einem PC mit aktivierter intelligenter App-Steuerung überhaupt nicht.
 
 ## Anmelden

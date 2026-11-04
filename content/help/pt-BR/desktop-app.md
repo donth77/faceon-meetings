@@ -24,7 +24,7 @@ Em um Mac ou em um PC com Windows, **Baixar para Mac** ou **Baixar para Windows*
 
 O computador pode mostrar um aviso na primeira vez que você abrir o app:
 
-- **Mac:** se a sua cópia do app ainda não for assinada, clique com o botão direito no {appName} em Aplicativos e escolha **Abrir**, ou vá em **Ajustes do Sistema → Privacidade e Segurança → Abrir Mesmo Assim**.
+- **Mac:** se a sua cópia do app ainda não for notarizada, abra-a uma vez e depois vá em **Ajustes do Sistema → Privacidade e Segurança** e escolha **Abrir Mesmo Assim**. (Antes do macOS 15, clicar com o botão direito no {appName} em Aplicativos e escolher **Abrir** também funciona.)
 - **Windows:** se aparecer “O Windows protegeu o computador”, escolha **Mais informações → Executar assim mesmo**. Um app assinado pode mostrar esse aviso por pouco tempo depois que sai uma nova versão. Um app sem assinatura mostra o aviso na primeira vez e não abre de jeito nenhum em um PC com o Controle Inteligente de Aplicativos ativado.
 
 ## Entre na sua conta
