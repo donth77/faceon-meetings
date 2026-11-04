@@ -71,6 +71,8 @@ export const account = pgTable(
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
+    /** A Google account's own email, from its ID token, which isn't kept (lib/auth/server.ts). */
+    providerEmail: text("provider_email"),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );

@@ -13,7 +13,7 @@ updated: 2026-11-04
 
 - Tu **nombre**, tu **dirección de correo** y tu **foto**. La foto es un avatar que {appName} dibuja para ti, o tu foto de Google o GitHub si la eliges. En ese caso, esa foto se carga desde Google o GitHub.
 - Tu **contraseña**, si estableces una, guardada solo como un hash seguro, nunca la contraseña en sí.
-- Qué **formas de iniciar sesión** conectaste. Cuando inicias sesión con Google o GitHub, {appName} recibe de ellos tu nombre, tu dirección de correo y tu foto, y guarda, cifrados, los tokens de inicio de sesión que envían.
+- Qué **formas de iniciar sesión** conectaste. Cuando inicias sesión con Google o GitHub, {appName} recibe de ellos tu nombre, tu dirección de correo y tu foto, y guarda, cifrados, los tokens que envían para acceder a tu cuenta en ese servicio. Del token de inicio de sesión que envía Google, que dice quién eres, {appName} guarda solo el correo de tu cuenta de Google, para que **Configuración** pueda mostrar qué cuenta es.
 - Tus **sesiones**, con la dirección IP y el navegador de cada una, para que sigas con la sesión iniciada y las sesiones se puedan revisar y cerrar.
 - Si las reuniones que organizas **ofrecen notas de IA**: una opción de sí o no en **Configuración**, desactivada hasta que la actives.
 - Si **usaste la app de escritorio**: cuándo iniciaste sesión en ella por primera vez, para que {appName} deje de sugerirla en **Inicio** en tus navegadores.
@@ -159,7 +159,7 @@ Según dónde vivas, por ejemplo en el Espacio Económico Europeo, el Reino Unid
 
 ## Seguridad
 
-Las conexiones usan HTTPS. Las contraseñas se guardan como hash, y los tokens que envían Google y GitHub se cifran. Los enlaces de reunión llevan su código de acceso en una parte de la dirección que los navegadores nunca envían a los servidores. Solo las personas a las que una reunión deja entrar pueden conectarse a su llamada, y los intentos fallidos están limitados. Ningún sistema es perfectamente seguro, y esa es una razón más por la que {appName} guarda tan poco.
+Las conexiones usan HTTPS. Las contraseñas se guardan como hash, y los tokens de Google y GitHub que guarda {appName} están cifrados. Los enlaces de reunión llevan su código de acceso en una parte de la dirección que los navegadores nunca envían a los servidores. Solo las personas a las que una reunión deja entrar pueden conectarse a su llamada, y los intentos fallidos están limitados. Ningún sistema es perfectamente seguro, y esa es una razón más por la que {appName} guarda tan poco.
 
 ## Cambios
 

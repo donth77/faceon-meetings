@@ -13,7 +13,7 @@ updated: 2026-11-04
 
 - Votre **nom**, votre **adresse e-mail** et votre **photo**. La photo est un avatar que {appName} dessine pour vous, ou votre photo Google ou GitHub si vous la choisissez. Cette photo est alors chargée depuis Google ou GitHub.
 - Votre **mot de passe**, si vous en définissez un, conservé uniquement sous forme de hachage sécurisé, jamais en clair.
-- Les **moyens de connexion** que vous avez associés. Quand vous vous connectez avec Google ou GitHub, {appName} reçoit de leur part votre nom, votre adresse e-mail et votre photo, et conserve, chiffrés, les jetons de connexion qu’ils envoient.
+- Les **moyens de connexion** que vous avez associés. Quand vous vous connectez avec Google ou GitHub, {appName} reçoit de leur part votre nom, votre adresse e-mail et votre photo, et conserve, chiffrés, les jetons qu’ils envoient pour accéder à votre compte chez eux. Du jeton de connexion que Google envoie, qui indique qui vous êtes, {appName} ne conserve que l’adresse e-mail de votre compte Google, pour que **Paramètres** puisse indiquer de quel compte il s’agit.
 - Vos **sessions de connexion**, avec l’adresse IP et le navigateur de chacune, pour que vous restiez connecté et que les sessions puissent être vérifiées et fermées.
 - Si les réunions que vous organisez **proposent les notes IA** : un réglage oui ou non dans **Paramètres**, désactivé tant que vous ne l’activez pas.
 - Si vous avez **utilisé l’application de bureau** : la date de votre première connexion, pour que {appName} cesse de la suggérer sur **Accueil** dans vos navigateurs.
@@ -159,7 +159,7 @@ Selon l’endroit où vous vivez, par exemple dans l’Espace économique europ�
 
 ## Sécurité
 
-Les connexions utilisent HTTPS. Les mots de passe sont hachés, et les jetons envoyés par Google et GitHub sont chiffrés. Les liens de réunion portent leur code secret dans une partie de l’adresse que les navigateurs n’envoient jamais aux serveurs. Seules les personnes admises dans une réunion peuvent se connecter à son appel, et les tentatives infructueuses sont limitées. Aucun système n’est parfaitement sûr : c’est une raison de plus pour laquelle {appName} conserve si peu.
+Les connexions utilisent HTTPS. Les mots de passe sont hachés, et les jetons de Google et de GitHub que {appName} conserve sont chiffrés. Les liens de réunion portent leur code secret dans une partie de l’adresse que les navigateurs n’envoient jamais aux serveurs. Seules les personnes admises dans une réunion peuvent se connecter à son appel, et les tentatives infructueuses sont limitées. Aucun système n’est parfaitement sûr : c’est une raison de plus pour laquelle {appName} conserve si peu.
 
 ## Modifications
 

@@ -13,7 +13,7 @@ O {appName} é um serviço de videoconferência gratuito e de código aberto. Es
 
 - Seu **nome**, seu **endereço de e-mail** e sua **foto**. A foto é um avatar que o {appName} desenha para você, ou sua foto do Google ou do GitHub, se você escolher. Nesse caso, a foto é carregada do Google ou do GitHub.
 - Sua **senha**, se você definir uma, guardada só como um hash seguro, nunca a senha em si.
-- Quais **formas de entrar** você conectou. Quando você entra com o Google ou o GitHub, o {appName} recebe deles seu nome, seu endereço de e-mail e sua foto, e guarda, criptografados, os tokens de login que eles enviam.
+- Quais **formas de entrar** você conectou. Quando você entra com o Google ou o GitHub, o {appName} recebe deles seu nome, seu endereço de e-mail e sua foto, e guarda, criptografados, os tokens que eles enviam para acessar sua conta nesse serviço. Do token de login que o Google envia, que diz quem você é, o {appName} guarda só o e-mail da sua conta do Google, para que **Configurações** possa mostrar qual conta é.
 - Suas **sessões**, com o endereço IP e o navegador de cada uma, para manter você conectado e para que as sessões possam ser conferidas e encerradas.
 - Se as reuniões que você organiza **oferecem notas de IA**: uma opção de sim ou não em **Configurações**, desativada até você ativar.
 - Se você **usou o app para computador**: quando você entrou nele pela primeira vez, para que o {appName} pare de sugeri-lo no **Início** dos seus navegadores.
@@ -159,7 +159,7 @@ O {appName} não é destinado a crianças com menos de 13 anos, e elas não pode
 
 ## Segurança
 
-As conexões usam HTTPS. As senhas são guardadas como hash, e os tokens que o Google e o GitHub enviam são criptografados. Os links de reunião levam o código de acesso em uma parte do endereço que os navegadores nunca enviam aos servidores. Só as pessoas que uma reunião deixa entrar podem se conectar à chamada dela, e as tentativas que falham são limitadas. Nenhum sistema é perfeitamente seguro, e esse é mais um motivo para o {appName} guardar tão pouco.
+As conexões usam HTTPS. As senhas são guardadas como hash, e os tokens do Google e do GitHub que o {appName} guarda são criptografados. Os links de reunião levam o código de acesso em uma parte do endereço que os navegadores nunca enviam aos servidores. Só as pessoas que uma reunião deixa entrar podem se conectar à chamada dela, e as tentativas que falham são limitadas. Nenhum sistema é perfeitamente seguro, e esse é mais um motivo para o {appName} guardar tão pouco.
 
 ## Mudanças
 
