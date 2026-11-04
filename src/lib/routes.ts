@@ -61,6 +61,8 @@ export const NOINDEX_ROUTES = [
 export const HOME_ROUTE = "/home";
 export const PERSONAL_ROOM_ROUTE = "/personal-room";
 export const SIGN_IN_ROUTE = "/sign-in";
+/** Clears a sign-in cookie whose session has ended, then signs in (app/api/session/ended). */
+export const SESSION_ENDED_ROUTE = "/api/session/ended";
 
 /** True when `pathname` is one of `routes` or below one ("/settings" matches "/settings/audio"). */
 export function matchesRoute(
