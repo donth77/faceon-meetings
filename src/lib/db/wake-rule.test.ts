@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { isNeonDatabase, shouldWakeDatabase } from "./wake-rule";
+import {
+  HEALTH_WINDOW_MS,
+  isNeonDatabase,
+  shouldWakeDatabase,
+  WAKE_WINDOW_MS,
+  windowOf,
+} from "./wake-rule";
 
 const NEON =
   "postgresql://user:secret@ep-quiet-sound-a1b2c3d4-pooler.us-east-1.aws.neon.tech/app?sslmode=require";
@@ -33,5 +39,22 @@ describe("shouldWakeDatabase", () => {
   it("lets the setting decide outright", () => {
     expect(shouldWakeDatabase("off", NEON)).toBe(false);
     expect(shouldWakeDatabase("on", OTHER)).toBe(true);
+  });
+});
+
+describe("windowOf", () => {
+  it("gives every moment in a window the same key, and the next window a new one", () => {
+    const start = Date.UTC(2026, 10, 4, 12, 0, 0);
+    expect(windowOf(start, WAKE_WINDOW_MS)).toBe(
+      windowOf(start + WAKE_WINDOW_MS - 1, WAKE_WINDOW_MS),
+    );
+    expect(windowOf(start + WAKE_WINDOW_MS, WAKE_WINDOW_MS)).toBe(
+      windowOf(start, WAKE_WINDOW_MS) + 1,
+    );
+  });
+
+  it("keeps the database checks rare: a quarter of an hour to wake, an hour to check", () => {
+    expect(WAKE_WINDOW_MS).toBe(15 * 60 * 1000);
+    expect(HEALTH_WINDOW_MS).toBe(60 * 60 * 1000);
   });
 });

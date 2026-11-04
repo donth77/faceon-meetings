@@ -23,3 +23,16 @@ export function shouldWakeDatabase(
   if (setting === "off") return false;
   return isNeonDatabase(url);
 }
+
+/**
+ * Anything that reaches the database without signing in (/api/wake, and /api/health's
+ * ?db=1) does so at most once a window, whoever asks: a sleeping database still wakes for
+ * someone about to use FaceOn, but asking over and over can't hold it awake and spend the
+ * free plan's compute hours.
+ */
+export const WAKE_WINDOW_MS = 15 * 60 * 1000;
+export const HEALTH_WINDOW_MS = 60 * 60 * 1000;
+
+/** The window a moment falls in, as a number to key a cache by. */
+export const windowOf = (now: number, length: number) =>
+  Math.floor(now / length);

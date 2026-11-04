@@ -92,7 +92,7 @@ The first build needs settings from [step 8](#8-add-the-environment-variables-to
 
 To check both connections, run `pnpm db:check` with both strings set.
 
-Neon's database sleeps after five idle minutes, on every plan unless you turn that off, and takes about a second to wake. FaceOn wakes it when someone starts to sign in or join, so they don't wait. `DATABASE_WAKE_ON_INTENT` decides: `auto` (the default) does this for Neon only; set `off` if your database never sleeps, or `on` for another database that does.
+Neon's database sleeps after five idle minutes, on every plan unless you turn that off, and takes about a second to wake. FaceOn wakes it when someone starts to sign in or join, so they don't wait, at most once every 15 minutes however many people do. `DATABASE_WAKE_ON_INTENT` decides: `auto` (the default) does this for Neon only; set `off` if your database never sleeps, or `on` for another database that does.
 
 For local development, a second branch keeps test data apart: **Branches → New branch** (for example `dev`), with its strings in `.env.local`, and `pnpm db:migrate` on its own.
 
@@ -351,7 +351,7 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 
 `/api/health` answers `{"ok":true}` while your copy is up. It doesn't touch the database, so checking it every few minutes never keeps Neon awake. With [UptimeRobot](https://uptimerobot.com)'s free plan, add a monitor: **HTTP(s)**, `https://faceon.example.com/api/health`, every 5 minutes, alerting you by email.
 
-`/api/health?db=1` also checks the database, and answers 503 when it can't reach it. Each check wakes a sleeping database for 5 minutes of Neon's monthly compute, so give it a slow monitor of its own, every 12 hours say.
+`/api/health?db=1` also checks the database, and answers 503 when it can't reach it. It asks the database at most once an hour, however often it's called (checks in between get the same answer), and each time can wake a sleeping database for 5 minutes of Neon's monthly compute, so give it a slow monitor of its own, every 12 hours say.
 
 ### Usage this month
 
