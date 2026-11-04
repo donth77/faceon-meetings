@@ -6,7 +6,7 @@ This guide sets up your own copy of FaceOn on free plans:
 - Neon keeps the database.
 - Stream carries the audio and video.
 - Google and GitHub handle sign-in.
-- Resend sends account emails, if you want email-and-password accounts.
+- Resend sends account emails, if you want email-and-password accounts, with Mailtrap as an optional backup.
 
 Plan on about an hour. You need [Node.js](https://nodejs.org) 24, [pnpm](https://pnpm.io) 10 and git on your computer, because a few setup commands run from there.
 
@@ -14,14 +14,15 @@ The examples use `https://faceon.example.com` as the address. Use your own. [`.e
 
 ## What you need
 
-| Service                                          | What FaceOn uses it for                        | Free plan, at the time of writing                                                                                                                                                                                          |
-| ------------------------------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [GitHub](https://github.com)                     | Your copy of the code, and Sign in with GitHub | Free                                                                                                                                                                                                                       |
-| [Vercel](https://vercel.com/pricing) (Hobby)     | Hosting, and the daily cleanup                 | For personal, non-commercial use. Each month: 1M function invocations, 4 hours of active CPU, 100 GB of fast data transfer. Scheduled jobs run at most once a day                                                          |
-| [Neon](https://neon.com/pricing) (Free)          | The Postgres database                          | 1 GB per project and 100 CU-hours of compute a month; the database sleeps after 5 idle minutes. No card. Running out of compute suspends the database until the next month, without deleting anything                      |
-| [Stream](https://getstream.io/video/pricing/)    | Audio, video and screen sharing                | The Build plan: $100 of usage every month, no card. How many meeting minutes that covers depends on video quality and how many people join; FaceOn's limits ([step 9](#9-decide-who-hosts-and-set-limits)) keep usage down |
-| [Google Cloud](https://console.cloud.google.com) | Sign in with Google, and Google Calendar sync  | Free                                                                                                                                                                                                                       |
-| [Resend](https://resend.com/pricing), optional   | Emails for email-and-password accounts         | 3,000 emails a month, 100 a day. Needs a domain you own                                                                                                                                                                    |
+| Service                                           | What FaceOn uses it for                                         | Free plan, at the time of writing                                                                                                                                                                                          |
+| ------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GitHub](https://github.com)                      | Your copy of the code, and Sign in with GitHub                  | Free                                                                                                                                                                                                                       |
+| [Vercel](https://vercel.com/pricing) (Hobby)      | Hosting, and the daily cleanup                                  | For personal, non-commercial use. Each month: 1M function invocations, 4 hours of active CPU, 100 GB of fast data transfer. Scheduled jobs run at most once a day                                                          |
+| [Neon](https://neon.com/pricing) (Free)           | The Postgres database                                           | 1 GB per project and 100 CU-hours of compute a month; the database sleeps after 5 idle minutes. No card. Running out of compute suspends the database until the next month, without deleting anything                      |
+| [Stream](https://getstream.io/video/pricing/)     | Audio, video and screen sharing                                 | The Build plan: $100 of usage every month, no card. How many meeting minutes that covers depends on video quality and how many people join; FaceOn's limits ([step 9](#9-decide-who-hosts-and-set-limits)) keep usage down |
+| [Google Cloud](https://console.cloud.google.com)  | Sign in with Google, and Google Calendar sync                   | Free                                                                                                                                                                                                                       |
+| [Resend](https://resend.com/pricing), optional    | Emails for email-and-password accounts                          | 3,000 emails a month, 100 a day. Needs a domain you own                                                                                                                                                                    |
+| [Mailtrap](https://mailtrap.io/pricing), optional | A backup for account emails when Resend is at its limit or down | 4,000 emails a month, 150 a day. Needs a domain you own                                                                                                                                                                    |
 
 LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Turnstile), error reports (Sentry), uptime checks and backups are optional and free: [Protect and watch your copy](#protect-and-watch-your-copy-optional) sets them up.
 
@@ -29,13 +30,14 @@ LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Tur
 
 Estimates for a copy with FaceOn's default limits ([step 9](#9-decide-who-hosts-and-set-limits)). Stream's credit is usually the first limit; the database's awake hours come first if meetings are spread across the day. After a busy week, compare with the Usage pages on Vercel and Neon and Stream's dashboard.
 
-| Service       | Free each month                                                                                                                                                              | What FaceOn uses it for                                                                             | Roughly supports                                                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Stream        | $100 credit: 333,000 participant-minutes at $0.30 per 1,000 for audio and standard video; HD costs twice that and Full HD four times, by the resolution each person receives | Every minute each person is connected, camera on or off                                             | About 5,550 participant-hours at standard video (below)                                                                               |
-| Neon          | 100 CU-hours; the database sleeps after 5 idle minutes                                                                                                                       | Every page and API call that reads data                                                             | About 400 hours awake at the smallest size, roughly 13 hours a day                                                                    |
-| Vercel        | 1M function calls, 4 hours of active CPU, 1M CDN requests, 100 GB of transfer                                                                                                | Pages, API calls, the app's files, backgrounds, the effects and noise runtimes                      | Roughly 20,000–30,000 people joining a month; a first visit is about 1.5 MB, or 6–8 MB with a background, and later visits are cached |
-| Resend        | 3,000 emails, 100 a day                                                                                                                                                      | Account emails (verifying, password resets), meeting reminders, hosting requests and usage warnings | About 100 emails a day, shared by sign-ups and reminders                                                                              |
-| On the device | Nothing                                                                                                                                                                      | Backgrounds, noise suppression, AI notes                                                            | Unlimited                                                                                                                             |
+| Service            | Free each month                                                                                                                                                              | What FaceOn uses it for                                                                             | Roughly supports                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Stream             | $100 credit: 333,000 participant-minutes at $0.30 per 1,000 for audio and standard video; HD costs twice that and Full HD four times, by the resolution each person receives | Every minute each person is connected, camera on or off                                             | About 5,550 participant-hours at standard video (below)                                                                               |
+| Neon               | 100 CU-hours; the database sleeps after 5 idle minutes                                                                                                                       | Every page and API call that reads data                                                             | About 400 hours awake at the smallest size, roughly 13 hours a day                                                                    |
+| Vercel             | 1M function calls, 4 hours of active CPU, 1M CDN requests, 100 GB of transfer                                                                                                | Pages, API calls, the app's files, backgrounds, the effects and noise runtimes                      | Roughly 20,000–30,000 people joining a month; a first visit is about 1.5 MB, or 6–8 MB with a background, and later visits are cached |
+| Resend             | 3,000 emails, 100 a day                                                                                                                                                      | Account emails (verifying, password resets), meeting reminders, hosting requests and usage warnings | About 100 emails a day, shared by sign-ups and reminders                                                                              |
+| Mailtrap, optional | 4,000 emails, 150 a day                                                                                                                                                      | Account emails Resend can't send, never reminders                                                   | Another 150 emails a day once Resend's are used                                                                                       |
+| On the device      | Nothing                                                                                                                                                                      | Backgrounds, noise suppression, AI notes                                                            | Unlimited                                                                                                                             |
 
 | Meeting                                | Participant-minutes | Meetings a month within Stream's credit |
 | -------------------------------------- | ------------------- | --------------------------------------- |
@@ -118,7 +120,7 @@ For local development, a second branch keeps test data apart: **Branches → New
    - `pnpm stream:check` reports anything that differs from what FaceOn expects (exit code 1 if something does).
    - `pnpm stream:lockdown-test` proves the permission boundary against your app. It makes API calls only, no media, so it uses no meeting minutes.
 
-   After that, the daily cleanup checks the permissions every day, read only: if they stop matching, **Settings → Admin → Call permissions** says so, and the admins (`ADMIN_EMAILS`) get one email (that needs Resend). Run `pnpm stream:setup` again to put them back; FaceOn never changes them itself.
+   After that, the daily cleanup checks the permissions every day, read only: if they stop matching, **Settings → Admin → Call permissions** says so, and the admins (`ADMIN_EMAILS`) get one email (that needs Resend or Mailtrap). Run `pnpm stream:setup` again to put them back; FaceOn never changes them itself.
 
 For local development, a second Stream app (environment **Development**, with its own `cohost` role and `pnpm stream:setup`) keeps test calls out of production. Its keys go in `.env.local`.
 
@@ -172,6 +174,16 @@ Email-and-password accounts need email: FaceOn sends a link to verify the addres
 1. At [resend.com](https://resend.com), add a domain you own and the DNS records it shows, and wait until it's verified. A subdomain such as `mail.example.com` works.
 2. Create an API key with sending access.
 3. Set both `RESEND_API_KEY` and `EMAIL_FROM`, a sender on the verified domain such as `FaceOn <no-reply@mail.example.com>`.
+
+### A backup for when Resend can't send (Mailtrap, optional)
+
+Resend's free plan stops at 100 emails a day and 3,000 a month. With [Mailtrap](https://mailtrap.io) set up as well, an email that goes now is sent with Mailtrap when Resend refuses it for a limit, fails, or doesn't answer within 10 seconds. Once **Usage this month** shows Resend's day or month used up, Mailtrap is tried first, and Resend after it. Reminders always go through Resend, the one that can hold an email until it's due.
+
+1. In Mailtrap, open **Sending Domains**, add your domain (the one in `EMAIL_FROM` works), and add the DNS records it shows: a CNAME for verification and bounces, two CNAMEs for DKIM keys, and a DMARC record if your domain has none yet (one covers Resend and Mailtrap). They don't touch Resend's records. Leave out the tracking CNAME, and turn open and click tracking off for the domain, since FaceOn's emails don't track anyone. Then select **Verify**.
+2. Create an API token in **Settings → API Tokens** with access to that sending domain only.
+3. Set `MAILTRAP_API_KEY` to it. `MAILTRAP_FROM` is optional: the sender for Mailtrap's emails, when it isn't `EMAIL_FROM`.
+
+Without Resend, Mailtrap alone sends account emails, and there are no reminders.
 
 ## 8. Add the environment variables to Vercel
 
@@ -228,11 +240,11 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 `STREAM_WEBHOOK_URL` is only for the setup script; Vercel doesn't need it. `MEDIA_PROVIDERS` stays `stream`, the only provider so far.
 
-**Email** (optional): `RESEND_API_KEY` and `EMAIL_FROM`, from [step 7](#7-set-up-account-emails-resend-optional).
+**Email** (optional): `RESEND_API_KEY` and `EMAIL_FROM`, from [step 7](#7-set-up-account-emails-resend-optional), and for the backup `MAILTRAP_API_KEY` (sensitive), with `MAILTRAP_FROM` if its sender differs.
 
 **The daily cleanup:** `CRON_SECRET`, a new secret ([step 11](#11-check-the-daily-cleanup)); the cleanup also schedules reminder emails. `REMINDER_EMAILS_PER_DAY` is optional (50 by default).
 
-**Usage this month** (optional): `USAGE_STREAM_MINUTES`, `USAGE_EMAILS_PER_DAY`, `USAGE_EMAILS_PER_MONTH` and `USAGE_NEON_CU_HOURS` if your plans differ from the free ones, and `NEON_API_KEY` with `NEON_PROJECT_ID` for the database's meter ([Usage this month](#usage-this-month)).
+**Usage this month** (optional): `USAGE_STREAM_MINUTES`, `USAGE_EMAILS_PER_DAY`, `USAGE_EMAILS_PER_MONTH`, `USAGE_MAILTRAP_PER_DAY`, `USAGE_MAILTRAP_PER_MONTH` and `USAGE_NEON_CU_HOURS` if your plans differ from the free ones, and `NEON_API_KEY` with `NEON_PROJECT_ID` for the database's meter ([Usage this month](#usage-this-month)).
 
 **Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
 
@@ -268,7 +280,7 @@ Admins are the addresses in `ADMIN_EMAILS`, and only those: the app can't add or
 
 Admins can't delete, edit or sign in as anyone's account, and Settings → Admin shows nothing of anyone's meetings, notes or settings: only what a hosting decision needs (name, email, whether an account exists, the note sent with a request, and past answers). Each action is its own server function that checks the caller is an admin; there's no general user management. Everyone else gets a "page not found" there.
 
-Emails to admins, about answers and invitations go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear in Settings → Admin and invite links work, but nobody is emailed.
+Emails to admins, about answers and invitations go through Resend, or Mailtrap when Resend can't ([step 7](#7-set-up-account-emails-resend-optional)). Without either, requests still appear in Settings → Admin and invite links work, but nobody is emailed.
 
 ## 10. Legal pages
 
@@ -296,7 +308,7 @@ It answers with what it did, such as `"closedSessions": 0`. Scheduled runs don't
 
 ### Reminder emails (optional)
 
-People with an account can turn on **Email me before my meetings** in Settings → Notifications. The emails need only account emails ([step 7](#7-set-up-account-emails-resend-optional)) and the daily cleanup: nothing outside calls FaceOn on a timer. FaceOn hands each reminder to Resend ahead of time with its send time, up to two days ahead, whenever a meeting or someone's reminder settings change and again in the daily cleanup, and Resend holds it until it's due. A changed or cancelled meeting updates or cancels its waiting reminders.
+People with an account can turn on **Email me before my meetings** in Settings → Notifications. The emails need Resend ([step 7](#7-set-up-account-emails-resend-optional)), since Mailtrap can't hold an email until it's due, and the daily cleanup: nothing outside calls FaceOn on a timer. FaceOn hands each reminder to Resend ahead of time with its send time, up to two days ahead, whenever a meeting or someone's reminder settings change and again in the daily cleanup, and Resend holds it until it's due. A changed or cancelled meeting updates or cancels its waiting reminders.
 
 Each reminder goes once, and at most `REMINDER_EMAILS_PER_DAY` go a day (50 by default), counted by the day they're sent, which leaves room for account emails in Resend's free 100 a day; a day that's full gets no more. A meeting saved after its reminder time has passed gets no reminder. Every email has a link that turns them off, and mail apps offer the same in one click.
 
@@ -357,7 +369,7 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 
 ### Usage this month
 
-**Settings → Admin → Usage this month** shows how much of each free plan this month has used: Stream's participant-minutes (FaceOn's own count; Stream's dashboard is what's billed), emails today and this month (from Resend), Neon's compute hours, and a link to Vercel's usage page, since Vercel emails its own warnings. The daily cleanup emails the admins (`ADMIN_EMAILS`) once when a meter passes 80%, and again at 100%; that needs Resend.
+**Settings → Admin → Usage this month** shows how much of each free plan this month has used: Stream's participant-minutes (FaceOn's own count; Stream's dashboard is what's billed), emails today and this month (from Resend, and FaceOn's own count of Mailtrap's where it's the backup), Neon's compute hours, and a link to Vercel's usage page, since Vercel emails its own warnings. The daily cleanup emails the admins (`ADMIN_EMAILS`) once when a meter passes 80%, and again at 100%; that needs Resend or Mailtrap.
 
 The limits default to the free plans; set the `USAGE_*` settings if yours differ (0 means no limit). For Neon's meter, create a project-scoped API key in the Neon console (your organization's **Settings → API keys → Create new → Project-scoped**, for this project) and copy the project's ID from its **Settings → General** (it looks like `misty-river-12345678`; a branch's ID, `br-…`, won't work). Set them as `NEON_API_KEY` (sensitive) and `NEON_PROJECT_ID` in Vercel, and redeploy.
 
@@ -508,7 +520,7 @@ Then:
 2. **Stream:** run `pnpm stream:setup` again with `STREAM_WEBHOOK_URL=https://<new domain>/api/webhooks/stream`. It replaces the old webhook.
 3. **Google:** in the OAuth client, add the new JavaScript origin and `https://<new domain>/api/auth/callback/google`. Update the home page, privacy policy, terms and authorized domains under **Branding**.
 4. **GitHub:** change the OAuth app's homepage and callback to `https://<new domain>/api/auth/callback/github`. It has only one callback, so Sign in with GitHub stops working at the old address.
-5. **Resend:** nothing changes, unless your email domain does too.
+5. **Resend and Mailtrap:** nothing changes, unless your email domain does too.
 6. **Reminder emails:** nothing to do. The next daily cleanup reschedules waiting reminders with the new address.
 7. **Installed apps** belong to the address they were installed from. People who added FaceOn to their home screen or dock add it again from the new address.
 
@@ -522,9 +534,9 @@ Then:
 
 **GitHub says "The redirect_uri is not associated with this application".** The OAuth app's callback must be exactly `https://<your address>/api/auth/callback/github`, and each app has only one.
 
-**There's no email sign-up.** Production offers it only when both `RESEND_API_KEY` and `EMAIL_FROM` are set. Set them and redeploy.
+**There's no email sign-up.** Production offers it only when email is set up: both `RESEND_API_KEY` and `EMAIL_FROM`, or `MAILTRAP_API_KEY` with a sender. Set them and redeploy.
 
-**Verification emails don't arrive.** Check that the domain is verified in Resend, that `EMAIL_FROM` uses it, and Resend's logs.
+**Verification emails don't arrive.** Check that the domain is verified in Resend, that `EMAIL_FROM` uses it, and Resend's logs. With Mailtrap as the backup, check that the domain is verified there too, and its **Email Logs**.
 
 **Meetings stop after 15 minutes, or at 4 people.** Those are demo limits. Approve the address in Settings → Admin, or add it to `HOST_ALLOWLIST` or `ADMIN_EMAILS` and redeploy, and make sure it's verified.
 

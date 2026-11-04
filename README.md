@@ -75,13 +75,13 @@ The desktop app and the Google add-on have their own guides: [desktop/DEVELOPING
 
 FaceOn runs on free plans. [DEPLOY.md](DEPLOY.md) walks through every step, from the accounts to your own domain.
 
-| For             | Service                                 |
-| --------------- | --------------------------------------- |
-| Hosting         | [Vercel](https://vercel.com)            |
-| Database        | [Neon](https://neon.com)                |
-| Audio and video | [Stream](https://getstream.io)          |
-| Sign-in         | Google and GitHub                       |
-| Email sign-in   | [Resend](https://resend.com) (optional) |
+| For             | Service                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| Hosting         | [Vercel](https://vercel.com)                                                              |
+| Database        | [Neon](https://neon.com)                                                                  |
+| Audio and video | [Stream](https://getstream.io)                                                            |
+| Sign-in         | Google and GitHub                                                                         |
+| Email sign-in   | [Resend](https://resend.com), with [Mailtrap](https://mailtrap.io) as a backup (optional) |
 
 Optional:
 
