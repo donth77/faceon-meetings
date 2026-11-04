@@ -24,6 +24,13 @@ import { usageReport } from "@/lib/usage/usage";
  */
 export const instant = false;
 
+/**
+ * Never prefetched: only admins come here, now and then, and the page asks Resend, Neon
+ * and Stream for figures. A prefetch from Settings' other pages would start those
+ * requests and cut them off when it finished, which read as Resend not answering.
+ */
+export const prefetch = "force-disabled";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Admin");
   return { title: t("title") };
