@@ -207,10 +207,10 @@ function InvitationCard({
         <Copy aria-hidden="true" />
         {t("copyInvitation")}
       </Button>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          className="h-10 rounded-[10px]"
+          className="h-10 flex-auto rounded-[10px]"
           onPress={() =>
             window.open(invitation.googleLink, "_blank", "noopener")
           }
@@ -219,7 +219,7 @@ function InvitationCard({
         </Button>
         <Button
           variant="outline"
-          className="h-10 rounded-[10px]"
+          className="h-10 flex-auto rounded-[10px]"
           onPress={() =>
             window.open(invitation.outlookLink, "_blank", "noopener")
           }
@@ -228,7 +228,7 @@ function InvitationCard({
         </Button>
         <Button
           variant="outline"
-          className="h-10 rounded-[10px]"
+          className="h-10 flex-auto rounded-[10px]"
           onPress={invitation.downloadIcs}
         >
           {t("icsFile")}

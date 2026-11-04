@@ -6,7 +6,8 @@ FaceOn speaks English (the source, `en.json`), Spanish (`es`), Portuguese (Brazi
 
 - **Plain and natural.** Write the way a careful native speaker would say it, not word for word from English. Short sentences, everyday words.
 - **Placeholders stay as they are:** `{appName}`, `{name}`, `{count, plural, …}`, `{role, select, …}` and tags like `<terms>…</terms>`. Translate the words inside plural and select branches, never the keywords or the argument names. Each language gives the plural forms its grammar has (Japanese has only `other`).
-- **Product and proper names stay:** FaceOn (`{appName}`), Google Calendar, Gmail, Stream, Chrome, Microsoft Authenticator, GitHub, Resend.
+- **Product and proper names stay:** FaceOn (`{appName}`), Gmail, Stream, Chrome, Microsoft Authenticator, GitHub, Resend.
+- **Google Calendar** goes by the name Google gives it in each language: Google Calendar (es), Google Agenda (pt-BR and fr), Google Kalender (de), Google カレンダー (ja). The add-on's Calendar option stays “{appName} meeting”, as Google shows it.
 - **Dates, times and numbers** come from `Intl` in the code; never write them into a message.
 - **Typography:** each language's own quotation marks and spacing (`« … »` with narrow spaces in French, `„…“` in German, `「…」` in Japanese), and the ellipsis character `…`.
 - **Longer text is fine.** Controls make room for labels about 35% longer than English, but prefer the shorter of two equally clear wordings, especially on buttons.

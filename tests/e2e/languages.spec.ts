@@ -132,17 +132,18 @@ function nativeName(locale: string): string {
 test.describe("choosing a language", () => {
   test.skip(!other, "FaceOn ships only English so far");
 
+  // Asked of the server directly: in the browser, the page's own locale would win
+  // over an extra Accept-Language header.
   test("follows the browser's languages, a regional variant included", async ({
-    people,
+    request,
   }) => {
-    const visitor = await people.guest();
-    const { page } = visitor;
-    await page.setExtraHTTPHeaders({
-      "accept-language": `sv-SE,${other!.split("-")[0]}-ZZ;q=0.8,en;q=0.5`,
+    const response = await request.get("/help", {
+      headers: {
+        "accept-language": `sv-SE,${other!.split("-")[0]}-ZZ;q=0.8,en;q=0.5`,
+      },
     });
-    await page.goto("/help");
-    await expect(page.locator("html")).toHaveAttribute("lang", other!);
-    expectNoErrors(visitor);
+    expect(response.ok()).toBe(true);
+    expect(await response.text()).toContain(`<html lang="${other}"`);
   });
 
   test("the language menu switches, and the choice stays", async ({
