@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   alertKey,
   alertsDue,
+  allowanceSpent,
   dayBefore,
   emailsByDay,
+  emailsUsed,
   meterStatus,
   participantMinutes,
   quotaHeader,
@@ -197,6 +199,28 @@ describe("warnings", () => {
     expect(alertsDue([{ ...stream(9_999_999), limit: 0 }], new Set())).toEqual(
       [],
     );
+  });
+});
+
+describe("email allowances", () => {
+  it("counts the larger of FaceOn's and Resend's email counts", () => {
+    expect(emailsUsed({ sent: 4, resend: null })).toBe(4);
+    expect(emailsUsed({ sent: 4, resend: 9 })).toBe(9);
+    expect(emailsUsed({ sent: 12, resend: 9 })).toBe(12);
+  });
+
+  it("is used up once a day's or the month's emails reach their limit", () => {
+    const limits = { perDay: 100, perMonth: 3000 };
+    const counts = (today: number, month: number) => ({
+      today: { sent: today, resend: null },
+      month: { sent: 0, resend: month },
+    });
+    expect(allowanceSpent(counts(99, 2999), limits)).toBe(false);
+    expect(allowanceSpent(counts(100, 2999), limits)).toBe(true);
+    expect(allowanceSpent(counts(12, 3000), limits)).toBe(true);
+    expect(
+      allowanceSpent(counts(5000, 90_000), { perDay: 0, perMonth: 0 }),
+    ).toBe(false);
   });
 });
 

@@ -4,8 +4,16 @@ import { and, eq, gte, isNotNull, lt, sql, sum } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { emailDay } from "@/lib/db/schema";
+import { serverEnv } from "@/lib/server-env";
 
-import { dayBefore, quotaHeader, utcDay, utcMonth } from "./meters";
+import {
+  allowanceSpent,
+  dayBefore,
+  quotaHeader,
+  utcDay,
+  utcMonth,
+  type EmailCount,
+} from "./meters";
 import { freshResendCounts, type Listing } from "./resend";
 
 /**
@@ -60,9 +68,6 @@ export async function uncountEmail(goesAt: Date): Promise<void> {
     .where(eq(emailDay.day, utcDay(goesAt)));
 }
 
-/** A count of emails: FaceOn's own, and Resend's when it reported one. */
-export type EmailCount = { sent: number; resend: number | null };
-
 export type EmailUsage = {
   /** Today (UTC). */
   today: EmailCount;
@@ -90,6 +95,24 @@ export async function emailUsage(
   force = false,
 ): Promise<EmailUsage> {
   const listing = await freshResendCounts(now, force);
+  return { ...(await savedCounts(now)), listing };
+}
+
+/**
+ * Whether Resend's free allowance is used up, today's or the month's, by the counts
+ * already saved (Resend isn't asked): emails that go now then try the next provider first
+ * (lib/email/send.ts).
+ */
+export async function resendSpent(now = new Date()): Promise<boolean> {
+  const env = serverEnv();
+  return allowanceSpent(await savedCounts(now), {
+    perDay: env.USAGE_EMAILS_PER_DAY,
+    perMonth: env.USAGE_EMAILS_PER_MONTH,
+  });
+}
+
+/** The counts as saved, without asking Resend for newer ones. */
+async function savedCounts(now: Date): Promise<Omit<EmailUsage, "listing">> {
   const today = utcDay(now);
   const yesterday = dayBefore(today);
   const month = utcMonth(now);
@@ -139,7 +162,6 @@ export async function emailUsage(
     account: latest?.resendAt
       ? { via: latest.resendVia ?? "headers", at: latest.resendAt }
       : null,
-    listing,
   };
 }
 

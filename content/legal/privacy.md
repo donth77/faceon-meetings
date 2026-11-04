@@ -110,6 +110,7 @@ If you use {appName}'s app for Mac or Windows, it keeps on your computer its set
 - **Neon** hosts the database.
 - **Stream** runs the meetings. It carries audio, video, screen sharing, chat and reactions, and the text for AI notes on its way to the host taking them. It keeps the name and picture each person uses in meetings and a record of each call and who was in it, and it handles the technical details needed to connect you, such as your IP address and connection quality.
 - **Resend** sends account emails, such as verifying your address or resetting your password, and the meeting reminder emails you turn on, holding each reminder until it's due (up to two days).
+- **Mailtrap**, if {appName} sets it up as a backup, sends the account emails Resend can't, such as when Resend has reached its daily or monthly limit or is down. Like Resend, it receives your email address and the email. It never sends reminders.
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
 - **GitHub** hosts the desktop app's downloads and updates. It sees your IP address when the app checks for an update or you download it.
 - **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations. **Google Workspace**, if you use {appName}'s add-on: Google runs it, as described above.

@@ -5,7 +5,7 @@ import type { Locale } from "next-intl";
 
 import { db } from "@/lib/db";
 import { usageAlert, user } from "@/lib/db/schema";
-import { sendEmail, type Email } from "@/lib/email/send";
+import { canSendEmail, sendEmail, type Email } from "@/lib/email/send";
 import { accountEmail, emailLocale } from "@/lib/email/templates";
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
@@ -78,10 +78,11 @@ export async function warnAboutUsage(now = new Date()): Promise<number> {
   // The daily check asks Resend and Neon afresh, whatever the page asked lately, so
   // every figure is at most a day old even when nobody opens Settings → Admin.
   const readings = readingsOf(await usageReport(now, true));
-  const canEmail =
-    process.env.NODE_ENV === "development" ||
-    Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
-  if (env.ADMIN_EMAILS.length === 0 || !canEmail || readings.length === 0) {
+  if (
+    env.ADMIN_EMAILS.length === 0 ||
+    !canSendEmail() ||
+    readings.length === 0
+  ) {
     return 0;
   }
   const sentRows = await db()

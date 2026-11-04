@@ -5,8 +5,13 @@ import type { ReactNode } from "react";
 
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
-import { meterStatus, usedShare, type MeterStatus } from "@/lib/usage/meters";
-import { emailsUsed, type UsageReport } from "@/lib/usage/usage";
+import {
+  emailsUsed,
+  meterStatus,
+  usedShare,
+  type MeterStatus,
+} from "@/lib/usage/meters";
+import type { UsageReport } from "@/lib/usage/usage";
 
 import { AdminCard } from "./admin-card";
 import { UsageAnchor } from "./usage-anchor";

@@ -69,6 +69,13 @@ const ServerEnv = z.object({
   RESEND_API_KEY: z.string().optional(),
   /** The sender, e.g. "FaceOn <no-reply@mail.example.com>", on a domain verified in Resend. */
   EMAIL_FROM: z.string().optional(),
+  /**
+   * Mailtrap's sending API token, a backup for emails that go now (lib/email/send.ts): used
+   * when Resend is at its limit or down. It can't schedule, so reminders stay with Resend.
+   */
+  MAILTRAP_API_KEY: z.string().optional(),
+  /** Mailtrap's sender, on a domain verified in Mailtrap; EMAIL_FROM when not set. */
+  MAILTRAP_FROM: z.string().optional(),
   /** Google Calendar sync for hosts who connect it ("on" or "off"); off leaves the calendar links. */
   GOOGLE_CALENDAR_SYNC: z.enum(["on", "off"]).default("on"),
   /**

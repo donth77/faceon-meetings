@@ -3,55 +3,125 @@ import "server-only";
 import { waitUntil } from "@vercel/functions";
 
 import { reportError } from "@/lib/monitoring/report";
-import { serverEnv } from "@/lib/server-env";
-import { recordSentEmail } from "@/lib/usage/emails";
+import { recordSentEmail, resendSpent } from "@/lib/usage/emails";
 import { z } from "@/lib/zod";
 
-export type Email = {
-  to: string;
-  subject: string;
-  text: string;
-  html: string;
-  /** Extra headers, such as List-Unsubscribe on reminder emails. */
-  headers?: Record<string, string>;
-};
+import {
+  emailProviders,
+  RESEND_API,
+  resendConfig,
+  shouldFallBack,
+  type Email,
+  type Outcome,
+  type Provider,
+  type SendOptions,
+} from "./providers";
+
+export type { Email } from "./providers";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-/** Resend is set up: both the API key and a sender on a verified domain. */
-function resendConfig(): { apiKey: string; from: string } | null {
-  const { RESEND_API_KEY, EMAIL_FROM } = serverEnv();
-  return RESEND_API_KEY && EMAIL_FROM
-    ? { apiKey: RESEND_API_KEY, from: EMAIL_FROM }
-    : null;
+/**
+ * Whether emails can go: a provider is set up, or this is development, where emails
+ * print to the server log instead.
+ */
+export function canSendEmail(): boolean {
+  return isDevelopment || emailProviders().length > 0;
+}
+
+/** Whether emails can be held until a set time, as reminders are: Resend can, Mailtrap can't. */
+export function canScheduleEmail(): boolean {
+  return (
+    isDevelopment || emailProviders().some((provider) => provider.schedules)
+  );
+}
+
+/** Whether email sign-up and sign-in are offered. They need email delivery. */
+export function emailPasswordEnabled(): boolean {
+  return canSendEmail();
 }
 
 /**
- * Whether email sign-up and sign-in are offered. They need email delivery; development
- * always has it, because emails print to the server log there.
+ * The providers to try, in two rounds. An email with a time goes only to those that can
+ * schedule it. One that goes now tries Resend last once the counts say its free allowance
+ * is used up, today's or the month's, so a full day doesn't cost a refusal per email;
+ * that last round is tried whatever happened before, since the counts can be behind (a
+ * bigger plan, say).
  */
-export function emailPasswordEnabled(): boolean {
-  return isDevelopment || resendConfig() !== null;
+async function roundsFor(
+  options: SendOptions,
+): Promise<[Provider[], Provider[]]> {
+  const providers = emailProviders().filter(
+    (provider) => provider.schedules || !options.scheduledAt,
+  );
+  const resend = providers.filter((provider) => provider.id === "resend");
+  const others = providers.filter((provider) => provider.id !== "resend");
+  if (resend.length === 0 || others.length === 0) return [providers, []];
+  const spent = await resendSpent().catch((error: unknown) => {
+    reportError("Couldn't read the email counts", error);
+    return false;
+  });
+  return spent ? [others, resend] : [providers, []];
 }
 
-const RESEND_API = "https://api.resend.com";
+type Attempt = { provider: Provider; outcome: Outcome & { ok: false } };
 
-/** Resend's answer to a new email: its ID. */
-const Sent = z.object({ id: z.string().min(1).max(200) });
+/** A provider that couldn't be reached: offline, or too slow to answer. */
+const UNREACHABLE: Attempt["outcome"] = {
+  ok: false,
+  failure: "unavailable",
+  status: null,
+};
+
+/**
+ * Tries each provider in turn until one takes the email, moving on past a limit or an
+ * outage but not a refusal. Notes every failure in `failed`.
+ */
+async function firstToSend(
+  providers: readonly Provider[],
+  email: Email,
+  options: SendOptions,
+  failed: Attempt[],
+): Promise<{ provider: Provider; id: string | null; headers: Headers } | null> {
+  for (const provider of providers) {
+    const outcome = await provider
+      .send(email, options)
+      .catch(() => UNREACHABLE);
+    if (outcome.ok) {
+      return { provider, id: outcome.id, headers: outcome.headers };
+    }
+    failed.push({ provider, outcome });
+    if (!shouldFallBack(outcome.failure)) break;
+  }
+  return null;
+}
+
+/** "Resend refused it (HTTP 429)", or "Mailtrap couldn't be reached". */
+const described = ({ provider, outcome }: Attempt) =>
+  outcome.status === null
+    ? `${provider.name} couldn't be reached`
+    : `${provider.name} refused it (HTTP ${outcome.status})`;
 
 /**
  * Sends an email now, or at `scheduledAt` (Resend holds it until then; up to 30 days
- * ahead). `idempotencyKey` makes a retry return the email the first try made rather than a
- * second one. Gives Resend's ID for it; null in development, where emails print to the
- * server log instead.
+ * ahead), with the first provider that takes it: Resend, or Mailtrap when Resend is at
+ * its limit or down (roundsFor). `idempotencyKey` makes a retry return the email the
+ * first try made rather than a second one. Gives the provider's ID for it; null in
+ * development without a provider, where emails print to the server log instead.
  */
 export async function sendEmail(
   email: Email,
-  options: { scheduledAt?: Date; idempotencyKey?: string } = {},
+  options: SendOptions = {},
 ): Promise<string | null> {
-  const resend = resendConfig();
-  if (!resend) {
-    if (!isDevelopment) throw new Error("Email delivery isn't configured.");
+  const [first, last] = await roundsFor(options);
+  if (first.length === 0 && last.length === 0) {
+    if (!isDevelopment) {
+      throw new Error(
+        options.scheduledAt
+          ? "No email provider set up here can schedule an email."
+          : "Email delivery isn't configured.",
+      );
+    }
     const when = options.scheduledAt
       ? `\n[email] Sends at: ${options.scheduledAt.toISOString()}`
       : "";
@@ -60,39 +130,42 @@ export async function sendEmail(
     );
     return null;
   }
-  const response = await fetch(`${RESEND_API}/emails`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resend.apiKey}`,
-      "Content-Type": "application/json",
-      ...(options.idempotencyKey
-        ? { "Idempotency-Key": options.idempotencyKey }
-        : {}),
-    },
-    body: JSON.stringify({
-      from: resend.from,
-      to: [email.to],
-      subject: email.subject,
-      text: email.text,
-      html: email.html,
-      ...(email.headers ? { headers: email.headers } : {}),
-      ...(options.scheduledAt
-        ? { scheduled_at: options.scheduledAt.toISOString() }
-        : {}),
-    }),
-  });
-  if (!response.ok) {
-    throw new Error(`Resend refused an email (HTTP ${response.status}).`);
+  const failed: Attempt[] = [];
+  const sent =
+    (await firstToSend(first, email, options, failed)) ??
+    (await firstToSend(last, email, options, failed));
+  if (!sent) {
+    throw new Error(
+      `An email couldn't be sent: ${failed.map(described).join("; ")}.`,
+    );
+  }
+  for (const attempt of failed) {
+    // A limit is expected (the usage meter warns about it); an outage or a refusal isn't.
+    if (attempt.outcome.failure === "quota") {
+      console.warn(
+        `[email] ${described(attempt)}; ${sent.provider.name} sent it.`,
+      );
+    } else {
+      reportError(
+        "An email provider failed, so another sent the email",
+        undefined,
+        {
+          provider: attempt.provider.id,
+          status: attempt.outcome.status ?? "unreachable",
+        },
+      );
+    }
   }
   // Counted for Settings → Admin → Usage this month, on the day it goes, with the counts
   // Resend reports; a count that fails to save never fails the email.
-  await recordSentEmail(response.headers, options.scheduledAt).catch(
-    (error: unknown) => {
-      reportError("Couldn't count a sent email", error);
-    },
-  );
-  const sent = Sent.safeParse(await response.json().catch(() => null));
-  return sent.success ? sent.data.id : null;
+  if (sent.provider.id === "resend") {
+    await recordSentEmail(sent.headers, options.scheduledAt).catch(
+      (error: unknown) => {
+        reportError("Couldn't count a sent email", error);
+      },
+    );
+  }
+  return sent.id;
 }
 
 /** Where a scheduled email stands, as Resend reports it. */
@@ -101,7 +174,8 @@ const Status = z.object({ last_event: z.string().max(50).nullish() });
 /**
  * Cancels a scheduled email: "cancelled" once it won't go (or Resend has no such email),
  * "sent" when it already went, or "retry" when Resend couldn't be asked, or the email is
- * so new that Resend hasn't finished scheduling it. Cancelling twice is fine.
+ * so new that Resend hasn't finished scheduling it. Cancelling twice is fine. Only Resend
+ * schedules, so only Resend cancels.
  */
 export async function cancelScheduledEmail(
   id: string,

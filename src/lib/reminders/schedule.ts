@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import {
   cancelScheduledEmail,
-  emailPasswordEnabled as canSendEmail,
+  canScheduleEmail,
   sendEmail,
   type Email,
 } from "@/lib/email/send";
@@ -194,7 +194,7 @@ async function reconcilePerson(
 ): Promise<Map<number, number>> {
   const secret = serverEnv().BETTER_AUTH_SECRET;
   const recipient =
-    secret && canSendEmail() ? await reminderRecipient(userId) : null;
+    secret && canScheduleEmail() ? await reminderRecipient(userId) : null;
   const wanted =
     recipient && secret ? await wantedFor(recipient, now, secret) : [];
   const scheduled = (await remindersOf(userId, now)).map((record) => ({

@@ -152,6 +152,27 @@ export function quotaHeader(value: string | null): number | null {
   return Number.isSafeInteger(count) && count >= 0 ? count : null;
 }
 
+/** A count of emails: FaceOn's own, and Resend's when it reported one. */
+export type EmailCount = { sent: number; resend: number | null };
+
+/** How many emails count against a limit: FaceOn's, or Resend's where it says more. */
+export const emailsUsed = (count: EmailCount) =>
+  Math.max(count.sent, count.resend ?? 0);
+
+/**
+ * Whether an email allowance is used up, today's or the month's (a limit of 0 is none):
+ * emails that go now then try the next provider first (lib/email/send.ts).
+ */
+export function allowanceSpent(
+  counts: { today: EmailCount; month: EmailCount },
+  limits: { perDay: number; perMonth: number },
+): boolean {
+  return (
+    meterStatus(emailsUsed(counts.today), limits.perDay) === "over" ||
+    meterStatus(emailsUsed(counts.month), limits.perMonth) === "over"
+  );
+}
+
 /**
  * One of the account's emails as Resend lists them: when it was made, when it's
  * scheduled to go (if it is), whether it was cancelled, and how many recipients it has

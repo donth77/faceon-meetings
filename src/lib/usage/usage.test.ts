@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { readNeonProject } from "./neon";
-import { emailsUsed, readingsOf, type UsageReport } from "./usage";
+import { readingsOf, type UsageReport } from "./usage";
 
 const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
   month: "2026-11",
@@ -66,12 +66,6 @@ describe("Neon's project details", () => {
 });
 
 describe("what the daily sweep checks", () => {
-  it("counts the larger of FaceOn's and Resend's email counts", () => {
-    expect(emailsUsed({ sent: 4, resend: null })).toBe(4);
-    expect(emailsUsed({ sent: 4, resend: 9 })).toBe(9);
-    expect(emailsUsed({ sent: 12, resend: 9 })).toBe(12);
-  });
-
   it("reads every meter that's set up", () => {
     expect(readingsOf(report())).toEqual([
       { meter: "stream", period: "2026-11", used: 1200.5, limit: 333_000 },

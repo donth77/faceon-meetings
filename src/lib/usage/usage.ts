@@ -2,8 +2,8 @@ import "server-only";
 
 import { serverEnv } from "@/lib/server-env";
 
-import { emailUsage, type EmailCount, type EmailUsage } from "./emails";
-import { utcMonth, type Reading } from "./meters";
+import { emailUsage, type EmailUsage } from "./emails";
+import { emailsUsed, utcMonth, type EmailCount, type Reading } from "./meters";
 import { neonUsage, type NeonUsage } from "./neon";
 import type { Listing } from "./resend";
 import { streamMinutesThisMonth } from "./stream";
@@ -36,10 +36,6 @@ export type UsageReport = {
   };
   neon: NeonUsage & { limit: number };
 };
-
-/** How many emails count against a limit: FaceOn's, or Resend's where it says more. */
-export const emailsUsed = (count: EmailCount) =>
-  Math.max(count.sent, count.resend ?? 0);
 
 /**
  * This month's usage of each free allowance, with the allowances themselves. What comes
