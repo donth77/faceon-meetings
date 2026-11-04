@@ -1,18 +1,19 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { createContext, use, useEffect, useState, type ReactNode } from "react";
 
-import {
-  Dialog,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { isAppleDevice, isTypingTarget } from "@/lib/platform";
 import { loadPreferences, withDefaults } from "@/lib/preferences";
 
-import { ShortcutsList } from "./shortcuts-list";
+/**
+ * The dialog's code (and the dialog component it's built on) loads the first time it
+ * opens, not with every page.
+ */
+const ShortcutsPanel = dynamic(
+  () => import("./shortcuts-panel").then((module) => module.ShortcutsPanel),
+  { ssr: false },
+);
 
 const OpenShortcutsContext = createContext<() => void>(() => {});
 
@@ -24,8 +25,14 @@ export const useOpenShortcuts = () => use(OpenShortcutsContext);
  * Gmail, Meet and GitHub. Keys show for the person's platform.
  */
 export function ShortcutsProvider({ children }: { children: ReactNode }) {
-  const t = useTranslations("Shortcuts");
   const [open, setOpen] = useState(false);
+  // Kept once it has opened, so it can close the way it opened.
+  const [wanted, setWanted] = useState(false);
+
+  function show() {
+    setWanted(true);
+    setOpen(true);
+  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -38,6 +45,7 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
         withDefaults(loadPreferences()).singleKeyShortcuts;
       if (question || (primary && event.key === "/")) {
         event.preventDefault();
+        setWanted(true);
         setOpen(true);
       }
     }
@@ -46,22 +54,9 @@ export function ShortcutsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OpenShortcutsContext value={() => setOpen(true)}>
+    <OpenShortcutsContext value={show}>
       {children}
-      <Dialog
-        isOpen={open}
-        onOpenChange={setOpen}
-        className="sm:max-w-lg"
-        closeLabel={t("close")}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">
-            {t("title")}
-          </DialogTitle>
-          <DialogDescription>{t("description")}</DialogDescription>
-        </DialogHeader>
-        <ShortcutsList />
-      </Dialog>
+      {wanted ? <ShortcutsPanel isOpen={open} onOpenChange={setOpen} /> : null}
     </OpenShortcutsContext>
   );
 }
