@@ -793,6 +793,7 @@
       "stopped": "AI メモはオフです。",
       "dontTranscribe": "自分を文字起こししない",
       "dontTranscribeHelp": "あなたの発言はメモに含まれません",
+      "gotIt": "OK",
       "open": "AI メモを開く",
       "notInDemo": "デモ ミーティングでは AI メモを使えません。",
       "offForYou": "あなたが主催するミーティングでは、AI メモがオフになっています。設定でオンにすると、あなたか共同ホストがここで開始できます。",
@@ -1496,6 +1497,7 @@
       },
       "ownKey": "自分の AI キー",
       "ownKeyHelp": "AI プロバイダーが要約を作成します。料金はプロバイダーからあなたに請求され、{appName} には請求されません。",
+      "useOwnKey": "自分の AI キーを使う",
       "yourKey": "あなたの AI プロバイダー",
       "provider": "プロバイダー",
       "model": "モデル",
@@ -1758,6 +1760,7 @@
     "lineCount": "文字起こしは {count, plural, other {# 行}}です。",
     "engineOnDevice": "メモは、Chrome の組み込み AI を使ってこのコンピューター上で作成されます。",
     "engineOwnKey": "メモは、あなたのキーを使って {provider} が作成します。",
+    "inEnglish": "Chrome の組み込み AI はまだ{language}でメモを作成できないため、このパソコンで作成するメモは英語になります。{language}のメモにするには、自分の AI キーを使ってください。",
     "firstDownload": "初回は Chrome によるダウンロードが必要です。数 GB あり、時間がかかることがあります。「ダウンロードしてメモを作成」を選択するまで、何もダウンロードされません。",
     "notReady": {
       "noKey": "AI メモの設定で {provider} のキーを追加してください。",

@@ -6,7 +6,7 @@ import { useSyncExternalStore } from "react";
  * dismissal lasts until the page reloads.
  */
 export type Dismissible =
-  "installCard" | "desktopAppCard" | "calendarSuggestion";
+  "installCard" | "desktopAppCard" | "calendarSuggestion" | "notesInEnglish";
 
 const listeners = new Set<() => void>();
 const thisVisit = new Set<Dismissible>();

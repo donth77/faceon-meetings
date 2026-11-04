@@ -5,12 +5,20 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
 
+import { EnglishNotesNotice } from "@/components/notes/english-notes-notice";
 import { NotesMaker } from "@/components/notes/notes-maker";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import {
+  useOnDeviceModel,
+  useOnDeviceNotesInEnglish,
+} from "@/hooks/use-on-device-model";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
+import { dismiss, useDismissed } from "@/lib/dismissals";
 import type { NotesState } from "@/lib/media/types";
 import type { TranscriptionStatus } from "@/lib/meetings/events";
+import { preferredEngine } from "@/lib/notes/engines";
+import { useNotesSettings } from "@/lib/notes/settings";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
 
@@ -166,6 +174,18 @@ export function NotesPanel({
   const t = useTranslations("Meeting.notes");
   const tn = useTranslations("Notes");
   const [busy, setBusy] = useState(false);
+  // Notes made on this computer, in a language Chrome's AI doesn't write yet: said once
+  // they're on, until put away on this device.
+  const settings = useNotesSettings();
+  const onDevice = useOnDeviceModel();
+  const inEnglish = useOnDeviceNotesInEnglish();
+  const englishSeen = useDismissed("notesInEnglish", { hiddenOnServer: true });
+  const englishNotice =
+    isNotetaker &&
+    inEnglish &&
+    !englishSeen &&
+    preferredEngine(settings, onDevice ?? "none") === "onDevice";
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   async function change(on: boolean) {
     setBusy(true);
@@ -179,7 +199,29 @@ export function NotesPanel({
   let body;
   if (notes) {
     body = (
-      <div className="flex min-h-0 flex-1 flex-col gap-3 pb-1 text-sm leading-normal">
+      <div
+        ref={bodyRef}
+        tabIndex={-1}
+        className="flex min-h-0 flex-1 flex-col gap-3 pb-1 text-sm leading-normal outline-hidden"
+      >
+        {englishNotice ? (
+          <div className="px-5">
+            <EnglishNotesNotice
+              announce
+              actions={[
+                { label: tn("settings"), onPress: onOpenSettings },
+                {
+                  label: t("gotIt"),
+                  onPress: () => {
+                    // The notice goes, so focus moves to the panel first.
+                    bodyRef.current?.focus();
+                    dismiss("notesInEnglish");
+                  },
+                },
+              ]}
+            />
+          </div>
+        ) : null}
         <p className="px-5">
           {isNotetaker
             ? t("youTakeNotes")

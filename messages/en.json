@@ -793,6 +793,7 @@
       "stopped": "AI notes are off.",
       "dontTranscribe": "Don't transcribe me",
       "dontTranscribeHelp": "What you say stays out of the notes",
+      "gotIt": "Got it",
       "open": "Open AI notes",
       "notInDemo": "AI notes aren't available in demo meetings.",
       "offForYou": "AI notes are off for meetings you host. Turn them on in Settings, then you or a co-host can start them here.",
@@ -1496,6 +1497,7 @@
       },
       "ownKey": "Your own AI key",
       "ownKeyHelp": "Your AI provider writes the summary. They bill you, not {appName}.",
+      "useOwnKey": "Use your own AI key",
       "yourKey": "Your AI provider",
       "provider": "Provider",
       "model": "Model",
@@ -1758,6 +1760,7 @@
     "lineCount": "{count, plural, one {# line} other {# lines}} in the transcript.",
     "engineOnDevice": "Notes are made on this computer, with Chrome's built-in AI.",
     "engineOwnKey": "Notes are made by {provider}, with your key.",
+    "inEnglish": "Chrome's built-in AI can't write notes in {language} yet, so notes made on this computer will be in English. For notes in {language}, use your own AI key.",
     "firstDownload": "Chrome downloads it the first time: a few gigabytes, which can take a while. Nothing downloads until you select Download and make notes.",
     "notReady": {
       "noKey": "Add your {provider} key in AI notes settings.",

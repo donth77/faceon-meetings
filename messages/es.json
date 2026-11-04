@@ -793,6 +793,7 @@
       "stopped": "Las notas de IA están desactivadas.",
       "dontTranscribe": "No transcribirme",
       "dontTranscribeHelp": "Lo que dices queda fuera de las notas",
+      "gotIt": "Entendido",
       "open": "Abrir notas de IA",
       "notInDemo": "Las notas de IA no están disponibles en las reuniones de demostración.",
       "offForYou": "Las notas de IA están desactivadas en las reuniones que organizas. Actívalas en Configuración y luego tú o un coanfitrión podrán iniciarlas aquí.",
@@ -1496,6 +1497,7 @@
       },
       "ownKey": "Tu propia clave de IA",
       "ownKeyHelp": "Tu proveedor de IA escribe el resumen. Te cobra a ti, no a {appName}.",
+      "useOwnKey": "Usar tu propia clave de IA",
       "yourKey": "Tu proveedor de IA",
       "provider": "Proveedor",
       "model": "Modelo",
@@ -1758,6 +1760,7 @@
     "lineCount": "{count, plural, one {# línea} other {# líneas}} en la transcripción.",
     "engineOnDevice": "Las notas se crean en esta computadora, con la IA integrada de Chrome.",
     "engineOwnKey": "Las notas las crea {provider}, con tu clave.",
+    "inEnglish": "La IA integrada de Chrome todavía no escribe notas en {language}, así que las notas creadas en esta computadora estarán en inglés. Para tener notas en {language}, usa tu propia clave de IA.",
     "firstDownload": "Chrome la descarga la primera vez: unos cuantos gigabytes, lo que puede tardar. No se descarga nada hasta que selecciones Descargar y crear notas.",
     "notReady": {
       "noKey": "Agrega tu clave de {provider} en la configuración de Notas de IA.",

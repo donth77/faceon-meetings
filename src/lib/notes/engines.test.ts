@@ -69,6 +69,32 @@ describe("notesOnDevice", () => {
     );
   });
 
+  it("writes English where the model doesn't write the reader's language", async () => {
+    const model = fakeModel([JSON.stringify(notes("All set."))]);
+    model.api.availability = async (options) =>
+      options.expectedOutputs[0]?.languages[0] === "pt"
+        ? "unavailable"
+        : "available";
+    await run(model.api, "Ana (10:02): Oi.", "pt-BR").result;
+    expect(model.created[0]?.expectedOutputs).toEqual([
+      { type: "text", languages: ["en"] },
+    ]);
+    expect(model.created[0]?.initialPrompts?.[0]?.content).toContain(
+      "Write the notes in English.",
+    );
+  });
+
+  it("writes the reader's language where the model does", async () => {
+    const model = fakeModel([JSON.stringify(notes("Tout est prêt."))]);
+    await run(model.api, "Ana (10:02): Bonjour.", "fr").result;
+    expect(model.created[0]?.expectedOutputs).toEqual([
+      { type: "text", languages: ["fr"] },
+    ]);
+    expect(model.created[0]?.initialPrompts?.[0]?.content).toContain(
+      "Write the notes in French.",
+    );
+  });
+
   it("reads a long meeting in parts, then merges their notes", async () => {
     const paragraph = "x".repeat(6000);
     const transcript = [paragraph, paragraph, paragraph].join("\n\n");
@@ -84,14 +110,6 @@ describe("notesOnDevice", () => {
     expect(model.prompts[0]).toContain("This is part 1 of 3");
     expect(model.prompts[3]).toContain("Part 3: ");
     expect(progress.at(-1)).toEqual({ phase: "merging" });
-  });
-
-  it("writes in English where the model can't write the reader's language", async () => {
-    const model = fakeModel([JSON.stringify(notes("Ok."))]);
-    await run(model.api, "Hi.", "de").result;
-    expect(model.created[0]?.expectedOutputs).toEqual([
-      { type: "text", languages: ["en"] },
-    ]);
   });
 
   it("says so when the answer isn't notes", async () => {

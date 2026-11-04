@@ -33,18 +33,63 @@ export interface ModelApi {
 /** Where to read about the model and what it needs. */
 export const ABOUT_MODEL = "https://developer.chrome.com/docs/ai/built-in";
 
-/** The languages the model writes. */
-const WRITES = new Set(["en", "es", "ja"]);
+/**
+ * The languages Chrome documents the model writing, for when the model can't be asked:
+ * https://developer.chrome.com/docs/ai/prompt-api (more are on the way).
+ */
+const WRITES = new Set(["en", "es", "ja", "de", "fr"]);
 
 /** The browser's model, if it has one. */
 export function modelApi(): ModelApi | undefined {
   return (globalThis as { LanguageModel?: ModelApi }).LanguageModel;
 }
 
-/** The language the model writes for this locale, or null where it can't. */
+/** A locale's language as the model names languages: "pt" for pt-BR. */
+export const baseLanguage = (locale: string): string =>
+  (locale.split("-")[0] ?? locale).toLowerCase();
+
+/** The language the model writes for this locale, or null where Chrome says it can't. */
 export function modelLanguage(locale: string): string | null {
-  const language = locale.split("-")[0] ?? locale;
+  const language = baseLanguage(locale);
   return WRITES.has(language) ? language : null;
+}
+
+/**
+ * Whether the model writes this language. The model is asked where it's here, since
+ * Chrome adds languages over time: unavailable for this language while not for English
+ * means it can't. Where it can't say (no model here at all), Chrome's documented list.
+ */
+export async function modelWrites(
+  api: ModelApi | undefined,
+  language: string,
+): Promise<boolean> {
+  if (language === "en") return true;
+  if (typeof api?.availability === "function") {
+    try {
+      const [own, english] = await Promise.all([
+        api.availability(optionsFor(language)),
+        api.availability(optionsFor("en")),
+      ]);
+      if (own !== "unavailable") return true;
+      if (english !== "unavailable") return false;
+    } catch {
+      // Asking failed: go by the documented list.
+    }
+  }
+  return WRITES.has(language);
+}
+
+/**
+ * The language notes made on this computer are written in: the person's own where the
+ * model writes it, else English. `inEnglish` says when that isn't the person's language.
+ */
+export function onDeviceNotesLanguage(
+  locale: string,
+  writes: boolean,
+): { language: string; inEnglish: boolean } {
+  const language = baseLanguage(locale);
+  if (writes || language === "en") return { language, inEnglish: false };
+  return { language: "en", inEnglish: true };
 }
 
 export const optionsFor = (

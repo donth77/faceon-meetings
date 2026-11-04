@@ -793,6 +793,7 @@
       "stopped": "KI-Notizen sind aus.",
       "dontTranscribe": "Mich nicht transkribieren",
       "dontTranscribeHelp": "Was Sie sagen, bleibt aus den Notizen heraus",
+      "gotIt": "Verstanden",
       "open": "KI-Notizen öffnen",
       "notInDemo": "KI-Notizen sind in Demo-Meetings nicht verfügbar.",
       "offForYou": "KI-Notizen sind für Ihre Meetings ausgeschaltet. Schalten Sie sie in den Einstellungen ein, dann können Sie oder ein Co-Host sie hier starten.",
@@ -1496,6 +1497,7 @@
       },
       "ownKey": "Ihr eigener KI-Schlüssel",
       "ownKeyHelp": "Ihr KI-Anbieter schreibt die Zusammenfassung. Er rechnet mit Ihnen ab, nicht mit {appName}.",
+      "useOwnKey": "Eigenen KI-Schlüssel verwenden",
       "yourKey": "Ihr KI-Anbieter",
       "provider": "Anbieter",
       "model": "Modell",
@@ -1758,6 +1760,7 @@
     "lineCount": "{count, plural, one {# Zeile} other {# Zeilen}} im Transkript.",
     "engineOnDevice": "Die Notizen entstehen auf diesem Computer, mit der integrierten KI von Chrome.",
     "engineOwnKey": "Die Notizen schreibt {provider}, mit Ihrem Schlüssel.",
+    "inEnglish": "Die integrierte KI von Chrome kann noch keine Notizen auf {language} schreiben, daher sind Notizen, die auf diesem Computer erstellt werden, auf Englisch. Für Notizen auf {language} verwenden Sie Ihren eigenen KI-Schlüssel.",
     "firstDownload": "Chrome lädt sie beim ersten Mal herunter: einige Gigabyte, was eine Weile dauern kann. Es wird nichts heruntergeladen, bevor Sie „Herunterladen und Notizen erstellen“ auswählen.",
     "notReady": {
       "noKey": "Fügen Sie Ihren {provider}-Schlüssel in den Einstellungen für KI-Notizen hinzu.",

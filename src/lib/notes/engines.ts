@@ -3,7 +3,9 @@
  * Chrome's built-in model, or with the host's own AI key, straight to its provider.
  */
 import {
-  modelLanguage,
+  baseLanguage,
+  modelWrites,
+  onDeviceNotesLanguage,
   optionsFor,
   type ModelApi,
   type ModelState,
@@ -75,7 +77,11 @@ export async function notesOnDevice(input: {
   signal: AbortSignal;
   onProgress: (progress: NotesProgress) => void;
 }): Promise<MeetingNotes> {
-  const language = modelLanguage(input.locale) ?? "en";
+  // The person's language where the model writes it, else English.
+  const { language } = onDeviceNotesLanguage(
+    input.locale,
+    await modelWrites(input.api, baseLanguage(input.locale)),
+  );
   const system = systemPrompt(language);
   const max = partSize(language);
 
