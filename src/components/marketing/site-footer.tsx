@@ -7,6 +7,7 @@ import { NewTabNote } from "@/components/ui/new-tab-note";
 import { translationIssueUrl } from "@/i18n/names";
 import { routing } from "@/i18n/routing";
 import { publicEnv } from "@/lib/env";
+import { repoHomeUrl } from "@/lib/repo";
 
 import { PUBLIC_CONTAINER } from "./layout";
 
@@ -53,7 +54,7 @@ export async function SiteFooter() {
           ) : null}
           {repo ? (
             <a
-              href={repo}
+              href={repoHomeUrl(repo)}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground inline-flex items-center gap-1.5 sm:ml-auto"

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useCapability } from "@/hooks/use-capability";
 import { publicEnv } from "@/lib/env";
 import type { HelpEntry, HelpSection } from "@/lib/help/sections";
+import { repoHomeUrl } from "@/lib/repo";
 
 import { HelpHeader } from "./help-header";
 
@@ -137,7 +138,7 @@ export function RepoLinks({ repoUrl }: { repoUrl: string }) {
         <span className="sr-only">{t("opensInNewTab")}</span>
       </a>
       <a
-        href={repo}
+        href={repoHomeUrl(repo)}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`${t("viewSource")} ${t("opensInNewTab")}`}
