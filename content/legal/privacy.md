@@ -13,7 +13,7 @@ updated: 2026-11-04
 
 - Your **name**, **email address** and **picture**. The picture is an avatar {appName} draws for you, or your Google or GitHub photo if you choose it. That photo is then loaded from Google or GitHub.
 - Your **password**, if you set one, stored only as a secure hash, never the password itself.
-- Which **sign-in methods** you've connected. When you sign in with Google or GitHub, {appName} receives your name, email address and photo from them, and keeps the sign-in tokens they send, encrypted.
+- Which **sign-in methods** you've connected. When you sign in with Google or GitHub, {appName} receives your name, email address and photo from them, and keeps the tokens they send for access to your account there, encrypted. Of the sign-in token Google sends, which says who you are, {appName} keeps only your Google account's email, so **Settings** can show which account it is.
 - Your **sign-in sessions**, with the IP address and browser each came from, so you stay signed in and sessions can be checked and ended.
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
 - Whether you've **used the desktop app**: when you first signed in to it, so {appName} stops suggesting it on **Home** in your browsers.
@@ -159,7 +159,7 @@ Depending on where you live, for example in the European Economic Area, the Unit
 
 ## Security
 
-Connections use HTTPS. Passwords are hashed, and the tokens Google and GitHub send are encrypted. Meeting links carry their passcode in a part of the address that browsers never send to servers. Only people a meeting lets in can connect to its call, and failed attempts are limited. No system is perfectly secure, which is one more reason {appName} keeps so little.
+Connections use HTTPS. Passwords are hashed, and the tokens {appName} keeps from Google and GitHub are encrypted. Meeting links carry their passcode in a part of the address that browsers never send to servers. Only people a meeting lets in can connect to its call, and failed attempts are limited. No system is perfectly secure, which is one more reason {appName} keeps so little.
 
 ## Changes
 

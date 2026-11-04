@@ -9,7 +9,6 @@ import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 
 import { googleClientConfigured } from "./client";
-import { idTokenEmail } from "./id-token";
 import { watchGoogleRefresh, type RefreshWatch } from "./refresh";
 import {
   GOOGLE_CALENDAR_SCOPE,
@@ -42,7 +41,7 @@ async function googleAccountWith(
       googleSub: account.accountId,
       scope: account.scope,
       refreshToken: account.refreshToken,
-      idToken: account.idToken,
+      providerEmail: account.providerEmail,
       updatedAt: account.updatedAt,
     })
     .from(account)
@@ -73,25 +72,26 @@ export async function calendarConnection(person: {
   return found.refreshToken
     ? {
         status: "connected",
-        email: idTokenEmail(found.idToken) ?? person.email,
+        email: found.providerEmail ?? person.email,
       }
     : { status: "reconnect" };
 }
 
 /**
  * The email of someone's linked Google account (the latest, if they somehow linked more
- * than one), for Settings to show; null without one, or when Google didn't say.
+ * than one), for Settings to show; null without one, or when Google didn't say. It's
+ * the email from the account's ID token, which isn't kept (`withoutIdToken`).
  */
 export async function googleAccountEmail(
   userId: string,
 ): Promise<string | null> {
   const [latest] = await db()
-    .select({ idToken: account.idToken })
+    .select({ email: account.providerEmail })
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.providerId, "google")))
     .orderBy(desc(account.updatedAt))
     .limit(1);
-  return idTokenEmail(latest?.idToken);
+  return latest?.email ?? null;
 }
 
 /** Whether someone gave FaceOn `scope` with a grant it can still use. */

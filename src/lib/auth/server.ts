@@ -18,6 +18,7 @@ import {
   type AccountEmail,
 } from "@/lib/email/templates";
 import { publicEnv } from "@/lib/env";
+import { withoutIdToken } from "@/lib/google-calendar/id-token";
 import { refreshGoogleToken } from "@/lib/google-calendar/refresh";
 import {
   GOOGLE_SCRIPT_SCOPE,
@@ -111,7 +112,19 @@ export const auth = betterAuth({
   account: {
     // Which provider accounts may join which FaceOn account (lib/auth/linking-rules.ts).
     accountLinking: ACCOUNT_LINKING,
+    // Access and refresh tokens are kept encrypted. ID tokens aren't kept at all, only
+    // the email in Google's (the account hooks below).
     encryptOAuthTokens: true,
+    additionalFields: {
+      // The Google account's own email, which can differ from the user's, for Settings
+      // to show (lib/google-calendar/connection.ts).
+      providerEmail: {
+        type: "string",
+        required: false,
+        input: false,
+        returned: false,
+      },
+    },
   },
   emailAndPassword: {
     // Needs email delivery: Resend, or the server log in development.
@@ -212,8 +225,11 @@ export const auth = betterAuth({
           if (created.providerId !== "credential") {
             await dropUnverifiedPassword(created.userId);
           }
+          return withoutIdToken(created);
         },
       },
+      // Signing in again and refreshing a token bring a new ID token: only its email stays.
+      update: { before: async (changed) => withoutIdToken(changed) },
       delete: {
         // Removing Google as a sign-in method also disconnects Google Calendar, and
         // forgets an add-on that Google account had.
