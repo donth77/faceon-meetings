@@ -5,7 +5,7 @@ import type { Locale } from "next-intl";
 
 import { db } from "@/lib/db";
 import { usageAlert, user } from "@/lib/db/schema";
-import { sendEmail, type Email } from "@/lib/email/send";
+import { canSendEmail, sendEmail, type Email } from "@/lib/email/send";
 import { accountEmail, emailLocale } from "@/lib/email/templates";
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
@@ -92,9 +92,7 @@ async function emailAdmins(provider: MediaProviderId, fix: string) {
  */
 export async function warnAboutMediaPermissions(): Promise<number> {
   const env = serverEnv();
-  const canEmail =
-    process.env.NODE_ENV === "development" ||
-    Boolean(env.RESEND_API_KEY && env.EMAIL_FROM);
+  const canEmail = canSendEmail();
   let warned = 0;
   for (const { provider, check } of await mediaPermissions()) {
     const warning = sentWarning(provider);
