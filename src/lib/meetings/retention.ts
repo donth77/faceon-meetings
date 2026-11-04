@@ -18,6 +18,8 @@ export const KEEP_DAYS = {
   hostingRequests: 90,
   /** Records of reminder emails sent, after the meeting's start (so none goes twice). */
   reminders: 2,
+  /** The usage meter's daily email counts and the usage warnings sent: counts only. */
+  usage: 62,
 } as const;
 
 /** The moment `days` days before `now`. */

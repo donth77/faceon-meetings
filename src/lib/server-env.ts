@@ -103,6 +103,25 @@ const ServerEnv = z.object({
   ALONE_TIMEOUT_MINUTES: z.coerce.number().int().min(0).default(10),
   /** Meetings one account may create in a day; stops bots from burning the free credit. */
   MEETINGS_PER_USER_PER_DAY: z.coerce.number().int().min(1).default(20),
+  /**
+   * Settings → Admin → Usage this month measures against these allowances, and warns the
+   * admins at 80% and 100% (lib/usage). 0 means no limit. Stream's free $100 a month is
+   * 333,000 participant-minutes of audio or SD video; Resend's free plan, 100 emails a
+   * day and 3,000 a month; Neon's Free plan, 100 compute hours (CU-hours) a month.
+   */
+  USAGE_STREAM_MINUTES: z.coerce.number().int().min(0).default(333_000),
+  USAGE_EMAILS_PER_DAY: z.coerce.number().int().min(0).default(100),
+  USAGE_EMAILS_PER_MONTH: z.coerce.number().int().min(0).default(3000),
+  USAGE_NEON_CU_HOURS: z.coerce.number().min(0).default(100),
+  /**
+   * Neon's API, for the database's compute hours on the usage meter: a project-scoped
+   * API key and the project's ID (its Settings → General). Without them, no meter.
+   */
+  NEON_API_KEY: z.string().optional(),
+  NEON_PROJECT_ID: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;

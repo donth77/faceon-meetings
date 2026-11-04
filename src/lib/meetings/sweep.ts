@@ -6,6 +6,8 @@ import { loggable } from "@/lib/log";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 import { reconcileAllReminders } from "@/lib/reminders/schedule";
 import { pruneSentReminders } from "@/lib/reminders/store";
+import { pruneUsageAlerts, warnAboutUsage } from "@/lib/usage/alerts";
+import { pruneEmailDays } from "@/lib/usage/emails";
 
 import { pruneAttendance, pruneWebhookEvents } from "./attendance";
 import {
@@ -31,6 +33,8 @@ import { pruneEndedSessionRequests } from "./waiting-room";
  *   counters and sign-in rate limits after a day, sign-in sessions once they expire,
  *   answered requests to host full meetings after 90 days, and the records of reminder
  *   emails two days after their meeting. The privacy policy promises these (retention.ts).
+ * - warns the admins when a free allowance (Stream, emails, Neon) reaches 80% and again
+ *   at 100% (lib/usage), and drops the usage meter's counts after two months.
  */
 export async function sweep(now = new Date()) {
   let closedSessions = 0;
@@ -71,5 +75,11 @@ export async function sweep(now = new Date()) {
       daysBefore(now, KEEP_DAYS.reminders),
     ),
     reminders: await reconcileAllReminders(now),
+    usageWarnings: await warnAboutUsage(now).catch((error: unknown) => {
+      console.error("Sweep could not check usage", loggable(error));
+      return 0;
+    }),
+    prunedEmailDays: await pruneEmailDays(daysBefore(now, KEEP_DAYS.usage)),
+    prunedUsageAlerts: await pruneUsageAlerts(daysBefore(now, KEEP_DAYS.usage)),
   };
 }

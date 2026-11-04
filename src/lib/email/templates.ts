@@ -11,8 +11,9 @@ import { escapeHtml } from "./html";
 import type { Email } from "./send";
 
 /**
- * The account emails FaceOn sends: signing up and passwords, and hosting full meetings
- * (to the admins when someone asks, and to the person when an admin answers).
+ * The account emails FaceOn sends: signing up and passwords, hosting full meetings (to
+ * the admins when someone asks, and to the person when an admin answers), and warning
+ * the admins when a free allowance runs low (lib/usage/alerts.ts).
  */
 export type AccountEmail =
   | "verify"
@@ -21,7 +22,8 @@ export type AccountEmail =
   | "existing"
   | "hostingAsked"
   | "hostingApproved"
-  | "hostingDeclined";
+  | "hostingDeclined"
+  | "usageAlert";
 
 /** The person's language when we know it and support it; otherwise the default. */
 export function emailLocale(user: object): Locale {

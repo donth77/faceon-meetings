@@ -260,7 +260,7 @@
   },
   "Admin": {
     "title": "Admin",
-    "subtitle": "Decide who hosts full meetings.",
+    "subtitle": "Decide who hosts full meetings, and see how much of the free plans is used.",
     "notAllowed": "Only admins can do that.",
     "tooManyTries": "Too many changes at once. Wait a minute, then try again.",
     "failed": "That didn’t work. Try again.",
@@ -318,6 +318,51 @@
       "title": "Admins",
       "pages": "Pages of admins",
       "body": "Admins come from ADMIN_EMAILS where {appName} is hosted. They decide who hosts full meetings, and can’t see or change anyone’s account, meetings or notes."
+    },
+    "usage": {
+      "title": "Usage this month",
+      "body": "How much of each service’s free plan {appName} has used, so nothing runs out by surprise. Admins get an email when one reaches 80%, and again at 100%.",
+      "near": "Near the limit",
+      "over": "Limit reached",
+      "underOnePercent": "under 1%",
+      "stream": {
+        "title": "Stream video minutes",
+        "value": "{used, number} of {limit, plural, one {# participant-minute} other {# participant-minutes}}",
+        "count": "{used, plural, one {# participant-minute} other {# participant-minutes}}, with no limit set",
+        "note": "{appName}’s own count: each person’s time in each call. Stream charges by the video people receive, with HD at twice the rate of audio and SD, so its dashboard is what’s billed.",
+        "dashboard": "Open Stream’s dashboard",
+        "off": "Stream isn’t set up, so there are no calls to count."
+      },
+      "emailsToday": {
+        "title": "Emails today (UTC)",
+        "resend": "{appName} sent {sent, number}. Resend counts {resend, plural, one {# email} other {# emails}} today, including anything else sent from the same Resend account."
+      },
+      "emailsMonth": {
+        "title": "Emails this month",
+        "resend": "{appName} sent {sent, number} this month. Resend counts {resend, plural, one {# email} other {# emails}} in its billing month, including anything else sent from the same Resend account."
+      },
+      "emailsValue": "{used, number} of {limit, plural, one {# email} other {# emails}}",
+      "emailsCount": "{used, plural, one {# email} other {# emails}}, with no limit set",
+      "emailsOwn": "{appName}’s own count of the {sent, plural, one {email} other {emails}} it sent.",
+      "emailsOff": {
+        "title": "Emails",
+        "body": "Resend isn’t set up, so {appName} sends no email."
+      },
+      "neon": {
+        "title": "Database compute (Neon)",
+        "value": "{used, number} of {limit, plural, one {# compute hour} other {# compute hours}}",
+        "count": "{used, plural, one {# compute hour} other {# compute hours}}, with no limit set",
+        "period": "Neon’s count for its billing period, {start} to {end}. When the hours run out, Neon pauses the database until the next period, and {appName} stops working until then.",
+        "note": "Neon’s count for its current billing period. When the hours run out, Neon pauses the database until the next one, and {appName} stops working until then.",
+        "setup": "To see this, create a project-scoped API key in Neon’s console (your organization’s Settings → API keys → Create new → Project-scoped), then set NEON_API_KEY and NEON_PROJECT_ID (the project’s Settings → General) where {appName} is hosted, and redeploy.",
+        "unavailable": "Neon didn’t answer just now. Reload the page to try again.",
+        "console": "Open Neon’s console"
+      },
+      "vercel": {
+        "title": "Hosting (Vercel)",
+        "body": "Vercel emails you itself as you near its free plan’s limits, so there’s nothing to count here.",
+        "link": "Open Vercel’s usage page"
+      }
     }
   },
   "Home": {
@@ -894,6 +939,13 @@
       "body": "Hi {name}, thanks for asking. For now, your meetings stay demo meetings: up to {minutes} minutes and {people} people. You can ask again in {days} days.",
       "action": "Open {appName}",
       "note": "You’re getting this because you asked to host full meetings on {appName}."
+    },
+    "usageAlert": {
+      "subject": "{appName}: {meter, select, stream {Stream video minutes} emailsDay {a day’s emails} emailsMonth {this month’s emails} neon {database compute} other {usage}} at {share, number, ::percent}",
+      "heading": "{meter, select, stream {Stream video minutes are at {share, number, ::percent}} emailsDay {A day’s emails reached {share, number, ::percent}} emailsMonth {This month’s emails are at {share, number, ::percent}} neon {Database compute is at {share, number, ::percent}} other {Usage is at {share, number, ::percent}}}",
+      "body": "{meter, select, stream {{appName} has used {used, number} of this month’s {limit, number} participant-minutes on Stream, by its own count. Stream charges HD video at twice that rate, so its dashboard may show more.} emailsDay {On {day, date, ::MMMMd}, {appName} sent {used, number} of the {limit, number} emails Resend allows in a day. Past the limit, Resend refuses emails until the next day (UTC), sign-up emails included.} emailsMonth {{appName} has sent {used, number} of the {limit, number} emails Resend allows this month. Past the limit, Resend refuses emails until the month is over, sign-up emails included.} neon {The database has used {used, number} of its {limit, number} compute hours this billing period. When they run out, Neon pauses it until the next period, and {appName} stops working until then.} other {{appName} has used {used, number} of {limit, number}.}}",
+      "action": "See usage",
+      "note": "You’re getting this because you’re an admin of {appName}. {next, select, full {You’ll hear again if it reaches 100%.} other {That’s the last email about it until the next {meter, select, neon {billing period} other {month}}.}}"
     }
   },
   "Help": {

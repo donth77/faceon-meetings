@@ -3,7 +3,9 @@ import "server-only";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
+import { loggable } from "@/lib/log";
 import { serverEnv } from "@/lib/server-env";
+import { recordSentEmail } from "@/lib/usage/emails";
 
 export type Email = {
   to: string;
@@ -82,6 +84,13 @@ export async function sendEmail(
   if (!response.ok) {
     throw new Error(`Resend refused an email (HTTP ${response.status}).`);
   }
+  // Counted for Settings → Admin → Usage this month, on the day it goes, with the counts
+  // Resend reports; a count that fails to save never fails the email.
+  await recordSentEmail(response.headers, options.scheduledAt).catch(
+    (error: unknown) => {
+      console.error("Couldn't count a sent email", loggable(error));
+    },
+  );
   const sent = Sent.safeParse(await response.json().catch(() => null));
   return sent.success ? sent.data.id : null;
 }

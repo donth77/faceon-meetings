@@ -169,6 +169,13 @@
       "when": 1793797070780,
       "tag": "0023_scheduled_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793798257640,
+      "tag": "0024_usage_meter",
+      "breakpoints": true
     }
   ]
 }

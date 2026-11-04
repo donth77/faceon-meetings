@@ -4,6 +4,8 @@ import { and, eq, gt, gte, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meeting, meetingInvitee, reminderSent, user } from "@/lib/db/schema";
+import { loggable } from "@/lib/log";
+import { uncountEmail } from "@/lib/usage/emails";
 
 import { remindersChanged } from "./changed";
 import { readEmailReminders, type EmailReminders } from "./rules";
@@ -196,9 +198,20 @@ export async function settleReminder(key: ReminderKey, now: Date) {
   await db().update(reminderSent).set({ sendAt: now }).where(keyIs(key));
 }
 
-/** Forgets a reminder email: cancelled, or never scheduled after all. */
+/**
+ * Forgets a reminder email: cancelled, or never scheduled after all. One Resend had no
+ * longer counts toward the day it was due (the usage meter, lib/usage/emails.ts).
+ */
 export async function forgetReminder(key: ReminderKey): Promise<void> {
-  await db().delete(reminderSent).where(keyIs(key));
+  const [forgotten] = await db()
+    .delete(reminderSent)
+    .where(keyIs(key))
+    .returning({ sendAt: reminderSent.sendAt, emailId: reminderSent.emailId });
+  if (forgotten?.emailId && forgotten.sendAt) {
+    await uncountEmail(forgotten.sendAt).catch((error: unknown) => {
+      console.error("Couldn't uncount a cancelled reminder", loggable(error));
+    });
+  }
 }
 
 /**

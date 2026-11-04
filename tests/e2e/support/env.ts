@@ -35,6 +35,12 @@ export function authSecret(): string {
   return secret;
 }
 
+/**
+ * The test admin's address: the server Playwright starts lists it in ADMIN_EMAILS, so a
+ * test can sign in as an admin by making an account with it (support/db.ts, createUser).
+ */
+export const ADMIN_EMAIL = "e2e-admin@faceon.test";
+
 /** Whether the media tests can run: they join real calls on Stream's development app. */
 export const hasStream = Boolean(
   process.env.NEXT_PUBLIC_STREAM_API_KEY && process.env.STREAM_API_SECRET,

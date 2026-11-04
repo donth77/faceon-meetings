@@ -2,6 +2,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import {
+  ADMIN_EMAIL,
   assertTestDatabase,
   BASE_URL,
   E2E_PORT,
@@ -105,13 +106,14 @@ export default defineConfig({
             process.env.MAX_CONCURRENT_MEETINGS ?? "1000",
           // No email, OAuth apps or approved hosts, as in CI: the tests behave the same on
           // every machine, and nothing they do reaches a real inbox or account. (Blank
-          // counts as unset.)
+          // counts as unset.) The one admin is the test admin (support/env.ts), whose
+          // account a test makes when it needs one.
           RESEND_API_KEY: "",
           GOOGLE_CLIENT_ID: "",
           GOOGLE_CLIENT_SECRET: "",
           GITHUB_CLIENT_ID: "",
           GITHUB_CLIENT_SECRET: "",
-          ADMIN_EMAILS: "",
+          ADMIN_EMAILS: ADMIN_EMAIL,
           HOST_ALLOWLIST: "",
         },
       },

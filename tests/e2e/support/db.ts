@@ -46,11 +46,23 @@ export async function createUser(
     signedInAgo?: string;
     /** Has signed in to the desktop app already. */
     usedDesktopApp?: boolean;
+    /**
+     * A particular address, such as the test admin's (ADMIN_EMAIL). Any account left
+     * with it from an earlier run is deleted first.
+     */
+    email?: string;
   } = {},
 ): Promise<TestUser> {
   const id = `e2e_${unique()}`;
   const name = options.name ?? "Test Host";
-  const email = `${id}@faceon.test`;
+  const email = options.email ?? `${id}@faceon.test`;
+  if (options.email) {
+    const left = await database().query<{ id: string }>(
+      `select id from "user" where lower(email) = lower($1)`,
+      [options.email],
+    );
+    await deleteUsers(left.rows.map((row) => row.id));
+  }
   await database().query(
     `insert into "user" (id, name, email, email_verified, avatar_seed, avatar_source, ai_notes, desktop_app_at, created_at, updated_at)
      values ($1, $2, $3, true, $4, 'dicebear', $5, case when $6::boolean then now() end, now(), now())`,
