@@ -23,7 +23,6 @@
 
 Try it at [joinfaceon.app](https://joinfaceon.app), or [deploy your own](#deploy-your-own).
 
-
 ## What works
 
 - Instant and scheduled meetings, and a personal room
