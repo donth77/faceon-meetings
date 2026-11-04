@@ -37,7 +37,10 @@ export type Person = {
   page: Page;
   context: BrowserContext;
   user?: TestUser;
-  /** Console errors and uncaught exceptions on their page so far. */
+  /**
+   * Console errors, Content Security Policy violations and uncaught exceptions on their
+   * page so far.
+   */
   errors: string[];
 };
 
@@ -58,11 +61,19 @@ type People = {
  */
 const NOT_OURS = [/^Failed to load resource/];
 
+/**
+ * While the Content Security Policy only reports, Chromium logs what it would block as
+ * info, not as an error: counted all the same, so nothing a page needs is missing from
+ * the policy when it's enforced.
+ */
+const CSP_VIOLATION =
+  /violates the following Content Security Policy directive/;
+
 function watch(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() !== "error") return;
     const text = message.text();
+    if (message.type() !== "error" && !CSP_VIOLATION.test(text)) return;
     if (!NOT_OURS.some((pattern) => pattern.test(text))) errors.push(text);
   });
   page.on("pageerror", (error) => errors.push(String(error)));
