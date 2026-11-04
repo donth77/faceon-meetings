@@ -365,6 +365,8 @@ export const translations: Record<string, Strings> = {
   es,
   "pt-BR": ptBR,
   fr,
+  de,
+  ja,
 };
 
 /** The shell's words in its current language; setLanguage switches them. */

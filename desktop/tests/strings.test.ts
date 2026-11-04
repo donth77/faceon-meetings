@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { routing } from "../../src/i18n/routing";
 import {
   languageFor,
   setLanguage,
@@ -32,6 +33,12 @@ function shown(words: Strings): Record<string, string> {
 }
 
 describe("the shell's strings", () => {
+  it("speak every language the web app does", () => {
+    expect(Object.keys(translations).sort()).toEqual(
+      [...routing.locales].sort(),
+    );
+  });
+
   it.each(Object.keys(translations))(
     "%s has every string, none empty",
     (language) => {
