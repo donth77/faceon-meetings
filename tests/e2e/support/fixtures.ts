@@ -44,9 +44,14 @@ export type Person = {
   errors: string[];
 };
 
-type OpenOptions = { viewport?: ViewportSize; userAgent?: string };
+type OpenOptions = {
+  viewport?: ViewportSize;
+  userAgent?: string;
+  /** Device pixels per CSS pixel: 2 for a Retina screen. */
+  deviceScaleFactor?: number;
+};
 
-type People = {
+export type People = {
   /** A new account, signed in, in a browser of its own. */
   signedIn(
     options?: OpenOptions & Parameters<typeof createUser>[0],
@@ -91,6 +96,9 @@ export const test = base.extend<{ people: People }>({
         baseURL,
         viewport: options.viewport ?? { width: 1280, height: 800 },
         ...(options.userAgent ? { userAgent: options.userAgent } : {}),
+        ...(options.deviceScaleFactor
+          ? { deviceScaleFactor: options.deviceScaleFactor }
+          : {}),
         locale: "en-US",
         timezoneId: "America/New_York",
         permissions:
