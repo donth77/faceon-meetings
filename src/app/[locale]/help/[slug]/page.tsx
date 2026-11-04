@@ -13,6 +13,7 @@ import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 import { helpArticles } from "@/lib/help/articles";
 import { helpSections } from "@/lib/help/sections";
+import { languageAlternates } from "@/lib/site";
 
 // Rendered whole before sending, so an address that isn't an article is a real 404.
 export const instant = false;
@@ -36,7 +37,11 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const article = (await helpArticles(locale)).find((a) => a.slug === slug);
   if (!article) return {};
-  return { title: article.title, description: article.summary };
+  return {
+    title: article.title,
+    description: article.summary,
+    alternates: languageAlternates(`/help/${slug}`, locale),
+  };
 }
 
 /** One help article, with every other article beside it on wide screens. */

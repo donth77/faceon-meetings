@@ -119,7 +119,10 @@ export function useMeetingShortcuts(actions: {
   }, []);
 }
 
-/** The shortcut hint shown in tooltips, e.g. "Ctrl+D" or "⌘D". */
-export function shortcutLabel(key: "D" | "E"): string {
-  return isAppleDevice() ? `⌘${key}` : `Ctrl+${key}`;
+/**
+ * The shortcut hint shown in tooltips, e.g. "Ctrl+D" or "⌘D", with Ctrl as the
+ * keyboard labels it in the app's language ("Strg" in German).
+ */
+export function shortcutLabel(key: "D" | "E", ctrl: string): string {
+  return isAppleDevice() ? `⌘${key}` : `${ctrl}+${key}`;
 }

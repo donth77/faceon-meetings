@@ -6,10 +6,15 @@ import { DownloadPanel } from "@/components/desktop/download-buttons";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { publicEnv } from "@/lib/env";
+import { languageAlternates } from "@/lib/site";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/download">): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations("Download");
   return {
+    alternates: languageAlternates("/download", locale),
     title: t("title", { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
     description: t("intro", { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
   };

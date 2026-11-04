@@ -9,15 +9,22 @@ export type Translate = (
   values?: Record<string, string | number>,
 ) => string;
 
-/** "en-GB" → "en"; "pt-BR" stays "pt-BR" when there's a file for it. */
+/**
+ * The file for a person's language: the same tag, or else one in the same language, so
+ * every regional variant uses its language ("en-GB" → "en", "pt-PT" → "pt-BR").
+ */
 export function languageOf(
   locale: string | undefined,
   available: readonly string[],
 ): string {
-  const wanted = (locale ?? "").replace("_", "-");
-  if (available.includes(wanted)) return wanted;
-  const base = wanted.split("-")[0] ?? "";
-  if (available.includes(base)) return base;
+  const wanted = (locale ?? "").replace("_", "-").toLowerCase();
+  const exact = available.find((file) => file.toLowerCase() === wanted);
+  if (exact) return exact;
+  const base = wanted.split("-")[0];
+  const sameLanguage = available.find(
+    (file) => file.split("-")[0]?.toLowerCase() === base,
+  );
+  if (sameLanguage) return sameLanguage;
   return available.includes("en") ? "en" : (available[0] ?? "en");
 }
 

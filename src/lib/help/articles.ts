@@ -2,12 +2,19 @@ import "server-only";
 
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { hasLocale, type Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
+import { routing } from "@/i18n/routing";
 import { parseFrontMatter } from "@/lib/content/front-matter";
 import { publicEnv } from "@/lib/env";
 import { serverEnv } from "@/lib/server-env";
 
-import { fillHelpPlaceholders, type HelpLimits } from "./placeholders";
+import {
+  fillHelpPlaceholders,
+  type HelpLimits,
+  type HelpPhrases,
+} from "./placeholders";
 
 /** Help's categories, in the order the index and the sidebar show them. */
 export const HELP_CATEGORIES = [
@@ -44,13 +51,14 @@ export type HelpArticle = {
  */
 const helpPath = (...parts: string[]) =>
   path.join(process.cwd(), "content", "help", ...parts);
-function parse(slug: string, raw: string): HelpArticle {
+function parse(slug: string, raw: string, phrases: HelpPhrases): HelpArticle {
   // Articles say {appName} and the limits by name; a self-hosted copy sets its own.
   const { fields, body } = parseFrontMatter(
-    fillHelpPlaceholders(raw, {
-      appName: publicEnv.NEXT_PUBLIC_APP_NAME,
-      ...meetingLimits(),
-    }),
+    fillHelpPlaceholders(
+      raw,
+      { appName: publicEnv.NEXT_PUBLIC_APP_NAME, ...meetingLimits() },
+      phrases,
+    ),
   );
   const category = CATEGORY_IDS[fields.get("category") ?? ""];
   if (!category) {
@@ -81,20 +89,22 @@ function meetingLimits(): HelpLimits {
 }
 
 /** The language whose articles to show; English until a translation exists. */
-async function languageFor(locale: string): Promise<string> {
+async function languageFor(locale: string): Promise<Locale> {
+  if (!hasLocale(routing.locales, locale)) return routing.defaultLocale;
   try {
     const files = await readdir(helpPath(locale));
     if (files.some((file) => file.endsWith(".md"))) return locale;
   } catch {
     // No translation yet.
   }
-  return "en";
+  return routing.defaultLocale;
 }
 
 /** Every help article in a language, in reading order (by category, then order). */
 export async function helpArticles(locale: string): Promise<HelpArticle[]> {
   "use cache";
   const language = await languageFor(locale);
+  const t = await getTranslations({ locale: language, namespace: "Help.fill" });
   const files = (await readdir(helpPath(language))).filter((file) =>
     file.endsWith(".md"),
   );
@@ -103,6 +113,7 @@ export async function helpArticles(locale: string): Promise<HelpArticle[]> {
       parse(
         file.slice(0, -3),
         await readFile(helpPath(language, file), "utf8"),
+        (phrase, values) => t(phrase, values),
       ),
     ),
   );

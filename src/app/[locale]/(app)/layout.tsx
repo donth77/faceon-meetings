@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 
+import { AccountLanguage } from "@/components/app-shell/account-language";
 import { AppFrame } from "@/components/app-shell/app-frame";
 import { requireSession } from "@/lib/auth/session";
 import { HOME_ROUTE } from "@/lib/routes";
@@ -15,5 +16,10 @@ export default function AppLayout({ children }: LayoutProps<"/[locale]">) {
 
 async function AppShell({ children }: { children: ReactNode }) {
   const session = await requireSession(HOME_ROUTE);
-  return <AppFrame session={session}>{children}</AppFrame>;
+  return (
+    <>
+      <AccountLanguage saved={session.user.locale} />
+      <AppFrame session={session}>{children}</AppFrame>
+    </>
+  );
 }

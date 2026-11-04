@@ -1,19 +1,24 @@
 import { cn } from "cn";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { GitHubIcon } from "@/components/auth/provider-icons";
 import { NewTabNote } from "@/components/ui/new-tab-note";
+import { translationIssueUrl } from "@/i18n/names";
+import { routing } from "@/i18n/routing";
 import { publicEnv } from "@/lib/env";
 
 import { PUBLIC_CONTAINER } from "./layout";
 
 /**
  * Footer for public pages: Help, the legal pages and the credits. The source link
- * appears once NEXT_PUBLIC_REPO_URL is set. The language menu is in the header.
+ * appears once NEXT_PUBLIC_REPO_URL is set, and in a language other than English, a
+ * link to suggest better wording. The language menu is in the header.
  */
 export async function SiteFooter() {
   const t = await getTranslations("Landing");
+  const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const repo = publicEnv.NEXT_PUBLIC_REPO_URL;
 
   return (
@@ -35,6 +40,17 @@ export async function SiteFooter() {
           <Link href="/credits" className="hover:text-foreground">
             {t("credits")}
           </Link>
+          {repo && locale !== routing.defaultLocale ? (
+            <a
+              href={translationIssueUrl(repo, locale)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground"
+            >
+              {tc("suggestTranslation")}
+              <NewTabNote />
+            </a>
+          ) : null}
           {repo ? (
             <a
               href={repo}

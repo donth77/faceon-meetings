@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { captcha, haveIBeenPwned, oAuthProxy } from "better-auth/plugins";
 
+import { localeOfRequest } from "@/i18n/locale";
 import { endHostedCalls, forgetMediaUser } from "@/lib/account/deletion";
 import { lookForName } from "@/lib/avatars/name-look";
 import { createAvatarSeed } from "@/lib/avatars/seed";
@@ -225,10 +226,14 @@ export const auth = betterAuth({
     },
     user: {
       create: {
-        // Every new account gets a friendly default avatar (DiceBear "Dylan").
-        before: async (user) => ({
+        // Every new account gets a friendly default avatar (DiceBear "Dylan"), and the
+        // language it signed up in, which its emails use until it chooses another.
+        before: async (user, context) => ({
           data: {
             ...user,
+            locale: localeOfRequest(
+              context?.headers ?? context?.request?.headers,
+            ),
             avatarSeed: createAvatarSeed(lookForName(user.name)),
             avatarSource: "dicebear",
           },

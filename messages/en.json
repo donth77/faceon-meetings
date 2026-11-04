@@ -216,6 +216,7 @@
     "lengthLeft": "{count, plural, one {# character} other {# characters}} left",
     "lengthReached": "That’s the limit: {max, number} characters.",
     "newTab": "(opens in a new tab)",
+    "suggestTranslation": "Suggest a better translation",
     "live": "Live"
   },
   "Pager": {
@@ -951,13 +952,23 @@
       "dismiss": "Dismiss"
     },
     "reportIssueShort": "Report an issue",
-    "stillStuck": "Still stuck? <link>Report an issue on GitHub</link>."
+    "stillStuck": "Still stuck? <link>Report an issue on GitHub</link>.",
+    "fill": {
+      "fullLengthLimited": "for up to {minutes, plural, one {# minute} other {# minutes}}",
+      "fullLengthUnlimited": "with no time limit",
+      "aloneCheck": "After {minutes, plural, one {# minute} other {# minutes}} alone in a meeting, {appName} asks whether you’re still there, and leaves for you if nobody answers.",
+      "aloneCheckOff": "{appName} doesn’t end a meeting because you’re alone in it."
+    }
   },
   "Shortcuts": {
     "title": "Keyboard shortcuts",
     "description": "Both Meet-style and Zoom-style keys work.",
     "close": "Close",
     "or": "or",
+    "keys": {
+      "ctrl": "Ctrl",
+      "space": "Space"
+    },
     "groups": {
       "meeting": "In a meeting",
       "anywhere": "Anywhere"
@@ -1605,6 +1616,15 @@
   },
   "Legal": {
     "updated": "Last updated {date}",
+    "translated": "This page was translated with AI to help you read it. The English version is the one that applies: <english>read it in English</english>.",
+    "fill": {
+      "unnamedOperator": "{appName}'s operator",
+      "contactEmail": "email [{email}](mailto:{email}).",
+      "contactIssues": "open an issue on [GitHub]({url}).",
+      "contactSite": "use the contact details on this site.",
+      "lawsOf": "the laws of {jurisdiction}",
+      "lawsWhereBased": "the laws of the place where {operator} is based"
+    },
     "consent": {
       "signUp": "By creating an account, you agree to the <terms>Terms</terms> and acknowledge the <privacy>Privacy Policy</privacy>.",
       "signIn": "By continuing, you agree to the <terms>Terms</terms> and acknowledge the <privacy>Privacy Policy</privacy>.",

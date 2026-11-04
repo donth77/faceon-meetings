@@ -3,8 +3,15 @@
  * and the noindex headers, so they can't drift apart.
  */
 
-/** Public pages that search engines and agents may index. */
-export const PUBLIC_ROUTES = ["/"] as const;
+/** Public pages that search engines and agents may index (the sitemap adds Help articles). */
+export const PUBLIC_ROUTES = [
+  "/",
+  "/help",
+  "/download",
+  "/privacy",
+  "/terms",
+  "/credits",
+] as const;
 
 /** Signing in, signing up and resetting a password. Signed-in visitors are sent on to HOME_ROUTE. */
 export const AUTH_ROUTES = [

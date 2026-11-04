@@ -7,6 +7,9 @@ describe("languageOf", () => {
     expect(languageOf("pt-BR", ["en", "pt-BR"])).toBe("pt-BR");
     expect(languageOf("en-GB", ["en", "de"])).toBe("en");
     expect(languageOf("de_AT", ["en", "de"])).toBe("de");
+    expect(languageOf("pt-PT", ["en", "pt-BR"])).toBe("pt-BR");
+    expect(languageOf("es-419", ["en", "es"])).toBe("es");
+    expect(languageOf("ja-JP", ["en", "ja"])).toBe("ja");
     expect(languageOf("ko", ["en", "de"])).toBe("en");
     expect(languageOf(undefined, ["en"])).toBe("en");
   });

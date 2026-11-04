@@ -449,6 +449,7 @@ export function ControlBar({
 }) {
   const t = useTranslations("Meeting");
   const te = useTranslations("Effects");
+  const tk = useTranslations("Shortcuts.keys");
   const media = useRoomMedia();
   const { mic, camera, speaker, screenShare } = media;
   const count = media.participants.length;
@@ -469,7 +470,7 @@ export function ControlBar({
         <Control
           icon={mic.enabled ? Mic : MicOff}
           label={mic.enabled ? t("mute") : t("unmute")}
-          shortcut={shortcutLabel("D")}
+          shortcut={shortcutLabel("D", tk("ctrl"))}
           tone={mic.enabled ? "plain" : "danger"}
           onPress={onToggleMic}
         >
@@ -500,7 +501,7 @@ export function ControlBar({
         <Control
           icon={camera.enabled ? Video : VideoOff}
           label={camera.enabled ? t("stopVideo") : t("startVideo")}
-          shortcut={shortcutLabel("E")}
+          shortcut={shortcutLabel("E", tk("ctrl"))}
           tone={camera.enabled ? "plain" : "danger"}
           onPress={() => void camera.toggle()}
         >

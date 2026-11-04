@@ -25,6 +25,7 @@ import {
   RELEASES_REPO,
 } from "./config";
 import { handleBridge } from "./ipc";
+import { followLanguage } from "./language";
 import { linkInArgv, parseAppLink } from "./links";
 import { buildAppMenu } from "./menu";
 import type { UpcomingMeeting } from "./reminder-schedule";
@@ -246,11 +247,16 @@ function run() {
       },
     });
 
-    buildAppMenu({
+    const menuActions = {
       openPath,
       checkForUpdates: () => void checkForUpdatesFromMenu(),
       quit,
+    };
+    followLanguage(ses, () => {
+      buildAppMenu(menuActions);
+      refreshTray();
     });
+    buildAppMenu(menuActions);
     tray = createTray({
       show,
       openPath,

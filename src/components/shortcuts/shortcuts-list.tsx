@@ -11,8 +11,15 @@ import { shortcutsFor } from "./shortcuts";
 /** The platform doesn't change while the page is open. */
 const subscribeNever = () => () => {};
 
+/** Keys whose names keyboards print in their own language ("Strg" in German). */
+const NAMED_KEYS = { Ctrl: "ctrl", Space: "space" } as const;
+
 function Keys({ combos }: { combos: string[][] }) {
   const t = useTranslations("Shortcuts");
+  const keyName = (key: string) =>
+    key in NAMED_KEYS
+      ? t(`keys.${NAMED_KEYS[key as keyof typeof NAMED_KEYS]}`)
+      : key;
   return (
     <span className="flex flex-wrap items-center justify-end gap-1.5">
       {combos.map((combo, index) => (
@@ -27,7 +34,7 @@ function Keys({ combos }: { combos: string[][] }) {
               key={key}
               className="bg-muted text-foreground min-w-6 rounded-md border px-1.5 py-0.5 text-center font-sans text-xs font-semibold"
             >
-              {key}
+              {keyName(key)}
             </kbd>
           ))}
         </span>

@@ -184,10 +184,12 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
-  --font-display:
-    var(--font-bricolage), var(--font-figtree), ui-sans-serif, system-ui,
+  --font-sans:
+    var(--font-figtree), var(--font-language), ui-sans-serif, system-ui,
     sans-serif;
+  --font-display:
+    var(--font-bricolage), var(--font-figtree), var(--font-language),
+    ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -233,6 +235,24 @@
 }
 
 @layer base {
+  /* The system's own fonts for scripts Figtree and Bricolage don't have, by the page's
+     language, rather than multi-megabyte web fonts. Japanese uses Japanese fonts, so
+     kanji take their Japanese forms. */
+  :root {
+    --font-language: ui-sans-serif;
+  }
+  :root:lang(ja) {
+    --font-language:
+      "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic",
+      Meiryo, "Noto Sans JP", "Noto Sans CJK JP";
+  }
+  /* Japanese breaks lines between phrases, as Japanese text should, where browsers can. */
+  :lang(ja) {
+    line-break: strict;
+  }
+  :lang(ja) :is(h1, h2, h3, button, label) {
+    word-break: auto-phrase;
+  }
   html {
     @apply font-sans;
     /* Reserve the scrollbar's space, so centered headers don't shift between short and

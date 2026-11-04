@@ -15,20 +15,30 @@ export type HelpLimits = {
   aloneMinutes: number;
 };
 
+/** The sentences some placeholders become, in the article's language (messages: Help.fill). */
+export type HelpPhrase =
+  "fullLengthLimited" | "fullLengthUnlimited" | "aloneCheck" | "aloneCheckOff";
+export type HelpPhrases = (
+  phrase: HelpPhrase,
+  values: { appName: string; minutes?: number },
+) => string;
+
 export function fillHelpPlaceholders(
   raw: string,
   values: { appName: string } & HelpLimits,
+  phrases: HelpPhrases,
 ): string {
+  const { appName } = values;
   const fullLength =
     values.fullMinutes > 0
-      ? `for up to ${values.fullMinutes} minutes`
-      : "with no time limit";
+      ? phrases("fullLengthLimited", { appName, minutes: values.fullMinutes })
+      : phrases("fullLengthUnlimited", { appName });
   const aloneCheck =
     values.aloneMinutes > 0
-      ? `After ${values.aloneMinutes} minutes alone in a meeting, ${values.appName} asks whether you’re still there, and leaves for you if nobody answers.`
-      : `${values.appName} doesn’t end a meeting because you’re alone in it.`;
+      ? phrases("aloneCheck", { appName, minutes: values.aloneMinutes })
+      : phrases("aloneCheckOff", { appName });
   return raw
-    .replaceAll("{appName}", values.appName)
+    .replaceAll("{appName}", appName)
     .replaceAll("{demoMinutes}", String(values.demoMinutes))
     .replaceAll("{demoPeople}", String(values.demoPeople))
     .replaceAll("{demoPerDay}", String(values.demoPerDay))

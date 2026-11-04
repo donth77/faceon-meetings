@@ -1,4 +1,5 @@
 import { Video } from "lucide-react";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -12,7 +13,14 @@ import { JoinForm } from "@/components/meetings/join-form";
 import { LinkButton } from "@/components/ui/button";
 import { wakesDatabase } from "@/lib/db/wake";
 import { publicEnv } from "@/lib/env";
-import { siteUrl } from "@/lib/site";
+import { languageAlternates, siteUrl } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  return { alternates: languageAlternates("/", locale) };
+}
 
 /**
  * The signed-out home. Most visitors come to join a meeting, so the meeting ID field is

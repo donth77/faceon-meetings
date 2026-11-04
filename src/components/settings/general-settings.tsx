@@ -10,7 +10,11 @@ import { InstallAppCard } from "@/components/pwa/install-app";
 import { TimeZoneField } from "@/components/schedule/time-zone-field";
 import { Button } from "@/components/ui/button";
 import { RadioDot, SelectField } from "@/components/ui/form-fields";
+import { NewTabNote } from "@/components/ui/new-tab-note";
+import { nativeName, translationIssueUrl } from "@/i18n/names";
 import { routing } from "@/i18n/routing";
+import { chooseLanguageAction } from "@/lib/account/language";
+import { publicEnv } from "@/lib/env";
 import {
   savePreferences,
   useIntlLocale,
@@ -20,11 +24,6 @@ import { formattingLocale, systemTimeZone } from "@/lib/time";
 
 import { DesktopLinksSetting } from "./desktop-links-setting";
 import { SectionTitle, SettingsCard } from "./settings-nav";
-
-const ONE_YEAR = 60 * 60 * 24 * 365;
-
-const nativeName = (locale: string) =>
-  new Intl.DisplayNames([locale], { type: "language" }).of(locale) ?? locale;
 
 /** A small picture of the app in a theme, for the Theme choices. */
 function ThemePreview({ dark }: { dark: boolean }) {
@@ -75,7 +74,9 @@ export function GeneralSettings({
   place?: GeneralPlace;
 }) {
   const t = useTranslations("Settings.general");
+  const tc = useTranslations("Common");
   const locale = useLocale();
+  const repo = publicEnv.NEXT_PUBLIC_REPO_URL;
   const intlLocale = useIntlLocale();
   const router = useRouter();
   const { theme = "system", setTheme } = useTheme();
@@ -99,9 +100,8 @@ export function GeneralSettings({
     minute: "2-digit",
   }).format(new Date(Date.UTC(2026, 10, 12, 19, 0)));
 
-  function chooseLanguage(next: string) {
-    document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
-    router.refresh();
+  async function chooseLanguage(next: string) {
+    if (next !== locale && (await chooseLanguageAction(next))) router.refresh();
   }
 
   return (
@@ -119,6 +119,17 @@ export function GeneralSettings({
               value={locale}
               onChange={chooseLanguage}
             />
+            {repo && locale !== routing.defaultLocale ? (
+              <a
+                href={translationIssueUrl(repo, locale)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary focus-visible:focus-ring self-start rounded-[2px] text-[13px] font-semibold underline-offset-4 outline-hidden hover:underline"
+              >
+                {tc("suggestTranslation")}
+                <NewTabNote />
+              </a>
+            ) : null}
           </div>
         )}
         <RadioGroup
