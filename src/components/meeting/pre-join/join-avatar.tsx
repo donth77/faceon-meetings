@@ -29,7 +29,10 @@ export type Viewer =
       avatarSeed: string;
       /** No avatar of their own yet: the default follows the name they type. */
       firstVisit: boolean;
-      /** No guest ID yet, where this copy checks for a person before the first join. */
+      /**
+       * Where this copy checks for a person: before a guest ID's first join, and before
+       * any guest's join to a meeting that has had many wrong passcodes lately.
+       */
       humanCheck?: boolean;
     };
 

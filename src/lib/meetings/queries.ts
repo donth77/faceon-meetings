@@ -425,6 +425,24 @@ export async function isNamedCohost(
   return row !== undefined;
 }
 
+/** Whether a meeting invites this (verified, lowercased) address, as a co-host or not. */
+export async function isInvited(
+  meetingId: string,
+  email: string,
+): Promise<boolean> {
+  const [row] = await db()
+    .select({ email: meetingInvitee.email })
+    .from(meetingInvitee)
+    .where(
+      and(
+        eq(meetingInvitee.meetingId, meetingId),
+        eq(meetingInvitee.email, email),
+      ),
+    )
+    .limit(1);
+  return row !== undefined;
+}
+
 /** A meeting's named co-hosts, in the order they were added. */
 export async function namedCohostsOf(meetingId: string): Promise<string[]> {
   const rows = await db()

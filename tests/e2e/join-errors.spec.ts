@@ -117,3 +117,42 @@ test.describe("joining from the meeting ID field", () => {
     }
   });
 });
+
+test.describe("failed joins", () => {
+  test.beforeEach(async () => {
+    await resetAttempts();
+  });
+
+  test("other people's wrong passcodes never keep a meeting's host out", async ({
+    people,
+    playwright,
+    baseURL,
+  }) => {
+    const { page, user } = await people.signedIn();
+    const meeting = await createMeeting(user.id);
+    const api = await playwright.request.newContext({ baseURL });
+    const join = (address: string, passcode: string) =>
+      api.post(`/api/meetings/${meeting.code}/join`, {
+        headers: { "x-forwarded-for": address, origin: baseURL ?? "" },
+        data: { name: "Someone", passcode },
+      });
+    try {
+      // Twenty wrong passcodes, from two addresses: the meeting's limit.
+      for (const address of ["198.51.100.7", "198.51.100.8"]) {
+        for (let attempt = 0; attempt < 10; attempt++) {
+          expect((await join(address, "WRONG1")).status()).toBe(403);
+        }
+      }
+      // A newcomer without an account waits now: this build has no check for a person.
+      expect((await join("198.51.100.9", meeting.passcode)).status()).toBe(429);
+      // The host still gets past the limits.
+      const host = await page.request.post(
+        `/api/meetings/${meeting.code}/join`,
+        { headers: { origin: baseURL ?? "" }, data: { name: user.name } },
+      );
+      expect(host.status()).not.toBe(429);
+    } finally {
+      await api.dispose();
+    }
+  });
+});

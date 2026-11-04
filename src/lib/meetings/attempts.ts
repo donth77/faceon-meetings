@@ -1,8 +1,13 @@
 import "server-only";
 
-import { hashedClientIp, type AttemptLimit } from "@/lib/rate-limit";
+import {
+  hashedAttemptKey,
+  hashedClientIp,
+  type AttemptLimit,
+} from "@/lib/rate-limit";
 
 import type { MeetingErrorCode } from "./api";
+import type { Principal } from "./principal";
 
 /**
  * Only failed joins count: a wrong passcode or an unknown meeting ID. Successful joins,
@@ -21,13 +26,37 @@ const guessesBy = (caller: Caller): AttemptLimit => ({
   max: 10,
 });
 
-/** Per caller and per meeting, so guessing is slow both ways. */
-export function joinAttemptLimits(
+/**
+ * A caller's own budgets for failed joins: by address, and by account when signed in, so
+ * neither more addresses nor more browsers buy more guesses. People the meeting already
+ * knows skip them (rules.ts, joinGate).
+ */
+export function callerJoinLimits(
   request: Request,
-  code: string,
+  principal: Principal | null,
 ): AttemptLimit[] {
-  return [guessesBy(request), { key: `join:meeting:${code}`, max: 20 }];
+  return [
+    guessesBy(request),
+    ...(principal?.kind === "user"
+      ? [
+          {
+            key: `join:user:${hashedAttemptKey(`user:${principal.userId}`)}`,
+            max: 10,
+          },
+        ]
+      : []),
+  ];
 }
+
+/**
+ * Failed joins to one meeting from everyone it doesn't know, together, so guessing its
+ * passcode from many addresses is slow too. Reaching it never shuts the meeting: it asks
+ * people without an account for a check on each try (rules.ts, joinGate).
+ */
+export const meetingJoinLimit = (code: string): AttemptLimit => ({
+  key: `join:meeting:${code}`,
+  max: 20,
+});
 
 /**
  * Opening /j/{ID} for a meeting that doesn't exist counts as a failed join too, so the

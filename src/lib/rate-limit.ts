@@ -19,8 +19,13 @@ const WINDOW_MS = 10 * 60 * 1000;
 export function hashedClientIp(source: Request | Pick<Headers, "get">): string {
   const headers = "get" in source ? source : source.headers;
   const ip = headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  return hashedAttemptKey(ip);
+}
+
+/** Anything else a counter is keyed by (an account, say), as the same keyed hash. */
+export function hashedAttemptKey(value: string): string {
   return createHmac("sha256", serverEnv().BETTER_AUTH_SECRET ?? "")
-    .update(`attempts:${ip}`)
+    .update(`attempts:${value}`)
     .digest("base64url")
     .slice(0, 22);
 }

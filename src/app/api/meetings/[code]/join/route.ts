@@ -1,15 +1,18 @@
 import { guestForJoin, guestsEnabled, saveGuest } from "@/lib/guest-session";
 import { humanCheckOn, passedHumanCheck } from "@/lib/human-check/verify";
+import { knownToMeeting } from "@/lib/meetings/access";
 import { JoinRequest } from "@/lib/meetings/api";
 import {
+  callerJoinLimits,
   FAILED_JOIN,
-  joinAttemptLimits,
+  meetingJoinLimit,
   waitingRoomLimits,
 } from "@/lib/meetings/attempts";
 import { MeetingError } from "@/lib/meetings/errors";
 import { handleMeetingRequest, readJson } from "@/lib/meetings/http";
 import { joinMeeting } from "@/lib/meetings/join";
 import { getPrincipal, guestPrincipal } from "@/lib/meetings/principal";
+import { joinGate } from "@/lib/meetings/rules";
 import { isLimited, recordAttempt } from "@/lib/rate-limit";
 
 /**
@@ -19,7 +22,8 @@ import { isLimited, recordAttempt } from "@/lib/rate-limit";
  * browser keeps its guest ID and that avatar in a cookie. Where this copy checks for a
  * person (Turnstile), a browser's first guest join carries the check's token; once it
  * passes, the guest ID is kept at once, so a retry (a corrected passcode, say) and later
- * joins from this browser skip it.
+ * joins from this browser skip it. Failed joins are limited per caller and per meeting,
+ * but never for people the meeting already knows (rules.ts, joinGate).
  */
 export async function POST(
   request: Request,
@@ -31,19 +35,30 @@ export async function POST(
       request,
       JoinRequest,
     );
-    const limits = joinAttemptLimits(request, code);
+    const caller = await getPrincipal(request);
+    const known = await knownToMeeting(code, caller);
+    const limits = callerJoinLimits(request, caller);
+    const meetingLimit = meetingJoinLimit(code);
     const lobbyLimits = waitingRoomLimits(request);
-    const [limited, lobbyFull] = await Promise.all([
-      isLimited(limits),
+    const [callerLimited, meetingBusy, lobbyFull] = await Promise.all([
+      known ? false : isLimited(limits),
+      known ? false : isLimited([meetingLimit]),
       isLimited(lobbyLimits),
     ]);
-    if (limited) throw new MeetingError("RATE_LIMITED");
+    const gate = joinGate({
+      known,
+      callerLimited,
+      meetingBusy,
+      signedIn: caller?.kind === "user",
+      humanCheck: humanCheckOn(),
+    });
+    if (gate === "wait") throw new MeetingError("RATE_LIMITED");
 
-    const caller = await getPrincipal(request);
-    // A browser without a guest ID yet shows there's a person behind it first.
+    // A browser without a guest ID yet shows there's a person behind it first, and so
+    // does anyone without an account while the meeting asks for it (gate "check").
     const firstGuestJoin = !caller && guestsEnabled() && humanCheckOn();
     if (
-      firstGuestJoin &&
+      (firstGuestJoin || gate === "check") &&
       !(await passedHumanCheck({
         token: humanCheck,
         action: "guest-join",
@@ -76,8 +91,12 @@ export async function POST(
         canAskHosts: !lobbyFull,
       });
     } catch (error) {
-      if (error instanceof MeetingError && FAILED_JOIN.has(error.code)) {
-        await recordAttempt(limits);
+      if (
+        !known &&
+        error instanceof MeetingError &&
+        FAILED_JOIN.has(error.code)
+      ) {
+        await recordAttempt([...limits, meetingLimit]);
       }
       throw error;
     }

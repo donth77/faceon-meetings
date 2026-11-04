@@ -100,7 +100,12 @@ async function MeetingGate({
               avatar: accountAvatar(session.user),
             }
           : guest
-            ? { kind: "guest", avatarSeed: guest.avatarSeed, firstVisit: false }
+            ? {
+                kind: "guest",
+                avatarSeed: guest.avatarSeed,
+                firstVisit: false,
+                humanCheck: humanCheckOn(),
+              }
             : // Made here, so the join screen shows the avatar they'll join with.
               {
                 kind: "guest",

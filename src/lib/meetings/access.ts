@@ -7,6 +7,7 @@ import {
   findMeetingByCode,
   findMember,
   findOpenSession,
+  isInvited,
   type MeetingMember,
   type MeetingSession,
 } from "./queries";
@@ -18,6 +19,35 @@ export async function requireMeeting(code: string) {
     : null;
   if (!found) throw new MeetingError("NOT_FOUND");
   return found;
+}
+
+/**
+ * Whether the meeting already knows this caller: its host, a co-host or invitee it names
+ * (by a verified address), or someone admitted to its open session and not removed. They
+ * skip the limits on failed joins (rules.ts, joinGate), so nobody else's wrong passcodes
+ * can keep them out.
+ */
+export async function knownToMeeting(
+  code: string,
+  principal: Principal | null,
+): Promise<boolean> {
+  if (!principal || !MEETING_CODE_PATTERN.test(code)) return false;
+  const found = await findMeetingByCode(code);
+  if (!found) return false;
+  const { meeting } = found;
+  if (principal.kind === "user") {
+    if (principal.userId === meeting.hostId) return true;
+    if (
+      principal.verifiedEmail !== null &&
+      (await isInvited(meeting.id, principal.verifiedEmail))
+    ) {
+      return true;
+    }
+  }
+  const session = await findOpenSession(meeting.id);
+  if (!session) return false;
+  const member = await findMember(session.id, principal.mediaUserId);
+  return member !== null && !member.bannedAt;
 }
 
 export function requirePrincipal(principal: Principal | null): Principal {

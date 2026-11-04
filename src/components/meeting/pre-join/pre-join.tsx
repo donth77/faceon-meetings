@@ -231,8 +231,9 @@ export function PreJoin({
   const passcodeId = useId();
   const passcodeHintId = useId();
   const errorId = useId();
-  // A guest's first join from this browser needs a person behind it, where this copy
-  // checks (Turnstile).
+  // A guest's join may need a person behind it, where this copy checks (Turnstile): the
+  // first from this browser, and any while the meeting has had many wrong passcodes. The
+  // check is ready either way; the server asks for its token only then.
   const humanCheck = useHumanCheck(
     "guest-join",
     viewer.kind === "guest" && viewer.humanCheck === true,

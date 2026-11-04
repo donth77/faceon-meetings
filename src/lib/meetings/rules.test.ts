@@ -13,6 +13,7 @@ import {
   closedReason,
   isSessionLive,
   isSessionStale,
+  joinGate,
   notesOnJoin,
   notesStartAutomatically,
   offersNotes,
@@ -747,5 +748,55 @@ describe("offersNotes", () => {
     expect(
       offersNotes({ ...offered, runsNotes: false, transcribed: true }),
     ).toBe(false);
+  });
+});
+
+describe("joinGate", () => {
+  const facts = {
+    known: false,
+    callerLimited: false,
+    meetingBusy: false,
+    signedIn: false,
+    humanCheck: true,
+  };
+
+  it("always lets in people the meeting knows, whatever anyone else has tried", () => {
+    expect(
+      joinGate({
+        ...facts,
+        known: true,
+        callerLimited: true,
+        meetingBusy: true,
+      }),
+    ).toBe("go");
+  });
+
+  it("lets anyone else in to try while their own budget lasts", () => {
+    expect(joinGate(facts)).toBe("go");
+    expect(joinGate({ ...facts, signedIn: true })).toBe("go");
+  });
+
+  it("makes someone wait once their own budget is used up", () => {
+    expect(joinGate({ ...facts, callerLimited: true })).toBe("wait");
+    expect(joinGate({ ...facts, callerLimited: true, signedIn: true })).toBe(
+      "wait",
+    );
+  });
+
+  it("asks people without an account for a check while a meeting has had many wrong passcodes", () => {
+    expect(joinGate({ ...facts, meetingBusy: true })).toBe("check");
+  });
+
+  it("never closes a busy meeting to everyone", () => {
+    expect(joinGate({ ...facts, meetingBusy: true, signedIn: true })).toBe(
+      "go",
+    );
+    expect(joinGate({ ...facts, meetingBusy: true, known: true })).toBe("go");
+  });
+
+  it("makes people without an account wait where this copy has no check", () => {
+    expect(joinGate({ ...facts, meetingBusy: true, humanCheck: false })).toBe(
+      "wait",
+    );
   });
 });

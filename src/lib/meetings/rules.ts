@@ -397,3 +397,30 @@ export function canManageNotes(input: {
 }): boolean {
   return input.viewer === input.savedBy || input.viewer === input.hostId;
 }
+
+/** What a join attempt needs before its passcode is checked (joinGate). */
+export type JoinGate = "go" | "check" | "wait";
+
+/**
+ * The guard on joining, before the passcode is checked. People the meeting already knows
+ * (its host, the co-hosts and invitees it names, anyone admitted to its session) always
+ * go: nobody else's wrong passcodes ever keep them out. Everyone else has budgets of
+ * their own for wrong passcodes (by address, and by account when signed in) and waits
+ * once those run out. A meeting with many wrong passcodes lately asks people without an
+ * account to show they're a person on each try, where this copy checks for one, rather
+ * than closing its door; where it doesn't, they wait.
+ */
+export function joinGate(facts: {
+  known: boolean;
+  callerLimited: boolean;
+  meetingBusy: boolean;
+  signedIn: boolean;
+  humanCheck: boolean;
+}): JoinGate {
+  if (facts.known) return "go";
+  if (facts.callerLimited) return "wait";
+  if (facts.meetingBusy && !facts.signedIn) {
+    return facts.humanCheck ? "check" : "wait";
+  }
+  return "go";
+}
