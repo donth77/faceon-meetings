@@ -116,8 +116,9 @@ test.describe("AI notes", () => {
       });
       await guest.context.addInitScript({ content: browserLike(GUEST_LINES) });
 
-      // The host's key goes to Anthropic and nowhere else; the transcript reaches
-      // FaceOn's server only when the host saves it.
+      // The host's key goes to Anthropic and nowhere else. The transcript reaches FaceOn's
+      // server only when the host saves it; Stream carries it to the host and the provider
+      // makes the notes, as the privacy policy says.
       const keySentTo = watchFor(host, KEY);
       const transcriptSentTo = watchFor(host, "March 3rd");
       const asked: Array<Record<string, string | undefined>> = [];
@@ -196,10 +197,9 @@ test.describe("AI notes", () => {
         },
       ]);
       expect(keySentTo).toEqual(["POST api.anthropic.com"]);
+      const faceOn = new URL(baseURL ?? "http://localhost").host;
       expect(
-        transcriptSentTo.filter(
-          (request) => !request.endsWith("api.anthropic.com"),
-        ),
+        transcriptSentTo.filter((request) => request.endsWith(` ${faceOn}`)),
       ).toEqual([]);
 
       // Saved with the meeting, then shared with its participants.
