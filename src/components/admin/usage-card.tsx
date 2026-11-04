@@ -1,15 +1,17 @@
 import { cn } from "cn";
 import { ExternalLink, OctagonAlert, TriangleAlert } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { NewTabNote } from "@/components/ui/new-tab-note";
 import { publicEnv } from "@/lib/env";
 import {
   emailsUsed,
   meterStatus,
+  USAGE_ORDER,
   usedShare,
   type MeterStatus,
+  type UsageRow,
 } from "@/lib/usage/meters";
 import type { UsageReport } from "@/lib/usage/usage";
 
@@ -151,15 +153,15 @@ function Note({ children }: { children: ReactNode }) {
 /**
  * Settings → Admin → Usage this month, the page's last section: how much of each
  * service's free plan this copy has used, so nothing runs out by surprise, each figure
- * with when it was last updated.
+ * with when it was last updated. The rows go most critical first (USAGE_ORDER):
  * - Stream: FaceOn's own count of participant-minutes; Stream's API doesn't report what
  *   it bills.
+ * - Neon: compute hours from Neon's API, where it's set up.
+ * - Vercel: a link only. Vercel's API has no read-only token, and it warns by email.
  * - Emails: the whole Resend account's count leads, with FaceOn's share beside it, from
  *   Resend's list of emails where the key can read it, or its answer to FaceOn's last
  *   email (lib/usage/resend.ts, emails.ts). Mailtrap's, where it's the backup, by
  *   FaceOn's own count.
- * - Neon: compute hours from Neon's API, where it's set up.
- * - Vercel: a link only. Vercel's API has no read-only token, and it warns by email.
  * Figures from other services refresh at most every five minutes while someone looks,
  * and daily in the sweep, which also emails the admins at 80% and 100%
  * (lib/usage/alerts.ts), linking here (#usage).
@@ -234,6 +236,115 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
     </MeterRow>
   );
 
+  // Each row, by its place in USAGE_ORDER; a service that isn't set up says so (and
+  // how), and the emails' second row has nothing to add then.
+  const rows: Record<UsageRow, ReactNode> = {
+    stream: stream.configured ? (
+      <MeterRow
+        id="stream"
+        title={t("stream.title")}
+        used={stream.minutes}
+        limit={stream.limit}
+        value={
+          stream.limit > 0
+            ? t("stream.value", {
+                used: Math.round(stream.minutes),
+                limit: stream.limit,
+              })
+            : t("stream.count", { used: Math.round(stream.minutes) })
+        }
+      >
+        <Note>{t("stream.note", { appName })}</Note>
+        <Note>
+          <UsageUpdated at={stream.countedAt.toISOString()} />
+        </Note>
+        <OutLink href={STREAM_DASHBOARD}>{t("stream.dashboard")}</OutLink>
+      </MeterRow>
+    ) : (
+      <li className="flex flex-col gap-1 py-4">
+        <h4 className="font-semibold">{t("stream.title")}</h4>
+        <Note>{t("stream.off")}</Note>
+      </li>
+    ),
+    neon:
+      neon.state === "ok" ? (
+        <MeterRow
+          id="neon"
+          title={t("neon.title")}
+          used={neon.cuHours}
+          limit={neon.limit}
+          value={
+            neon.limit > 0
+              ? t("neon.value", {
+                  used: Math.round(neon.cuHours * 10) / 10,
+                  limit: neon.limit,
+                })
+              : t("neon.count", { used: Math.round(neon.cuHours * 10) / 10 })
+          }
+        >
+          <Note>
+            {neon.periodStart && neon.periodEnd
+              ? t("neon.period", {
+                  start: day(neon.periodStart),
+                  end: day(neon.periodEnd),
+                  appName,
+                })
+              : t("neon.note", { appName })}
+          </Note>
+          <Note>
+            <UsageUpdated at={neon.readAt.toISOString()} />
+          </Note>
+        </MeterRow>
+      ) : (
+        <li className="flex flex-col gap-1.5 py-4">
+          <h4 className="font-semibold">{t("neon.title")}</h4>
+          <Note>
+            {neon.state === "unavailable"
+              ? t("neon.unavailable")
+              : t("neon.setup", { appName })}
+          </Note>
+          {neon.state === "unconfigured" ? (
+            <OutLink href={NEON_CONSOLE}>{t("neon.console")}</OutLink>
+          ) : null}
+        </li>
+      ),
+    vercel: (
+      <li className="flex flex-col gap-1.5 py-4">
+        <h4 className="font-semibold">{t("vercel.title")}</h4>
+        <Note>{t("vercel.body", { appName })}</Note>
+        <OutLink href={VERCEL_USAGE}>{t("vercel.link")}</OutLink>
+      </li>
+    ),
+    emailsDay: emails.configured ? (
+      emailRow("emailsToday", emails.today, emails.perDay)
+    ) : (
+      <li className="flex flex-col gap-1 py-4 last:pb-0">
+        <h4 className="font-semibold">{t("emailsOff.title")}</h4>
+        <Note>
+          {t(mailtrap.configured ? "emailsOff.backup" : "emailsOff.body", {
+            appName,
+          })}
+        </Note>
+      </li>
+    ),
+    emailsMonth: emails.configured
+      ? emailRow(
+          "emailsMonth",
+          emails.month,
+          emails.perMonth,
+          emails.listing === "restricted" ? (
+            <Note>{t("emailsKey", { appName })}</Note>
+          ) : null,
+        )
+      : null,
+    mailtrapDay: mailtrap.configured
+      ? mailtrapRow("mailtrapToday", mailtrap.today, mailtrap.perDay)
+      : null,
+    mailtrapMonth: mailtrap.configured
+      ? mailtrapRow("mailtrapMonth", mailtrap.month, mailtrap.perMonth)
+      : null,
+  };
+
   return (
     <AdminCard
       id="usage"
@@ -241,111 +352,9 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
       description={t("body", { appName })}
     >
       <ul className="flex flex-col divide-y border-t">
-        {stream.configured ? (
-          <MeterRow
-            id="stream"
-            title={t("stream.title")}
-            used={stream.minutes}
-            limit={stream.limit}
-            value={
-              stream.limit > 0
-                ? t("stream.value", {
-                    used: Math.round(stream.minutes),
-                    limit: stream.limit,
-                  })
-                : t("stream.count", { used: Math.round(stream.minutes) })
-            }
-          >
-            <Note>{t("stream.note", { appName })}</Note>
-            <Note>
-              <UsageUpdated at={stream.countedAt.toISOString()} />
-            </Note>
-            <OutLink href={STREAM_DASHBOARD}>{t("stream.dashboard")}</OutLink>
-          </MeterRow>
-        ) : (
-          <li className="flex flex-col gap-1 py-4">
-            <h4 className="font-semibold">{t("stream.title")}</h4>
-            <Note>{t("stream.off")}</Note>
-          </li>
-        )}
-
-        {emails.configured ? (
-          <>
-            {emailRow("emailsToday", emails.today, emails.perDay)}
-            {emailRow(
-              "emailsMonth",
-              emails.month,
-              emails.perMonth,
-              emails.listing === "restricted" ? (
-                <Note>{t("emailsKey", { appName })}</Note>
-              ) : null,
-            )}
-          </>
-        ) : (
-          <li className="flex flex-col gap-1 py-4">
-            <h4 className="font-semibold">{t("emailsOff.title")}</h4>
-            <Note>
-              {t(mailtrap.configured ? "emailsOff.backup" : "emailsOff.body", {
-                appName,
-              })}
-            </Note>
-          </li>
-        )}
-
-        {mailtrap.configured ? (
-          <>
-            {mailtrapRow("mailtrapToday", mailtrap.today, mailtrap.perDay)}
-            {mailtrapRow("mailtrapMonth", mailtrap.month, mailtrap.perMonth)}
-          </>
-        ) : null}
-
-        {neon.state === "ok" ? (
-          <MeterRow
-            id="neon"
-            title={t("neon.title")}
-            used={neon.cuHours}
-            limit={neon.limit}
-            value={
-              neon.limit > 0
-                ? t("neon.value", {
-                    used: Math.round(neon.cuHours * 10) / 10,
-                    limit: neon.limit,
-                  })
-                : t("neon.count", { used: Math.round(neon.cuHours * 10) / 10 })
-            }
-          >
-            <Note>
-              {neon.periodStart && neon.periodEnd
-                ? t("neon.period", {
-                    start: day(neon.periodStart),
-                    end: day(neon.periodEnd),
-                    appName,
-                  })
-                : t("neon.note", { appName })}
-            </Note>
-            <Note>
-              <UsageUpdated at={neon.readAt.toISOString()} />
-            </Note>
-          </MeterRow>
-        ) : (
-          <li className="flex flex-col gap-1.5 py-4">
-            <h4 className="font-semibold">{t("neon.title")}</h4>
-            <Note>
-              {neon.state === "unavailable"
-                ? t("neon.unavailable")
-                : t("neon.setup", { appName })}
-            </Note>
-            {neon.state === "unconfigured" ? (
-              <OutLink href={NEON_CONSOLE}>{t("neon.console")}</OutLink>
-            ) : null}
-          </li>
-        )}
-
-        <li className="flex flex-col gap-1.5 py-4 last:pb-0">
-          <h4 className="font-semibold">{t("vercel.title")}</h4>
-          <Note>{t("vercel.body")}</Note>
-          <OutLink href={VERCEL_USAGE}>{t("vercel.link")}</OutLink>
-        </li>
+        {USAGE_ORDER.map((row) => (
+          <Fragment key={row}>{rows[row]}</Fragment>
+        ))}
       </ul>
     </AdminCard>
   );

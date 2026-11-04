@@ -74,9 +74,10 @@ describe("Neon's project details", () => {
 });
 
 describe("what the daily sweep checks", () => {
-  it("reads every meter that's set up", () => {
+  it("reads every meter that's set up, most critical first", () => {
     expect(readingsOf(report())).toEqual([
       { meter: "stream", period: "2026-11", used: 1200.5, limit: 333_000 },
+      { meter: "neon", period: "2026-11-01", used: 50, limit: 100 },
       {
         meter: "emailsDay",
         period: "2026-11",
@@ -85,7 +86,6 @@ describe("what the daily sweep checks", () => {
         day: "2026-11-03",
       },
       { meter: "emailsMonth", period: "2026-11", used: 400, limit: 3000 },
-      { meter: "neon", period: "2026-11-01", used: 50, limit: 100 },
     ]);
   });
 
@@ -123,6 +123,14 @@ describe("what the daily sweep checks", () => {
         },
       }),
     );
+    expect(readings.map((reading) => reading.meter)).toEqual([
+      "stream",
+      "neon",
+      "emailsDay",
+      "emailsMonth",
+      "mailtrapDay",
+      "mailtrapMonth",
+    ]);
     expect(
       readings.filter((reading) => reading.meter.startsWith("mailtrap")),
     ).toEqual([

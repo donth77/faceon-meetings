@@ -4,7 +4,13 @@ import { mailtrapConfig, resendConfig } from "@/lib/email/providers";
 import { serverEnv } from "@/lib/server-env";
 
 import { emailUsage, type EmailUsage } from "./emails";
-import { emailsUsed, utcMonth, type EmailCount, type Reading } from "./meters";
+import {
+  emailsUsed,
+  inUsageOrder,
+  utcMonth,
+  type EmailCount,
+  type Reading,
+} from "./meters";
 import { neonUsage, type NeonUsage } from "./neon";
 import type { Listing } from "./resend";
 import { streamMinutesThisMonth } from "./stream";
@@ -87,9 +93,9 @@ export async function usageReport(
 }
 
 /**
- * What the daily sweep checks: this month's Stream minutes and emails (Resend's, and
- * Mailtrap's where it's the backup), yesterday's emails against a day's limit (the day
- * is over by then), and Neon's billing period.
+ * What the daily sweep checks, most critical first (USAGE_ORDER): this month's Stream
+ * minutes, Neon's billing period, and emails (Resend's, and Mailtrap's where it's the
+ * backup), with yesterday's emails against a day's limit (the day is over by then).
  */
 export function readingsOf(report: UsageReport): Reading[] {
   const readings: Reading[] = [];
@@ -144,5 +150,5 @@ export function readingsOf(report: UsageReport): Reading[] {
       limit: report.neon.limit,
     });
   }
-  return readings;
+  return inUsageOrder(readings);
 }

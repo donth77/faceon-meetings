@@ -7,6 +7,7 @@ import {
   dayBefore,
   emailsByDay,
   emailsUsed,
+  inUsageOrder,
   meterStatus,
   participantMinutes,
   quotaHeader,
@@ -38,6 +39,33 @@ describe("meter status", () => {
     expect(usedShare(500, 0)).toBeNull();
     expect(meterStatus(500, 0)).toBe("ok");
     expect(usedShare(25, 100)).toBe(0.25);
+  });
+});
+
+describe("the order of the meters", () => {
+  it("puts calls first, then the database and hosting, then emails", () => {
+    const reading = (meter: Reading["meter"]): Reading => ({
+      meter,
+      period: "2026-11",
+      used: 1,
+      limit: 10,
+    });
+    const shuffled = [
+      reading("mailtrapMonth"),
+      reading("emailsDay"),
+      reading("neon"),
+      reading("mailtrapDay"),
+      reading("stream"),
+      reading("emailsMonth"),
+    ];
+    expect(inUsageOrder(shuffled).map((r) => r.meter)).toEqual([
+      "stream",
+      "neon",
+      "emailsDay",
+      "emailsMonth",
+      "mailtrapDay",
+      "mailtrapMonth",
+    ]);
   });
 });
 

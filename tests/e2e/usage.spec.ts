@@ -34,6 +34,13 @@ test.describe("Settings → Admin → Usage this month", () => {
     await expect(heading).toBeInViewport();
     await expect(page.locator("#usage ~ section")).toHaveCount(0);
     await expect(page.locator("section:has(h3) ~ #usage")).toHaveCount(1);
+    // Most critical first: calls, then the database and hosting, then emails.
+    await expect(usage.getByRole("heading", { level: 4 })).toHaveText([
+      "Stream video minutes",
+      "Database compute (Neon)",
+      "Hosting (Vercel)",
+      "Emails",
+    ]);
 
     // Stream: a meter where Stream is set up, saying how much of the month's minutes.
     if (hasStream) {

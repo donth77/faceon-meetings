@@ -5,17 +5,33 @@
  */
 
 /**
- * What's measured: Stream's participant-minutes, the emails sent in a day and in a
- * month (against Resend's limits, and Mailtrap's where it's the backup), and Neon's
- * compute hours.
+ * Usage this month's rows, most critical first: Stream's participant-minutes (the calls
+ * themselves), then the database's compute hours and the hosting that everything needs,
+ * then the emails sent in a day and in a month, against Resend's limits and then
+ * Mailtrap's where it's the backup. Settings → Admin lists them in this order, and the
+ * daily sweep checks and warns in it (usage.ts, readingsOf).
  */
-export type MeterId =
-  | "stream"
-  | "emailsDay"
-  | "emailsMonth"
-  | "mailtrapDay"
-  | "mailtrapMonth"
-  | "neon";
+export const USAGE_ORDER = [
+  "stream",
+  "neon",
+  "vercel",
+  "emailsDay",
+  "emailsMonth",
+  "mailtrapDay",
+  "mailtrapMonth",
+] as const;
+export type UsageRow = (typeof USAGE_ORDER)[number];
+
+/** What's measured: every row but Vercel's, a link (its API has no read-only key). */
+export type MeterId = Exclude<UsageRow, "vercel">;
+
+/** Readings in USAGE_ORDER, most critical first. */
+export const inUsageOrder = <T extends { meter: MeterId }>(
+  readings: readonly T[],
+): T[] =>
+  [...readings].sort(
+    (a, b) => USAGE_ORDER.indexOf(a.meter) - USAGE_ORDER.indexOf(b.meter),
+  );
 
 /** Admins are emailed when a meter reaches each of these percentages, once per period. */
 export const THRESHOLDS = [80, 100] as const;
