@@ -42,6 +42,7 @@ As notas de IA só são guardadas quando um anfitrião ou coanfitrião decide sa
 
 - **Permissão para gerenciar eventos** nas agendas do Google que são suas, que você dá na própria tela do Google. Entrar com o Google nunca pede essa permissão.
 - Os **tokens** dessa permissão, criptografados.
+- O **e-mail da conta do Google** que você conecta, do token de login que o Google dá ao {appName}, para que **Configurações** possa mostrar qual conta é. Ele pode ser diferente do e-mail da sua conta do {appName}.
 - O **ID de cada evento** que o {appName} cria, para poder atualizar ou cancelar o evento quando você muda a reunião.
 
 O {appName} usa essa permissão só para adicionar, atualizar e cancelar as reuniões que você agenda. Ele nunca lê seus outros eventos.
@@ -53,7 +54,7 @@ Se você adicionar o {appName} ao Google Agenda e ao Gmail (em **Configurações
 - **Permissão para criar e atualizar projetos do Apps Script**, que você dá na própria tela do Google, e os **tokens** dela, criptografados. O {appName} a usa só para criar sua cópia do complemento e mantê-la atualizada. Ele nunca lê nem muda seus outros projetos.
 - O **ID do projeto** da sua cópia, o **ID da Conta do Google** em que ela está e o **ID do cliente Google** dela, para que o {appName} só a aceite vinda de você.
 
-Para as reuniões que você cria com o complemento, o {appName} guarda o mesmo que para qualquer reunião agendada (título, horários, repetição e configurações). Para uma reunião criada a partir de um evento do Agenda, ele também guarda o **ID desse evento** e o **ID da agenda** dele (na sua agenda principal, é o seu endereço de e-mail), para acompanhar o evento e criar um link para ele. Ele não guarda os convidados do evento: quem os convida é o Google Agenda.
+Para as reuniões que você cria com o complemento, o {appName} guarda o mesmo que para qualquer reunião agendada (título, horários, repetição e configurações). Para uma reunião criada a partir de um evento do Agenda, ele também guarda o **ID desse evento** e o **ID da agenda** dele (na sua agenda principal, é o endereço de e-mail da sua conta do Google), para acompanhar o evento e criar um link para ele. Ele não guarda os convidados do evento: quem os convida é o Google Agenda.
 
 O complemento é executado nos servidores do Google, com a sua Conta do Google. No Google Agenda, ele lê o evento em que é aberto e, para manter as reuniões sincronizadas, os eventos que mudam depois nessa agenda, e só informa ao {appName} os que têm reuniões do {appName}. No Gmail, ele só insere o texto que você escolhe no e-mail que está escrevendo, e nunca lê seus e-mails. Para saber quem você é, ele envia ao {appName} um token do Google com o ID da sua Conta do Google, que o {appName} usa nessa solicitação e nunca guarda.
 

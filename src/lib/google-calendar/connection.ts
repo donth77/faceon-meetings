@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
@@ -9,6 +9,7 @@ import { loggable } from "@/lib/log";
 import { serverEnv } from "@/lib/server-env";
 
 import { googleClientConfigured } from "./client";
+import { idTokenEmail } from "./id-token";
 import { watchGoogleRefresh, type RefreshWatch } from "./refresh";
 import {
   GOOGLE_CALENDAR_SCOPE,
@@ -41,6 +42,7 @@ async function googleAccountWith(
       googleSub: account.accountId,
       scope: account.scope,
       refreshToken: account.refreshToken,
+      idToken: account.idToken,
       updatedAt: account.updatedAt,
     })
     .from(account)
@@ -57,8 +59,9 @@ async function googleAccountWith(
 }
 
 /**
- * Where someone's Google Calendar stands. Connected means Google gave FaceOn a refresh
- * token with calendar access; once Google refuses it, it's a reconnect.
+ * Where someone's Google Calendar stands, with the connected Google account's email,
+ * which can differ from theirs (lib/auth/linking-rules.ts). Connected means Google gave
+ * FaceOn a refresh token with calendar access; once Google refuses it, it's a reconnect.
  */
 export async function calendarConnection(person: {
   id: string;
@@ -68,8 +71,27 @@ export async function calendarConnection(person: {
   const found = await googleAccountWith(person.id, GOOGLE_CALENDAR_SCOPE);
   if (!found) return { status: "disconnected" };
   return found.refreshToken
-    ? { status: "connected", email: person.email }
+    ? {
+        status: "connected",
+        email: idTokenEmail(found.idToken) ?? person.email,
+      }
     : { status: "reconnect" };
+}
+
+/**
+ * The email of someone's linked Google account (the latest, if they somehow linked more
+ * than one), for Settings to show; null without one, or when Google didn't say.
+ */
+export async function googleAccountEmail(
+  userId: string,
+): Promise<string | null> {
+  const [latest] = await db()
+    .select({ idToken: account.idToken })
+    .from(account)
+    .where(and(eq(account.userId, userId), eq(account.providerId, "google")))
+    .orderBy(desc(account.updatedAt))
+    .limit(1);
+  return idTokenEmail(latest?.idToken);
 }
 
 /** Whether someone gave FaceOn `scope` with a grant it can still use. */

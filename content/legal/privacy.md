@@ -42,6 +42,7 @@ AI notes are kept only when a host or co-host chooses to save them, or when the 
 
 - **Permission to manage events** on the Google calendars you own, which you give on Google's own screen. Signing in with Google never asks for it.
 - The **tokens** for that permission, encrypted.
+- The **email of the Google account** you connect, from the sign-in token Google gives {appName}, so **Settings** can show which account it is. It can differ from your {appName} account’s.
 - The **ID of each event** {appName} creates, so it can update or cancel the event when you change the meeting.
 
 {appName} uses this permission only to add, update and cancel the meetings you schedule. It never reads your other events.
@@ -53,7 +54,7 @@ If you add {appName} to Google Calendar and Gmail (in **Settings**, under **Cale
 - **Permission to create and update Apps Script projects**, which you give on Google's own screen, and the **tokens** for it, encrypted. {appName} uses it only to create your copy of the add-on and to keep it up to date. It never reads or changes your other projects.
 - Your copy's **project ID**, the **ID of your Google account** it's in, and its **Google client ID**, so {appName} accepts it only from you.
 
-For meetings you make with the add-on, {appName} keeps what it keeps for any meeting you schedule (its title, times, repeat and settings). For a meeting made from a Calendar event, it also keeps that **event's ID** and its **calendar's ID** (for your main calendar, that's your email address), to follow the event and link to it. It doesn't keep the event's guests: Google Calendar invites them.
+For meetings you make with the add-on, {appName} keeps what it keeps for any meeting you schedule (its title, times, repeat and settings). For a meeting made from a Calendar event, it also keeps that **event's ID** and its **calendar's ID** (for your main calendar, that's your Google account's email address), to follow the event and link to it. It doesn't keep the event's guests: Google Calendar invites them.
 
 The add-on runs on Google's servers, under your Google account. In Google Calendar it reads the event it's opened on, and, to keep meetings in step, the events that change in that calendar afterwards, telling {appName} only about the ones with {appName} meetings. In Gmail it only inserts the text you choose into the email you're writing, and never reads your mail. To know who you are, it sends {appName} a token from Google with your Google account's ID, which {appName} uses for that request and never keeps.
 

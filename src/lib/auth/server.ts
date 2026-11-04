@@ -30,7 +30,8 @@ import { humanCheckSecret } from "@/lib/human-check/verify";
 import { siteUrl } from "@/lib/site";
 
 import { desktopHandoff } from "./desktop-handoff";
-import { dropUnverifiedPassword } from "./linking";
+import { checkLinkedAccount, dropUnverifiedPassword } from "./linking";
+import { ACCOUNT_LINKING } from "./linking-rules";
 import { authOrigins } from "./origins";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "./password";
 
@@ -84,9 +85,10 @@ function emailUser(
 
 /**
  * Accounts: Google, GitHub, or email and password. The first social sign-in creates the
- * account; an email account must verify its address before it can sign in. Accounts with
- * the same verified email are linked. Responses never reveal whether an email has an
- * account.
+ * account; an email account must verify its address before it can sign in. Signing in
+ * with Google or GitHub links to the account with the same email once the provider has
+ * verified it; Settings can also connect a Google account with another email
+ * (lib/auth/linking-rules.ts). Responses never reveal whether an email has an account.
  */
 export const auth = betterAuth({
   appName: publicEnv.NEXT_PUBLIC_APP_NAME,
@@ -107,13 +109,8 @@ export const auth = betterAuth({
     },
   },
   account: {
-    accountLinking: {
-      enabled: true,
-      trustedProviders: ["google", "github"],
-      // Google or GitHub may link to an account whose email was never verified; the
-      // hook below drops that account's password first.
-      requireLocalEmailVerified: false,
-    },
+    // Which provider accounts may join which FaceOn account (lib/auth/linking-rules.ts).
+    accountLinking: ACCOUNT_LINKING,
     encryptOAuthTokens: true,
   },
   emailAndPassword: {
@@ -147,6 +144,8 @@ export const auth = betterAuth({
       emailUser("verify", user, url),
   },
   user: {
+    // Every link of a Google or GitHub account passes this first (lib/auth/linking.ts).
+    validateUserInfo: checkLinkedAccount,
     // Settings → Account → Delete account; a recent sign-in (or the password) confirms it.
     // Meetings go with the user (foreign keys). First, calls in progress end, upcoming
     // meetings leave Google Calendar (Google tells the invitees), and access is revoked.

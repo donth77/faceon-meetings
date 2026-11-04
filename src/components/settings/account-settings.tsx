@@ -15,6 +15,10 @@ import {
 import { GitHubIcon, GoogleIcon } from "@/components/auth/provider-icons";
 import { AvatarPicker } from "@/components/avatars/avatar-picker";
 import { DownloadButton } from "@/components/exports/download-button";
+import {
+  ConnectAnyway,
+  SignInWithThatAccount,
+} from "@/components/google-calendar/different-email";
 import { LEGAL_LINKS } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,8 +54,11 @@ export type AccountInfo = {
   email: string;
   emailVerified: boolean;
   avatar: AccountAvatar;
-  /** Linked sign-in methods: "google", "github" and "credential" (a password). */
-  methods: Array<{ id: string; providerId: string }>;
+  /**
+   * Linked sign-in methods: "google", "github" and "credential" (a password), with a
+   * Google account's own email where it's known (it can differ from the account's).
+   */
+  methods: Array<{ id: string; providerId: string; email?: string }>;
   /** Whether this deployment offers email-and-password sign-in. */
   passwordSignIn: boolean;
   /** Whether Google Calendar sync is connected, so deleting cancels events there. */
@@ -313,11 +320,15 @@ const PROVIDERS = [
 function SignIn({
   account,
   linkError,
+  linking,
 }: {
   account: AccountInfo;
   linkError: string | null;
+  linking: "google" | "github" | null;
 }) {
   const t = useTranslations("Settings.account");
+  const tc = useTranslations("GoogleCalendar");
+  const problem = linkError ? linkProblem(linkError) : null;
   const router = useRouter();
   const [dialog, setDialog] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -334,7 +345,7 @@ function SignIn({
     const { error } = await linkSocial({
       provider,
       callbackURL: ACCOUNT_ROUTE,
-      errorCallbackURL: ACCOUNT_ROUTE,
+      errorCallbackURL: `${ACCOUNT_ROUTE}?linking=${provider}`,
     });
     if (error) {
       setBusy(null);
@@ -358,9 +369,37 @@ function SignIn({
     "flex flex-wrap items-center justify-between gap-2.5 border-t border-[#e2e5ea] py-3 dark:border-white/10";
   return (
     <SettingsCard title={t("emailAndSignIn")}>
-      {linkError ? (
+      {problem && linking === "google" && problem !== "generic" ? (
+        <div className="flex flex-col gap-2.5">
+          <FormNotice icon={Info}>
+            {tc(`problems.${problem}`, {
+              email: account.email,
+              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+            })}
+          </FormNotice>
+          <div className="flex flex-wrap gap-2">
+            {problem === "emailMismatch" ? (
+              <ConnectAnyway
+                email={account.email}
+                className={OUTLINE}
+                connect={async () => {
+                  const { error } = await linkSocial({
+                    provider: "google",
+                    callbackURL: ACCOUNT_ROUTE,
+                    errorCallbackURL: `${ACCOUNT_ROUTE}?linking=google`,
+                    additionalParams: { prompt: "select_account" },
+                  });
+                  return !error;
+                }}
+              />
+            ) : (
+              <SignInWithThatAccount className={OUTLINE} />
+            )}
+          </div>
+        </div>
+      ) : problem ? (
         <FormNotice icon={Info}>
-          {t(`linkErrors.${linkProblem(linkError)}`, {
+          {t(`linkErrors.${problem}`, {
             email: account.email,
             appName: publicEnv.NEXT_PUBLIC_APP_NAME,
           })}
@@ -388,13 +427,17 @@ function SignIn({
       <div className="flex flex-col">
         <span className="pb-1.5 text-sm font-semibold">{t("methods")}</span>
         {PROVIDERS.map(({ id, name, Icon }) => {
-          const connected = methodFor(id) !== undefined;
+          const method = methodFor(id);
+          const connected = method !== undefined;
           return (
             <div key={id} className={row}>
               <span className="flex items-center gap-2.5 text-[15px]">
                 <Icon className="size-[22px]" />
                 {connected
-                  ? t("withEmail", { method: name, email: account.email })
+                  ? t("withEmail", {
+                      method: name,
+                      email: method.email ?? account.email,
+                    })
                   : name}
               </span>
               {!connected ? (
@@ -639,19 +682,22 @@ export function AccountSettings({
   account,
   avatarChoices,
   linkError,
+  linking,
 }: {
   account: AccountInfo;
   /** Seven avatars to offer beside the current one. */
   avatarChoices: string[];
   /** The error from a failed Connect Google or GitHub, if the page came back with one. */
   linkError: string | null;
+  /** Which of the two that was. */
+  linking: "google" | "github" | null;
 }) {
   const t = useTranslations("Settings.account");
   return (
     <>
       <h2 className="text-[22px] font-bold">{t("title")}</h2>
       <Profile account={account} avatarChoices={avatarChoices} />
-      <SignIn account={account} linkError={linkError} />
+      <SignIn account={account} linkError={linkError} linking={linking} />
       <YourData />
       <DeleteAccount
         hasPassword={account.methods.some(

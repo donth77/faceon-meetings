@@ -1659,11 +1659,23 @@
     "retry": "Tentar de novo",
     "retried": "Google Agenda atualizado",
     "problems": {
-      "emailMismatch": "Essa conta do Google usa outro e-mail. Conecte a que usa {email}.",
-      "alreadyLinked": "Essa conta do Google está conectada a outra conta do {appName}.",
+      "emailMismatch": "Essa conta do Google usa um e-mail diferente do da sua conta do {appName} ({email}).",
+      "alreadyLinked": "Essa conta do Google já pertence a outra conta do {appName}. Para usá-la, entre no {appName} com ela.",
       "denied": "O Google Agenda não foi conectado.",
       "scope": "O Google Agenda não foi conectado: o {appName} precisa de permissão para criar eventos na sua agenda. Tente de novo e permita.",
       "generic": "Não foi possível conectar o Google Agenda. Tente de novo."
+    },
+    "differentEmail": {
+      "connectAnyway": "Conectar mesmo assim",
+      "title": "Conectar uma conta do Google com outro e-mail?",
+      "body": "Sua conta do {appName} usa {email}. Depois de conectar uma conta do Google com outro e-mail, você também poderá entrar nesta conta do {appName} com essa conta do Google. Escolha-a na próxima tela do Google.",
+      "continue": "Continuar no Google",
+      "cancel": "Cancelar",
+      "signInFirst": "Por segurança, para conectar uma conta do Google com outro e-mail você precisa ter entrado há pouco. Entre de novo e depois conecte.",
+      "signInAgain": "Entrar de novo",
+      "failed": "Não foi possível começar a conexão. Tente de novo.",
+      "otherAccount": "Entrar com essa conta do Google",
+      "alsoSignIn": "O e-mail desta conta do Google não é o da sua conta do {appName}. Você também pode entrar no {appName} com ela."
     },
     "inBrowser": "Termine de conectar no seu navegador. Vai aparecer aqui quando terminar."
   },

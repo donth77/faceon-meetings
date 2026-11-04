@@ -42,6 +42,7 @@ Las notas de IA solo se conservan cuando un anfitrión o coanfitrión decide gua
 
 - **Permiso para administrar eventos** en los calendarios de Google que son tuyos, que das en la propia pantalla de Google. Iniciar sesión con Google nunca lo pide.
 - Los **tokens** de ese permiso, cifrados.
+- El **correo de la cuenta de Google** que conectas, del token de inicio de sesión que Google le da a {appName}, para que **Configuración** pueda mostrar qué cuenta es. Puede ser distinto del de tu cuenta de {appName}.
 - El **ID de cada evento** que crea {appName}, para poder actualizar o cancelar el evento cuando cambias la reunión.
 
 {appName} usa este permiso solo para agregar, actualizar y cancelar las reuniones que programas. Nunca lee tus demás eventos.
@@ -53,7 +54,7 @@ Si agregas {appName} a Google Calendar y Gmail (en **Configuración**, en **Cale
 - **Permiso para crear y actualizar proyectos de Apps Script**, que das en la propia pantalla de Google, y sus **tokens**, cifrados. {appName} lo usa solo para crear tu copia del complemento y mantenerla actualizada. Nunca lee ni cambia tus demás proyectos.
 - El **ID del proyecto** de tu copia, el **ID de la cuenta de Google** en la que está y su **ID de cliente de Google**, para que {appName} solo la acepte si viene de ti.
 
-Para las reuniones que creas con el complemento, {appName} guarda lo mismo que para cualquier reunión que programas (su título, sus horas, cómo se repite y su configuración). Para una reunión creada desde un evento de Calendar, también guarda el **ID de ese evento** y el **ID de su calendario** (en tu calendario principal, es tu dirección de correo), para seguir el evento y enlazarlo. No guarda los invitados del evento: los invita Google Calendar.
+Para las reuniones que creas con el complemento, {appName} guarda lo mismo que para cualquier reunión que programas (su título, sus horas, cómo se repite y su configuración). Para una reunión creada desde un evento de Calendar, también guarda el **ID de ese evento** y el **ID de su calendario** (en tu calendario principal, es la dirección de correo de tu cuenta de Google), para seguir el evento y enlazarlo. No guarda los invitados del evento: los invita Google Calendar.
 
 El complemento se ejecuta en los servidores de Google, con tu cuenta de Google. En Google Calendar lee el evento en el que se abre y, para mantener las reuniones al día, los eventos que cambian después en ese calendario, y solo le informa a {appName} sobre los que tienen reuniones de {appName}. En Gmail solo inserta el texto que eliges en el correo que estás escribiendo, y nunca lee tu correo. Para saber quién eres, envía a {appName} un token de Google con el ID de tu cuenta de Google, que {appName} usa para esa solicitud y nunca guarda.
 

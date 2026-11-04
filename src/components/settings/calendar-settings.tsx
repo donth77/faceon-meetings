@@ -19,6 +19,10 @@ import {
   connectInPage,
   reportToOpener,
 } from "@/components/google-calendar/connect";
+import {
+  ConnectAnyway,
+  SignInWithThatAccount,
+} from "@/components/google-calendar/different-email";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { AddonSetup } from "@/lib/addon/google/setup-shared";
@@ -145,12 +149,32 @@ export function CalendarSettings({
       <SectionTitle title={t("title")} />
       <SettingsCard title={t("google")}>
         {problem ? (
-          <FormNotice icon={Info}>
-            {tc(`problems.${problem}`, {
-              email,
-              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
-            })}
-          </FormNotice>
+          <div className="flex flex-col gap-2.5">
+            <FormNotice icon={Info}>
+              {tc(`problems.${problem}`, {
+                email,
+                appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+              })}
+            </FormNotice>
+            {problem === "emailMismatch" ? (
+              <div className="flex flex-wrap gap-2">
+                <ConnectAnyway
+                  email={email}
+                  className={OUTLINE}
+                  connect={() =>
+                    connectInPage({
+                      back: `${CALENDAR_SETTINGS_ROUTE}?connected=1`,
+                      anyAccount: true,
+                    })
+                  }
+                />
+              </div>
+            ) : problem === "alreadyLinked" ? (
+              <div className="flex flex-wrap gap-2">
+                <SignInWithThatAccount className={OUTLINE} />
+              </div>
+            ) : null}
+          </div>
         ) : consent.returned && connection.status === "connected" ? (
           <FormNotice icon={CircleCheck} role="status">
             {tc("connected")}
@@ -190,6 +214,13 @@ export function CalendarSettings({
             actions={disconnectButton}
           >
             <p>{t("connectedBody")}</p>
+            {connection.email.toLowerCase() !== email.toLowerCase() ? (
+              <p>
+                {tc("differentEmail.alsoSignIn", {
+                  appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+                })}
+              </p>
+            ) : null}
           </ConnectionState>
         ) : null}
         {connection.status === "reconnect" ? (

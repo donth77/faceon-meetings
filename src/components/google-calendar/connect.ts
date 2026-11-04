@@ -189,22 +189,56 @@ export type ConnectReport = {
   error: string | null;
 };
 
-/** Asks Better Auth to send this window, or the consent window, to Google. */
+/**
+ * Asks Better Auth to send this window, or the consent window, to Google. `anyAccount`
+ * lets the person pick a Google account whose email isn't theirs, once they've
+ * confirmed it (allowDifferentEmail).
+ */
 function startConsent(options: {
   back: string;
   loginHint?: string;
   inPopup: boolean;
   scope?: GoogleScope;
+  anyAccount?: boolean;
 }) {
   return linkSocial({
     provider: "google",
     scopes: [options.scope ?? GOOGLE_CALENDAR_SCOPE],
-    additionalParams: { ...GOOGLE_OFFLINE_CONSENT },
-    loginHint: options.loginHint,
+    additionalParams: options.anyAccount
+      ? { ...GOOGLE_OFFLINE_CONSENT, prompt: "consent select_account" }
+      : { ...GOOGLE_OFFLINE_CONSENT },
+    loginHint: options.anyAccount ? undefined : options.loginHint,
     callbackURL: options.back,
     errorCallbackURL: options.back,
     disableRedirect: options.inPopup,
   });
+}
+
+/**
+ * The person confirmed connecting a Google account whose email isn't their account's:
+ * FaceOn allows it for a few minutes, and only after a recent sign-in
+ * (lib/auth/linking-rules.ts). "signInAgain" when their sign-in is too old.
+ */
+export async function allowDifferentEmail(): Promise<
+  "ok" | "signInAgain" | "failed"
+> {
+  try {
+    const response = await fetch("/api/integrations/google-link", {
+      method: "POST",
+      cache: "no-store",
+    });
+    if (response.ok) return "ok";
+    const body: unknown = await response.json().catch(() => null);
+    return response.status === 403 &&
+      typeof body === "object" &&
+      body !== null &&
+      "problem" in body &&
+      body.problem === "signInAgain"
+      ? "signInAgain"
+      : "failed";
+  } catch {
+    return "failed";
+  }
 }
 
 /**
@@ -216,6 +250,7 @@ export async function connectInPage(options: {
   back: string;
   loginHint?: string;
   scope?: GoogleScope;
+  anyAccount?: boolean;
 }): Promise<boolean> {
   const { error } = await startConsent({ ...options, inPopup: false });
   return !error;

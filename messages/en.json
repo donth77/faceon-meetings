@@ -1659,11 +1659,23 @@
     "retry": "Retry",
     "retried": "Google Calendar updated",
     "problems": {
-      "emailMismatch": "That Google account uses a different email. Connect the one that uses {email}.",
-      "alreadyLinked": "That Google account is connected to a different {appName} account.",
+      "emailMismatch": "That Google account uses a different email from your {appName} account ({email}).",
+      "alreadyLinked": "That Google account already belongs to another {appName} account. To use it, sign in to {appName} with it instead.",
       "denied": "Google Calendar wasn’t connected.",
       "scope": "Google Calendar wasn’t connected: {appName} needs permission to make events in your calendar. Try again and allow it.",
       "generic": "Couldn’t connect Google Calendar. Try again."
+    },
+    "differentEmail": {
+      "connectAnyway": "Connect it anyway",
+      "title": "Connect a Google account with a different email?",
+      "body": "Your {appName} account uses {email}. Once you connect a Google account with another email, you can also sign in to this {appName} account with that Google account. Choose it on Google’s next screen.",
+      "continue": "Continue to Google",
+      "cancel": "Cancel",
+      "signInFirst": "For your security, connecting a Google account with a different email needs a recent sign-in. Sign in again, then connect it.",
+      "signInAgain": "Sign in again",
+      "failed": "Couldn’t start connecting. Try again.",
+      "otherAccount": "Sign in with that Google account",
+      "alsoSignIn": "This Google account’s email isn’t your {appName} account’s. You can also sign in to {appName} with it."
     },
     "inBrowser": "Finish connecting in your browser. It shows here once it’s done."
   },

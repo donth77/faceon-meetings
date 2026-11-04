@@ -42,6 +42,7 @@ Les notes IA ne sont conservées que lorsqu’un hôte ou un co-hôte choisit de
 
 - **L’autorisation de gérer les événements** des agendas Google qui vous appartiennent, que vous accordez sur l’écran de Google. La connexion avec Google ne la demande jamais.
 - Les **jetons** de cette autorisation, chiffrés.
+- L’**adresse e-mail du compte Google** que vous connectez, tirée du jeton de connexion que Google donne à {appName}, pour que **Paramètres** puisse indiquer de quel compte il s’agit. Elle peut différer de celle de votre compte {appName}.
 - L’**ID de chaque événement** créé par {appName}, pour pouvoir mettre à jour ou annuler l’événement quand vous modifiez la réunion.
 
 {appName} n’utilise cette autorisation que pour ajouter, mettre à jour et annuler les réunions que vous planifiez. Il ne lit jamais vos autres événements.
@@ -53,7 +54,7 @@ Si vous ajoutez {appName} à Google Agenda et Gmail (dans **Paramètres**, sous 
 - **L’autorisation de créer et de mettre à jour des projets Apps Script**, que vous accordez sur l’écran de Google, et ses **jetons**, chiffrés. {appName} ne s’en sert que pour créer votre copie du module complémentaire et la tenir à jour. Il ne lit ni ne modifie jamais vos autres projets.
 - L’**ID du projet** de votre copie, l’**ID du compte Google** qui l’héberge et son **ID client Google**, pour que {appName} ne l’accepte que de votre part.
 
-Pour les réunions créées avec le module complémentaire, {appName} conserve la même chose que pour toute réunion planifiée (son titre, ses horaires, sa récurrence et ses paramètres). Pour une réunion créée depuis un événement d’Agenda, il conserve aussi l’**ID de cet événement** et l’**ID de son agenda** (pour votre agenda principal, il s’agit de votre adresse e-mail), afin de suivre l’événement et d’y renvoyer. Il ne conserve pas les invités de l’événement : c’est Google Agenda qui les invite.
+Pour les réunions créées avec le module complémentaire, {appName} conserve la même chose que pour toute réunion planifiée (son titre, ses horaires, sa récurrence et ses paramètres). Pour une réunion créée depuis un événement d’Agenda, il conserve aussi l’**ID de cet événement** et l’**ID de son agenda** (pour votre agenda principal, il s’agit de l’adresse e-mail de votre compte Google), afin de suivre l’événement et d’y renvoyer. Il ne conserve pas les invités de l’événement : c’est Google Agenda qui les invite.
 
 Le module complémentaire s’exécute sur les serveurs de Google, avec votre compte Google. Dans Google Agenda, il lit l’événement sur lequel il est ouvert et, pour garder les réunions synchronisées, les événements qui changent ensuite dans cet agenda, et ne signale à {appName} que ceux qui ont des réunions {appName}. Dans Gmail, il insère seulement le texte que vous choisissez dans l’e-mail que vous rédigez, et ne lit jamais vos e-mails. Pour savoir qui vous êtes, il envoie à {appName} un jeton de Google contenant l’ID de votre compte Google, que {appName} utilise pour cette requête et ne conserve jamais.
 

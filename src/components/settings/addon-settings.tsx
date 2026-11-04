@@ -18,6 +18,10 @@ import {
   CALENDAR_SETTINGS_ROUTE,
   connectInPage,
 } from "@/components/google-calendar/connect";
+import {
+  ConnectAnyway,
+  SignInWithThatAccount,
+} from "@/components/google-calendar/different-email";
 import { Button, LinkButton } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { NewTabNote } from "@/components/ui/new-tab-note";
@@ -243,6 +247,13 @@ export function AddonSettings({
         <ProblemNote
           problem={problem}
           email={email}
+          connectAnyway={() =>
+            connectInPage({
+              back: `${CALENDAR_SETTINGS_ROUTE}?addon=${lastAction}`,
+              scope: GOOGLE_SCRIPT_SCOPE,
+              anyAccount: true,
+            })
+          }
           retry={
             RETRY.has(problem.kind)
               ? () => {
@@ -378,10 +389,13 @@ export function AddonSettings({
 function ProblemNote({
   problem,
   email,
+  connectAnyway,
   retry,
 }: {
   problem: Problem;
   email: string;
+  /** Back to Google, to connect a Google account with another email. */
+  connectAnyway: () => Promise<boolean>;
   retry: (() => void) | null;
 }) {
   const t = useTranslations("AddonSetup");
@@ -422,6 +436,16 @@ function ProblemNote({
             {t("turnOnApi")}
             <NewTabNote />
           </LinkButton>
+        ) : null}
+        {problem.kind === "emailMismatch" ? (
+          <ConnectAnyway
+            email={email}
+            className={OUTLINE}
+            connect={connectAnyway}
+          />
+        ) : null}
+        {problem.kind === "alreadyLinked" ? (
+          <SignInWithThatAccount className={OUTLINE} />
         ) : null}
         {retry ? (
           <Button variant="outline" className={OUTLINE} onPress={retry}>

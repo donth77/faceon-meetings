@@ -1659,11 +1659,23 @@
     "retry": "Erneut versuchen",
     "retried": "Google Kalender aktualisiert",
     "problems": {
-      "emailMismatch": "Dieses Google-Konto verwendet eine andere E-Mail-Adresse. Verbinden Sie das Konto mit {email}.",
-      "alreadyLinked": "Dieses Google-Konto ist mit einem anderen {appName}-Konto verbunden.",
+      "emailMismatch": "Dieses Google-Konto verwendet eine andere E-Mail-Adresse als Ihr {appName}-Konto ({email}).",
+      "alreadyLinked": "Dieses Google-Konto gehört bereits zu einem anderen {appName}-Konto. Um es zu verwenden, melden Sie sich stattdessen damit bei {appName} an.",
       "denied": "Google Kalender wurde nicht verbunden.",
       "scope": "Google Kalender wurde nicht verbunden: {appName} braucht die Berechtigung, Termine in Ihrem Kalender zu erstellen. Versuchen Sie es erneut und erlauben Sie es.",
       "generic": "Google Kalender konnte nicht verbunden werden. Versuchen Sie es erneut."
+    },
+    "differentEmail": {
+      "connectAnyway": "Trotzdem verbinden",
+      "title": "Google-Konto mit einer anderen E-Mail-Adresse verbinden?",
+      "body": "Ihr {appName}-Konto verwendet {email}. Wenn Sie ein Google-Konto mit einer anderen E-Mail-Adresse verbinden, können Sie sich auch mit diesem Google-Konto bei diesem {appName}-Konto anmelden. Wählen Sie es auf dem nächsten Bildschirm von Google aus.",
+      "continue": "Weiter zu Google",
+      "cancel": "Abbrechen",
+      "signInFirst": "Zu Ihrer Sicherheit braucht das Verbinden eines Google-Kontos mit einer anderen E-Mail-Adresse eine kürzliche Anmeldung. Melden Sie sich erneut an und verbinden Sie es dann.",
+      "signInAgain": "Erneut anmelden",
+      "failed": "Das Verbinden konnte nicht gestartet werden. Versuchen Sie es erneut.",
+      "otherAccount": "Mit diesem Google-Konto anmelden",
+      "alsoSignIn": "Die E-Mail-Adresse dieses Google-Kontos ist nicht die Ihres {appName}-Kontos. Sie können sich auch damit bei {appName} anmelden."
     },
     "inBrowser": "Schließen Sie die Verbindung in Ihrem Browser ab. Sobald sie steht, wird sie hier angezeigt."
   },

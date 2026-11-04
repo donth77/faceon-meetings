@@ -42,6 +42,7 @@ KI-Notizen werden nur aufbewahrt, wenn ein Host oder Co-Host sie speichert, oder
 
 - Die **Berechtigung, Termine** in Ihren eigenen Google-Kalendern **zu verwalten**, die Sie auf einer Seite von Google erteilen. Die Anmeldung mit Google fragt nie danach.
 - Die **Tokens** für diese Berechtigung, verschlüsselt.
+- Die **E-Mail-Adresse des Google-Kontos**, das Sie verbinden, aus dem Anmelde-Token, das Google {appName} gibt, damit die **Einstellungen** zeigen können, welches Konto es ist. Sie kann von der Ihres {appName}-Kontos abweichen.
 - Die **ID jedes Termins**, den {appName} erstellt, damit es den Termin aktualisieren oder absagen kann, wenn Sie das Meeting ändern.
 
 {appName} nutzt diese Berechtigung nur, um die Meetings, die Sie planen, einzutragen, zu aktualisieren und abzusagen. Ihre anderen Termine liest es nie.
@@ -53,7 +54,7 @@ Wenn Sie {appName} zu Google Kalender und Gmail hinzufügen (in den **Einstellun
 - Die **Berechtigung, Apps-Script-Projekte zu erstellen und zu aktualisieren**, die Sie auf einer Seite von Google erteilen, und die **Tokens** dafür, verschlüsselt. {appName} nutzt sie nur, um Ihre Kopie des Add-ons zu erstellen und aktuell zu halten. Ihre anderen Projekte liest oder ändert es nie.
 - Die **Projekt-ID** Ihrer Kopie, die **ID des Google-Kontos**, in dem sie liegt, und ihre **Google-Client-ID**, damit {appName} sie nur von Ihnen annimmt.
 
-Für Meetings, die Sie mit dem Add-on erstellen, speichert {appName} dasselbe wie für jedes geplante Meeting (Titel, Zeiten, Wiederholung und Einstellungen). Für ein Meeting aus einem Kalendertermin speichert es außerdem die **ID dieses Termins** und die **ID seines Kalenders** (bei Ihrem Hauptkalender ist das Ihre E-Mail-Adresse), um dem Termin zu folgen und auf ihn zu verlinken. Die Gäste des Termins speichert es nicht: Sie werden von Google Kalender eingeladen.
+Für Meetings, die Sie mit dem Add-on erstellen, speichert {appName} dasselbe wie für jedes geplante Meeting (Titel, Zeiten, Wiederholung und Einstellungen). Für ein Meeting aus einem Kalendertermin speichert es außerdem die **ID dieses Termins** und die **ID seines Kalenders** (bei Ihrem Hauptkalender ist das die E-Mail-Adresse Ihres Google-Kontos), um dem Termin zu folgen und auf ihn zu verlinken. Die Gäste des Termins speichert es nicht: Sie werden von Google Kalender eingeladen.
 
 Das Add-on läuft auf den Servern von Google, unter Ihrem Google-Konto. In Google Kalender liest es den Termin, in dem es geöffnet ist, und, um Meetings aktuell zu halten, die Termine, die sich danach in diesem Kalender ändern, und meldet {appName} nur die mit {appName}-Meetings. In Gmail fügt es nur den Text, den Sie wählen, in die E-Mail ein, die Sie schreiben, und liest nie Ihre E-Mails. Um zu wissen, wer Sie sind, schickt es {appName} ein Token von Google mit der ID Ihres Google-Kontos, das {appName} für diese Anfrage verwendet und nie speichert.
 

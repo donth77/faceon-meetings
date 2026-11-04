@@ -1659,11 +1659,23 @@
     "retry": "再試行",
     "retried": "Google カレンダーを更新しました",
     "problems": {
-      "emailMismatch": "その Google アカウントは別のメールアドレスを使用しています。{email} を使用しているアカウントを接続してください。",
-      "alreadyLinked": "その Google アカウントは、別の {appName} アカウントに接続されています。",
+      "emailMismatch": "その Google アカウントのメールアドレスは、{appName} アカウントのもの（{email}）と違います。",
+      "alreadyLinked": "その Google アカウントは、すでに別の {appName} アカウントで使われています。使うには、代わりにその Google アカウントで {appName} にサインインしてください。",
       "denied": "Google カレンダーは接続されませんでした。",
       "scope": "Google カレンダーは接続されませんでした。{appName} には、カレンダーに予定を作成する権限が必要です。もう一度お試しのうえ、許可してください。",
       "generic": "Google カレンダーを接続できませんでした。もう一度お試しください。"
+    },
+    "differentEmail": {
+      "connectAnyway": "このまま接続",
+      "title": "メールアドレスが違う Google アカウントを接続しますか？",
+      "body": "{appName} アカウントのメールアドレスは {email} です。別のメールアドレスの Google アカウントを接続すると、その Google アカウントでもこの {appName} アカウントにサインインできるようになります。次の Google の画面でアカウントを選んでください。",
+      "continue": "Google へ進む",
+      "cancel": "キャンセル",
+      "signInFirst": "安全のため、メールアドレスが違う Google アカウントを接続するには、最近サインインしている必要があります。もう一度サインインしてから接続してください。",
+      "signInAgain": "もう一度サインイン",
+      "failed": "接続を開始できませんでした。もう一度お試しください。",
+      "otherAccount": "その Google アカウントでサインイン",
+      "alsoSignIn": "この Google アカウントのメールアドレスは、{appName} アカウントのものとは違います。この Google アカウントでも {appName} にサインインできます。"
     },
     "inBrowser": "ブラウザーで接続を完了してください。完了すると、ここに表示されます。"
   },

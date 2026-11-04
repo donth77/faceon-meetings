@@ -11,7 +11,10 @@ import { accountAvatar } from "@/lib/avatars/account";
 import { lookForName } from "@/lib/avatars/name-look";
 import { createAvatarSeed, parseAvatarSeed } from "@/lib/avatars/seed";
 import { emailPasswordEnabled } from "@/lib/email/send";
-import { calendarConnection } from "@/lib/google-calendar/connection";
+import {
+  calendarConnection,
+  googleAccountEmail,
+} from "@/lib/google-calendar/connection";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Settings");
@@ -33,10 +36,11 @@ async function Account({
   searchParams,
 }: Pick<PageProps<"/[locale]/settings/account">, "searchParams">) {
   const session = await requireSession("/settings/account");
-  const { error } = await searchParams;
-  const [accounts, calendar] = await Promise.all([
+  const { error, linking } = await searchParams;
+  const [accounts, calendar, googleEmail] = await Promise.all([
     auth.api.listUserAccounts({ headers: await headers() }),
     calendarConnection(session.user),
+    googleAccountEmail(session.user.id),
   ]);
   const { user } = session;
   const avatar = accountAvatar(user);
@@ -48,13 +52,20 @@ async function Account({
         email: user.email,
         emailVerified: user.emailVerified,
         avatar,
-        methods: accounts.map(({ id, providerId }) => ({ id, providerId })),
+        methods: accounts.map(({ id, providerId }) => ({
+          id,
+          providerId,
+          ...(providerId === "google" && googleEmail
+            ? { email: googleEmail }
+            : {}),
+        })),
         passwordSignIn: emailPasswordEnabled(),
         onGoogleCalendar: calendar.status === "connected",
       }}
       // Seven more avatars to pick from, made here so the page renders the same twice.
       avatarChoices={Array.from({ length: 7 }, () => createAvatarSeed(look))}
       linkError={typeof error === "string" ? error : null}
+      linking={linking === "google" || linking === "github" ? linking : null}
     />
   );
 }

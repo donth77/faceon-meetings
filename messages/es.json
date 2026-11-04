@@ -1659,11 +1659,23 @@
     "retry": "Reintentar",
     "retried": "Google Calendar actualizado",
     "problems": {
-      "emailMismatch": "Esa cuenta de Google usa otro correo. Conecta la que usa {email}.",
-      "alreadyLinked": "Esa cuenta de Google está conectada a otra cuenta de {appName}.",
+      "emailMismatch": "Esa cuenta de Google usa un correo distinto al de tu cuenta de {appName} ({email}).",
+      "alreadyLinked": "Esa cuenta de Google ya pertenece a otra cuenta de {appName}. Para usarla, inicia sesión en {appName} con ella.",
       "denied": "Google Calendar no se conectó.",
       "scope": "Google Calendar no se conectó: {appName} necesita permiso para crear eventos en tu calendario. Vuelve a intentarlo y permítelo.",
       "generic": "No se pudo conectar Google Calendar. Vuelve a intentarlo."
+    },
+    "differentEmail": {
+      "connectAnyway": "Conectarla de todos modos",
+      "title": "¿Conectar una cuenta de Google con otro correo?",
+      "body": "Tu cuenta de {appName} usa {email}. Si conectas una cuenta de Google con otro correo, también podrás iniciar sesión en esta cuenta de {appName} con esa cuenta de Google. Elígela en la siguiente pantalla de Google.",
+      "continue": "Continuar a Google",
+      "cancel": "Cancelar",
+      "signInFirst": "Por tu seguridad, para conectar una cuenta de Google con otro correo tienes que haber iniciado sesión hace poco. Vuelve a iniciar sesión y luego conéctala.",
+      "signInAgain": "Volver a iniciar sesión",
+      "failed": "No se pudo empezar a conectar. Inténtalo de nuevo.",
+      "otherAccount": "Iniciar sesión con esa cuenta de Google",
+      "alsoSignIn": "El correo de esta cuenta de Google no es el de tu cuenta de {appName}. También puedes iniciar sesión en {appName} con ella."
     },
     "inBrowser": "Termina de conectarlo en tu navegador. Aparecerá aquí cuando esté listo."
   },

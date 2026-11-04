@@ -8,6 +8,7 @@ import {
   connectInPage,
   DESKTOP_CALENDAR_ROUTE,
 } from "@/components/google-calendar/connect";
+import { ConnectAnyway } from "@/components/google-calendar/different-email";
 import { Button, LinkButton } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/client";
 import { publicEnv } from "@/lib/env";
@@ -131,9 +132,22 @@ export function DesktopCalendar({
               appName,
             })}
           </p>
-          <Button onPress={() => void start(state.email)}>
-            {t("tryAgain")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {connectProblem(state.error) === "emailMismatch" ? (
+              <ConnectAnyway
+                email={state.email}
+                connect={() =>
+                  connectInPage({
+                    back: `${DESKTOP_CALENDAR_ROUTE}?done=1`,
+                    anyAccount: true,
+                  })
+                }
+              />
+            ) : null}
+            <Button onPress={() => void start(state.email)}>
+              {t("tryAgain")}
+            </Button>
+          </div>
         </Card>
       );
   }
