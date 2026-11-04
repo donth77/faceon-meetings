@@ -105,6 +105,22 @@ describe("a reminder email", () => {
     });
   });
 
+  it("comes in the shared layout: the logo, the invitation as the preview, the footer", () => {
+    const { html } = email();
+    expect(html).toContain(
+      '<img src="https://joinfaceon.app/brand/logo-email.png"',
+    );
+    expect(html).toMatch(
+      /<div style="display:none;[^"]*">Maya Chen is inviting you to a scheduled FaceOn meeting\./,
+    );
+    expect(html).toContain(
+      'FaceOn · <a href="https://joinfaceon.app" style="color:#4f5966">joinfaceon.app</a>',
+    );
+    expect(html).toContain(
+      '<span style="word-break:break-all">https://joinfaceon.app/j/1234567890#pwd=K7XQ2M</span>',
+    );
+  });
+
   it("escapes a title in the HTML", () => {
     const { html } = email({ title: "<b>Plans</b> & dates" });
     expect(html).toContain("&lt;b&gt;Plans&lt;/b&gt; &amp; dates");

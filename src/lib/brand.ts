@@ -19,3 +19,6 @@ export const BRAND_COLORS = {
 
 /** The logo with the name beside it (public/brand/logo-lockup*.svg), in pixels. */
 export const LOCKUP_SIZE = { width: 979, height: 224 } as const;
+
+/** The emails' logo (public/brand/logo-email.png, drawn at twice this), in CSS pixels. */
+export const EMAIL_LOGO_SIZE = { width: 156, height: 48 } as const;

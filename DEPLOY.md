@@ -389,7 +389,7 @@ Edit [`brand/brand.json`](brand/brand.json), put your mark in `brand/` as SVG, t
 pnpm brand
 ```
 
-It writes the logo files in `public/brand/` (the mark, and the mark beside the name, for light and dark backgrounds and in one color), the browser tab icon (`src/app/icon.svg`, `favicon.ico`), the icons for phones and installed apps (`src/app/apple-icon.png`, `public/icons/`), the link preview (`src/app/opengraph-image.png`), the Google Workspace add-on's Marketplace icons and banner (`google-addon/assets/`), and the brand colors for both themes (`src/app/brand.css`, with a copy in `src/lib/brand.ts` for emails and the offline page). Commit them and push. The smallest config:
+It writes the logo files in `public/brand/` (the mark, and the mark beside the name, for light and dark backgrounds and in one color, plus a PNG of the mark beside the name for emails), the browser tab icon (`src/app/icon.svg`, `favicon.ico`), the icons for phones and installed apps (`src/app/apple-icon.png`, `public/icons/`), the link preview (`src/app/opengraph-image.png`), the Google Workspace add-on's Marketplace icons and banner (`google-addon/assets/`), and the brand colors for both themes (`src/app/brand.css`, with a copy in `src/lib/brand.ts` for emails and the offline page). Commit them and push. The smallest config:
 
 ```json
 {

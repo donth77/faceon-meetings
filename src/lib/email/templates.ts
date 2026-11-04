@@ -4,10 +4,18 @@ import { hasLocale, type Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 
 import { routing } from "@/i18n/routing";
-import { BRAND_COLORS } from "@/lib/brand";
 import { publicEnv } from "@/lib/env";
+import { siteUrl } from "@/lib/site";
 
-import { escapeHtml } from "./html";
+import {
+  emailButton,
+  emailHeading,
+  emailLinkFallback,
+  emailNote,
+  emailPage,
+  emailParagraph,
+  emailQuote,
+} from "./layout";
 import type { Email } from "./send";
 
 /**
@@ -34,7 +42,7 @@ export function emailLocale(user: object): Locale {
 /**
  * One account email, in the person's language: a heading, a sentence, one button (with
  * the link spelled out for clients that hide buttons) and a note on what to do if it
- * wasn't them. Plain text and simple, inline-styled HTML. `values` fill the message's
+ * wasn't them, as plain text and in the shared layout (layout.ts). `values` fill the message's
  * other placeholders; `quote` is someone's own words, shown as they wrote them.
  */
 export async function accountEmail(
@@ -71,21 +79,21 @@ export async function accountEmail(
     `${action}: ${input.url}`,
     note,
   ].join("\n\n");
-  const html = `<!doctype html>
-<html lang="${escapeHtml(input.locale)}">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(heading)}</title></head>
-<body style="margin:0;padding:24px 12px;background:#f5f6f8;color:#12161c;font-family:Figtree,'Segoe UI',Helvetica,Arial,sans-serif">
-<div style="max-width:480px;margin:0 auto;padding:32px;border:1px solid #e2e5ea;border-radius:16px;background:#ffffff">
-<p style="margin:0 0 24px;font-size:20px;font-weight:700;color:${BRAND_COLORS.light.brand}">${escapeHtml(values.appName)}</p>
-<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3">${escapeHtml(heading)}</h1>
-<p style="margin:0 0 24px;font-size:15px;line-height:1.5">${escapeHtml(body)}</p>
-${quote ? `<blockquote style="margin:0 0 24px;padding:12px 16px;border-radius:10px;background:#f5f6f8;font-size:15px;line-height:1.5;white-space:pre-wrap">${escapeHtml(quote)}</blockquote>` : ""}
-<p style="margin:0 0 24px"><a href="${escapeHtml(input.url)}" style="display:inline-block;padding:12px 20px;border-radius:10px;background:${BRAND_COLORS.light.brand};color:${BRAND_COLORS.light.brandForeground};font-size:15px;font-weight:600;text-decoration:none">${escapeHtml(action)}</a></p>
-<p style="margin:0 0 24px;font-size:13px;line-height:1.5;color:#4f5966;word-break:break-all">${escapeHtml(fallback)}<br>${escapeHtml(input.url)}</p>
-<p style="margin:0;font-size:13px;line-height:1.5;color:#4f5966">${escapeHtml(note)}</p>
-</div>
-</body>
-</html>`;
+  const html = emailPage({
+    locale: input.locale,
+    title: heading,
+    preheader: body,
+    appName: values.appName,
+    siteUrl: siteUrl(),
+    blocks: [
+      emailHeading(heading),
+      emailParagraph(body),
+      ...(quote ? [emailQuote(quote)] : []),
+      emailButton(action, input.url),
+      emailLinkFallback(fallback, input.url),
+      emailNote(note),
+    ],
+  });
 
   return {
     to: input.to,

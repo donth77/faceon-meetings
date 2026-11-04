@@ -321,6 +321,24 @@ async function main(args: string[]) {
     `<g transform="translate(${num((BANNER.width - box.width * bannerScale) / 2)} ${num((BANNER.height - box.height * bannerScale) / 2)}) scale(${bannerScale}) translate(${-box.x} ${-box.y})">${mark.inner}${wordmarkPaths(lightColors)}</g>` +
     "</svg>";
 
+  // The emails' logo: the lockup on a tile of the card's white, as a PNG at twice its size
+  // (mail apps drop SVG). On the email's white card the tile doesn't show. Where a mail
+  // app darkens the card in its dark mode it leaves images alone, so the tile keeps the
+  // name's dark letters readable there.
+  const EMAIL_LOGO_HEIGHT = 32;
+  const EMAIL_LOGO_PADDING = 8;
+  const emailLogoScale =
+    Math.round((EMAIL_LOGO_HEIGHT / box.height) * 1e6) / 1e6;
+  const emailLogoSize = {
+    width: Math.ceil(box.width * emailLogoScale) + 2 * EMAIL_LOGO_PADDING,
+    height: EMAIL_LOGO_HEIGHT + 2 * EMAIL_LOGO_PADDING,
+  };
+  const emailLogoSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${emailLogoSize.width * 2}" height="${emailLogoSize.height * 2}" viewBox="0 0 ${emailLogoSize.width} ${emailLogoSize.height}">` +
+    `<rect width="${emailLogoSize.width}" height="${emailLogoSize.height}" rx="10" fill="${paint(SURFACES.light.card)}"/>` +
+    `<g transform="translate(${EMAIL_LOGO_PADDING} ${EMAIL_LOGO_PADDING}) scale(${emailLogoScale}) translate(${-box.x} ${-box.y})">${mark.inner}${wordmarkPaths(lightColors)}</g>` +
+    "</svg>";
+
   const css = `/*
  * The brand's colors, written by \`pnpm brand\` from brand/brand.json: change that and run
  * it again rather than editing this file. src/app/globals.css gives them their roles.
@@ -342,6 +360,9 @@ export const BRAND_COLORS = ${JSON.stringify(palette)} as const;
 
 /** The logo with the name beside it (public/brand/logo-lockup*.svg), in pixels. */
 export const LOCKUP_SIZE = ${JSON.stringify(lockupSize)} as const;
+
+/** The emails' logo (public/brand/logo-email.png, drawn at twice this), in CSS pixels. */
+export const EMAIL_LOGO_SIZE = ${JSON.stringify(emailLogoSize)} as const;
 `;
 
   /** Every file the app ships that comes from the brand. */
@@ -363,6 +384,7 @@ export const LOCKUP_SIZE = ${JSON.stringify(lockupSize)} as const;
           ),
       ],
       ["public/brand/logo-lockup.svg", () => lockup(mark.inner, lightColors)],
+      ["public/brand/logo-email.png", () => renderPng(emailLogoSvg)],
       [
         "public/brand/logo-lockup-dark.svg",
         () =>
