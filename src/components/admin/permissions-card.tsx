@@ -36,9 +36,11 @@ function StateChip({ state }: { state: Checked }) {
 
 /**
  * Settings → Admin → Call permissions: whether each video service still lets people's
- * browsers do only what FaceOn set up, asked as the page loads (lib/media/permissions.ts).
- * When it changes, the daily sweep emails the admins, linking here (#permissions); fixing
- * it is the command shown, run by whoever holds the keys.
+ * browsers do only what FaceOn set up, so host controls work only through FaceOn, asked
+ * as the page loads (lib/media/permissions.ts). The description names the video service
+ * (the first, where there's a choice). When the settings change, the daily sweep emails
+ * the admins, linking here (#permissions); fixing them is the command shown, run by
+ * whoever holds the keys.
  */
 export function PermissionsCard({
   providers,
@@ -51,7 +53,7 @@ export function PermissionsCard({
     <AdminCard
       id="permissions"
       title={t("title")}
-      description={t("body", { appName })}
+      description={t("body", { appName, service: providers[0]?.name ?? "" })}
     >
       <ul className="flex flex-col divide-y border-t">
         {providers.map(({ provider, name, check }) => (

@@ -350,11 +350,11 @@
     },
     "permissions": {
       "title": "Berechtigungen in Anrufen",
-      "body": "Was die Browser der Teilnehmer in Anrufen dürfen, wie {appName} es bei seinem Videodienst eingerichtet hat. Das wird täglich geprüft, und die Admins erhalten eine E-Mail, wenn es sich ändert.",
+      "body": "{service}, der Videodienst von {appName}, hat eigene Einstellungen dafür, was die Browser der Teilnehmer in einem Anruf tun dürfen. {appName} legt sie so fest, dass Host-Funktionen wie das Stummschalten anderer oder das Beenden des Meetings nur über {appName} funktionieren, das sie nur Hosts und Co-Hosts erlaubt. Sie werden täglich geprüft, und die Admins erhalten eine E-Mail, wenn jemand sie ändert.",
       "ok": "OK",
-      "okNote": "{provider} entspricht der Einrichtung von {appName}.",
+      "okNote": "Die Einstellungen bei {provider} sind so, wie {appName} sie festgelegt hat.",
       "changed": "Geändert",
-      "changedNote": "{provider} entspricht nicht mehr der Einrichtung von {appName}. Um sie wiederherzustellen, führen Sie <code>{command}</code> mit den Schlüsseln dieser Kopie in .env.local aus.",
+      "changedNote": "Die Einstellungen bei {provider} haben sich geändert, daher lassen sich Host-Funktionen womöglich auch ohne {appName} nutzen. Um sie wiederherzustellen, führen Sie <code>{command}</code> in Ihrer Kopie des Codes von {appName} aus, mit den {provider}-Schlüsseln dieser Website in .env.local.",
       "unknown": "Nicht geprüft",
       "unknownNote": "{provider} hat gerade nicht geantwortet. Laden Sie die Seite neu, um es erneut zu versuchen.",
       "off": "{provider} ist nicht eingerichtet, daher gibt es nichts zu prüfen."
@@ -1015,9 +1015,9 @@
       "note": "Sie erhalten diese E-Mail, weil Sie Admin von {appName} sind. {next, select, full {Bei 100 % erhalten Sie noch eine Nachricht.} other {Das ist die letzte E-Mail dazu bis {meter, select, neon {zum nächsten Abrechnungszeitraum} other {zum nächsten Monat}}.}}"
     },
     "permissionsChanged": {
-      "subject": "{appName}: Berechtigungen bei {provider} geändert",
-      "heading": "Die Berechtigungen bei {provider} haben sich geändert",
-      "body": "Was die Browser der Teilnehmer in Anrufen von {appName} dürfen, entspricht nicht mehr der Einrichtung bei {provider}. Um sie wiederherzustellen, führen Sie {command} mit den Schlüsseln dieser Kopie in .env.local aus.",
+      "subject": "{appName}: Berechtigungen in Anrufen bei {provider} geändert",
+      "heading": "Die Berechtigungen in Anrufen bei {provider} haben sich geändert",
+      "body": "Die Einstellungen bei {provider} dafür, was die Browser der Teilnehmer in Anrufen von {appName} tun dürfen, haben sich geändert. {appName} legt sie so fest, dass Host-Funktionen wie das Stummschalten anderer oder das Beenden des Meetings nur über {appName} funktionieren, das sie nur Hosts und Co-Hosts erlaubt. Um sie wiederherzustellen, führen Sie {command} in Ihrer Kopie des Codes von {appName} aus, mit den {provider}-Schlüsseln dieser Website in .env.local.",
       "action": "Berechtigungen ansehen",
       "note": "Sie erhalten diese E-Mail, weil Sie Admin von {appName} sind. Sie hören erst wieder davon, wenn sie sich nach dem Wiederherstellen erneut ändern."
     }

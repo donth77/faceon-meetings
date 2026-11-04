@@ -350,11 +350,11 @@
     },
     "permissions": {
       "title": "Permisos de las llamadas",
-      "body": "Lo que los navegadores de las personas pueden hacer en las llamadas, según lo configuró {appName} con su servicio de video. Se revisa cada día, y los administradores reciben un correo si cambia.",
+      "body": "{service}, el servicio de video de {appName}, tiene su propia configuración de lo que los navegadores de las personas pueden hacer en una llamada. {appName} la configura para que los controles del anfitrión, como silenciar a otros o finalizar la reunión, solo funcionen a través de {appName}, que solo deja usarlos a los anfitriones y coanfitriones. Se revisa cada día, y los administradores reciben un correo si alguien la cambia.",
       "ok": "Correcto",
-      "okNote": "{provider} coincide con la configuración de {appName}.",
+      "okNote": "La configuración de {provider} está como la dejó {appName}.",
       "changed": "Cambió",
-      "changedNote": "{provider} ya no coincide con la configuración de {appName}. Para restablecerla, ejecuta <code>{command}</code> con las claves de esta copia en .env.local.",
+      "changedNote": "La configuración de {provider} cambió, así que podría ser posible usar los controles del anfitrión sin pasar por {appName}. Para restablecerla, ejecuta <code>{command}</code> en tu copia del código de {appName}, con las claves de {provider} de este sitio en .env.local.",
       "unknown": "Sin revisar",
       "unknownNote": "{provider} no respondió hace un momento. Vuelve a cargar la página para intentarlo de nuevo.",
       "off": "{provider} no está configurado, así que no hay nada que revisar."
@@ -1015,9 +1015,9 @@
       "note": "Recibes este correo porque eres administrador de {appName}. {next, select, full {Te volveremos a avisar si llega al 100 %.} other {Es el último correo sobre esto hasta {meter, select, neon {el próximo período de facturación} other {el próximo mes}}.}}"
     },
     "permissionsChanged": {
-      "subject": "{appName}: cambiaron los permisos de {provider}",
-      "heading": "Cambiaron los permisos de {provider}",
-      "body": "Lo que los navegadores de las personas pueden hacer en las llamadas de {appName} ya no coincide con su configuración en {provider}. Para restablecerla, ejecuta {command} con las claves de esta copia en .env.local.",
+      "subject": "{appName}: cambiaron los permisos de las llamadas en {provider}",
+      "heading": "Cambiaron los permisos de las llamadas en {provider}",
+      "body": "Cambió la configuración de {provider} sobre lo que los navegadores de las personas pueden hacer en las llamadas de {appName}. {appName} la configura para que los controles del anfitrión, como silenciar a otros o finalizar la reunión, solo funcionen a través de {appName}, que solo deja usarlos a los anfitriones y coanfitriones. Para restablecerla, ejecuta {command} en tu copia del código de {appName}, con las claves de {provider} de este sitio en .env.local.",
       "action": "Ver los permisos",
       "note": "Recibes este correo porque eres administrador de {appName}. Solo te volveremos a avisar si cambia otra vez después de restablecerla."
     }

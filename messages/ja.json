@@ -350,11 +350,11 @@
     },
     "permissions": {
       "title": "通話の権限",
-      "body": "通話中に参加者のブラウザーができることで、{appName} がビデオ サービスに設定したものです。毎日確認され、変更があると管理者にメールが届きます。",
+      "body": "{service} は {appName} のビデオ サービスで、通話中に参加者のブラウザーができることについて独自の設定があります。{appName} は、他の参加者のミュートやミーティングの終了などのホスト機能が {appName} を通してのみ使えるように設定しており、{appName} はそれらをホストと共同ホストにだけ許可します。この設定は毎日確認され、誰かが変更すると管理者にメールが届きます。",
       "ok": "OK",
-      "okNote": "{provider} の設定は {appName} の設定と一致しています。",
+      "okNote": "{provider} の設定は {appName} が設定したとおりです。",
       "changed": "変更あり",
-      "changedNote": "{provider} の設定が {appName} の設定と一致しなくなりました。元に戻すには、このコピーの .env.local のキーで <code>{command}</code> を実行してください。",
+      "changedNote": "{provider} の設定が変更されたため、{appName} を通さずにホスト機能を使える可能性があります。元に戻すには、{appName} のコードのコピーで、このサイトの {provider} のキーを .env.local に入れて <code>{command}</code> を実行してください。",
       "unknown": "未確認",
       "unknownNote": "{provider} から応答がありませんでした。ページを再読み込みして、もう一度お試しください。",
       "off": "{provider} が設定されていないため、確認するものはありません。"
@@ -1015,9 +1015,9 @@
       "note": "{appName} の管理者であるため、このメールをお送りしています。{next, select, full {100% に達した場合は、もう一度お知らせします。} other {{meter, select, neon {次の請求期間} other {来月}}まで、この件に関するメールはこれが最後です。}}"
     },
     "permissionsChanged": {
-      "subject": "{appName}: {provider} の権限が変更されました",
-      "heading": "{provider} の権限が変更されました",
-      "body": "{appName} の通話で参加者のブラウザーができることが、{provider} での設定と一致しなくなりました。元に戻すには、このコピーの .env.local のキーで {command} を実行してください。",
+      "subject": "{appName}: {provider} での通話の権限が変更されました",
+      "heading": "{provider} での通話の権限が変更されました",
+      "body": "{appName} の通話で参加者のブラウザーができることについての {provider} の設定が変更されました。{appName} は、他の参加者のミュートやミーティングの終了などのホスト機能が {appName} を通してのみ使えるように設定しており、{appName} はそれらをホストと共同ホストにだけ許可します。元に戻すには、{appName} のコードのコピーで、このサイトの {provider} のキーを .env.local に入れて {command} を実行してください。",
       "action": "権限を確認",
       "note": "{appName} の管理者であるため、このメールをお送りしています。元に戻した後に再び変更された場合にのみ、もう一度お知らせします。"
     }

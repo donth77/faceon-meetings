@@ -350,11 +350,11 @@
     },
     "permissions": {
       "title": "Call permissions",
-      "body": "What people’s browsers may do in calls, as {appName} set it up with its video service. It’s checked every day, and admins get an email if it changes.",
+      "body": "{service}, {appName}’s video service, has its own settings for what people’s browsers can do in a call. {appName} sets them so that host controls, like muting others or ending the meeting, only work through {appName}, which lets only hosts and co-hosts use them. They’re checked every day, and admins get an email if someone changes them.",
       "ok": "OK",
-      "okNote": "{provider} matches {appName}’s setup.",
+      "okNote": "{provider}’s settings are as {appName} set them.",
       "changed": "Changed",
-      "changedNote": "{provider} no longer matches {appName}’s setup. To put it back, run <code>{command}</code> with this copy’s keys in .env.local.",
+      "changedNote": "{provider}’s settings have changed, so people may be able to use host controls without going through {appName}. To set them back, run <code>{command}</code> in your copy of {appName}’s code, with this site’s {provider} keys in .env.local.",
       "unknown": "Not checked",
       "unknownNote": "{provider} didn’t answer just now. Reload the page to try again.",
       "off": "{provider} isn’t set up, so there’s nothing to check."
@@ -1015,9 +1015,9 @@
       "note": "You’re getting this because you’re an admin of {appName}. {next, select, full {You’ll hear again if it reaches 100%.} other {That’s the last email about it until the next {meter, select, neon {billing period} other {month}}.}}"
     },
     "permissionsChanged": {
-      "subject": "{appName}: {provider} permissions changed",
-      "heading": "{provider}’s permissions changed",
-      "body": "What people’s browsers may do in {appName}’s calls no longer matches its setup on {provider}. To put it back, run {command} with this copy’s keys in .env.local.",
+      "subject": "{appName}: {provider}’s call permissions changed",
+      "heading": "{provider}’s call permissions changed",
+      "body": "{provider}’s settings for what people’s browsers can do in {appName}’s calls have changed. {appName} sets them so that host controls, like muting others or ending the meeting, only work through {appName}, which lets only hosts and co-hosts use them. To set them back, run {command} in your copy of {appName}’s code, with this site’s {provider} keys in .env.local.",
       "action": "See permissions",
       "note": "You’re getting this because you’re an admin of {appName}. You’ll hear again only if it changes after it’s put back."
     }

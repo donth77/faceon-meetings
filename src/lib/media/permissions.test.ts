@@ -30,10 +30,14 @@ describe("the permissions warning email", () => {
       "en",
     );
     expect(email.to).toBe("admin@example.com");
-    expect(email.subject).toBe("FaceOn: Stream permissions changed");
-    expect(email.text).toContain("Stream’s permissions changed");
+    expect(email.subject).toBe("FaceOn: Stream’s call permissions changed");
+    expect(email.text).toContain("Stream’s call permissions changed");
+    // What it is and why it matters, in plain words.
     expect(email.text).toContain(
-      "To put it back, run pnpm stream:setup with this copy’s keys in .env.local.",
+      "host controls, like muting others or ending the meeting, only work through FaceOn",
+    );
+    expect(email.text).toContain(
+      "To set them back, run pnpm stream:setup in your copy of FaceOn’s code, with this site’s Stream keys in .env.local.",
     );
     expect(email.text).toContain("You’re getting this because you’re an admin");
     expect(email.text).toContain("/settings/admin#permissions");

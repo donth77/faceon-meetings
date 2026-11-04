@@ -350,11 +350,11 @@
     },
     "permissions": {
       "title": "Autorisations des appels",
-      "body": "Ce que les navigateurs des participants peuvent faire pendant les appels, tel que {appName} l’a configuré auprès de son service vidéo. C’est vérifié chaque jour, et les administrateurs reçoivent un e-mail en cas de changement.",
+      "body": "{service}, le service vidéo de {appName}, a ses propres réglages pour ce que les navigateurs des participants peuvent faire pendant un appel. {appName} les règle pour que les commandes de l’hôte, comme couper le micro des autres ou mettre fin à la réunion, ne fonctionnent qu’à travers {appName}, qui ne les permet qu’aux hôtes et co-hôtes. Ils sont vérifiés chaque jour, et les administrateurs reçoivent un e-mail si quelqu’un les modifie.",
       "ok": "OK",
-      "okNote": "{provider} correspond à la configuration de {appName}.",
+      "okNote": "Les réglages de {provider} sont tels que {appName} les a définis.",
       "changed": "Modifié",
-      "changedNote": "{provider} ne correspond plus à la configuration de {appName}. Pour la rétablir, exécutez <code>{command}</code> avec les clés de cette copie dans .env.local.",
+      "changedNote": "Les réglages de {provider} ont changé : il est peut-être possible d’utiliser les commandes de l’hôte sans passer par {appName}. Pour les rétablir, exécutez <code>{command}</code> dans votre copie du code de {appName}, avec les clés {provider} de ce site dans .env.local.",
       "unknown": "Non vérifié",
       "unknownNote": "{provider} n’a pas répondu. Rechargez la page pour réessayer.",
       "off": "{provider} n’est pas configuré : il n’y a donc rien à vérifier."
@@ -399,7 +399,7 @@
       "emailsOff": {
         "title": "E-mails",
         "body": "Resend n’est pas configuré : {appName} n’envoie donc aucun e-mail.",
-        "backup": "Resend n’est pas configuré : {appName} envoie donc ses e-mails uniquement via Mailtrap, et n’envoie aucun rappel, car seul Resend peut les programmer."
+        "backup": "Resend n’est pas configuré : {appName} envoie donc ses e-mails uniquement via Mailtrap, et n’envoie aucun rappel, car seul Resend peut les programmer."
       },
       "neon": {
         "title": "Calcul de la base de données (Neon)",
@@ -1015,9 +1015,9 @@
       "note": "Vous recevez cet e-mail parce que vous administrez {appName}. {next, select, full {Vous serez à nouveau prévenu si l’utilisation atteint 100 %.} other {C’est le dernier e-mail à ce sujet jusqu’{meter, select, neon {à la prochaine période de facturation} other {au mois prochain}}.}}"
     },
     "permissionsChanged": {
-      "subject": "{appName} : les autorisations de {provider} ont changé",
-      "heading": "Les autorisations de {provider} ont changé",
-      "body": "Ce que les navigateurs des participants peuvent faire pendant les appels de {appName} ne correspond plus à sa configuration sur {provider}. Pour la rétablir, exécutez {command} avec les clés de cette copie dans .env.local.",
+      "subject": "{appName} : les autorisations des appels sur {provider} ont changé",
+      "heading": "Les autorisations des appels sur {provider} ont changé",
+      "body": "Les réglages de {provider} pour ce que les navigateurs des participants peuvent faire pendant les appels de {appName} ont changé. {appName} les règle pour que les commandes de l’hôte, comme couper le micro des autres ou mettre fin à la réunion, ne fonctionnent qu’à travers {appName}, qui ne les permet qu’aux hôtes et co-hôtes. Pour les rétablir, exécutez {command} dans votre copie du code de {appName}, avec les clés {provider} de ce site dans .env.local.",
       "action": "Voir les autorisations",
       "note": "Vous recevez cet e-mail, car vous êtes administrateur de {appName}. Vous ne serez prévenu à nouveau que si elles changent après avoir été rétablies."
     }
