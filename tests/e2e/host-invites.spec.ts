@@ -1,6 +1,6 @@
 import { database } from "./support/db";
 import { HOSTS_ADMIN_EMAIL } from "./support/env";
-import { expect, expectNoErrors, test } from "./support/fixtures";
+import { expect, expectNoErrors, hydrated, test } from "./support/fixtures";
 
 /** Addresses these tests approve, so a failed run doesn't leave them on the list. */
 const INVITEE = /^e2e_invite_/;
@@ -28,6 +28,7 @@ test.describe("Settings → Admin → inviting approved hosts", () => {
     expect(invitee).toMatch(INVITEE);
 
     await page.goto("/settings/admin");
+    await hydrated(page.getByLabel("Email address"));
     await page.getByLabel("Email address").fill(invitee);
     // Emailing an invitation is only ever a choice, and this build has no email set up,
     // so it isn't offered at all: adding sends nothing.
@@ -105,6 +106,9 @@ test.describe("Settings → Admin → inviting approved hosts", () => {
     const invitee = `e2e_invite_${Date.now().toString(36)}k@faceon.test`;
     await page.goto("/settings/admin");
     const field = page.getByLabel("Email address");
+    // Keys pressed while the page is still loading can be lost (CI caught Enter there):
+    // this test is about the phone layout and the keyboard, so it waits for React first.
+    await hydrated(field);
     await field.focus();
     await page.keyboard.type(invitee);
     await page.keyboard.press("Enter");
