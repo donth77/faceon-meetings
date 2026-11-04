@@ -4,6 +4,7 @@ import { pruneExpiredSessions } from "@/lib/account/sessions";
 import { pruneAnsweredRequests } from "@/lib/hosting/requests";
 import { loggable } from "@/lib/log";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
+import { reconcileAllReminders } from "@/lib/reminders/schedule";
 import { pruneSentReminders } from "@/lib/reminders/store";
 
 import { pruneAttendance, pruneWebhookEvents } from "./attendance";
@@ -20,6 +21,8 @@ import { pruneEndedSessionRequests } from "./waiting-room";
 
 /**
  * Housekeeping, run on a schedule (and safe to run any time):
+ * - schedules the reminder emails due in the next two days with Resend, and brings the
+ *   ones already scheduled in line with any change (reminders/schedule.ts);
  * - closes sessions whose call ended or sat empty past the grace period, ending their
  *   calls, so they don't count as running and old tokens can't rejoin;
  * - deletes expired meetings once nothing of theirs is left in Previous;
@@ -67,5 +70,6 @@ export async function sweep(now = new Date()) {
     prunedReminders: await pruneSentReminders(
       daysBefore(now, KEEP_DAYS.reminders),
     ),
+    reminders: await reconcileAllReminders(now),
   };
 }

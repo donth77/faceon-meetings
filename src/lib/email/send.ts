@@ -1,6 +1,7 @@
 import "server-only";
 
 import { waitUntil } from "@vercel/functions";
+import { z } from "zod";
 
 import { serverEnv } from "@/lib/server-env";
 
@@ -31,20 +32,40 @@ export function emailPasswordEnabled(): boolean {
   return isDevelopment || resendConfig() !== null;
 }
 
-export async function sendEmail(email: Email): Promise<void> {
+const RESEND_API = "https://api.resend.com";
+
+/** Resend's answer to a new email: its ID. */
+const Sent = z.object({ id: z.string().min(1).max(200) });
+
+/**
+ * Sends an email now, or at `scheduledAt` (Resend holds it until then; up to 30 days
+ * ahead). `idempotencyKey` makes a retry return the email the first try made rather than a
+ * second one. Gives Resend's ID for it; null in development, where emails print to the
+ * server log instead.
+ */
+export async function sendEmail(
+  email: Email,
+  options: { scheduledAt?: Date; idempotencyKey?: string } = {},
+): Promise<string | null> {
   const resend = resendConfig();
   if (!resend) {
     if (!isDevelopment) throw new Error("Email delivery isn't configured.");
+    const when = options.scheduledAt
+      ? `\n[email] Sends at: ${options.scheduledAt.toISOString()}`
+      : "";
     console.info(
-      `\n[email] To: ${email.to}\n[email] Subject: ${email.subject}\n\n${email.text}\n`,
+      `\n[email] To: ${email.to}${when}\n[email] Subject: ${email.subject}\n\n${email.text}\n`,
     );
-    return;
+    return null;
   }
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(`${RESEND_API}/emails`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resend.apiKey}`,
       "Content-Type": "application/json",
+      ...(options.idempotencyKey
+        ? { "Idempotency-Key": options.idempotencyKey }
+        : {}),
     },
     body: JSON.stringify({
       from: resend.from,
@@ -53,11 +74,49 @@ export async function sendEmail(email: Email): Promise<void> {
       text: email.text,
       html: email.html,
       ...(email.headers ? { headers: email.headers } : {}),
+      ...(options.scheduledAt
+        ? { scheduled_at: options.scheduledAt.toISOString() }
+        : {}),
     }),
   });
   if (!response.ok) {
     throw new Error(`Resend refused an email (HTTP ${response.status}).`);
   }
+  const sent = Sent.safeParse(await response.json().catch(() => null));
+  return sent.success ? sent.data.id : null;
+}
+
+/** Where a scheduled email stands, as Resend reports it. */
+const Status = z.object({ last_event: z.string().max(50).nullish() });
+
+/**
+ * Cancels a scheduled email: "cancelled" once it won't go (or Resend has no such email),
+ * "sent" when it already went, or "retry" when Resend couldn't be asked, or the email is
+ * so new that Resend hasn't finished scheduling it. Cancelling twice is fine.
+ */
+export async function cancelScheduledEmail(
+  id: string,
+): Promise<"cancelled" | "sent" | "retry"> {
+  const resend = resendConfig();
+  if (!resend) return isDevelopment ? "cancelled" : "retry";
+  const headers = { Authorization: `Bearer ${resend.apiKey}` };
+  const path = `${RESEND_API}/emails/${encodeURIComponent(id)}`;
+  const response = await fetch(`${path}/cancel`, {
+    method: "POST",
+    headers,
+  }).catch(() => null);
+  if (response?.ok || response?.status === 404) return "cancelled";
+  if (response?.status !== 422) return "retry";
+  // "Email is not scheduled": it went already, or it's still being scheduled.
+  const status = await fetch(path, { headers })
+    .then((answer) => (answer.ok ? answer.json() : null))
+    .catch(() => null);
+  const event = Status.safeParse(status).data?.last_event ?? null;
+  if (event === "canceled") return "cancelled";
+  if (event === null || event === "scheduled" || event === "queued") {
+    return "retry";
+  }
+  return "sent";
 }
 
 /**

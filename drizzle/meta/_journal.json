@@ -162,6 +162,13 @@
       "when": 1793686336776,
       "tag": "0022_desktop_app",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793797070780,
+      "tag": "0023_scheduled_reminders",
+      "breakpoints": true
     }
   ]
 }

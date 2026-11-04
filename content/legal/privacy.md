@@ -1,6 +1,6 @@
 ---
 title: Privacy policy
-updated: 2026-11-03
+updated: 2026-11-04
 ---
 
 {appName} is a free, open-source video meeting service. This policy explains what {appName} at {siteUrl} keeps about you, why, who else handles it, and for how long. {operator} runs this copy of {appName} and is responsible for your information. Anyone can run their own copy of {appName}, and each copy has its own policy.
@@ -18,7 +18,7 @@ updated: 2026-11-03
 - Whether the meetings you host **offer AI notes**: a yes-or-no setting in **Settings**, off until you turn it on.
 - Whether you've **used the desktop app**: when you first signed in to it, so {appName} stops suggesting it on **Home** in your browsers.
 - The **options you last scheduled a meeting with**, such as its length, passcode on or off, and waiting room, so your next meeting starts from them. Never its title, people or passcode.
-- If you turn on **email reminders**: how long before a meeting they come, and the time zone their times are in. They go to your account's email address, before meetings you host or are invited to, and each one has the meeting's title, time, link, ID and passcode. To stop them, select the link at the foot of any reminder, or turn them off in **Settings**, under **Notifications**. {appName} keeps a short record of each reminder it sent (the meeting and its time), so none goes twice.
+- If you turn on **email reminders**: how long before a meeting they come, and the time zone their times are in. They go to your account's email address, before meetings you host or are invited to, and each one has the meeting's title, time, link, ID and passcode. To stop them, select the link at the foot of any reminder, or turn them off in **Settings**, under **Notifications**. Each reminder is prepared up to two days ahead, and Resend holds it until it's due. {appName} keeps a short record of each one (the meeting, its time and when the email goes), so it can change or cancel the email when the meeting or your settings change, and so none goes twice.
 - If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
 - If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when.
 
@@ -108,7 +108,7 @@ If you use {appName}'s app for Mac or Windows, it keeps on your computer its set
 - **Vercel** hosts the website and runs its server. Like any web host, it logs requests, including IP addresses, to run and protect the site.
 - **Neon** hosts the database.
 - **Stream** runs the meetings. It carries audio, video, screen sharing, chat and reactions, and the text for AI notes on its way to the host taking them. It keeps the name and picture each person uses in meetings and a record of each call and who was in it, and it handles the technical details needed to connect you, such as your IP address and connection quality.
-- **Resend** sends account emails, such as verifying your address or resetting your password, and the meeting reminder emails you turn on.
+- **Resend** sends account emails, such as verifying your address or resetting your password, and the meeting reminder emails you turn on, holding each reminder until it's due (up to two days).
 - **Have I Been Pwned** checks new passwords against ones exposed in data breaches. It receives only the first five characters of a scrambled code made from the password, which can't reveal it.
 - **GitHub** hosts the desktop app's downloads and updates. It sees your IP address when the app checks for an update or you download it.
 - **Google** and **GitHub**, if you sign in with them. **Google Calendar**, if you connect it: it receives the meetings you schedule, with your invitees' email addresses, and sends them the invitations. **Google Workspace**, if you use {appName}'s add-on: Google runs it, as described above.
@@ -133,7 +133,7 @@ These services may handle your information in the United States and other countr
 - **Who joined and left**, and **saved AI notes**, are deleted after 90 days. Whoever saved notes, or the meeting's host, can delete them sooner.
 - **Waiting room requests and admission records** are deleted a week after the meeting. That someone was removed is kept as long as who joined (90 days).
 - **Attempt counters and sign-in limits** are deleted after a day.
-- **Records of reminder emails sent** are deleted two days after their meeting's start.
+- **Records of reminder emails** are deleted two days after their meeting's start. A reminder that hasn't gone yet is cancelled with Resend when you turn reminders off, the meeting changes or is cancelled, or you delete your account.
 - **Your add-on's IDs**, until you remove it in **Settings** or remove Google from your account.
 - **Requests to host full meetings** are deleted 90 days after they're answered. An approved address stays approved until an admin moves it back to demo meetings, or you delete your account.
 - **A guest's cookie** expires 90 days after its last use.

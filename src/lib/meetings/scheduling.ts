@@ -15,6 +15,7 @@ import {
   participantSession,
   user,
 } from "@/lib/db/schema";
+import { remindersChanged } from "@/lib/reminders/changed";
 import { localParts } from "@/lib/time";
 
 import { generatePasscode } from "./generate";
@@ -120,7 +121,7 @@ export async function scheduleMeeting(input: {
   const rule = ruleFor(values, start);
   const rules: RuleRow[] = rule ? [{ ...rule, lastStart: null }] : [];
 
-  return db().transaction(async (tx) => {
+  const created = await db().transaction(async (tx) => {
     let row;
     try {
       [row] = await tx
@@ -155,6 +156,8 @@ export async function scheduleMeeting(input: {
     }
     return readMeeting(row);
   });
+  remindersChanged({ meetingId: created.id, meetingCode: created.code });
+  return created;
 }
 
 /** A meeting's repeat rules and one-off changes; inside a transaction, through it. */
@@ -347,6 +350,7 @@ export async function updateSchedule(input: {
       .where(eq(meeting.id, row.id));
     await replaceInvitations(tx, row.id, values);
   });
+  remindersChanged({ meetingId: row.id, meetingCode: row.code });
 }
 
 /** Deletes one meeting of a series, it and the ones after it, or the whole meeting. */
@@ -408,6 +412,7 @@ export async function deleteSchedule(input: {
       .set({ status: "cancelled" })
       .where(eq(meeting.id, row.id));
   });
+  remindersChanged({ meetingId: row.id, meetingCode: row.code });
 }
 
 export type UpcomingItem = {

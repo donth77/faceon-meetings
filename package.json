@@ -21,7 +21,6 @@
     "stream:setup": "node --env-file=.env.local scripts/setup-stream.ts",
     "stream:check": "node --env-file=.env.local scripts/setup-stream.ts --check",
     "stream:lockdown-test": "node --env-file=.env.local scripts/stream-lockdown-test.ts",
-    "cron:setup": "node --env-file-if-exists=.env.production.local scripts/setup-cron.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

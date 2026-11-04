@@ -156,6 +156,11 @@ export const auth = betterAuth({
         await endHostedCalls(deleted.id);
         await cancelUpcomingEvents(deleted.id);
         await revokeGoogleAccess(deleted.id);
+        // Reminder emails waiting with Resend, theirs and their invitees', while there's
+        // still a record of them. (Loaded only now: it brings in the meetings code.)
+        const { cancelRemindersOfAccount } =
+          await import("@/lib/reminders/schedule");
+        await cancelRemindersOfAccount(deleted.id);
       },
       afterDelete: async (deleted) => {
         await forgetMediaUser(deleted.id);

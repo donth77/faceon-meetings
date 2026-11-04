@@ -373,9 +373,10 @@ export const webhookEvent = pgTable("webhook_event", {
 });
 
 /**
- * Reminder emails sent: one per person and occurrence (the meeting's ID and the start
- * reminded about), so each goes once however often the scheduler runs, and a moved
- * occurrence gets a new one. Kept two days (retention.ts).
+ * Reminder emails: one per person and occurrence (the meeting's ID and the start reminded
+ * about), scheduled with Resend ahead of time. Each row says when its email goes and
+ * Resend's ID for it, so a change can cancel or replace it while it waits, and none goes
+ * twice; a moved occurrence gets a new one. Kept two days past the meeting (retention.ts).
  */
 export const reminderSent = pgTable(
   "reminder_sent",
@@ -385,12 +386,22 @@ export const reminderSent = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     meetingCode: text("meeting_code").notNull(),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    /** When the row was made: when the email was scheduled (or, for older rows, sent). */
     sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+    /** When the email goes. Null on rows from before reminders were scheduled ahead. */
+    sendAt: timestamp("send_at", { withTimezone: true }),
+    /** Resend's ID for the email, once Resend has it. */
+    emailId: text("email_id"),
+    /** A hash of the email as scheduled, to tell when a change means a new one. */
+    fingerprint: text("fingerprint"),
+    /** Part of the key Resend dedupes on, so a retry never makes a second email. */
+    nonce: text("nonce"),
   },
   (table) => [
     primaryKey({
       columns: [table.userId, table.meetingCode, table.startsAt],
     }),
     index("reminder_sent_sent_at").on(table.sentAt),
+    index("reminder_sent_send_at").on(table.sendAt),
   ],
 );

@@ -5,9 +5,8 @@ import { timingSafeEqual } from "node:crypto";
 import { serverEnv } from "@/lib/server-env";
 
 /**
- * Only the scheduler, which sends "Authorization: Bearer <CRON_SECRET>": Vercel Cron for
- * the daily sweep, and an outside scheduler (cron-job.org) for reminders every few
- * minutes. Without a secret, nothing is let in.
+ * Only the scheduler, which sends "Authorization: Bearer <CRON_SECRET>": Vercel Cron, for
+ * the daily sweep. Without a secret, nothing is let in.
  */
 export function cronAuthorized(request: Request): boolean {
   const secret = serverEnv().CRON_SECRET;

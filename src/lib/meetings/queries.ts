@@ -32,6 +32,7 @@ import type {
   MeetingRole,
   SessionLimits,
 } from "@/lib/media/types";
+import { remindersChanged } from "@/lib/reminders/changed";
 import { serverEnv } from "@/lib/server-env";
 
 import type { MeetingLimits } from "./api";
@@ -197,10 +198,15 @@ export async function setMeetingPasscode(
   hostId: string,
   passcode: string,
 ): Promise<void> {
-  await db()
+  const [changed] = await db()
     .update(meeting)
     .set({ passcode })
-    .where(and(eq(meeting.id, meetingId), eq(meeting.hostId, hostId)));
+    .where(and(eq(meeting.id, meetingId), eq(meeting.hostId, hostId)))
+    .returning({ code: meeting.code, type: meeting.type });
+  // Reminder emails carry the passcode.
+  if (changed?.type === "scheduled") {
+    remindersChanged({ meetingId, meetingCode: changed.code });
+  }
 }
 
 /** Postgres's unique_violation, possibly wrapped by Drizzle. */
@@ -462,6 +468,8 @@ export async function setNamedCohosts(
         });
     }
   });
+  // Co-hosts are invitees: who gets reminders may have changed.
+  remindersChanged({ meetingId });
 }
 
 /**

@@ -33,6 +33,7 @@ import {
   DEFAULT_SETTINGS,
   type MeetingSettings,
 } from "@/lib/meetings/settings";
+import { remindersChanged } from "@/lib/reminders/changed";
 import { meetingPath } from "@/lib/routes";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
@@ -350,6 +351,7 @@ export async function updateConference(
     // FaceOn can't follow the new time or repeat: it keeps its own, with the new title.
     if (title && title !== row.title) {
       await db().update(meeting).set({ title }).where(eq(meeting.id, row.id));
+      remindersChanged({ meetingId: row.id, meetingCode: row.code });
     }
     return;
   }
