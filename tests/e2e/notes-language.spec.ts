@@ -1,6 +1,14 @@
-import pt from "../../messages/pt-BR.json";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+import type Portuguese from "../../messages/pt-BR.json";
 import { createMeeting, database } from "./support/db";
 import { expect, expectNoErrors, needsStream, test } from "./support/fixtures";
+
+/** The Portuguese messages (read, since Node won't import JSON without an attribute). */
+const pt: typeof Portuguese = JSON.parse(
+  readFileSync(path.join("messages", "pt-BR.json"), "utf8"),
+);
 
 /**
  * Chrome on a computer as far as FaceOn can tell, with a built-in AI that writes only
