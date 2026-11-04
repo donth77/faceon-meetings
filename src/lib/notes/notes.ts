@@ -3,7 +3,7 @@
  * notes as Markdown. The model gets the transcript as material, never as instructions,
  * and no tools, so nothing said in the meeting can make it do anything.
  */
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** On this computer (Chrome's built-in model), or with the host's own AI key. */
 export const ENGINES = ["onDevice", "ownKey"] as const;

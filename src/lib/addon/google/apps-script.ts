@@ -1,8 +1,7 @@
 import "server-only";
 
-import { z } from "zod";
-
 import { reportError } from "@/lib/monitoring/report";
+import { z } from "@/lib/zod";
 
 import type { ScriptFile } from "./content";
 

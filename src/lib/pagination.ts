@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** Rows on a page of a list paged on the server (Settings → Admin's lists). */
 export const PER_PAGE = 10;

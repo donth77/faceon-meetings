@@ -1,10 +1,10 @@
 import "server-only";
 
 import { cacheLife } from "next/cache";
-import { z } from "zod";
 
 import { publicEnv } from "@/lib/env";
 import { serverEnv } from "@/lib/server-env";
+import { z } from "@/lib/zod";
 
 import {
   desktopAssetNames,

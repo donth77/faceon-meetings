@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { addonAvailable } from "@/lib/addon/google/available";
 import {
   addAddon,
@@ -13,6 +11,7 @@ import { isAdmin } from "@/lib/meetings/hosting";
 import { reportError } from "@/lib/monitoring/report";
 import { isLimited, recordAttempt } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/same-origin";
+import { z } from "@/lib/zod";
 
 const NO_STORE = { "cache-control": "no-store" };
 

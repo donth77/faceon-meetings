@@ -1,7 +1,5 @@
 "use client";
 
-import { z } from "zod";
-
 import type { AddonReply, AddonSetup } from "@/lib/addon/google/setup-shared";
 import { authClient, linkSocial } from "@/lib/auth/client";
 import type { FaceonDesktop } from "@/lib/desktop/bridge";
@@ -12,6 +10,7 @@ import {
   type CalendarConnection,
   type GoogleScope,
 } from "@/lib/google-calendar/shared";
+import { z } from "@/lib/zod";
 
 /** Settings → Calendar, where Google sends people back after its consent screen. */
 export const CALENDAR_SETTINGS_ROUTE = "/settings/calendar";

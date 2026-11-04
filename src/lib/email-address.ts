@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** Whether text is an email address: one rule for sign-in, sign-up and invitations. */
 export const isEmailAddress = (text: string) =>

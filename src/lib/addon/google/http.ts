@@ -2,12 +2,12 @@ import "server-only";
 
 import { createHmac } from "node:crypto";
 import { unstable_rethrow } from "next/navigation";
-import type { z } from "zod";
 
 import { reportError } from "@/lib/monitoring/report";
 import { hashedClientIp, isLimited, recordAttempt } from "@/lib/rate-limit";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
+import type { z } from "@/lib/zod";
 
 import { ADDON_ERRORS } from "./api";
 import { addonAvailable } from "./available";

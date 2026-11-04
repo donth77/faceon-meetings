@@ -3,9 +3,8 @@
  * plan and their latest request, and when they may ask. lib/hosting/requests.ts keeps
  * the requests; lib/meetings/hosting.ts decides the plan.
  */
-import { z } from "zod";
-
 import type { HostingPlan } from "@/lib/meetings/hosting";
+import { z } from "@/lib/zod";
 
 /** After a decline, how long before someone may ask again. */
 export const ASK_AGAIN_AFTER_DAYS = 30;

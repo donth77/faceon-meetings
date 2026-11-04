@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /**
  * The desktop app's downloads, shared by the server (lib/desktop/releases.ts) and the
  * pages that offer them: which computer this is, each platform's installer in a release,
@@ -10,25 +8,70 @@ import { z } from "zod";
 export const DESKTOP_PLATFORMS = ["windows", "mac"] as const;
 export type DesktopPlatform = (typeof DESKTOP_PLATFORMS)[number];
 
-const DesktopDownloadSchema = z.object({
-  url: z.url(),
+/** One platform's installer in a release. */
+export type DesktopDownload = {
+  url: string;
   /** Bytes, when GitHub said. */
-  size: z.number().int().positive().nullable(),
+  size: number | null;
   /** Signed (Windows) or notarized (Mac): DESKTOP_SIGNED. */
-  signed: z.boolean(),
-});
-export type DesktopDownload = z.infer<typeof DesktopDownloadSchema>;
+  signed: boolean;
+};
 
-export const DesktopReleaseSchema = z.object({
+export type DesktopRelease = {
   /** Null when GitHub's API couldn't be asked and the release's files didn't say. */
-  version: z.string().nullable(),
-  publishedAt: z.string().nullable(),
+  version: string | null;
+  publishedAt: string | null;
   /** Every release, with all their files. */
-  releases: z.url(),
-  windows: DesktopDownloadSchema.nullable(),
-  mac: DesktopDownloadSchema.nullable(),
-});
-export type DesktopRelease = z.infer<typeof DesktopReleaseSchema>;
+  releases: string;
+  windows: DesktopDownload | null;
+  mac: DesktopDownload | null;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isStringOrNull = (value: unknown): value is string | null =>
+  typeof value === "string" || value === null;
+
+function isUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** An installer as the API describes it; null for none, undefined when it's neither. */
+function readDownload(value: unknown): DesktopDownload | null | undefined {
+  if (value === null) return null;
+  if (!isRecord(value)) return undefined;
+  const { url, size, signed } = value;
+  const sized =
+    size === null ||
+    (typeof size === "number" && Number.isInteger(size) && size > 0);
+  return isUrl(url) && sized && typeof signed === "boolean"
+    ? { url, size, signed }
+    : undefined;
+}
+
+/**
+ * The release in /api/desktop/release's reply, checked: null when there's none or the
+ * reply isn't one. Plain checks rather than a schema library, since the landing page
+ * asks for it.
+ */
+export function readReleaseReply(body: unknown): DesktopRelease | null {
+  if (!isRecord(body) || body.available !== true) return null;
+  const { version, publishedAt, releases } = body;
+  const windows = readDownload(body.windows);
+  const mac = readDownload(body.mac);
+  if (windows === undefined || mac === undefined) return null;
+  if (!isStringOrNull(version) || !isStringOrNull(publishedAt)) return null;
+  return isUrl(releases)
+    ? { version, publishedAt, releases, windows, mac }
+    : null;
+}
 
 /**
  * What this browser runs on, from its user agent: a Mac or Windows (the desktop app's),

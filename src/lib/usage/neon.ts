@@ -1,9 +1,8 @@
 import "server-only";
 
-import { z } from "zod";
-
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
+import { z } from "@/lib/zod";
 
 import { isFresh, lastReading, saveReading } from "./readings";
 

@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /**
  * Backgrounds and effects: what someone can choose, as kept on their device (Settings →
  * Backgrounds and effects). The video is processed on the device, by engine/.
@@ -107,16 +105,43 @@ export const motionFile = (id: MotionId) => `/backgrounds/motion/${id}.mp4`;
 export const motionThumb = (id: MotionId) => `/backgrounds/motion/${id}.webp`;
 
 /** Images and looping videos people add; kept in their browser (uploads.ts). */
-export const UPLOAD_ID = z.string().regex(/^[a-z0-9-]{1,64}$/);
+const UPLOAD_ID = /^[a-z0-9-]{1,64}$/;
 
-export const Effect = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("blur"), level: z.enum(BLUR_LEVELS) }),
-  z.object({ kind: z.literal("still"), id: z.enum(STILL_IDS) }),
-  z.object({ kind: z.literal("motion"), id: z.enum(MOTION_IDS) }),
-  z.object({ kind: z.literal("upload"), id: UPLOAD_ID }),
-]);
 /** A background or effect; null is none. */
-export type Effect = z.infer<typeof Effect>;
+export type Effect =
+  | { kind: "blur"; level: BlurLevel }
+  | { kind: "still"; id: StillId }
+  | { kind: "motion"; id: MotionId }
+  | { kind: "upload"; id: string };
+
+const isOneOf = <T extends string>(list: readonly T[], value: unknown) =>
+  list.find((item) => item === value);
+
+/**
+ * A stored choice as an effect, or null when it isn't one we offer (a retired background,
+ * a typo, anything else). Plain checks rather than a schema library: preferences read it
+ * on every page, and this keeps that light.
+ */
+export function parseEffect(value: unknown): Effect | null {
+  if (!value || typeof value !== "object") return null;
+  const { kind, level, id } = value as Record<string, unknown>;
+  if (kind === "blur") {
+    const found = isOneOf(BLUR_LEVELS, level);
+    return found ? { kind, level: found } : null;
+  }
+  if (kind === "still") {
+    const found = isOneOf(STILL_IDS, id);
+    return found ? { kind, id: found } : null;
+  }
+  if (kind === "motion") {
+    const found = isOneOf(MOTION_IDS, id);
+    return found ? { kind, id: found } : null;
+  }
+  if (kind === "upload" && typeof id === "string" && UPLOAD_ID.test(id)) {
+    return { kind, id };
+  }
+  return null;
+}
 
 /** One string per choice, for the picker's radio values; "none" for no effect. */
 export function effectKey(effect: Effect | null): string {
@@ -132,10 +157,9 @@ export function effectFromKey(key: string): Effect | null {
   if (at < 0) return null;
   const kind = key.slice(0, at);
   const value = key.slice(at + 1);
-  const parsed = Effect.safeParse(
+  return parseEffect(
     kind === "blur" ? { kind, level: value } : { kind, id: value },
   );
-  return parsed.success ? parsed.data : null;
 }
 
 export const sameEffect = (a: Effect | null, b: Effect | null) =>

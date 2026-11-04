@@ -1,6 +1,5 @@
-import { z } from "zod";
-
 import { isTimeZone } from "@/lib/time";
+import { z } from "@/lib/zod";
 
 /**
  * Email reminders (Settings → Notifications): off to start, for people with an account.

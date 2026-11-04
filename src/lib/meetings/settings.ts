@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** Per-meeting options the host controls. Validated on every read and write. */
 export const MeetingSettings = z.object({

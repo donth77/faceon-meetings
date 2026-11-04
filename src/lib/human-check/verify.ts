@@ -1,10 +1,9 @@
 import "server-only";
 
-import { z } from "zod";
-
 import { publicEnv } from "@/lib/env";
 import { serverEnv } from "@/lib/server-env";
 import { siteUrl } from "@/lib/site";
+import { z } from "@/lib/zod";
 
 import type { HumanCheckAction } from ".";
 

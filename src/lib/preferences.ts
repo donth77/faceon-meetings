@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 import { DESKTOP_LINKS, type DesktopLinks } from "@/lib/desktop/open-in-app";
-import { Effect } from "@/lib/effects/effects";
+import { parseEffect, type Effect } from "@/lib/effects/effects";
 import {
   parseNoiseSuppression,
   type NoiseSuppression,
@@ -117,8 +117,8 @@ export function loadPreferences(): Preferences {
       if (minutes !== undefined) value.reminderMinutes = minutes;
       const links = DESKTOP_LINKS.find((value) => value === p.desktopLinks);
       if (links) value.desktopLinks = links;
-      const effect = Effect.safeParse(p.effect);
-      if (effect.success) value.effect = effect.data;
+      const effect = parseEffect(p.effect);
+      if (effect) value.effect = effect;
       const noise = parseNoiseSuppression(p.noiseSuppression);
       if (noise) value.noiseSuppression = noise;
       for (const key of BOOLEANS) {

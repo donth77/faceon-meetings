@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /**
  * Default avatars (DiceBear "Dylan"): seeds and URLs. Safe in the browser; the look a

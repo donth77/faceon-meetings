@@ -5,7 +5,8 @@
  * this browser; keys go from here straight to their provider and nowhere else.
  */
 import { useSyncExternalStore } from "react";
-import { z } from "zod";
+
+import { z } from "@/lib/zod";
 
 import { ENGINES } from "./notes";
 import { isProvider, PROVIDERS, type ProviderId } from "./providers";

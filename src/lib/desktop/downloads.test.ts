@@ -8,6 +8,7 @@ import {
   homeInstallCard,
   installOffer,
   pickInstallers,
+  readReleaseReply,
   versionFromDownloadUrl,
   type DesktopRelease,
 } from "./downloads";
@@ -162,6 +163,46 @@ describe("what /download offers", () => {
       expect(
         platforms(downloadView({ ...release, mac: null }, device)),
       ).toEqual(["windows"]);
+    }
+  });
+});
+
+describe("the release API's reply", () => {
+  const release: DesktopRelease = {
+    version: "0.2.0",
+    publishedAt: "2026-10-01T12:00:00Z",
+    releases: "https://example.test/releases",
+    windows: {
+      url: "https://example.test/FaceOn-Setup.exe",
+      size: 90_000_000,
+      signed: true,
+    },
+    mac: null,
+  };
+
+  it("reads a release, keeping only what it describes", () => {
+    expect(readReleaseReply({ available: true, ...release })).toEqual(release);
+    expect(
+      readReleaseReply({ available: true, ...release, extra: "kept out" }),
+    ).toEqual(release);
+  });
+
+  it("is null when there's no release, or the reply isn't one", () => {
+    expect(readReleaseReply({ available: false })).toBeNull();
+    expect(readReleaseReply(release)).toBeNull();
+    expect(readReleaseReply(null)).toBeNull();
+    expect(readReleaseReply("release")).toBeNull();
+    const reply = { available: true, ...release };
+    expect(readReleaseReply({ ...reply, releases: "not a link" })).toBeNull();
+    expect(readReleaseReply({ ...reply, version: 2 })).toBeNull();
+    expect(readReleaseReply({ ...reply, mac: undefined })).toBeNull();
+    for (const windows of [
+      { ...release.windows, url: "nowhere" },
+      { ...release.windows, size: 0 },
+      { ...release.windows, size: 1.5 },
+      { ...release.windows, signed: "yes" },
+    ]) {
+      expect(readReleaseReply({ ...reply, windows })).toBeNull();
     }
   });
 });

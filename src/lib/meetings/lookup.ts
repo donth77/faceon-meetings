@@ -1,21 +1,17 @@
-import { z } from "zod";
-
 /**
  * GET /api/meetings/{code}: what the meeting's page would say about an ID, so the Join
  * field can say it first. Always a 200: a missing meeting is an answer here, not an
  * error. (Kept out of api.ts, whose schemas the landing page has no need to load.)
  */
-export const MeetingLookup = z.object({
-  meeting: z.enum([
-    "open",
-    "notFound",
-    "ended",
-    "cancelled",
-    "expired",
-    "tooManyTries",
-  ]),
-});
-export type MeetingLookup = z.infer<typeof MeetingLookup>;
+const ANSWERS = [
+  "open",
+  "notFound",
+  "ended",
+  "cancelled",
+  "expired",
+  "tooManyTries",
+] as const;
+export type MeetingLookup = { meeting: (typeof ANSWERS)[number] };
 
 /**
  * What the Join field learns before opening a meeting: the lookup's answer, "network"
@@ -39,7 +35,7 @@ export async function lookUpMeeting(code: string): Promise<LookupResult> {
 
 /** The lookup's answer from its response, checked: anything unexpected is "unknown". */
 export function readLookup(ok: boolean, body: unknown): LookupResult {
-  if (!ok) return "unknown";
-  const parsed = MeetingLookup.safeParse(body);
-  return parsed.success ? parsed.data.meeting : "unknown";
+  if (!ok || !body || typeof body !== "object") return "unknown";
+  const { meeting } = body as Record<string, unknown>;
+  return ANSWERS.find((answer) => answer === meeting) ?? "unknown";
 }

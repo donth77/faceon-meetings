@@ -1,15 +1,13 @@
 "use server";
 
-import { z } from "zod";
-
 import { requireSession } from "@/lib/auth/session";
 import { calendarConnection } from "@/lib/google-calendar/connection";
 import type { CalendarOutcome } from "@/lib/google-calendar/shared";
 import { syncGoogleCalendar } from "@/lib/google-calendar/sync";
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
+import { z } from "@/lib/zod";
 
-import { Passcode } from "./codes";
 import { notesAllowedFor } from "./notes";
 import {
   countMeetingsCreatedSince,
@@ -23,6 +21,7 @@ import { DAY_MS } from "./retention";
 import {
   cohostsAllowed,
   OccurrenceRef,
+  Passcode,
   ScheduleDraft,
   ScheduleInput,
   SeriesScope,

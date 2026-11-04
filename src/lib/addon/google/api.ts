@@ -2,9 +2,8 @@
  * The add-on API's request schemas: every request is checked against these before
  * anything else happens. The types they check are in types.ts, shared with the add-on.
  */
-import { z } from "zod";
-
 import { MAX_TITLE } from "@/lib/meetings/schedule";
+import { z } from "@/lib/zod";
 
 import type {
   AddonErrorCode,

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
+
+import { z } from "@/lib/zod";
 
 /**
  * The link in a reminder email that turns reminder emails off: who it's for, signed so

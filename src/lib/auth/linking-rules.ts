@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
+
+import { z } from "@/lib/zod";
 
 /*
  * Which Google or GitHub accounts may be linked to a FaceOn account. Better Auth links a

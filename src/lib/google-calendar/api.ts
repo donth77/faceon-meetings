@@ -1,6 +1,6 @@
 import "server-only";
 
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** The host's own calendar: the only one FaceOn writes to. */
 const EVENTS_URL =

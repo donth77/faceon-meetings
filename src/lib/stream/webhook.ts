@@ -1,7 +1,6 @@
-import { z } from "zod";
-
 import type { AttendanceEvent } from "@/lib/media/types";
 import { isUuid } from "@/lib/uuid";
+import { z } from "@/lib/zod";
 
 import { CALL_TYPE } from "./constants";
 

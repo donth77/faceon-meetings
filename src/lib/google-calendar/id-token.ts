@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 const Claims = z.object({ email: z.email().max(320) });
 

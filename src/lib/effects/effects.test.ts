@@ -3,17 +3,18 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
-  Effect,
   effectFromKey,
   effectKey,
   motionFile,
   MOTIONS,
   motionThumb,
+  parseEffect,
   runnableEffect,
   sameEffect,
   stillFile,
   STILLS,
   stillThumb,
+  type Effect,
 } from "./effects";
 
 describe("effect keys", () => {
@@ -42,9 +43,7 @@ describe("effect keys", () => {
   it("drops motion backgrounds that are no longer offered", () => {
     for (const retired of ["waves", "bokeh", "drift"]) {
       expect(effectFromKey(`motion:${retired}`)).toBeNull();
-      expect(Effect.safeParse({ kind: "motion", id: retired }).success).toBe(
-        false,
-      );
+      expect(parseEffect({ kind: "motion", id: retired })).toBeNull();
     }
   });
 
@@ -91,9 +90,9 @@ describe("the default backgrounds", () => {
   });
 
   it("validates stored choices", () => {
-    expect(Effect.safeParse({ kind: "still", id: "oxbow" }).success).toBe(true);
-    expect(Effect.safeParse({ kind: "still", id: "nope" }).success).toBe(false);
-    expect(Effect.safeParse({ kind: "blur" }).success).toBe(false);
+    expect(parseEffect({ kind: "still", id: "oxbow" })).not.toBeNull();
+    expect(parseEffect({ kind: "still", id: "nope" })).toBeNull();
+    expect(parseEffect({ kind: "blur" })).toBeNull();
   });
 });
 

@@ -2,12 +2,14 @@
  * What the schedule form sends, and what edits and deletes say about a series. Safe to
  * import in the browser.
  */
-import { z } from "zod";
-
 import type { CalendarOutcome } from "@/lib/google-calendar/shared";
+import { z } from "@/lib/zod";
 
-import { Passcode } from "./codes";
+import { PASSCODE_PATTERN } from "./codes";
 import { latestSeriesEnd, Recurrence } from "./recurrence";
+
+/** A passcode a host chose (or kept the generated one): trimmed, as the rules allow. */
+export const Passcode = z.string().trim().regex(PASSCODE_PATTERN);
 
 /** Invite up to this many people by email. */
 export const MAX_INVITEES = 50;

@@ -4,7 +4,7 @@
  * reload keeps them and closing the tab forgets them; nothing is saved anywhere unless
  * the host chooses.
  */
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { ENGINES, MeetingNotes } from "./notes";
 import { PROVIDERS } from "./providers";

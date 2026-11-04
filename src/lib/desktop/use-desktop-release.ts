@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { z } from "zod";
 
 import {
-  DesktopReleaseSchema,
   deviceKind,
+  readReleaseReply,
   type DesktopDownload,
   type DesktopPlatform,
   type DesktopRelease,
@@ -13,22 +12,12 @@ import {
 } from "./downloads";
 import { useDesktop } from "./use-desktop";
 
-const Reply = z.union([
-  z.object({ available: z.literal(false) }),
-  DesktopReleaseSchema.extend({ available: z.literal(true) }),
-]);
-
 let request: Promise<DesktopRelease | null> | null = null;
 
 function loadRelease(): Promise<DesktopRelease | null> {
   request ??= fetch("/api/desktop/release")
     .then((response) => (response.ok ? response.json() : null))
-    .then((body: unknown) => {
-      const reply = Reply.safeParse(body);
-      return reply.success && reply.data.available
-        ? DesktopReleaseSchema.parse(reply.data)
-        : null;
-    })
+    .then(readReleaseReply)
     .catch(() => null);
   return request;
 }

@@ -2,7 +2,7 @@
  * Repeating meetings, as the schedule form builds them and the server stores them (an
  * RFC 5545 rule, expanded in the meeting's time zone). Safe to import in the browser.
  */
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /** The most meetings a series can have when it ends after a number of them. */
 export const MAX_SERIES_COUNT = 730;

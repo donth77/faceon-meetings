@@ -3,7 +3,6 @@
 import { isAPIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { z } from "zod";
 
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { auth } from "@/lib/auth/server";
@@ -14,6 +13,7 @@ import { user } from "@/lib/db/schema";
 import { aiNotesEnabled } from "@/lib/env";
 import { DisplayName } from "@/lib/meetings/api";
 import { allowNotesInMeetings } from "@/lib/meetings/notes";
+import { z } from "@/lib/zod";
 
 const ACCOUNT_ROUTE = "/settings/account";
 const AI_NOTES_ROUTE = "/settings/ai-notes";

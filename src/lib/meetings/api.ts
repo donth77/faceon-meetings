@@ -2,8 +2,6 @@
  * The meeting API's request and response shapes, shared by the route handlers and the
  * meeting client. Safe to import in the browser.
  */
-import { z } from "zod";
-
 import { AvatarSeed } from "@/lib/avatars/seed";
 import type { JoinInfo, MeetingRole } from "@/lib/media/types";
 import {
@@ -12,6 +10,7 @@ import {
   MeetingNotes,
 } from "@/lib/notes/notes";
 import { PROVIDERS } from "@/lib/notes/providers";
+import { z } from "@/lib/zod";
 
 import { SessionPolicy } from "./policy";
 

@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   formatMeetingCode,
   formatTypedMeetingId,
-  Passcode,
   passcodeProblem,
   randomPasscode,
   readMeetingInput,
 } from "./codes";
+import { Passcode } from "./schedule";
 
 describe("formatMeetingCode", () => {
   it("groups a valid ID as 3-3-4", () => {

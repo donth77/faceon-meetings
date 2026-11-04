@@ -3,7 +3,6 @@ import "server-only";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
-import { z } from "zod";
 
 import {
   challengeMatches,
@@ -18,6 +17,7 @@ import {
 import { CHALLENGE } from "@/lib/desktop/handoff-params";
 import { noteDesktopAppUsed } from "@/lib/desktop/usage";
 import { reportError } from "@/lib/monitoring/report";
+import { z } from "@/lib/zod";
 
 /** Back to the app's sign-in page, saying only that it didn't work. */
 const FAILED = "/desktop/sign-in?error=expired";

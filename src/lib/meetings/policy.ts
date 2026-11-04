@@ -2,9 +2,8 @@
  * What hosts and co-hosts can change while a meeting runs. Each session starts from the
  * meeting's settings; changes last until the session ends. Safe to import in the browser.
  */
-import { z } from "zod";
-
 import type { PublishPermissions } from "@/lib/media/types";
+import { z } from "@/lib/zod";
 
 import type { MeetingSettings } from "./settings";
 

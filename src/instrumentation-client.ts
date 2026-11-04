@@ -1,15 +1,9 @@
-import { z } from "zod";
-
 import { reportBrowserError } from "@/lib/monitoring/browser-errors";
 
 /**
- * Runs in the browser before the app does.
- *
- * Zod's faster parsing compiles validators with Function(), which the Content Security
- * Policy doesn't allow; only checking whether it may would be reported on every page.
- * Parsing the plain way costs nothing noticeable at FaceOn's sizes.
+ * Runs in the browser before the app does. (Zod's plain parsing is set where it's
+ * imported, src/lib/zod.ts, so pages that never parse don't load it.)
  */
-z.config({ jitless: true });
 
 /**
  * Error reports from the browser, only where this copy sets NEXT_PUBLIC_SENTRY_DSN

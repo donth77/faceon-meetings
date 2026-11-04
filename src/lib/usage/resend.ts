@@ -1,12 +1,12 @@
 import "server-only";
 
 import { sql } from "drizzle-orm";
-import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { emailDay } from "@/lib/db/schema";
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
+import { z } from "@/lib/zod";
 
 import {
   dayBefore,

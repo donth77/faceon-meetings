@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /** Meeting IDs are 10 random digits that never start with 0, shown as "123 456 7890". */
 export const MEETING_CODE_PATTERN = /^[1-9]\d{9}$/;
 
@@ -14,9 +12,6 @@ const PASSCODE_CHARS = "A-Za-z0-9@_*-";
 export const PASSCODE_PATTERN = new RegExp(
   `^[${PASSCODE_CHARS}]{${PASSCODE_MIN},${PASSCODE_MAX}}$`,
 );
-
-/** A passcode a host chose (or kept the generated one): trimmed, as the rules allow. */
-export const Passcode = z.string().trim().regex(PASSCODE_PATTERN);
 
 /** Why a passcode can't be used, for its field to say; null when it can. */
 export function passcodeProblem(value: string): "characters" | "length" | null {

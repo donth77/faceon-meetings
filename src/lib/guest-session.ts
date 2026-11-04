@@ -2,11 +2,11 @@ import "server-only";
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { z } from "zod";
 
 import { lookForName } from "@/lib/avatars/name-look";
 import { avatarUrl, createAvatarSeed } from "@/lib/avatars/seed";
 import { serverEnv } from "@/lib/server-env";
+import { z } from "@/lib/zod";
 
 /**
  * A browser's guest identity: a random ID and an avatar (a default, or the one they chose

@@ -1,11 +1,11 @@
 import "server-only";
 
 import { waitUntil } from "@vercel/functions";
-import { z } from "zod";
 
 import { reportError } from "@/lib/monitoring/report";
 import { serverEnv } from "@/lib/server-env";
 import { recordSentEmail } from "@/lib/usage/emails";
+import { z } from "@/lib/zod";
 
 export type Email = {
   to: string;

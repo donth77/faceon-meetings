@@ -73,7 +73,7 @@ Node.js 24 and pnpm 10. Deploys happen by pushing to GitHub (Vercel's Git integr
 
 ## Conventions
 
-- **TypeScript strict.** Validate every boundary (env, request bodies, webhooks, custom events) with Zod.
+- **TypeScript strict.** Validate every boundary (env, request bodies, webhooks, custom events) with Zod, imported from `@/lib/zod` (lint enforces it). Browser code that every public page loads (`env.ts`, preferences, the Join field, download links) checks its few values by hand instead, so those pages don't load Zod.
 - **Secrets stay on the server.** Only `NEXT_PUBLIC_*` values may reach the browser. Server modules that read secrets import `server-only`.
 - **The Content Security Policy lists every host.** Anything new the browser loads or calls directly (a script, an API, an image host) goes in `src/lib/security/csp.ts`, or production's reports, and later browsers, will turn it away.
 - **Hosts' AI keys never reach our server.** They're kept in the host's browser and sent only to their AI provider; no route accepts, stores or logs them.

@@ -3,7 +3,7 @@
  * prompts as events, plus reactions. Every one is validated on receipt, so a modified
  * client can't inject anything else. Nothing here is stored.
  */
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { SessionPolicy } from "./policy";
 

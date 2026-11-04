@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
+
+import { z } from "@/lib/zod";
 
 import { CHALLENGE } from "./handoff-params";
 

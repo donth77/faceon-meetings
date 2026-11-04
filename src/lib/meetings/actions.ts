@@ -4,7 +4,6 @@ import { requireSession } from "@/lib/auth/session";
 import { HOME_ROUTE, PERSONAL_ROOM_ROUTE } from "@/lib/routes";
 import { serverEnv } from "@/lib/server-env";
 
-import { Passcode } from "./codes";
 import {
   countMeetingsCreatedSince,
   getOrCreatePersonalRoom,
@@ -14,7 +13,7 @@ import {
   setNamedCohosts,
   updateMeetingSettings,
 } from "./queries";
-import { CohostList, cohostsAllowed } from "./schedule";
+import { CohostList, cohostsAllowed, Passcode } from "./schedule";
 import { demoMeetingsLeft } from "./sessions";
 import { MeetingSettings } from "./settings";
 
