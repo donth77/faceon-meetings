@@ -369,7 +369,7 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 
 ### Usage this month
 
-**Settings → Admin → Usage this month** shows how much of each free plan this month has used: Stream's participant-minutes (FaceOn's own count; Stream's dashboard is what's billed), emails today and this month (from Resend, and FaceOn's own count of Mailtrap's where it's the backup), Neon's compute hours, and a link to Vercel's usage page, since Vercel emails its own warnings. The daily cleanup emails the admins (`ADMIN_EMAILS`) once when a meter passes 80%, and again at 100%; that needs Resend or Mailtrap.
+**Settings → Admin → Usage this month** shows how much of each free plan this month has used, most critical first: Stream's participant-minutes (FaceOn's own count; Stream's dashboard is what's billed), Neon's compute hours, a link to Vercel's usage page (Vercel emails its own warnings), then emails today and this month (from Resend, and FaceOn's own count of Mailtrap's where it's the backup). The daily cleanup emails the admins (`ADMIN_EMAILS`) once when a meter passes 80%, and again at 100%; that needs Resend or Mailtrap.
 
 The limits default to the free plans; set the `USAGE_*` settings if yours differ (0 means no limit). For Neon's meter, create a project-scoped API key in the Neon console (your organization's **Settings → API keys → Create new → Project-scoped**, for this project) and copy the project's ID from its **Settings → General** (it looks like `misty-river-12345678`; a branch's ID, `br-…`, won't work). Set them as `NEON_API_KEY` (sensitive) and `NEON_PROJECT_ID` in Vercel, and redeploy.
 
