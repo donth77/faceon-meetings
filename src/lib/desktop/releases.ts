@@ -34,13 +34,30 @@ const Release = z.object({
  * none (no repository, or nothing published yet).
  */
 export async function latestDesktopRelease(): Promise<DesktopRelease | null> {
-  "use cache";
-  cacheLife("hours");
   const env = serverEnv();
   const repo = env.DESKTOP_RELEASES_REPO;
   if (!repo) return null;
-  const signed = new Set(env.DESKTOP_SIGNED?.split(",") ?? []);
-  const names = desktopAssetNames(publicEnv.NEXT_PUBLIC_APP_NAME);
+  return releaseIn(
+    repo,
+    env.DESKTOP_SIGNED ?? "",
+    publicEnv.NEXT_PUBLIC_APP_NAME,
+  );
+}
+
+/**
+ * latestDesktopRelease, cached by its settings: the cache outlives deployments, so a new
+ * repository or DESKTOP_SIGNED shows with the next deployment rather than up to an hour
+ * later.
+ */
+async function releaseIn(
+  repo: string,
+  signedPlatforms: string,
+  appName: string,
+): Promise<DesktopRelease | null> {
+  "use cache";
+  cacheLife("hours");
+  const signed = new Set(signedPlatforms.split(","));
+  const names = desktopAssetNames(appName);
   const releases = `https://github.com/${repo}/releases`;
 
   const release = await askGitHub(repo);

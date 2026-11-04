@@ -36,7 +36,7 @@ const ServerEnv = z.object({
   /** Whether people without an account may join meetings (hosts can still say no). */
   ALLOW_GUESTS: z.stringbool().default(true),
   /**
-   * The desktop app's public releases repository, as owner/name: /download and "Get the
+   * The public repository whose releases hold the desktop app, as owner/name: /download and "Get the
    * desktop app" read its latest release (lib/desktop/releases.ts). Empty: no desktop app.
    */
   DESKTOP_RELEASES_REPO: z

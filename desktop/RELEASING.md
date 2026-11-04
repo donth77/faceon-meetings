@@ -21,23 +21,23 @@ Builds read `desktop/.env.local` (git-ignored), then the environment. Copy
 
 The icons come from the brand: after `pnpm brand`, run `pnpm desktop:icons`.
 
-## Once: the releases repository
+## Once: where releases live
 
-While the code is private, downloads and updates live in a small **public** repository
-that holds only releases. The app's updater reads it, and it's free.
+Downloads and updates come from your repository's **GitHub Releases**, so the repository
+must be public: the app's updater and `/download` read its latest release without
+signing in. Publish only desktop releases there, since both read whichever is latest.
 
-1. On GitHub, create a public repository named, for example, `faceon-desktop-releases`.
-   Leave it empty.
-2. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new)
-   with access to only that repository and **Contents: Read and write**. This is your
+1. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new)
+   with access to only your repository and **Contents: Read and write**. This is your
    `GH_TOKEN` for publishing.
-3. In `desktop/.env.local` on the computers you publish from (your Mac and your Windows
-   PC), set `DESKTOP_RELEASES_REPO=<you>/faceon-desktop-releases` and `GH_TOKEN=<the token>`.
-4. Optionally, add `DESKTOP_RELEASES_REPO` as a variable in this repository's settings
+2. In `desktop/.env.local` on the computers you publish from (your Mac and your Windows
+   PC), set `DESKTOP_RELEASES_REPO=<you>/faceon-meetings` and `GH_TOKEN=<the token>`.
+3. Optionally, add `DESKTOP_RELEASES_REPO` as a variable in your repository's settings
    (**Settings → Secrets and variables → Actions → Variables**), so CI's test builds look
    for updates too.
 
-Once the code is public, releases can move to its own repository instead.
+Installed apps update from the repository their build named, so changing it later needs
+one release published in both places.
 
 ## Signing on your Mac
 

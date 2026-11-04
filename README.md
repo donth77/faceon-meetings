@@ -9,7 +9,7 @@
 
 **Free, open-source video meetings that run in your browser.**
 
-[![Desktop app](https://img.shields.io/github/v/release/donth77/faceon-desktop-releases?include_prereleases&style=flat-square&label=desktop&color=1F5EFF)](https://github.com/donth77/faceon-desktop-releases/releases)
+[![Desktop app](https://img.shields.io/github/v/release/donth77/faceon-meetings?include_prereleases&style=flat-square&label=desktop&color=1F5EFF)](https://github.com/donth77/faceon-meetings/releases)
 [![License](https://img.shields.io/badge/license-MIT-1F5EFF?style=flat-square)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
