@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -16,6 +17,8 @@ import { user } from "./auth-schema";
  * Addresses an admin approved in Settings → Admin to host full meetings, before or after their
  * owner signs up. The operator's settings (ADMIN_EMAILS, HOST_ALLOWLIST) count as well,
  * read from the settings themselves. An address counts once an account has verified it.
+ * FaceOn emails an invitation only when an admin chooses to (lib/hosting/invites.ts):
+ * the latest one's time and sender, and how many there have been, are kept for its limits.
  */
 export const hostAllowlist = pgTable("host_allowlist", {
   /** Lowercased. */
@@ -25,6 +28,13 @@ export const hostAllowlist = pgTable("host_allowlist", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  /** When an admin last emailed this address an invitation; null if never. */
+  invitedAt: timestamp("invited_at", { withTimezone: true }),
+  invitedBy: text("invited_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  /** How many invitation emails this address has had. */
+  inviteCount: integer("invite_count").notNull().default(0),
 });
 
 /**

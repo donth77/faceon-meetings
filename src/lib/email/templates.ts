@@ -20,8 +20,9 @@ import type { Email } from "./send";
 
 /**
  * The account emails FaceOn sends: signing up and passwords, hosting full meetings (to
- * the admins when someone asks, and to the person when an admin answers), and warning
- * the admins when a free allowance runs low (lib/usage/alerts.ts).
+ * the admins when someone asks, to the person when an admin answers, and an invitation
+ * when an admin chooses to send one), and warning the admins when a free allowance runs
+ * low (lib/usage/alerts.ts).
  */
 export type AccountEmail =
   | "verify"
@@ -31,6 +32,7 @@ export type AccountEmail =
   | "hostingAsked"
   | "hostingApproved"
   | "hostingDeclined"
+  | "hostInvite"
   | "usageAlert";
 
 /** The person's language when we know it and support it; otherwise the default. */

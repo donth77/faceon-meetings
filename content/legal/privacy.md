@@ -20,7 +20,7 @@ updated: 2026-11-04
 - The **options you last scheduled a meeting with**, such as its length, passcode on or off, and waiting room, so your next meeting starts from them. Never its title, people or passcode.
 - If you turn on **email reminders**: how long before a meeting they come, and the time zone their times are in. They go to your account's email address, before meetings you host or are invited to, and each one has the meeting's title, time, link, ID and passcode. To stop them, select the link at the foot of any reminder, or turn them off in **Settings**, under **Notifications**. Each reminder is prepared up to two days ahead, and Resend holds it until it's due. {appName} keeps a short record of each one (the meeting, its time and when the email goes), so it can change or cancel the email when the meeting or your settings change, and so none goes twice.
 - If you **ask to host full meetings**: your request, the note you add, and the answer. This site's admins (the people who run it) see your name, your email and any note you send with a request, so they can decide; they can't see your meetings, notes or settings, or change your account.
-- If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when.
+- If an admin **approves your address** to host full meetings, before or after you sign up: the address, who approved it and when. {appName} emails you an invitation to sign up only if an admin chooses to, and then also keeps when the last one went, who sent it and how many there have been. Taking the address off the list deletes all of it.
 
 ### Meetings you host
 

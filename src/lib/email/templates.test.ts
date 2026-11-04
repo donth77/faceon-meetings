@@ -75,4 +75,30 @@ describe("an account email", () => {
     );
     expect(text).toContain('"Our <club> meets weekly & runs long"');
   });
+
+  it("invites an approved address in the inviting admin's words: who, the terms, sign-up with the address filled in", async () => {
+    const link = "https://joinfaceon.app/sign-up?email=ana%40example.com";
+    const { subject, text, html } = await accountEmail("hostInvite", {
+      to: "ana@example.com",
+      name: "Ada Admin",
+      url: link,
+      locale: "en",
+      values: { admin: "Ada Admin", people: 100, minutes: 0 },
+      quote: "Welcome to the <book> club",
+    });
+    expect(subject).toMatch(/^Ada Admin invited you to host meetings on /);
+    expect(text.split("\n\n")).toEqual([
+      expect.stringMatching(/^You’re invited to host meetings on /),
+      expect.stringMatching(
+        /^Ada Admin invited you to host full meetings on .+: up to 100 people, with no time limit\. Create your account/,
+      ),
+      '"Welcome to the <book> club"',
+      `Create your account: ${link}`,
+      expect.stringMatching(
+        /^Signing in with Google or GitHub with this same address works too\./,
+      ),
+    ]);
+    expect(html).toContain(`href="${link}"`);
+    expect(html).toContain("Welcome to the &lt;book&gt; club");
+  });
 });

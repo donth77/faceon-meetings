@@ -14,6 +14,7 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
 import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
+import { invitedEmail } from "@/lib/hosting/invites";
 import { humanCheckFetchOptions, isHumanCheckError } from "@/lib/human-check";
 
 import { AuthCard, AuthCardIcon, OrDivider } from "./auth-card";
@@ -123,14 +124,18 @@ function CheckEmail({
 /**
  * The sign-up card: Google and GitHub, or name, email and password. An email sign-up
  * must verify its address, so it ends on "Check your email". It looks the same whether
- * or not the email already has an account.
+ * or not the email already has an account. An invite link (`?email=`, from Settings →
+ * Admin) fills in the address; it's only a convenience, since hosting full meetings still
+ * waits for that address to be verified.
  */
 export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
   const t = useTranslations("Auth");
   const searchParams = useSearchParams();
   const callbackURL = verifyEmailCallback(searchParams.get("next"));
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(
+    () => invitedEmail(searchParams.get("email")) ?? "",
+  );
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [problem, setProblem] = useState<AuthProblem | null>(null);

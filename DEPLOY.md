@@ -262,11 +262,11 @@ A listed address counts only once it's verified. Google and GitHub sign-ins are;
 Admins are the addresses in `ADMIN_EMAILS`, and only those: the app can't add or remove an admin. Signed in, an admin finds **Admin** in Settings (also in the account menu), at `/settings/admin`. It's about one thing, who hosts full meetings:
 
 - **Requests.** A demo host can select **Ask for full meetings** on Home and add a note. Admins get an email, then **Approve** or **Decline** in Settings → Admin, and the person gets an email with the answer. After a decline they can ask again in 30 days.
-- **Approved hosts.** Add an address before or after its owner signs up; their meetings are full from their next one. **Move to demo** takes someone back to demo meetings from their next meeting (a meeting already running keeps its limits), without an email. Addresses from `HOST_ALLOWLIST` show as "From settings" and change only there.
+- **Approved hosts.** Add an address before or after its owner signs up; their meetings are full from their next one. Each shows as **Approved**, **Invited** or **Joined** (signed up and verified). To invite someone who hasn't signed up, **Copy invite link** gives sign-up with their address filled in, to send them yourself at no cost. Emailing an invitation is a choice, off by default: tick **Email them an invitation** when adding, or **Send invitation** on the row. Each uses one of the day's emails, so they're limited (an hour apart, three per address, twenty per admin a day). **Remove** takes someone back to demo meetings from their next meeting (a meeting already running keeps its limits), without an email. Addresses from `HOST_ALLOWLIST` show as "From settings" and change only there.
 
 Admins can't delete, edit or sign in as anyone's account, and Settings → Admin shows nothing of anyone's meetings, notes or settings: only what a hosting decision needs (name, email, whether an account exists, the note sent with a request, and past answers). Each action is its own server function that checks the caller is an admin; there's no general user management. Everyone else gets a "page not found" there.
 
-Emails to admins and about answers go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear in Settings → Admin, but nobody is emailed.
+Emails to admins, about answers and invitations go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear in Settings → Admin and invite links work, but nobody is emailed.
 
 ## 10. Legal pages
 

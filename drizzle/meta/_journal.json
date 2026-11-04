@@ -183,6 +183,13 @@
       "when": 1793804814574,
       "tag": "0025_usage_readings",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793805649177,
+      "tag": "0026_host_invites",
+      "breakpoints": true
     }
   ]
 }

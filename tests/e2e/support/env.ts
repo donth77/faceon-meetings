@@ -41,6 +41,12 @@ export function authSecret(): string {
  */
 export const ADMIN_EMAIL = "e2e-admin@faceon.test";
 
+/**
+ * A second test admin, for tests that run beside ADMIN_EMAIL's: making an account with an
+ * address deletes any account already using it, so two tests can't share one.
+ */
+export const HOSTS_ADMIN_EMAIL = "e2e-hosts-admin@faceon.test";
+
 /** Whether the media tests can run: they join real calls on Stream's development app. */
 export const hasStream = Boolean(
   process.env.NEXT_PUBLIC_STREAM_API_KEY && process.env.STREAM_API_SECRET,
