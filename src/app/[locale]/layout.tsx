@@ -13,14 +13,17 @@ import { publicEnv } from "@/lib/env";
 
 import "../globals.css";
 
+// `subsets` are the ones preloaded: Latin covers every language FaceOn ships (but
+// Japanese, which uses the system's fonts). The other subsets still load, on the pages
+// that use their letters (a name like "Łukasz").
 const figtree = Figtree({
   variable: "--font-figtree",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
 });
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
-  subsets: ["latin", "latin-ext"],
+  subsets: ["latin"],
 });
 
 const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
