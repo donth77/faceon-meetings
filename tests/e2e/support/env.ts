@@ -47,6 +47,12 @@ export const ADMIN_EMAIL = "e2e-admin@faceon.test";
  */
 export const HOSTS_ADMIN_EMAIL = "e2e-hosts-admin@faceon.test";
 
+/**
+ * The one address in the server's HOST_ALLOWLIST, for Settings → Admin's rows from settings.
+ * Nobody signs up with it, so every test account still hosts demo meetings.
+ */
+export const SETTINGS_HOST_EMAIL = "e2e-settings-host@faceon.test";
+
 /** Whether the media tests can run: they join real calls on Stream's development app. */
 export const hasStream = Boolean(
   process.env.NEXT_PUBLIC_STREAM_API_KEY && process.env.STREAM_API_SECRET,

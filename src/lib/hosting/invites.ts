@@ -20,15 +20,20 @@ export const INVITES_PER_ADMIN_PER_DAY = 20;
 /** Whether the address has an account, and whether its owner has verified it. */
 export type AccountState = "none" | "unverified" | "verified";
 
-/** What Settings → Admin says about an approved address. */
-export type HostStatus = "joined" | "invited" | "approved";
+/**
+ * What Settings → Admin says about an approved address, whichever list it's on: Joined
+ * (signed up and verified, so hosting counts), signed up but not verified yet, Invited
+ * (no account, emailed an invitation), or no account yet.
+ */
+export type HostStatus = "joined" | "unverified" | "invited" | "noAccount";
 
 export function hostStatus(input: {
   account: AccountState;
   invitedAt: Date | null;
 }): HostStatus {
   if (input.account === "verified") return "joined";
-  return input.invitedAt ? "invited" : "approved";
+  if (input.account === "unverified") return "unverified";
+  return input.invitedAt ? "invited" : "noAccount";
 }
 
 /**
@@ -77,6 +82,29 @@ export function inviteRefusal(input: {
     return { reason: "dailyCap", count: input.sentToday };
   }
   return null;
+}
+
+/**
+ * Adding an address that's already approved, with an invitation asked for, sends none: the
+ * row it's already on has the invitation, and this says what it offers instead.
+ */
+export type AlreadyListed =
+  /** Signed up already: there's nothing to invite them to. */
+  | "hasAccount"
+  /** Never emailed: the row's Send invitation. */
+  | "sendFromRow"
+  /** Emailed before: the row's Resend invitation. */
+  | "resendFromRow"
+  /** All INVITES_PER_ADDRESS sent: the row's invite link. */
+  | "allSent";
+
+export function alreadyListed(input: {
+  account: AccountState;
+  inviteCount: number;
+}): AlreadyListed {
+  if (input.account !== "none") return "hasAccount";
+  if (input.inviteCount >= INVITES_PER_ADDRESS) return "allSent";
+  return input.inviteCount > 0 ? "resendFromRow" : "sendFromRow";
 }
 
 /** The start of `now`'s day in UTC, which the daily cap counts from. */

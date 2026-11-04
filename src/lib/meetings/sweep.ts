@@ -1,6 +1,7 @@
 import "server-only";
 
 import { pruneExpiredSessions } from "@/lib/account/sessions";
+import { pruneInvitations } from "@/lib/hosting/allowlist";
 import { pruneAnsweredRequests } from "@/lib/hosting/requests";
 import { warnAboutMediaPermissions } from "@/lib/media/permissions";
 import { reportError } from "@/lib/monitoring/report";
@@ -32,8 +33,9 @@ import { pruneEndedSessionRequests } from "./waiting-room";
  * - drops admission records and waiting-room requests a week after their session ended
  *   (removals after 90 days), attendance and saved AI notes after 90 days, attempt
  *   counters and sign-in rate limits after a day, sign-in sessions once they expire,
- *   answered requests to host full meetings after 90 days, and the records of reminder
- *   emails two days after their meeting. The privacy policy promises these (retention.ts).
+ *   answered requests to host full meetings after 90 days, invitations to addresses no
+ *   longer approved, and the records of reminder emails two days after their meeting.
+ *   The privacy policy promises these (retention.ts).
  * - warns the admins when a free allowance (Stream, emails, Neon) reaches 80% and again
  *   at 100% (lib/usage), and drops the usage meter's counts after two months.
  */
@@ -72,6 +74,7 @@ export async function sweep(now = new Date()) {
     prunedHostingRequests: await pruneAnsweredRequests(
       daysBefore(now, KEEP_DAYS.hostingRequests),
     ),
+    prunedInvitations: await pruneInvitations(),
     prunedReminders: await pruneSentReminders(
       daysBefore(now, KEEP_DAYS.reminders),
     ),

@@ -8,14 +8,13 @@ import {
   eq,
   gte,
   inArray,
-  isNull,
   lte,
   notInArray,
   sql,
 } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { hostAllowlist, user } from "@/lib/db/schema";
+import { hostAllowlist, hostInvitation, user } from "@/lib/db/schema";
 import { approvedBySettings } from "@/lib/meetings/hosting";
 import { fetchPage, pageOf, splitRows } from "@/lib/pagination";
 import { serverEnv } from "@/lib/server-env";
@@ -38,7 +37,7 @@ export type ApprovedHost = {
   createdAt: Date | null;
   /** The admin's own note on who this is; only admins see it. */
   note: string | null;
-  /** When an admin last emailed it an invitation, and how many it's had. */
+  /** When an admin last emailed it an invitation, and how many it's had, whichever list it's on. */
   invitedAt: Date | null;
   inviteCount: number;
 };
@@ -76,8 +75,6 @@ export async function approvedHosts(requested: number) {
                 email: hostAllowlist.email,
                 createdAt: hostAllowlist.createdAt,
                 note: hostAllowlist.note,
-                invitedAt: hostAllowlist.invitedAt,
-                inviteCount: hostAllowlist.inviteCount,
                 addedBy: user.name,
               })
               .from(hostAllowlist)
@@ -94,19 +91,26 @@ export async function approvedHosts(requested: number) {
           addedBy: null,
           createdAt: null,
           note: null,
-          invitedAt: null,
-          inviteCount: 0,
         })),
         ...fromTable.map((row) => ({ ...row, source: "admin" as const })),
       ];
     },
   );
-  const accounts = await accountStates(rows.map((host) => host.email));
+  const emails = rows.map((host) => host.email);
+  const [accounts, invitations] = await Promise.all([
+    accountStates(emails),
+    invitationsTo(emails),
+  ]);
   return {
-    rows: rows.map((host): ApprovedHost => ({
-      ...host,
-      account: accounts.get(host.email) ?? "none",
-    })),
+    rows: rows.map((host): ApprovedHost => {
+      const invitation = invitations.get(host.email);
+      return {
+        ...host,
+        account: accounts.get(host.email) ?? "none",
+        invitedAt: invitation?.invitedAt ?? null,
+        inviteCount: invitation?.inviteCount ?? 0,
+      };
+    }),
     page,
   };
 }
@@ -141,6 +145,22 @@ async function accountStates(
   );
 }
 
+/** The invitation emails these (lowercased) addresses have had, by address. */
+async function invitationsTo(
+  emails: string[],
+): Promise<Map<string, { invitedAt: Date; inviteCount: number }>> {
+  if (emails.length === 0) return new Map();
+  const rows = await db()
+    .select({
+      email: hostInvitation.email,
+      invitedAt: hostInvitation.invitedAt,
+      inviteCount: hostInvitation.inviteCount,
+    })
+    .from(hostInvitation)
+    .where(inArray(hostInvitation.email, emails));
+  return new Map(rows.map(({ email, ...invitation }) => [email, invitation]));
+}
+
 function unique(emails: string[]): string[] {
   return [...new Set(emails)];
 }
@@ -163,8 +183,8 @@ export async function addApprovedHost(input: {
 
 /**
  * An admin moves an address back to demo meetings, from its owner's next meeting: a
- * meeting already running keeps the limits it started with. Addresses from the
- * operator's settings can only be changed there.
+ * meeting already running keeps the limits it started with. Its invitations go with it.
+ * Addresses from the operator's settings can only be changed there.
  */
 export async function removeApprovedHost(
   email: string,
@@ -175,36 +195,74 @@ export async function removeApprovedHost(
     .delete(hostAllowlist)
     .where(eq(hostAllowlist.email, address))
     .returning({ email: hostAllowlist.email });
+  await forgetInvitations(address);
   return removed.length > 0 ? "removed" : "missing";
 }
 
-/** Deleting an account takes its address off the list too. */
+/** Deleting an account takes its address off the list too, with its invitations. */
 export async function forgetApprovedHost(email: string): Promise<void> {
-  await db()
-    .delete(hostAllowlist)
-    .where(eq(hostAllowlist.email, email.trim().toLowerCase()));
+  const address = email.trim().toLowerCase();
+  await db().delete(hostAllowlist).where(eq(hostAllowlist.email, address));
+  await forgetInvitations(address);
+}
+
+async function forgetInvitations(address: string): Promise<void> {
+  await db().delete(hostInvitation).where(eq(hostInvitation.email, address));
 }
 
 /**
- * What an invitation email to this address depends on: its row on the list (null when an
- * admin didn't add it, as for the operator's settings) and whether it has an account.
+ * The daily sweep: deletes the invitations of addresses no longer approved anywhere, off
+ * the list and out of the operator's settings.
+ */
+export async function pruneInvitations(): Promise<number> {
+  const env = serverEnv();
+  const inSettings = [...env.HOST_ALLOWLIST, ...env.ADMIN_EMAILS];
+  const onList = db()
+    .select({ email: hostAllowlist.email })
+    .from(hostAllowlist);
+  const deleted = await db()
+    .delete(hostInvitation)
+    .where(
+      and(
+        notInArray(hostInvitation.email, onList),
+        inSettings.length > 0
+          ? notInArray(hostInvitation.email, inSettings)
+          : undefined,
+      ),
+    )
+    .returning({ email: hostInvitation.email });
+  return deleted.length;
+}
+
+/**
+ * What an invitation email to this address depends on: whether it's approved (on the
+ * list, or in the operator's settings), the invitations it's had, and whether it has an
+ * account.
  */
 export async function invitationTarget(email: string): Promise<{
-  row: { inviteCount: number; invitedAt: Date | null } | null;
+  approved: boolean;
+  inviteCount: number;
+  invitedAt: Date | null;
   account: AccountState;
 }> {
   const address = email.trim().toLowerCase();
-  const [[row], accounts] = await Promise.all([
-    db()
-      .select({
-        inviteCount: hostAllowlist.inviteCount,
-        invitedAt: hostAllowlist.invitedAt,
-      })
-      .from(hostAllowlist)
-      .where(eq(hostAllowlist.email, address)),
+  const [listed, invitations, accounts] = await Promise.all([
+    approvedBySettings(address) ||
+      db()
+        .select({ email: hostAllowlist.email })
+        .from(hostAllowlist)
+        .where(eq(hostAllowlist.email, address))
+        .then((rows) => rows.length > 0),
+    invitationsTo([address]),
     accountStates([address]),
   ]);
-  return { row: row ?? null, account: accounts.get(address) ?? "none" };
+  const invitation = invitations.get(address);
+  return {
+    approved: listed,
+    inviteCount: invitation?.inviteCount ?? 0,
+    invitedAt: invitation?.invitedAt ?? null,
+    account: accounts.get(address) ?? "none",
+  };
 }
 
 /** Invitation emails this admin has sent today (UTC), for the daily cap. */
@@ -214,76 +272,92 @@ export async function invitationsSentToday(
 ): Promise<number> {
   const [row] = await db()
     .select({ total: count() })
-    .from(hostAllowlist)
+    .from(hostInvitation)
     .where(
       and(
-        eq(hostAllowlist.invitedBy, adminId),
-        gte(hostAllowlist.invitedAt, startOfUtcDay(now)),
+        eq(hostInvitation.invitedBy, adminId),
+        gte(hostInvitation.invitedAt, startOfUtcDay(now)),
       ),
     );
   return row?.total ?? 0;
 }
 
+/** An address's latest invitation before claimInvitation noted another; null for its first. */
+export type InvitationBefore = {
+  invitedAt: Date;
+  invitedBy: string | null;
+} | null;
+
 /**
  * Notes an invitation email before it goes, only while the address is still within its
  * limits, so two clicks at once send one. Gives back what to restore if sending fails;
- * null when another send got there first or a limit was reached.
+ * false when another send got there first or a limit was reached.
  */
 export async function claimInvitation(input: {
   email: string;
   adminId: string;
   now: Date;
-}): Promise<{ invitedAt: Date | null; invitedBy: string | null } | null> {
+}): Promise<{ before: InvitationBefore } | false> {
   const address = input.email.trim().toLowerCase();
   const [before] = await db()
     .select({
-      invitedAt: hostAllowlist.invitedAt,
-      invitedBy: hostAllowlist.invitedBy,
+      invitedAt: hostInvitation.invitedAt,
+      invitedBy: hostInvitation.invitedBy,
     })
-    .from(hostAllowlist)
-    .where(eq(hostAllowlist.email, address));
-  if (!before) return null;
+    .from(hostInvitation)
+    .where(eq(hostInvitation.email, address));
+  if (!before) {
+    const inserted = await db()
+      .insert(hostInvitation)
+      .values({
+        email: address,
+        invitedAt: input.now,
+        invitedBy: input.adminId,
+      })
+      .onConflictDoNothing()
+      .returning({ email: hostInvitation.email });
+    return inserted.length > 0 ? { before: null } : false;
+  }
   const resendFrom = new Date(input.now.getTime() - RESEND_AFTER_MS);
   const claimed = await db()
-    .update(hostAllowlist)
+    .update(hostInvitation)
     .set({
       invitedAt: input.now,
       invitedBy: input.adminId,
-      inviteCount: sql`${hostAllowlist.inviteCount} + 1`,
+      inviteCount: sql`${hostInvitation.inviteCount} + 1`,
     })
     .where(
       and(
-        eq(hostAllowlist.email, address),
-        sql`${hostAllowlist.inviteCount} < ${INVITES_PER_ADDRESS}`,
-        before.invitedAt
-          ? and(
-              eq(hostAllowlist.invitedAt, before.invitedAt),
-              lte(hostAllowlist.invitedAt, resendFrom),
-            )
-          : isNull(hostAllowlist.invitedAt),
+        eq(hostInvitation.email, address),
+        sql`${hostInvitation.inviteCount} < ${INVITES_PER_ADDRESS}`,
+        eq(hostInvitation.invitedAt, before.invitedAt),
+        lte(hostInvitation.invitedAt, resendFrom),
       ),
     )
-    .returning({ email: hostAllowlist.email });
-  return claimed.length > 0 ? before : null;
+    .returning({ email: hostInvitation.email });
+  return claimed.length > 0 ? { before } : false;
 }
 
 /** Undoes claimInvitation when the email didn't go. */
 export async function releaseInvitation(input: {
   email: string;
   claimedAt: Date;
-  before: { invitedAt: Date | null; invitedBy: string | null };
+  before: InvitationBefore;
 }): Promise<void> {
+  const claimed = and(
+    eq(hostInvitation.email, input.email.trim().toLowerCase()),
+    eq(hostInvitation.invitedAt, input.claimedAt),
+  );
+  if (!input.before) {
+    await db().delete(hostInvitation).where(claimed);
+    return;
+  }
   await db()
-    .update(hostAllowlist)
+    .update(hostInvitation)
     .set({
       invitedAt: input.before.invitedAt,
       invitedBy: input.before.invitedBy,
-      inviteCount: sql`greatest(${hostAllowlist.inviteCount} - 1, 0)`,
+      inviteCount: sql`greatest(${hostInvitation.inviteCount} - 1, 1)`,
     })
-    .where(
-      and(
-        eq(hostAllowlist.email, input.email.trim().toLowerCase()),
-        eq(hostAllowlist.invitedAt, input.claimedAt),
-      ),
-    );
+    .where(claimed);
 }

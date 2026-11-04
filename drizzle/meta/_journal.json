@@ -204,6 +204,13 @@
       "when": 1793810557788,
       "tag": "0028_provider_email",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793818237706,
+      "tag": "0029_host_invitation",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,7 @@
+import { INVITES_PER_ADDRESS } from "@/lib/hosting/invites";
+
 import { database } from "./support/db";
-import { HOSTS_ADMIN_EMAIL } from "./support/env";
+import { HOSTS_ADMIN_EMAIL, SETTINGS_HOST_EMAIL } from "./support/env";
 import { expect, expectNoErrors, hydrated, test } from "./support/fixtures";
 
 /** Addresses these tests approve, so a failed run doesn't leave them on the list. */
@@ -8,6 +10,10 @@ const INVITEE = /^e2e_invite_/;
 test.afterEach(async () => {
   await database().query(
     `delete from host_allowlist where email like 'e2e\\_invite\\_%'`,
+  );
+  await database().query(
+    `delete from host_invitation where email like 'e2e\\_invite\\_%' or email = $1`,
+    [SETTINGS_HOST_EMAIL],
   );
 });
 
@@ -39,7 +45,9 @@ test.describe("Settings → Admin → inviting approved hosts", () => {
     ).toBeVisible();
 
     const row = page.getByRole("listitem").filter({ hasText: invitee });
-    await expect(row.getByText("Approved", { exact: true })).toBeVisible();
+    await expect(
+      row.getByText("No account yet", { exact: true }),
+    ).toBeVisible();
     await expect(
       row.getByRole("button", { name: `Send an invitation to ${invitee}` }),
     ).toHaveCount(0);
@@ -91,6 +99,61 @@ test.describe("Settings → Admin → inviting approved hosts", () => {
     await expect(row).toHaveCount(0);
 
     expectNoErrors(admin, visitor, host);
+  });
+
+  test("an address from settings says whether it has an account, and its invitations, like any other, but is removed only there", async ({
+    people,
+  }) => {
+    // It had every invitation email while this copy had email set up.
+    await database().query(
+      `insert into host_invitation (email, invited_at, invite_count)
+       values ($1, now() - interval '2 hours', $2)`,
+      [SETTINGS_HOST_EMAIL, INVITES_PER_ADDRESS],
+    );
+    const admin = await people.signedIn({
+      email: HOSTS_ADMIN_EMAIL,
+      name: "Hana Admin",
+    });
+    const { page } = admin;
+    await page.goto("/settings/admin");
+    const row = page
+      .getByRole("listitem")
+      .filter({ hasText: SETTINGS_HOST_EMAIL });
+    await expect(row.getByText("From settings")).toBeVisible();
+    await expect(row.getByText(/^Invited /)).toBeVisible();
+    await expect(
+      row.getByText(
+        `${INVITES_PER_ADDRESS} of ${INVITES_PER_ADDRESS} invitations sent`,
+      ),
+    ).toBeVisible();
+    await expect(
+      row.getByRole("button", {
+        name: `Copy an invite link for ${SETTINGS_HOST_EMAIL}`,
+      }),
+    ).toBeVisible();
+    await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
+
+    // With no invitation yet, the row says plainly that there's no account.
+    await database().query(`delete from host_invitation where email = $1`, [
+      SETTINGS_HOST_EMAIL,
+    ]);
+    await page.reload();
+    await expect(
+      row.getByText("No account yet", { exact: true }),
+    ).toBeVisible();
+    await expect(row.getByText(/invitations sent/)).toHaveCount(0);
+
+    // Adding it here as well says where it's approved already.
+    await hydrated(page.getByLabel("Email address"));
+    await page.getByLabel("Email address").fill(SETTINGS_HOST_EMAIL);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(
+      page.getByText(
+        `${SETTINGS_HOST_EMAIL} is already approved in your settings.`,
+      ),
+    ).toBeVisible();
+
+    expectNoErrors(admin);
   });
 
   test("the list and form work on a phone, in dark mode, by keyboard", async ({

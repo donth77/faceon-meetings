@@ -16,7 +16,7 @@ import {
   removeApprovedHost,
 } from "./allowlist";
 import { emailInvitation } from "./emails";
-import { inviteRefusal } from "./invites";
+import { alreadyListed, inviteRefusal, type AlreadyListed } from "./invites";
 import { decideRequest } from "./requests";
 import { RequestNote } from "./rules";
 
@@ -70,7 +70,7 @@ export type InviteResult =
   | "dailyCap"
   /** This copy has no email delivery. */
   | "noEmail"
-  /** Not on the list an admin keeps (the operator's settings, or removed). */
+  /** Not approved any more: taken off the list, or out of the operator's settings. */
   | "notListed"
   | "failed";
 
@@ -91,23 +91,17 @@ async function invite(
     invitationTarget(email),
     invitationsSentToday(caller.id, now),
   ]);
-  if (!target.row) return "notListed";
-  const refusal = inviteRefusal({
-    account: target.account,
-    inviteCount: target.row.inviteCount,
-    invitedAt: target.row.invitedAt,
-    sentToday,
-    now,
-  });
+  if (!target.approved) return "notListed";
+  const refusal = inviteRefusal({ ...target, sentToday, now });
   if (refusal) return refusal.reason;
-  const before = await claimInvitation({ email, adminId: caller.id, now });
-  if (!before) return "tooSoon";
+  const claim = await claimInvitation({ email, adminId: caller.id, now });
+  if (!claim) return "tooSoon";
   try {
     await emailInvitation({ to: email, admin: caller, message });
     return "sent";
   } catch (error) {
     console.error("An invitation email failed to send", loggable(error));
-    await releaseInvitation({ email, claimedAt: now, before }).catch(
+    await releaseInvitation({ email, claimedAt: now, ...claim }).catch(
       (undo: unknown) => {
         console.error("Couldn't undo a failed invitation", loggable(undo));
       },
@@ -118,7 +112,8 @@ async function invite(
 
 /**
  * Approve an address to host full meetings, before or after its owner signs up. With
- * `sendInvitation`, and only then, it's emailed an invitation too, carrying `message`.
+ * `sendInvitation`, and only then, it's emailed an invitation too, carrying `message`. An
+ * address that's already approved gets none: `listed` says what its row offers instead.
  */
 export async function addApprovedHostAction(input: {
   email: unknown;
@@ -126,10 +121,8 @@ export async function addApprovedHostAction(input: {
   sendInvitation: unknown;
   message: unknown;
 }): Promise<
-  | {
-      added: "added" | "exists" | "settings";
-      invitation: InviteResult | null;
-    }
+  | { added: "added"; invitation: InviteResult | null }
+  | { added: "exists" | "settings"; listed: AlreadyListed | null }
   | Refusal
 > {
   const parsed = z
@@ -154,11 +147,23 @@ export async function addApprovedHostAction(input: {
     note: parsed.data.note || null,
     adminId: caller.id,
   });
-  const invitation =
-    added === "added" && parsed.data.sendInvitation
-      ? await invite(address, parsed.data.message || null, caller)
-      : null;
-  return { added, invitation };
+  if (!parsed.data.sendInvitation) {
+    return added === "added"
+      ? { added, invitation: null }
+      : { added, listed: null };
+  }
+  if (added === "added") {
+    return {
+      added,
+      invitation: await invite(address, parsed.data.message || null, caller),
+    };
+  }
+  return {
+    added,
+    listed: emailPasswordEnabled()
+      ? alreadyListed(await invitationTarget(address))
+      : null,
+  };
 }
 
 /** Email an approved address an invitation, or again, within the limits. */

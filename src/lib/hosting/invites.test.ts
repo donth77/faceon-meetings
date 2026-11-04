@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  alreadyListed,
   hostStatus,
   invitedEmail,
   inviteLink,
@@ -23,17 +24,20 @@ describe("an approved address's status", () => {
     );
   });
 
-  it("is Invited after an invitation email, until then Approved", () => {
+  it("says there's no account yet, until an invitation email, then Invited", () => {
+    expect(hostStatus({ account: "none", invitedAt: null })).toBe("noAccount");
     expect(hostStatus({ account: "none", invitedAt: minutesAgo(5) })).toBe(
       "invited",
     );
-    expect(hostStatus({ account: "none", invitedAt: null })).toBe("approved");
   });
 
   it("isn't Joined while the address is unverified: hosting waits for that", () => {
     expect(hostStatus({ account: "unverified", invitedAt: null })).toBe(
-      "approved",
+      "unverified",
     );
+    expect(
+      hostStatus({ account: "unverified", invitedAt: minutesAgo(5) }),
+    ).toBe("unverified");
   });
 });
 
@@ -114,5 +118,34 @@ describe("emailing an invitation", () => {
       new Date("2026-11-05T00:00:00Z"),
     );
     expect(startOfUtcDay(now)).toEqual(new Date("2026-11-04T00:00:00Z"));
+  });
+});
+
+describe("adding an address that's already approved, with an invitation asked for", () => {
+  it("sends nothing to someone who has an account, verified or not", () => {
+    expect(alreadyListed({ account: "verified", inviteCount: 0 })).toBe(
+      "hasAccount",
+    );
+    expect(alreadyListed({ account: "unverified", inviteCount: 1 })).toBe(
+      "hasAccount",
+    );
+  });
+
+  it("points to the row's Send invitation, or Resend once they've had one", () => {
+    expect(alreadyListed({ account: "none", inviteCount: 0 })).toBe(
+      "sendFromRow",
+    );
+    expect(alreadyListed({ account: "none", inviteCount: 1 })).toBe(
+      "resendFromRow",
+    );
+    expect(
+      alreadyListed({ account: "none", inviteCount: INVITES_PER_ADDRESS - 1 }),
+    ).toBe("resendFromRow");
+  });
+
+  it("points to the row's invite link once every invitation has gone", () => {
+    expect(
+      alreadyListed({ account: "none", inviteCount: INVITES_PER_ADDRESS }),
+    ).toBe("allSent");
   });
 });

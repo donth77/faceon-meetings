@@ -32,6 +32,7 @@ import {
   INVITES_PER_ADDRESS,
   INVITES_PER_ADMIN_PER_DAY,
   type AccountState,
+  type AlreadyListed,
 } from "@/lib/hosting/invites";
 import type { ListPage } from "@/lib/pagination";
 
@@ -52,13 +53,15 @@ type Host = {
 
 /**
  * Settings → Admin → Approved hosts: add an address (before or after its owner signs up), or move
- * one back to demo meetings. Addresses from the operator's settings are only listed. The list is
- * paged (`?hosts=`), and `hosts` is the page shown.
+ * one back to demo meetings. Addresses from the operator's settings are removed only there. The
+ * list is paged (`?hosts=`), and `hosts` is the page shown. Each row says whether its address
+ * has an account yet, whichever list it's on.
  *
- * Inviting someone who hasn't signed up: **Copy invite link** (sign-up with their address filled
- * in, sent however the admin likes, costing nothing) is the way offered first. FaceOn emails an
- * invitation only when the admin chooses to, when email is set up (`emailEnabled`), since each
- * one uses the free plan's daily emails (lib/hosting/invites.ts has the limits).
+ * Inviting someone who hasn't signed up, from either list: **Copy invite link** (sign-up with
+ * their address filled in, sent however the admin likes, costing nothing) is the way offered
+ * first. FaceOn emails an invitation only when the admin chooses to, when email is set up
+ * (`emailEnabled`), since each one uses the free plan's daily emails (lib/hosting/invites.ts has
+ * the limits); once an address has had them all, its row says so.
  */
 export function ApprovedHosts({
   hosts,
@@ -189,11 +192,12 @@ export function ApprovedHosts({
                 invitedAt: host.invitedAt ? new Date(host.invitedAt) : null,
               });
               const canCopy = host.account === "none";
-              const canEmail =
-                emailEnabled &&
-                host.source === "admin" &&
+              // Said even where email isn't set up any more: they had them all.
+              const allSent =
                 host.account === "none" &&
-                host.inviteCount < INVITES_PER_ADDRESS;
+                host.inviteCount >= INVITES_PER_ADDRESS;
+              const canEmail =
+                emailEnabled && host.account === "none" && !allSent;
               return (
                 <li
                   key={host.email}
@@ -205,11 +209,13 @@ export function ApprovedHosts({
                       <Chip tone={status === "joined" ? "brand" : "neutral"}>
                         {status === "joined"
                           ? t("statusJoined")
-                          : status === "invited" && host.invitedAt
-                            ? t("statusInvited", {
-                                date: when(host.invitedAt),
-                              })
-                            : t("statusApproved")}
+                          : status === "unverified"
+                            ? t("statusUnverified")
+                            : status === "invited" && host.invitedAt
+                              ? t("statusInvited", {
+                                  date: when(host.invitedAt),
+                                })
+                              : admin("noAccount")}
                       </Chip>
                       {host.source === "settings"
                         ? t("fromSettings")
@@ -228,7 +234,7 @@ export function ApprovedHosts({
                       </span>
                     ) : null}
                   </div>
-                  {canCopy || canEmail || host.source === "admin" ? (
+                  {canCopy || canEmail || allSent || host.source === "admin" ? (
                     <div className="flex flex-wrap items-center gap-2">
                       {canCopy ? (
                         <Button
@@ -253,6 +259,11 @@ export function ApprovedHosts({
                           <Mail aria-hidden="true" />
                           {t(host.invitedAt ? "resendInvite" : "sendInvite")}
                         </Button>
+                      ) : null}
+                      {allSent ? (
+                        <span className="text-muted-foreground text-[13px]">
+                          {t("invitesAllSent", { count: host.inviteCount })}
+                        </span>
                       ) : null}
                       {host.source === "admin" ? (
                         <Button
@@ -386,6 +397,14 @@ function SendInvitation({
   );
 }
 
+/** What adding an address that's already approved says, when an invitation was asked for. */
+const ALREADY_LISTED = {
+  hasAccount: "listedHasAccount",
+  sendFromRow: "listedSendFromRow",
+  resendFromRow: "listedResendFromRow",
+  allSent: "listedAllSent",
+} as const satisfies Record<AlreadyListed, string>;
+
 /** Approve an address: their meetings are full from their next one. */
 function AddHost({
   emailEnabled,
@@ -462,10 +481,17 @@ function AddHost({
         setMessage("");
         onAdded();
       } else {
+        // Already approved: nothing was sent, even with an invitation asked for, and the
+        // address's row says what to use instead.
         setProblem(
-          t(result.added === "exists" ? "exists" : "settingsAlready", {
-            email: lowered,
-          }),
+          result.listed
+            ? t(ALREADY_LISTED[result.listed], {
+                email: lowered,
+                count: INVITES_PER_ADDRESS,
+              })
+            : t(result.added === "exists" ? "exists" : "settingsAlready", {
+                email: lowered,
+              }),
         );
         field.current?.focus();
       }
