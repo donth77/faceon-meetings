@@ -148,8 +148,9 @@ export const meetingSession = pgTable(
     /**
      * The last time anyone was known to be in the call: someone joining, leaving (the
      * meeting page says so as they go) or, with the provider's webhooks, connecting.
-     * A session nobody's in closes only when the next join or the daily sweep notices,
-     * so that's when it ended, not when it was noticed.
+     * A session nobody's in closes only when something notices (the next join, Home or
+     * Upcoming checking for Live, or the daily sweep), so that's when it ended, not when
+     * it was noticed.
      */
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     /** For a scheduled meeting: the occurrence this session ran (its planned start). */

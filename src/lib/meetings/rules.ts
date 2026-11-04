@@ -3,7 +3,11 @@
  * anything Node-only, so the browser can ask them too (the ⋯ menu offers what
  * canModerate allows). The join flow (join.ts) gathers the facts and applies these.
  */
-import type { MeetingRole, SessionSnapshot } from "@/lib/media/types";
+import type {
+  MeetingRole,
+  SessionLimits,
+  SessionSnapshot,
+} from "@/lib/media/types";
 
 import type { MeetingErrorCode, ModerateRequest } from "./api";
 import type { MeetingSettings } from "./settings";
@@ -97,10 +101,26 @@ export function isSessionStale(
 }
 
 /**
+ * Whether a meeting is live, for its green dot on Home and in Upcoming: someone is in
+ * its call, which hasn't ended or reached the session's time limit. An open session
+ * nobody's in (not joined yet, or everyone left moments ago) isn't live.
+ */
+export function isSessionLive(
+  session: { startedAt: Date; limits: SessionLimits },
+  snapshot: SessionSnapshot | null,
+  now: Date,
+): boolean {
+  if (!snapshot || snapshot.ended) return false;
+  if (snapshot.connectedUserIds.length === 0) return false;
+  const max = session.limits.maxDurationSeconds;
+  return !max || now.getTime() - session.startedAt.getTime() < max * 1000;
+}
+
+/**
  * When a session that's no longer usable ended. With someone still connected (the call
  * was ended for everyone), now. Otherwise the last time anyone was seen in it, never
- * before it started: a session closed late, by the next join or the daily sweep, keeps
- * the length it really had.
+ * before it started: a session closed late (by the next join, a look for Live, or the
+ * daily sweep) keeps the length it really had.
  */
 export function sessionEndedAt(
   session: { startedAt: Date; lastSeenAt: Date | null },

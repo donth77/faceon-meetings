@@ -215,7 +215,8 @@
   "Common": {
     "lengthLeft": "{count, plural, one {# character} other {# characters}} left",
     "lengthReached": "That’s the limit: {max, number} characters.",
-    "newTab": "(opens in a new tab)"
+    "newTab": "(opens in a new tab)",
+    "live": "Live"
   },
   "Pager": {
     "range": "{first, number}–{last, number} of {total, number}",
@@ -342,6 +343,7 @@
     "personalRoom": "Personal room",
     "personalRoomBody": "Your always-available link. {passcode, select, on {Passcode on} other {No passcode}}, {waitingRoom, select, on {waiting room on} other {no waiting room}}.",
     "start": "Start",
+    "join": "Join",
     "copyInvitation": "Copy invitation",
     "scheduleTitle": "Schedule a meeting",
     "scheduleBody": "Pick a time, then share a link, a ready-made invitation or a calendar file.",

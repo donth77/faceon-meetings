@@ -464,6 +464,47 @@ export async function setNamedCohosts(
   });
 }
 
+/**
+ * Someone's meetings with an open session, as Home and Upcoming can show them: their
+ * own (personal room, instant and scheduled), and scheduled ones they're invited to by
+ * their verified email, as in Upcoming (upcomingFor).
+ */
+export async function openMeetingsFor(viewer: {
+  userId: string;
+  verifiedEmail: string | null;
+}): Promise<Meeting[]> {
+  const invitedTo = viewer.verifiedEmail
+    ? db()
+        .select({ id: meetingInvitee.meetingId })
+        .from(meetingInvitee)
+        .where(eq(meetingInvitee.email, viewer.verifiedEmail.toLowerCase()))
+    : null;
+  const rows = await db()
+    .select({ meeting })
+    .from(meeting)
+    .where(
+      and(
+        eq(meeting.status, "active"),
+        or(
+          eq(meeting.hostId, viewer.userId),
+          invitedTo ? inArray(meeting.id, invitedTo) : undefined,
+        ),
+        exists(
+          db()
+            .select({ id: meetingSession.id })
+            .from(meetingSession)
+            .where(
+              and(
+                eq(meetingSession.meetingId, meeting.id),
+                eq(meetingSession.status, "open"),
+              ),
+            ),
+        ),
+      ),
+    );
+  return rows.map((row) => readMeeting(row.meeting));
+}
+
 export async function findOpenSession(
   meetingId: string,
 ): Promise<MeetingSession | null> {

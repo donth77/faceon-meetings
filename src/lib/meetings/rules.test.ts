@@ -11,6 +11,7 @@ import {
   canSetNotes,
   checkEntry,
   closedReason,
+  isSessionLive,
   isSessionStale,
   notesOnJoin,
   notesStartAutomatically,
@@ -205,6 +206,50 @@ describe("isSessionStale", () => {
   it("waits for a call that's still being created", () => {
     expect(isSessionStale(ago(1000), null, now)).toBe(false);
     expect(isSessionStale(ago(SESSION_GRACE_MS + 1), null, now)).toBe(true);
+  });
+});
+
+describe("isSessionLive", () => {
+  const now = new Date("2026-11-04T15:00:00Z");
+  const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000);
+  const session = { startedAt: ago(10), limits: { maxParticipants: 100 } };
+  const inCall = { ended: false, connectedUserIds: ["u_1"], emptySince: null };
+
+  it("is live while someone is in the call", () => {
+    expect(isSessionLive(session, inCall, now)).toBe(true);
+    expect(
+      isSessionLive(
+        session,
+        { ...inCall, connectedUserIds: ["u_1", "g_2"] },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it("isn't live while nobody's in it: not joined yet, or everyone just left", () => {
+    expect(isSessionLive(session, null, now)).toBe(false);
+    expect(
+      isSessionLive(
+        session,
+        { ended: false, connectedUserIds: [], emptySince: ago(1) },
+        now,
+      ),
+    ).toBe(false);
+  });
+
+  it("isn't live once the call ended for everyone", () => {
+    expect(isSessionLive(session, { ...inCall, ended: true }, now)).toBe(false);
+  });
+
+  it("isn't live past a demo session's time limit, even before the call ends", () => {
+    const demo = {
+      startedAt: ago(15),
+      limits: { maxParticipants: 4, maxDurationSeconds: 900, demo: true },
+    };
+    expect(isSessionLive(demo, inCall, now)).toBe(false);
+    expect(isSessionLive({ ...demo, startedAt: ago(14) }, inCall, now)).toBe(
+      true,
+    );
   });
 });
 

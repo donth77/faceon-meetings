@@ -118,6 +118,38 @@ export async function createMeeting(
 }
 
 /**
+ * A one-off scheduled meeting that's on now: it started a minute ago and lasts an hour,
+ * with `invitees` invited by email, as the schedule form does.
+ */
+export async function createScheduledMeeting(
+  hostId: string,
+  options: { title: string; invitees?: string[] },
+): Promise<TestMeeting> {
+  const code = meetingCode();
+  const passcode = "K7XQ2M";
+  const { rows } = await database().query<{ id: string }>(
+    `insert into meeting (code, host_id, type, title, passcode, settings, starts_at, duration_min, time_zone, expires_at)
+     values ($1, $2, 'scheduled', $3, $4, $5, now() - interval '1 minute', 60, 'America/New_York', now() + interval '1 day') returning id`,
+    [
+      code,
+      hostId,
+      options.title,
+      passcode,
+      JSON.stringify(DEFAULT_SETTINGS.scheduled),
+    ],
+  );
+  const id = rows[0]?.id;
+  if (!id) throw new Error("The test meeting wasn't created.");
+  for (const email of options.invitees ?? []) {
+    await database().query(
+      `insert into meeting_invitee (meeting_id, email) values ($1, $2)`,
+      [id, email.toLowerCase()],
+    );
+  }
+  return { id, code, passcode };
+}
+
+/**
  * A meeting that already happened, for Previous: an ended session with the host and a
  * guest in it, `minutes` long, ending an hour ago.
  */

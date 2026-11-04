@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { LiveBadge } from "@/components/meetings/live-badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -14,11 +15,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLiveRefresh } from "@/hooks/use-live-refresh";
 import { useNow } from "@/hooks/use-now";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { announceMeetingsChanged } from "@/lib/meetings/changes";
 import { formatMeetingCode } from "@/lib/meetings/codes";
 import { fromRRule, recurrenceChip } from "@/lib/meetings/describe";
+import { worthWatching } from "@/lib/meetings/live";
 import type { SeriesScope } from "@/lib/meetings/schedule";
 import { deleteScheduleAction } from "@/lib/meetings/schedule-actions";
 import { useIntlLocale } from "@/lib/preferences";
@@ -45,6 +48,8 @@ export type UpcomingRow = {
   passcode: string | null;
   timeZone: string;
   seriesStartDate: string;
+  /** Someone's in this occurrence's call now (isSessionLive, liveOccurrenceKeys). */
+  live: boolean;
 };
 
 function Row({ row }: { row: UpcomingRow }) {
@@ -108,6 +113,7 @@ function Row({ row }: { row: UpcomingRow }) {
       <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-base font-bold">{title}</span>
+          {row.live ? <LiveBadge /> : null}
           {recurrence ? (
             <Chip>
               <Repeat className="size-3.5" aria-hidden="true" />
@@ -124,7 +130,7 @@ function Row({ row }: { row: UpcomingRow }) {
       </div>
       <div className="flex items-center gap-2">
         <LinkButton href={invitation.link} size="app">
-          {isHost ? t("start") : t("join")}
+          {isHost && !row.live ? t("start") : t("join")}
         </LinkButton>
         <Button
           variant="outline"
@@ -199,20 +205,23 @@ function Row({ row }: { row: UpcomingRow }) {
 
 /**
  * Upcoming, as a list: meetings grouped by day in the viewer's time zone ("Today ·
- * Sunday, November 1"), each with Start or Join, Copy invitation and more.
+ * Sunday, November 1"), each with Start or Join, Copy invitation and more. A live
+ * meeting says so, and stays until it ends, however late it runs; the page asks again
+ * while anything here is live or due.
  */
 export function UpcomingList({ rows }: { rows: UpcomingRow[] }) {
   const t = useTranslations("Upcoming");
   const locale = useIntlLocale();
   const zone = useViewerTimeZone();
   const now = useNow(60_000);
+  useLiveRefresh(now !== null && worthWatching(rows, now));
   if (now === null) return null;
   const today = localParts(new Date(now), zone).date;
   const tomorrow = localParts(new Date(now + 86_400_000), zone).date;
 
   const days = new Map<string, UpcomingRow[]>();
   for (const row of rows) {
-    if (new Date(row.end).getTime() <= now) continue;
+    if (!row.live && new Date(row.end).getTime() <= now) continue;
     const day = localParts(new Date(row.start), zone).date;
     days.set(day, [...(days.get(day) ?? []), row]);
   }

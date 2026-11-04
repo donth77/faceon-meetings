@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
+import { connection } from "next/server";
+import { cache, Suspense } from "react";
 
 import { CardsLoading } from "@/components/app-shell/loading";
 import { Clock } from "@/components/home/clock";
@@ -17,9 +18,10 @@ import { requireSession } from "@/lib/auth/session";
 import { desktopAppUsedBy } from "@/lib/desktop/usage";
 import { hostingAccessOf } from "@/lib/hosting/access";
 import { demoTerms, fullTerms } from "@/lib/meetings/hosting";
+import { liveOccurrenceKeys, occurrenceKey } from "@/lib/meetings/live";
 import { getOrCreatePersonalRoom } from "@/lib/meetings/queries";
 import { upcomingSoon } from "@/lib/meetings/scheduling";
-import { demoMeetingsLeft } from "@/lib/meetings/sessions";
+import { demoMeetingsLeft, liveMeetingsFor } from "@/lib/meetings/sessions";
 import { HOME_ROUTE } from "@/lib/routes";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -98,9 +100,24 @@ async function AppCard() {
   );
 }
 
+/**
+ * This account's meetings that are live now (liveMeetingsFor), looked at once per
+ * request: the personal room and Today both ask. Only when someone really opens Home,
+ * never in a prefetch's prerender (connection() waits for that): a prefetched Live
+ * would be stale, and the prerender would cut off the calls to the media provider.
+ */
+const liveNow = cache(async () => {
+  await connection();
+  const session = await requireSession(HOME_ROUTE);
+  return liveMeetingsFor(session.user, new Date());
+});
+
 async function PersonalRoom() {
   const session = await requireSession(HOME_ROUTE);
-  const room = await getOrCreatePersonalRoom(session.user.id);
+  const [room, live] = await Promise.all([
+    getOrCreatePersonalRoom(session.user.id),
+    liveNow(),
+  ]);
   return (
     <PersonalRoomCard
       room={{
@@ -110,13 +127,31 @@ async function PersonalRoom() {
         hostName: session.user.name,
         waitingRoom: room.settings.waitingRoom,
       }}
+      live={live.some(({ meeting }) => meeting.id === room.id)}
     />
   );
 }
 
 async function Today() {
   const session = await requireSession(HOME_ROUTE);
-  const items = await upcomingSoon(session.user, 2);
+  const [items, live] = await Promise.all([
+    upcomingSoon(session.user, 2),
+    liveNow(),
+  ]);
+  const now = new Date();
+  const liveKeys = liveOccurrenceKeys(
+    items,
+    new Set(live.map(({ meeting }) => meeting.code)),
+    now,
+  );
+  const listed = new Set(items.map((item) => item.code));
+  // Your own live meetings with no time on the list: instant ones, mostly.
+  const running = live.filter(
+    ({ meeting }) =>
+      meeting.hostId === session.user.id &&
+      meeting.type !== "personal" &&
+      !listed.has(meeting.code),
+  );
   return (
     <TodayList
       rows={items.map((item) => ({
@@ -124,7 +159,17 @@ async function Today() {
         start: item.start.toISOString(),
         end: item.end.toISOString(),
         originalStart: item.originalStart.toISOString(),
+        live: liveKeys.has(occurrenceKey(item.code, item.originalStart)),
       }))}
+      running={running.map(({ meeting, since }) => ({
+        code: meeting.code,
+        title: meeting.title,
+        hostName: session.user.name,
+        passcode: meeting.passcode,
+        allowGuests: meeting.settings.allowGuests,
+        since: since.toISOString(),
+      }))}
+      roomLive={live.some(({ meeting }) => meeting.type === "personal")}
     />
   );
 }

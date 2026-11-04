@@ -1,6 +1,7 @@
 import "server-only";
 
 import { hostingPlanOf } from "@/lib/hosting/access";
+import { loggable } from "@/lib/log";
 import { mediaProvider, pickProvider } from "@/lib/media";
 import type { SessionSnapshot } from "@/lib/media/types";
 import { serverEnv } from "@/lib/server-env";
@@ -13,17 +14,19 @@ import {
   countSessionsSince,
   endMeeting,
   findOpenSession,
+  openMeetingsFor,
   openSession,
   type Meeting,
   type MeetingHost,
   type MeetingSession,
 } from "./queries";
-import { isSessionStale, sessionEndedAt } from "./rules";
+import { isSessionLive, isSessionStale, sessionEndedAt } from "./rules";
 import { keepOpenSeriesAlive } from "./scheduling";
 
 /**
- * Meeting sessions: opening one (with the host's limits and the platform's caps), and
- * checking an open one is still usable. Used by joining and by the scheduled sweep.
+ * Meeting sessions: opening one (with the host's limits and the platform's caps),
+ * checking an open one is still usable, and which meetings are live. Used by joining,
+ * by the scheduled sweep, and by Home and Upcoming for their green Live dots.
  */
 
 /** An open session with what its provider reported (null: its call isn't there yet). */
@@ -116,4 +119,38 @@ export async function currentSession(
     await provider.endSession(row.id);
   }
   return null;
+}
+
+/** A meeting that's live now (isSessionLive), and since when its session has run. */
+export type LiveMeeting = { meeting: Meeting; since: Date };
+
+/**
+ * Someone's meetings that are live now, for the green dots on Home and in Upcoming: of
+ * their own and those they're invited to, each with an open session is looked at as a
+ * join would (currentSession, which also closes one that's no longer usable). A call
+ * that can't be looked at counts as not live.
+ */
+export async function liveMeetingsFor(
+  viewer: { id: string; email: string; emailVerified: boolean },
+  now: Date,
+): Promise<LiveMeeting[]> {
+  const candidates = await openMeetingsFor({
+    userId: viewer.id,
+    verifiedEmail: viewer.emailVerified ? viewer.email : null,
+  });
+  const checked = await Promise.all(
+    candidates.map(async (meeting): Promise<LiveMeeting | null> => {
+      const current = await currentSession(meeting, now).catch(
+        (error: unknown) => {
+          console.error("Could not check a meeting's call.", loggable(error));
+          return null;
+        },
+      );
+      if (!current || current === "meeting-ended") return null;
+      return isSessionLive(current.row, current.snapshot, now)
+        ? { meeting, since: current.row.startedAt }
+        : null;
+    }),
+  );
+  return checked.filter((live) => live !== null);
 }

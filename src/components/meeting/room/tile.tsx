@@ -38,8 +38,9 @@ function useLoudness(participant: RoomParticipant): number {
 }
 
 /**
- * Three green bars that move with someone's voice while they speak, as in Meet; a mic
- * while they're quiet, and a crossed-out one while they're muted.
+ * Three green bars that move with someone's voice while they speak, as in Meet (the
+ * logo's green, as for everything live); a mic while they're quiet, and a crossed-out
+ * one while they're muted.
  */
 export function VoiceLevel({ participant }: { participant: RoomParticipant }) {
   const t = useTranslations("Meeting");
@@ -67,7 +68,7 @@ export function VoiceLevel({ participant }: { participant: RoomParticipant }) {
           key={index}
           style={{ height: 3 + Math.round(11 * level * weight) }}
           className={cn(
-            "w-[3px] rounded-full bg-[#3ddc84] transition-[height] duration-150 ease-out motion-reduce:transition-none",
+            "bg-live w-[3px] rounded-full transition-[height] duration-150 ease-out motion-reduce:transition-none",
           )}
         />
       ))}
@@ -84,14 +85,14 @@ function SpeakingRing({ participant }: { participant: RoomParticipant }) {
       aria-hidden="true"
       style={{ transform: `scale(${1 + 0.32 * level})` }}
       className={cn(
-        "absolute inset-0 rounded-full bg-[#3ddc84]/30 ring-2 ring-[#3ddc84]/70 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none",
+        "bg-live/30 ring-live/70 absolute inset-0 rounded-full ring-2 transition-[transform,opacity] duration-150 ease-out motion-reduce:transition-none",
         speaking ? "opacity-100" : "opacity-0",
       )}
     />
   );
 }
 
-/** The green outline around a tile while its person speaks. */
+/** The green outline around a tile while its person speaks, in the logo's green. */
 function SpeakingOutline({ participant }: { participant: RoomParticipant }) {
   const speaking = useSpeaking(participant.key);
   return (
@@ -100,7 +101,7 @@ function SpeakingOutline({ participant }: { participant: RoomParticipant }) {
       className={cn(
         "pointer-events-none absolute inset-0 rounded-xl transition-shadow duration-200 motion-reduce:transition-none",
         speaking &&
-          "shadow-[inset_0_0_0_3px_#3ddc84,inset_0_0_18px_rgb(61_220_132/0.3)]",
+          "shadow-[inset_0_0_0_3px_var(--live),inset_0_0_18px_color-mix(in_srgb,var(--live)_30%,transparent)]",
       )}
     />
   );
