@@ -9,15 +9,16 @@ app while you work on it is in [DEVELOPING.md](DEVELOPING.md).
 Builds read `desktop/.env.local` (git-ignored), then the environment. Copy
 [`.env.example`](.env.example) there.
 
-| Setting                                                                                | What it's for                                                                                                              |
-| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `FACEON_APP_URL`                                                                       | The site the app opens. Empty means `https://joinfaceon.app`. A copy of FaceOn sets its own                                |
-| `NEXT_PUBLIC_APP_NAME`, `DESKTOP_APP_ID`                                               | The app's name and ID. Empty means FaceOn and `app.joinfaceon.desktop`                                                     |
-| `DESKTOP_RELEASES_REPO`                                                                | `owner/name` of the releases repository (below). Without it the app doesn't look for updates, and nothing can be published |
-| `GH_TOKEN`                                                                             | Only for publishing: a token that can write that repository's releases                                                     |
-| `APPLE_KEYCHAIN_PROFILE`, or `APPLE_API_KEY` + `APPLE_API_KEY_ID` + `APPLE_API_ISSUER` | Only for notarizing the Mac app ([Signing on your Mac](#signing-on-your-mac))                                              |
-| `ARTIFACT_SIGNING_ENDPOINT`, `ARTIFACT_SIGNING_ACCOUNT`, `ARTIFACT_SIGNING_PROFILE`    | Only for signing the Windows app ([Signing on Windows](#signing-on-windows))                                               |
-| `WINDOWS_PUBLISHER_NAME`                                                               | The name on that certificate. Installed apps then accept only updates signed with it                                       |
+| Setting                                                                                | What it's for                                                                                                                                            |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FACEON_APP_URL`                                                                       | The site the app opens. Empty means `https://joinfaceon.app`. A copy of FaceOn sets its own                                                              |
+| `NEXT_PUBLIC_APP_NAME`, `DESKTOP_APP_ID`                                               | The app's name and ID. Empty means FaceOn and `app.joinfaceon.desktop`                                                                                   |
+| `DESKTOP_RELEASES_REPO`                                                                | `owner/name` of the releases repository (below). Without it the app doesn't look for updates, and nothing can be published                               |
+| `GH_TOKEN`                                                                             | Only for publishing: a token that can write that repository's releases                                                                                   |
+| `APPLE_KEYCHAIN_PROFILE`, or `APPLE_API_KEY` + `APPLE_API_KEY_ID` + `APPLE_API_ISSUER` | Only for notarizing the Mac app ([Signing on your Mac](#signing-on-your-mac))                                                                            |
+| `CSC_LINK`, `CSC_KEY_PASSWORD`                                                         | Only for signing the Mac app with a `.p12` instead of the login keychain, as on GitHub ([Signing the Mac app on GitHub](#signing-the-mac-app-on-github)) |
+| `ARTIFACT_SIGNING_ENDPOINT`, `ARTIFACT_SIGNING_ACCOUNT`, `ARTIFACT_SIGNING_PROFILE`    | Only for signing the Windows app ([Signing on Windows](#signing-on-windows))                                                                             |
+| `WINDOWS_PUBLISHER_NAME`                                                               | The name on that certificate. Installed apps then accept only updates signed with it                                                                     |
 
 The icons come from the brand: after `pnpm brand`, run `pnpm desktop:icons`.
 
@@ -42,9 +43,9 @@ one release published in both places.
 ## Signing on your Mac
 
 Apple only lets a Mac app open without a warning, and update itself, when it's signed
-with a Developer ID and notarized. You do that on your own Mac with your own Apple
+with a Developer ID and notarized. Here you do that on your own Mac with your own Apple
 Developer account; the certificate and passwords stay in your keychain, never in the
-repository or CI.
+repository. Without a Mac, [sign it on GitHub](#signing-the-mac-app-on-github) instead.
 
 1. **Xcode's command line tools:** `xcode-select --install`.
 2. **The Apple Developer Program** ($99 a year), at [developer.apple.com](https://developer.apple.com/programs/).
@@ -77,22 +78,90 @@ repository or CI.
    cd faceon-meetings
    pnpm install
    ```
-6. **Build:** `pnpm desktop:mac`. It signs with your certificate (hardened runtime, and the
-   camera and microphone entitlements in `build/entitlements.mac.plist`), notarizes
-   (a few minutes), staples the ticket, and checks the result. You get
-   `desktop/release/FaceOn.dmg`, plus `FaceOn-mac.zip` and `latest-mac.yml`
-   that updates need.
+6. **Build:** `pnpm desktop:mac`. It signs the app and the disk image with your certificate
+   (hardened runtime, and the camera and microphone entitlements in
+   `build/entitlements.mac.plist`), notarizes and staples both (a few minutes each), and
+   checks them, stopping if a check fails. You get `desktop/release/FaceOn.dmg`, plus
+   `FaceOn-mac.zip` and `latest-mac.yml` that updates need.
 7. **Check it yourself** (the build runs these and shows ✓ or ✗):
    ```bash
    codesign --verify --deep --strict --verbose=2 desktop/release/mac-universal/FaceOn.app
    spctl -a -vvv -t exec desktop/release/mac-universal/FaceOn.app   # "accepted, source=Notarized Developer ID"
    xcrun stapler validate desktop/release/FaceOn.dmg
+   spctl -a -vvv -t open --context context:primary-signature desktop/release/FaceOn.dmg
    ```
 
 Without a certificate, `pnpm desktop:mac` still builds, unsigned, and says so. macOS then
-asks people to right-click → **Open** the first time (or **System Settings → Privacy &
-Security → Open Anyway**), and the app can't update itself: it says a new version is out
-and links to the download.
+blocks it the first time until people choose **System Settings → Privacy & Security →
+Open Anyway** (before macOS 15, right-click → **Open** also works), and the app can't
+update itself: it says a new version is out and links to the download.
+
+## Signing the Mac app on GitHub
+
+You don't need a Mac for this. GitHub's Mac machines, free for public repositories, sign,
+notarize and publish the Mac app with your Apple Developer certificate and key, which stay
+in a GitHub environment only `main` can use. You need the Apple Developer Program ($99 a
+year), and the Account Holder role to make the certificate.
+
+1. **A certificate request,** made with OpenSSL (Git Bash has it), in a private folder
+   outside the repository:
+   ```bash
+   mkdir -p ~/faceon-apple-signing && cd ~/faceon-apple-signing
+   openssl req -new -newkey rsa:2048 -nodes -keyout developer-id.key -out developer-id.csr \
+     -subj "/emailAddress=you@example.com/CN=Your Name/C=US"
+   ```
+   `developer-id.key` is your signing key: keep it in that folder, never in the repository.
+2. **A Developer ID Application certificate:** at
+   [developer.apple.com → Certificates](https://developer.apple.com/account/resources/certificates/list),
+   select **+**, choose **Developer ID Application** with the **G2 Sub-CA** profile, upload
+   `developer-id.csr`, and download the certificate (`developerID_application.cer`) into
+   the same folder.
+3. **A `.p12` with Apple's intermediate certificate,** and a password for it:
+   ```bash
+   curl -sO https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+   openssl x509 -inform DER -in developerID_application.cer -out developer-id.pem
+   openssl x509 -inform DER -in DeveloperIDG2CA.cer -out developer-id-g2.pem
+   openssl rand -base64 24 > p12-password.txt
+   openssl pkcs12 -export -legacy -inkey developer-id.key -in developer-id.pem \
+     -certfile developer-id-g2.pem -name "Developer ID Application" \
+     -passout file:p12-password.txt -out developer-id.p12
+   openssl base64 -A -in developer-id.p12 -out developer-id.p12.txt
+   ```
+   `-legacy` (OpenSSL 3) uses the older encryption that macOS's keychain imports.
+4. **An App Store Connect API key,** for notarizing: in
+   [App Store Connect](https://appstoreconnect.apple.com) → **Users and Access →
+   Integrations → App Store Connect API → Team Keys**, add a key with **Developer** access
+   and download its `AuthKey_….p8`, which you can do only once. Note its **Key ID**, and
+   the **Issuer ID** above the list.
+5. **A `mac-release` environment,** in the repository's **Settings → Environments**, with
+   **Deployment branches and tags** set to **Selected branches and tags** → `main`, and
+   these secrets:
+
+   | Secret               | Value                                                                     |
+   | -------------------- | ------------------------------------------------------------------------- |
+   | `MAC_CERTS`          | The contents of `developer-id.p12.txt`                                    |
+   | `MAC_CERTS_PASSWORD` | The contents of `p12-password.txt`                                        |
+   | `APPLE_API_KEY`      | The contents of the `.p8` file, its `-----BEGIN` and `-----END` lines too |
+   | `APPLE_API_KEY_ID`   | The key's Key ID                                                          |
+   | `APPLE_API_ISSUER`   | The Issuer ID                                                             |
+
+   Only a run on `main`, started by someone who can write to the repository, can use them;
+   pull requests from forks never can. Set the `DESKTOP_RELEASES_REPO` variable (**Settings
+   → Secrets and variables → Actions → Variables**) if releases live in another repository.
+
+6. **Run it:** **Actions → Desktop → Run workflow** on `main`, with **Mac release** set to:
+   - `draft`, for a new version: it uploads to the version's draft release, making it if
+     there's none, and stops if that version is already published.
+   - `attach`, to add the Mac app to a version that's already out, such as one published
+     for Windows first. It replaces any Mac files that release has.
+
+   The job signs the app and the disk image, notarizes and staples both, and fails unless
+   `codesign`, `spctl` (`source=Notarized Developer ID`) and `stapler` all pass. Only then
+   does it upload `FaceOn.dmg`, `FaceOn-mac.zip` with its block map, and `latest-mac.yml`.
+   Each run also keeps them as an artifact for 14 days.
+
+On a Mac, `pnpm desktop:mac --attach` adds the Mac files to a published release the same
+way.
 
 ## Signing on Windows
 
@@ -165,9 +234,10 @@ Actions for free, as "SignPath Foundation". Since installed apps accept updates 
    uploads the installer to a **draft** release in the releases repository, which it
    makes first, so every file lands in the one draft. It refuses to publish a build that
    isn't signed.
-3. On your Mac: `pnpm desktop:mac --publish`. It signs, notarizes and uploads the Mac
-   files to the same draft. It refuses to publish a Mac build that isn't signed and
-   notarized.
+3. The Mac files, to the same draft: on your Mac, `pnpm desktop:mac --publish`, or on
+   GitHub, **Actions → Desktop → Run workflow** with **Mac release** set to `draft`. Either
+   signs, notarizes and checks the app, and refuses to publish a Mac build that isn't
+   signed and notarized.
 4. On GitHub, open the releases repository's draft and **Publish release**. Apps then
    update themselves within six hours, or right away from **Check for Updates…**. Mark it
    a pre-release to hold it back from everyone except copies run with

@@ -66,10 +66,15 @@ const result = spawnSync(
 if (result.status !== 0) process.exit(result.status ?? 1);
 
 if (publish) {
-  await prepareRelease({
-    productName: config.productName,
-    version: require("../package.json").version,
-  });
+  try {
+    await prepareRelease({
+      productName: config.productName,
+      version: require("../package.json").version,
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
 }
 const { build, Platform, Arch } = builder;
 await build({

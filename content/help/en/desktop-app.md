@@ -24,7 +24,7 @@ On a Mac or a Windows PC, **Download for Mac** or **Download for Windows** (on t
 
 Your computer may warn you the first time you open it:
 
-- **Mac:** if your copy of the app isn't signed yet, right-click {appName} in Applications and choose **Open**, or go to **System Settings → Privacy & Security → Open Anyway**.
+- **Mac:** if your copy of the app isn't notarized yet, open it once, then go to **System Settings → Privacy & Security** and choose **Open Anyway**. (Before macOS 15, right-clicking {appName} in Applications and choosing **Open** also works.)
 - **Windows:** if "Windows protected your PC" appears, choose **More info → Run anyway**. A signed app can show this for a short while after a new version comes out. An app that isn't signed shows it the first time, and doesn't open at all on a PC with Smart App Control on.
 
 ## Sign in
