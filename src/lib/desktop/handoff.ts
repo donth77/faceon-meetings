@@ -9,7 +9,7 @@ import { CHALLENGE } from "./handoff-params";
  * sends only its SHA-256, the challenge. The browser, signed in, asks for a one-time
  * token tied to that challenge and hands it to the app through faceon://auth. The app
  * proves it's the one that asked by sending the verifier with the token. A token that
- * leaks without the verifier is useless; it works once, for a minute.
+ * leaks without the verifier is useless; it works once, within ten minutes (below).
  */
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const VERIFIER = /^[A-Za-z0-9_-]{43,128}$/;

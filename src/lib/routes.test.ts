@@ -35,6 +35,29 @@ describe("safeRedirectPath", () => {
     expect(safeRedirectPath("//evil.example")).toBe("/home");
     expect(safeRedirectPath("/\\evil.example")).toBe("/home");
   });
+
+  it("refuses paths with characters a browser skips or bends", () => {
+    expect(safeRedirectPath("/\t/evil.example")).toBe("/home");
+    expect(safeRedirectPath("/\n/evil.example")).toBe("/home");
+    expect(safeRedirectPath("/\r\n/evil.example")).toBe("/home");
+    // ?next=%2F%09%2Fevil.example arrives decoded.
+    expect(
+      safeRedirectPath(
+        new URLSearchParams("next=%2F%09%2Fevil.example").get("next"),
+      ),
+    ).toBe("/home");
+    expect(safeRedirectPath("/ /evil.example")).toBe("/home");
+    expect(safeRedirectPath("/\u0000/evil.example")).toBe("/home");
+    expect(safeRedirectPath("/\\/evil.example")).toBe("/home");
+    expect(safeRedirectPath("/%5C/evil.example")).toBe("/%5C/evil.example");
+  });
+
+  it("keeps encoded characters, which stay on this site", () => {
+    expect(safeRedirectPath("/help/meeting-limits?q=a%20b")).toBe(
+      "/help/meeting-limits?q=a%20b",
+    );
+    expect(safeRedirectPath("/%2F%2Fevil.example")).toBe("/%2F%2Fevil.example");
+  });
 });
 
 describe("links", () => {

@@ -15,7 +15,7 @@ const NOINDEX = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
  * The Content Security Policy (src/lib/security/csp.ts) starts out report-only:
  * violations go to /api/csp-report and the server log, and nothing is blocked. Once
  * production's reports are quiet, CONTENT_SECURITY_POLICY=enforce makes it binding
- * ("off" leaves it out). Vercel sends Strict-Transport-Security itself.
+ * ("off" leaves it out). The few rules that can't break a page are enforced from the start.
  */
 const CSP_MODE = cspMode(process.env.CONTENT_SECURITY_POLICY);
 
@@ -51,10 +51,22 @@ function policyHeaders() {
  * unless they come back to FaceOn.
  */
 const SECURITY = [
-  // Enforced even while the full policy only reports: report-only ignores frame-ancestors.
+  // Enforced even while the full policy only reports (which ignores frame-ancestors):
+  // FaceOn uses no plugins and no <base>, so these can only stop injected markup.
   ...(CSP_MODE === "enforce"
     ? []
-    : [{ key: "Content-Security-Policy", value: "frame-ancestors 'none'" }]),
+    : [
+        {
+          key: "Content-Security-Policy",
+          value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        },
+      ]),
+  // HTTPS only, for two years, on this address and its subdomains (Vercel's default
+  // leaves subdomains out).
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains",
+  },
   ...policyHeaders(),
   { key: "X-Frame-Options", value: "DENY" },
   {

@@ -34,7 +34,7 @@ function readRecord(value: string) {
 /**
  * Signing the desktop app in through the browser (lib/desktop/handoff.ts).
  * - POST /desktop/handoff, from the signed-in browser: a one-time token for the app's
- *   challenge, kept a minute.
+ *   challenge, kept ten minutes (HANDOFF_TTL_MS).
  * - GET /desktop/session, from the app's window with the token and the verifier in a
  *   header: a session of the window's own, so signing out in the app leaves the browser
  *   signed in, and the reverse.

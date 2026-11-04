@@ -245,7 +245,9 @@ export const auth = betterAuth({
       },
     },
   },
-  session: { cookieCache: { enabled: true, maxAge: 5 * 60 } },
+  // A session read from its cookie for at most a minute: signing out elsewhere, or a
+  // password reset, ends it everywhere within that.
+  session: { cookieCache: { enabled: true, maxAge: 60 } },
   rateLimit: {
     enabled: true,
     storage: "database",

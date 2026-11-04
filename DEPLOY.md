@@ -317,7 +317,7 @@ None of these needs an account to start with, and each stays off until you set i
 
 ### Security headers and the Content Security Policy
 
-Every page is sent with headers that keep other sites from framing FaceOn, keep the camera, microphone, screen capture and full screen to FaceOn's own pages, give other sites only your address's origin as the referrer (never a page's address), and stop browsers guessing file types. Vercel adds HTTPS-only (HSTS) itself.
+Every page is sent with headers that keep other sites from framing FaceOn, keep the camera, microphone, screen capture and full screen to FaceOn's own pages, give other sites only your address's origin as the referrer (never a page's address), and stop browsers guessing file types. They also keep browsers on HTTPS for two years, on your address and its subdomains (HSTS), so serve every subdomain over HTTPS.
 
 A Content Security Policy lists where pages may load code and media from and connect to: your site, Stream, the AI providers a host's own key can call, Google and GitHub profile photos, and Turnstile and your error reports when they're on. It starts **report-only**: browsers report anything outside it to `/api/csp-report`, which writes one line per report to the server log, such as `csp report: connect-src blocked https://example.com on /j/:code`, and nothing is blocked. In Vercel, open **Logs** and search for `csp`; Vercel keeps them only briefly. With [error reports](#error-reports-sentry-or-glitchtip) on, each kind of report also goes to Sentry once an hour, as a warning with just that line's rule, site and page, so you can see them for as long as you need.
 

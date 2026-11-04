@@ -72,20 +72,27 @@ export function matchesRoute(
   );
 }
 
+/** Any address reads as this site's, to check a path stays on it. */
+const SAME_SITE = "https://faceon.invalid";
+
 /**
- * Where to go after signing in. Only same-site paths are allowed (no "//host" or
- * absolute URLs), so a crafted ?next= can't send people to another site.
+ * Where to go after signing in. Only same-site paths are allowed, so a crafted ?next=
+ * can't send people to another site: no "//host", absolute URLs or backslashes, and
+ * nothing a browser would skip or bend while reading the address (spaces and control
+ * characters). What's left must still resolve to this site.
  */
 export function safeRedirectPath(next: string | null | undefined): string {
   if (
     !next ||
     !next.startsWith("/") ||
     next.startsWith("//") ||
-    next.includes("\\")
+    // Spaces, control characters (tabs, line breaks) and backslashes.
+    /[\u0000- \u007f\\]/.test(next)
   ) {
     return HOME_ROUTE;
   }
-  return next;
+  const url = new URL(next, SAME_SITE);
+  return url.origin === SAME_SITE ? next : HOME_ROUTE;
 }
 
 /**
