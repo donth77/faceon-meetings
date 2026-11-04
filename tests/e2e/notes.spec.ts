@@ -185,7 +185,7 @@ test.describe("AI notes", () => {
         host.page.getByRole("heading", { name: "Summary" }),
       ).toBeVisible({ timeout: 30_000 });
       await expect(
-        host.page.getByText("Launch the beta on March 3rd"),
+        host.page.getByText("Launch the beta on March 3rd", { exact: true }),
       ).toBeVisible();
       expect(asked).toEqual([
         {
@@ -241,7 +241,7 @@ test.describe("AI notes", () => {
       const sessionId = (await saved())[0]?.session_id;
       await guest.page.goto(`${baseURL}/previous/${sessionId}/notes`);
       await expect(
-        guest.page.getByText("Launch the beta on March 3rd"),
+        guest.page.getByText("Launch the beta on March 3rd", { exact: true }),
       ).toBeVisible();
 
       // The host deletes them for everyone.
