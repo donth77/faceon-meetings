@@ -124,8 +124,67 @@ const es: Strings = {
   ok: "Aceptar",
 };
 
+const ptBR: Strings = {
+  about: (name) => `Sobre o ${name}`,
+  checkForUpdates: "Verificar atualizações…",
+  settings: "Configurações…",
+  help: "Ajuda",
+  quit: (name) => `Sair do ${name}`,
+  hide: (name) => `Ocultar ${name}`,
+  hideOthers: "Ocultar outros",
+  showAll: "Mostrar tudo",
+  services: "Serviços",
+  fileMenu: "&Arquivo",
+  editMenu: "&Editar",
+  viewMenu: "E&xibir",
+  windowMenu: "&Janela",
+  helpMenu: "Aj&uda",
+  undo: "Desfazer",
+  redo: "Refazer",
+  cut: "Recortar",
+  copy: "Copiar",
+  paste: "Colar",
+  pasteAndMatchStyle: "Colar com o mesmo estilo",
+  delete: "Excluir",
+  selectAll: "Selecionar tudo",
+  reload: "Recarregar",
+  actualSize: "Tamanho real",
+  zoomIn: "Aumentar zoom",
+  zoomOut: "Diminuir zoom",
+  fullScreen: "Tela cheia",
+  minimize: "Minimizar",
+  zoom: "Zoom",
+  close: "Fechar",
+  bringAllToFront: "Trazer tudo para a frente",
+  open: (name) => `Abrir o ${name}`,
+  startMeeting: "Iniciar uma reunião",
+  joinMeeting: "Participar de uma reunião…",
+  upcoming: "Próximas",
+  joinNext: (title) => `Participar de “${title}”`,
+  mute: "Desativar áudio",
+  unmute: "Ativar áudio",
+  leave: "Sair da reunião",
+  join: "Participar",
+  startsIn: (minutes) =>
+    minutes === 1 ? "Começa em 1 minuto" : `Começa em ${minutes} minutos`,
+  unread: (count) =>
+    count === 1 ? "1 mensagem não lida" : `${count} mensagens não lidas`,
+  updateReady: (name, version) =>
+    `O ${name} ${version} está pronto para instalar`,
+  updateReadyDetail: "Reinicie o app para terminar a atualização.",
+  restartNow: "Reiniciar agora",
+  later: "Mais tarde",
+  upToDate: (name) => `O ${name} está atualizado`,
+  updatesOff: "As atualizações não estão configuradas nesta versão.",
+  updateFailed:
+    "Não foi possível verificar se há atualizações. Tente de novo mais tarde.",
+  newVersion: (name, version) => `O ${name} ${version} já está disponível`,
+  download: "Baixar",
+  ok: "OK",
+};
+
 /** The languages the shell speaks, named as the web app names them. */
-export const translations: Record<string, Strings> = { en, es };
+export const translations: Record<string, Strings> = { en, es, "pt-BR": ptBR };
 
 /** The shell's words in its current language; setLanguage switches them. */
 export const strings: Strings = { ...en };

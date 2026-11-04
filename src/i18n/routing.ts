@@ -7,7 +7,7 @@ import { defineRouting } from "next-intl/routing";
  * unsupported falls back to English), then rewrites to the internal [locale] segment.
  */
 export const routing = defineRouting({
-  locales: ["en", "es"],
+  locales: ["en", "es", "pt-BR"],
   defaultLocale: "en",
   localePrefix: "never",
 });
