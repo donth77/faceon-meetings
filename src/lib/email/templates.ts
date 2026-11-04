@@ -33,7 +33,8 @@ export type AccountEmail =
   | "hostingApproved"
   | "hostingDeclined"
   | "hostInvite"
-  | "usageAlert";
+  | "usageAlert"
+  | "permissionsChanged";
 
 /** The person's language when we know it and support it; otherwise the default. */
 export function emailLocale(user: object): Locale {

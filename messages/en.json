@@ -348,6 +348,17 @@
       "pages": "Pages of admins",
       "body": "Admins come from ADMIN_EMAILS where {appName} is hosted. They decide who hosts full meetings, and can’t see or change anyone’s account, meetings or notes."
     },
+    "permissions": {
+      "title": "Call permissions",
+      "body": "What people’s browsers may do in calls, as {appName} set it up with its video service. It’s checked every day, and admins get an email if it changes.",
+      "ok": "OK",
+      "okNote": "{provider} matches {appName}’s setup.",
+      "changed": "Changed",
+      "changedNote": "{provider} no longer matches {appName}’s setup. To put it back, run <code>{command}</code> with this copy’s keys in .env.local.",
+      "unknown": "Not checked",
+      "unknownNote": "{provider} didn’t answer just now. Reload the page to try again.",
+      "off": "{provider} isn’t set up, so there’s nothing to check."
+    },
     "usage": {
       "title": "Usage this month",
       "body": "How much of each service’s free plan {appName} has used, so nothing runs out by surprise. Admins get an email when one reaches 80%, and again at 100%.",
@@ -992,6 +1003,13 @@
       "body": "{meter, select, stream {{appName} has used {used, number} of this month’s {limit, number} participant-minutes on Stream, by its own count. Stream charges HD video at twice that rate, so its dashboard may show more.} emailsDay {On {day, date, ::MMMMd}, {appName} sent {used, number} of the {limit, number} emails Resend allows in a day. Past the limit, Resend refuses emails until the next day (UTC), sign-up emails included.} emailsMonth {{appName} has sent {used, number} of the {limit, number} emails Resend allows this month. Past the limit, Resend refuses emails until the month is over, sign-up emails included.} neon {The database has used {used, number} of its {limit, number} compute hours this billing period. When they run out, Neon pauses it until the next period, and {appName} stops working until then.} other {{appName} has used {used, number} of {limit, number}.}}",
       "action": "See usage",
       "note": "You’re getting this because you’re an admin of {appName}. {next, select, full {You’ll hear again if it reaches 100%.} other {That’s the last email about it until the next {meter, select, neon {billing period} other {month}}.}}"
+    },
+    "permissionsChanged": {
+      "subject": "{appName}: {provider} permissions changed",
+      "heading": "{provider}’s permissions changed",
+      "body": "What people’s browsers may do in {appName}’s calls no longer matches its setup on {provider}. To put it back, run {command} with this copy’s keys in .env.local.",
+      "action": "See permissions",
+      "note": "You’re getting this because you’re an admin of {appName}. You’ll hear again only if it changes after it’s put back."
     }
   },
   "Help": {

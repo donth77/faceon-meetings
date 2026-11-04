@@ -49,7 +49,10 @@ export const usageReading = pgTable("usage_reading", {
 export const usageAlert = pgTable(
   "usage_alert",
   {
-    /** A meter (lib/usage/meters.ts, MeterId). */
+    /**
+     * A meter (lib/usage/meters.ts, MeterId), or "permissions:<provider>" for a media
+     * provider whose permissions changed (lib/media/permissions.ts).
+     */
     meter: text("meter").notNull(),
     /** What the meter counts over: a UTC month ("2026-11"), or Neon's billing period's start. */
     period: text("period").notNull(),

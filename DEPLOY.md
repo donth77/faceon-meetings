@@ -118,6 +118,8 @@ For local development, a second branch keeps test data apart: **Branches → New
    - `pnpm stream:check` reports anything that differs from what FaceOn expects (exit code 1 if something does).
    - `pnpm stream:lockdown-test` proves the permission boundary against your app. It makes API calls only, no media, so it uses no meeting minutes.
 
+   After that, the daily cleanup checks the permissions every day, read only: if they stop matching, **Settings → Admin → Call permissions** says so, and the admins (`ADMIN_EMAILS`) get one email (that needs Resend). Run `pnpm stream:setup` again to put them back; FaceOn never changes them itself.
+
 For local development, a second Stream app (environment **Development**, with its own `cohost` role and `pnpm stream:setup`) keeps test calls out of production. Its keys go in `.env.local`.
 
 ## 5. Set up Sign in with Google (and Google Calendar)

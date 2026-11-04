@@ -122,6 +122,18 @@ export type ProviderCapabilities = {
   pinForEveryone: boolean;
 };
 
+/**
+ * Whether a provider's permissions are still as FaceOn set them up: what people's
+ * browsers may do in a call. "changed" names the command that sets them up again
+ * (`pnpm stream:setup`, for Stream); "unknown" means the provider couldn't be asked just
+ * now, and "off" that this copy doesn't have it set up.
+ */
+export type PermissionsCheck =
+  | { state: "ok" }
+  | { state: "changed"; fix: string }
+  | { state: "unknown" }
+  | { state: "off" };
+
 export interface MediaProvider {
   readonly id: MediaProviderId;
   readonly capabilities: ProviderCapabilities;
@@ -168,4 +180,7 @@ export interface MediaProvider {
 
   /** Deletes what the provider keeps about a person (their profile), for account deletion. */
   forgetUser(userId: string): Promise<void>;
+
+  /** Compares the provider's permissions with FaceOn's setup. Reads only: never fixes them. */
+  checkPermissions(): Promise<PermissionsCheck>;
 }

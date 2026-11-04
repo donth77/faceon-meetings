@@ -348,6 +348,17 @@
       "pages": "管理者のページ",
       "body": "管理者は、{appName} をホストしている環境の ADMIN_EMAILS で決まります。管理者はフル ミーティングを主催できる人を決めますが、他の人のアカウント、ミーティング、メモを見たり変更したりすることはできません。"
     },
+    "permissions": {
+      "title": "通話の権限",
+      "body": "通話中に参加者のブラウザーができることで、{appName} がビデオ サービスに設定したものです。毎日確認され、変更があると管理者にメールが届きます。",
+      "ok": "OK",
+      "okNote": "{provider} の設定は {appName} の設定と一致しています。",
+      "changed": "変更あり",
+      "changedNote": "{provider} の設定が {appName} の設定と一致しなくなりました。元に戻すには、このコピーの .env.local のキーで <code>{command}</code> を実行してください。",
+      "unknown": "未確認",
+      "unknownNote": "{provider} から応答がありませんでした。ページを再読み込みして、もう一度お試しください。",
+      "off": "{provider} が設定されていないため、確認するものはありません。"
+    },
     "usage": {
       "title": "今月の使用状況",
       "body": "各サービスの無料プランを {appName} がどれだけ使ったかを表示し、突然使い切ることがないようにします。80% に達すると管理者にメールが届き、100% でもう一度届きます。",
@@ -992,6 +1003,13 @@
       "body": "{meter, select, stream {{appName} 自身の集計で、今月の Stream の {limit, number} 参加者・分のうち {used, number} を使用しました。Stream は HD ビデオをその 2 倍の料金で課金するため、ダッシュボードではより多く表示される場合があります。} emailsDay {{day, date, ::MMMMd}、{appName} は Resend で 1 日に送信できる {limit, number} 通のうち {used, number} 通を送信しました。上限を超えると、Resend は翌日（UTC）まで、登録用のメールも含めてメールの送信を拒否します。} emailsMonth {{appName} は Resend で今月送信できる {limit, number} 通のうち {used, number} 通を送信しました。上限を超えると、Resend は月末まで、登録用のメールも含めてメールの送信を拒否します。} neon {データベースは、この請求期間の {limit, number} コンピューティング時間のうち {used, number} 時間を使用しました。使い切ると、Neon は次の期間までデータベースを一時停止し、それまで {appName} は動作しなくなります。} other {{appName} は {limit, number} のうち {used, number} を使用しました。}}",
       "action": "使用状況を見る",
       "note": "{appName} の管理者であるため、このメールをお送りしています。{next, select, full {100% に達した場合は、もう一度お知らせします。} other {{meter, select, neon {次の請求期間} other {来月}}まで、この件に関するメールはこれが最後です。}}"
+    },
+    "permissionsChanged": {
+      "subject": "{appName}: {provider} の権限が変更されました",
+      "heading": "{provider} の権限が変更されました",
+      "body": "{appName} の通話で参加者のブラウザーができることが、{provider} での設定と一致しなくなりました。元に戻すには、このコピーの .env.local のキーで {command} を実行してください。",
+      "action": "権限を確認",
+      "note": "{appName} の管理者であるため、このメールをお送りしています。元に戻した後に再び変更された場合にのみ、もう一度お知らせします。"
     }
   },
   "Help": {

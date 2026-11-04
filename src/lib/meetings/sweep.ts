@@ -2,6 +2,7 @@ import "server-only";
 
 import { pruneExpiredSessions } from "@/lib/account/sessions";
 import { pruneAnsweredRequests } from "@/lib/hosting/requests";
+import { warnAboutMediaPermissions } from "@/lib/media/permissions";
 import { reportError } from "@/lib/monitoring/report";
 import { pruneAttempts, pruneAuthRateLimits } from "@/lib/rate-limit";
 import { reconcileAllReminders } from "@/lib/reminders/schedule";
@@ -79,6 +80,12 @@ export async function sweep(now = new Date()) {
       reportError("Sweep could not check usage", error);
       return 0;
     }),
+    permissionWarnings: await warnAboutMediaPermissions().catch(
+      (error: unknown) => {
+        reportError("Sweep could not check media permissions", error);
+        return 0;
+      },
+    ),
     prunedEmailDays: await pruneEmailDays(daysBefore(now, KEEP_DAYS.usage)),
     prunedUsageAlerts: await pruneUsageAlerts(daysBefore(now, KEEP_DAYS.usage)),
   };

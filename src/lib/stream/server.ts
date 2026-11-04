@@ -13,6 +13,10 @@ import type {
 import { serverEnv } from "@/lib/server-env";
 
 import { CALL_TYPE } from "./constants";
+import { grantsDrift } from "./grants";
+
+/** How long a permissions check waits for Stream before saying it couldn't ask. */
+const CHECK_TIMEOUT_MS = 5000;
 
 /** Call tokens last an hour; the client's token provider refreshes them through our API. */
 const TOKEN_TTL_SECONDS = 60 * 60;
@@ -210,6 +214,33 @@ export const streamProvider: MediaProvider = {
       messages: "hard",
       conversations: "hard",
     });
+  },
+
+  async checkPermissions() {
+    // Stream's call types against the grants pnpm stream:setup sets (grants.ts).
+    const env = serverEnv();
+    if (!env.NEXT_PUBLIC_STREAM_API_KEY || !env.STREAM_API_SECRET) {
+      return { state: "off" };
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const { call_types } = await Promise.race([
+        stream().video.listCallTypes(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error("Stream took too long.")),
+            CHECK_TIMEOUT_MS,
+          );
+        }),
+      ]);
+      return grantsDrift(call_types).length === 0
+        ? { state: "ok" }
+        : { state: "changed", fix: "pnpm stream:setup" };
+    } catch {
+      return { state: "unknown" };
+    } finally {
+      clearTimeout(timer);
+    }
   },
 };
 

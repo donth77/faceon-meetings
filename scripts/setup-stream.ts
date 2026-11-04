@@ -18,6 +18,8 @@
  */
 import { StreamClient } from "@stream-io/node-sdk";
 
+import { EXPECTED_GRANTS, grantsDrift } from "../src/lib/stream/grants.ts";
+
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
 const secret = process.env.STREAM_API_SECRET;
 if (!apiKey || !secret) {
@@ -28,67 +30,30 @@ if (!apiKey || !secret) {
 const checkOnly = process.argv.includes("--check");
 const client = new StreamClient(apiKey, secret);
 
-// Grant names (not capability names): reactions are "create-call-reaction", and chat and
-// other custom events need "send-event".
-const MEMBER = [
-  "read-call",
-  "join-call",
-  "send-audio",
-  "send-video",
-  "screenshare",
-  "create-call-reaction",
-  "send-event",
-];
-// Hosts and co-hosts moderate through FaceOn's API, which checks who may do what (a
-// co-host can't remove the host, say) and acts with the server's credentials. Their
-// browsers get no more than everyone's, so Stream's SDK can't go around those rules.
-const COHOST = MEMBER;
-const HOST = MEMBER;
-const OUTSIDERS: Record<string, string[]> = {
-  user: [],
-  guest: [],
-  anonymous: [],
-};
-const BUILT_IN = ["default", "audio_room", "livestream", "development"];
-
-const expected: Record<string, Record<string, string[]>> = {
-  meeting: { ...OUTSIDERS, call_member: MEMBER, cohost: COHOST, host: HOST },
-  ...Object.fromEntries(BUILT_IN.map((name) => [name, OUTSIDERS])),
-};
-
 /** Each session's call overrides this with its own full or demo limits. */
 const MEETING_SETTINGS = { limits: { max_participants: 20 } };
 
-const sorted = (list: string[] | undefined) =>
-  [...(list ?? [])].sort().join(",");
-
 const { call_types: live } = await client.video.listCallTypes();
-let drift = 0;
+const drifted = grantsDrift(live);
 
-for (const [name, grants] of Object.entries(expected)) {
-  const current = live[name]?.grants ?? {};
-  const differing = Object.keys(grants).filter(
-    (role) => sorted(current[role]) !== sorted(grants[role]),
-  );
-  const missing = !live[name];
-
-  if (!missing && differing.length === 0) {
+for (const [name, grants] of Object.entries(EXPECTED_GRANTS)) {
+  const drift = drifted.find((found) => found.callType === name);
+  if (!drift) {
     console.log(`ok       ${name}`);
     continue;
   }
-  drift++;
   console.log(
-    `${missing ? "missing " : "drift   "} ${name}${differing.length ? ` (roles: ${differing.join(", ")})` : ""}`,
+    `${drift.missing ? "missing " : "drift   "} ${name}${drift.roles.length ? ` (roles: ${drift.roles.join(", ")})` : ""}`,
   );
   if (checkOnly) continue;
 
-  if (missing && name === "meeting") {
+  if (drift.missing && name === "meeting") {
     await client.video.createCallType({
       name,
       grants,
       settings: MEETING_SETTINGS,
     });
-  } else if (!missing) {
+  } else if (!drift.missing) {
     await client.video.updateCallType({
       name,
       grants,
@@ -138,4 +103,4 @@ if (webhookUrl && !checkOnly) {
   console.log(`ok       webhook → ${webhookUrl}`);
 }
 
-if (checkOnly && drift > 0) process.exit(1);
+if (checkOnly && drifted.length > 0) process.exit(1);

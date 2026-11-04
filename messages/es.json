@@ -348,6 +348,17 @@
       "pages": "Páginas de administradores",
       "body": "Los administradores vienen de ADMIN_EMAILS, donde se aloja {appName}. Deciden quién organiza reuniones completas y no pueden ver ni cambiar la cuenta, las reuniones ni las notas de nadie."
     },
+    "permissions": {
+      "title": "Permisos de las llamadas",
+      "body": "Lo que los navegadores de las personas pueden hacer en las llamadas, según lo configuró {appName} con su servicio de video. Se revisa cada día, y los administradores reciben un correo si cambia.",
+      "ok": "Correcto",
+      "okNote": "{provider} coincide con la configuración de {appName}.",
+      "changed": "Cambió",
+      "changedNote": "{provider} ya no coincide con la configuración de {appName}. Para restablecerla, ejecuta <code>{command}</code> con las claves de esta copia en .env.local.",
+      "unknown": "Sin revisar",
+      "unknownNote": "{provider} no respondió hace un momento. Vuelve a cargar la página para intentarlo de nuevo.",
+      "off": "{provider} no está configurado, así que no hay nada que revisar."
+    },
     "usage": {
       "title": "Uso este mes",
       "body": "Cuánto usó {appName} del plan gratuito de cada servicio, para que nada se agote por sorpresa. Los administradores reciben un correo cuando uno llega al 80 % y otra vez al 100 %.",
@@ -992,6 +1003,13 @@
       "body": "{meter, select, stream {{appName} usó {used, number} de los {limit, number} minutos por participante de este mes en Stream, según su propio recuento. Stream cobra el video en HD al doble de esa tarifa, así que su panel puede mostrar más.} emailsDay {El {day, date, ::MMMMd}, {appName} envió {used, number} de los {limit, number} correos que Resend permite por día. Si se supera el límite, Resend rechaza los correos hasta el día siguiente (UTC), incluidos los de registro.} emailsMonth {{appName} envió {used, number} de los {limit, number} correos que Resend permite este mes. Si se supera el límite, Resend rechaza los correos hasta que termine el mes, incluidos los de registro.} neon {La base de datos usó {used, number} de sus {limit, number} horas de cómputo en este período de facturación. Cuando se acaban, Neon la pausa hasta el período siguiente, y {appName} deja de funcionar hasta entonces.} other {{appName} usó {used, number} de {limit, number}.}}",
       "action": "Ver el uso",
       "note": "Recibes este correo porque eres administrador de {appName}. {next, select, full {Te volveremos a avisar si llega al 100 %.} other {Es el último correo sobre esto hasta {meter, select, neon {el próximo período de facturación} other {el próximo mes}}.}}"
+    },
+    "permissionsChanged": {
+      "subject": "{appName}: cambiaron los permisos de {provider}",
+      "heading": "Cambiaron los permisos de {provider}",
+      "body": "Lo que los navegadores de las personas pueden hacer en las llamadas de {appName} ya no coincide con su configuración en {provider}. Para restablecerla, ejecuta {command} con las claves de esta copia en .env.local.",
+      "action": "Ver los permisos",
+      "note": "Recibes este correo porque eres administrador de {appName}. Solo te volveremos a avisar si cambia otra vez después de restablecerla."
     }
   },
   "Help": {

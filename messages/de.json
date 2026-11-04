@@ -348,6 +348,17 @@
       "pages": "Seiten mit Admins",
       "body": "Admins werden in ADMIN_EMAILS dort festgelegt, wo {appName} gehostet wird. Sie entscheiden, wer vollwertige Meetings veranstaltet, und können weder Konten noch Meetings oder Notizen anderer sehen oder ändern."
     },
+    "permissions": {
+      "title": "Berechtigungen in Anrufen",
+      "body": "Was die Browser der Teilnehmer in Anrufen dürfen, wie {appName} es bei seinem Videodienst eingerichtet hat. Das wird täglich geprüft, und die Admins erhalten eine E-Mail, wenn es sich ändert.",
+      "ok": "OK",
+      "okNote": "{provider} entspricht der Einrichtung von {appName}.",
+      "changed": "Geändert",
+      "changedNote": "{provider} entspricht nicht mehr der Einrichtung von {appName}. Um sie wiederherzustellen, führen Sie <code>{command}</code> mit den Schlüsseln dieser Kopie in .env.local aus.",
+      "unknown": "Nicht geprüft",
+      "unknownNote": "{provider} hat gerade nicht geantwortet. Laden Sie die Seite neu, um es erneut zu versuchen.",
+      "off": "{provider} ist nicht eingerichtet, daher gibt es nichts zu prüfen."
+    },
     "usage": {
       "title": "Nutzung in diesem Monat",
       "body": "Wie viel {appName} vom kostenlosen Tarif jedes Dienstes verbraucht hat, damit nichts überraschend ausgeht. Admins erhalten eine E-Mail, wenn ein Kontingent 80 % erreicht, und noch einmal bei 100 %.",
@@ -992,6 +1003,13 @@
       "body": "{meter, select, stream {{appName} hat nach eigener Zählung {used, number} der {limit, number} Teilnehmerminuten dieses Monats bei Stream verbraucht. Stream berechnet HD-Video zum doppelten Satz, daher kann das Dashboard mehr anzeigen.} emailsDay {Am {day, date, ::MMMMd} hat {appName} {used, number} der {limit, number} E-Mails gesendet, die Resend pro Tag erlaubt. Über dem Limit lehnt Resend E-Mails bis zum nächsten Tag (UTC) ab, auch Registrierungs-E-Mails.} emailsMonth {{appName} hat {used, number} der {limit, number} E-Mails gesendet, die Resend in diesem Monat erlaubt. Über dem Limit lehnt Resend E-Mails bis zum Monatsende ab, auch Registrierungs-E-Mails.} neon {Die Datenbank hat in diesem Abrechnungszeitraum {used, number} ihrer {limit, number} Rechenstunden verbraucht. Wenn sie aufgebraucht sind, pausiert Neon sie bis zum nächsten Zeitraum, und {appName} funktioniert bis dahin nicht.} other {{appName} hat {used, number} von {limit, number} verbraucht.}}",
       "action": "Nutzung ansehen",
       "note": "Sie erhalten diese E-Mail, weil Sie Admin von {appName} sind. {next, select, full {Bei 100 % erhalten Sie noch eine Nachricht.} other {Das ist die letzte E-Mail dazu bis {meter, select, neon {zum nächsten Abrechnungszeitraum} other {zum nächsten Monat}}.}}"
+    },
+    "permissionsChanged": {
+      "subject": "{appName}: Berechtigungen bei {provider} geändert",
+      "heading": "Die Berechtigungen bei {provider} haben sich geändert",
+      "body": "Was die Browser der Teilnehmer in Anrufen von {appName} dürfen, entspricht nicht mehr der Einrichtung bei {provider}. Um sie wiederherzustellen, führen Sie {command} mit den Schlüsseln dieser Kopie in .env.local aus.",
+      "action": "Berechtigungen ansehen",
+      "note": "Sie erhalten diese E-Mail, weil Sie Admin von {appName} sind. Sie hören erst wieder davon, wenn sie sich nach dem Wiederherstellen erneut ändern."
     }
   },
   "Help": {

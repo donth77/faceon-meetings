@@ -14,7 +14,6 @@ import {
 import type { UsageReport } from "@/lib/usage/usage";
 
 import { AdminCard } from "./admin-card";
-import { UsageAnchor } from "./usage-anchor";
 import { UsageUpdated } from "./usage-updated";
 
 const STREAM_DASHBOARD = "https://dashboard.getstream.io/";
@@ -219,7 +218,6 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
       title={t("title")}
       description={t("body", { appName })}
     >
-      <UsageAnchor />
       <ul className="flex flex-col divide-y border-t">
         {stream.configured ? (
           <MeterRow

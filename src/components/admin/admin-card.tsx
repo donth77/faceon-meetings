@@ -1,9 +1,11 @@
 import type { ReactNode, Ref } from "react";
 
+import { SectionAnchor } from "./section-anchor";
+
 /**
  * One section of Settings → Admin, as a card like Settings' sections. `headingRef` lets a section
  * move focus to its heading when the row someone acted on goes away; `id` lets a link
- * (a usage warning's, say) go straight to it.
+ * (a usage warning's, say) go straight to it (SectionAnchor).
  */
 export function AdminCard({
   id,
@@ -23,6 +25,7 @@ export function AdminCard({
       id={id}
       className="bg-card ring-border flex scroll-mt-6 flex-col gap-4 rounded-2xl px-5 py-5 ring-1 sm:px-6 sm:py-5.5"
     >
+      {id ? <SectionAnchor id={id} /> : null}
       <div className="flex flex-col gap-1">
         <h3
           ref={headingRef}
