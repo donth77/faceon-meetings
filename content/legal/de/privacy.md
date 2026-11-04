@@ -13,7 +13,7 @@ updated: 2026-11-04
 
 - Ihren **Namen**, Ihre **E-Mail-Adresse** und Ihr **Bild**. Das Bild ist ein Avatar, den {appName} für Sie zeichnet, oder Ihr Foto von Google oder GitHub, wenn Sie es auswählen. Dieses Foto wird dann von Google oder GitHub geladen.
 - Ihr **Passwort**, falls Sie eines festlegen, nur als sicherer Hash gespeichert, nie das Passwort selbst.
-- Welche **Anmeldemethoden** Sie verbunden haben. Wenn Sie sich mit Google oder GitHub anmelden, erhält {appName} von dort Ihren Namen, Ihre E-Mail-Adresse und Ihr Foto und speichert die Tokens für den Zugriff auf Ihr Konto dort verschlüsselt. Vom Anmelde-Token, das Google sendet und das angibt, wer Sie sind, speichert {appName} nur die E-Mail-Adresse Ihres Google-Kontos, damit die **Einstellungen** zeigen können, welches Konto es ist.
+- Welche **Anmeldemethoden** Sie verbunden haben. Wenn Sie sich mit Google oder GitHub anmelden, erhält {appName} von dort Ihren Namen, Ihre E-Mail-Adresse und Ihr Foto und speichert die übermittelten Anmeldetokens verschlüsselt.
 - Ihre **Anmeldesitzungen**, jeweils mit IP-Adresse und Browser, damit Sie angemeldet bleiben und Sitzungen geprüft und beendet werden können.
 - Ob die Meetings, die Sie veranstalten, **KI-Notizen anbieten**: eine Ja-oder-Nein-Einstellung in den **Einstellungen**, aus, bis Sie sie einschalten.
 - Ob Sie **die Desktop-App verwendet haben**: wann Sie sich zum ersten Mal darin angemeldet haben, damit {appName} sie auf der **Startseite** in Ihren Browsern nicht mehr vorschlägt.
@@ -159,7 +159,7 @@ Je nachdem, wo Sie leben, etwa im Europäischen Wirtschaftsraum, im Vereinigten 
 
 ## Sicherheit
 
-Verbindungen verwenden HTTPS. Passwörter werden gehasht, und die Tokens von Google und GitHub, die {appName} speichert, sind verschlüsselt. Meeting-Links tragen ihren Kenncode in einem Teil der Adresse, den Browser nie an Server senden. Nur Personen, die ein Meeting hereinlässt, können sich mit seinem Anruf verbinden, und Fehlversuche sind begrenzt. Kein System ist vollkommen sicher, ein Grund mehr, warum {appName} so wenig speichert.
+Verbindungen verwenden HTTPS. Passwörter werden gehasht, und die Tokens, die Google und GitHub senden, werden verschlüsselt. Meeting-Links tragen ihren Kenncode in einem Teil der Adresse, den Browser nie an Server senden. Nur Personen, die ein Meeting hereinlässt, können sich mit seinem Anruf verbinden, und Fehlversuche sind begrenzt. Kein System ist vollkommen sicher, ein Grund mehr, warum {appName} so wenig speichert.
 
 ## Änderungen
 
