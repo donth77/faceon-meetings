@@ -19,3 +19,6 @@ overrides:
   "@sentry/bundler-plugins>glob": ^14.0.2
   "@esbuild-kit/core-utils>esbuild": ^0.25.0
   "@ts-morph/common>minimatch": ^11.0.1
+  "@typescript-eslint/typescript-estree>minimatch": ^11.0.1
+  "app-builder-lib>minimatch": ^11.0.1
+  "@electron/universal>minimatch": ^11.0.1
