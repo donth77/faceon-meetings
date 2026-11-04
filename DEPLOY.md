@@ -232,7 +232,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 **AI notes:** `NEXT_PUBLIC_AI_NOTES` is optional; `off` removes AI notes from your copy. When it's on, each host still decides in Settings → AI notes whether their meetings offer them, and they're off until a host turns them on.
 
-Then add the variables from [step 9](#9-decide-who-hosts-and-set-limits) and [step 10](#10-make-the-legal-pages-yours), and open **Deployments** and redeploy. Vercel applies changed variables to new deployments only, and `NEXT_PUBLIC_*` values are built into the pages, so redeploy after every change.
+Then add the variables from [step 9](#9-decide-who-hosts-and-set-limits) and [step 10](#10-legal-pages), and open **Deployments** and redeploy. Vercel applies changed variables to new deployments only, and `NEXT_PUBLIC_*` values are built into the pages, so redeploy after every change.
 
 ## 9. Decide who hosts, and set limits
 
@@ -264,7 +264,7 @@ Admins can't delete, edit or sign in as anyone's account, and Settings → Admin
 
 Emails to admins and about answers go through Resend ([step 7](#7-set-up-account-emails-resend-optional)). Without it, requests still appear in Settings → Admin, but nobody is emailed.
 
-## 10. Make the legal pages yours
+## 10. Legal pages
 
 The privacy policy and terms (`/privacy` and `/terms`, from [`content/legal/`](content/legal/)) speak for whoever runs the copy. Set:
 
@@ -273,8 +273,6 @@ The privacy policy and terms (`/privacy` and `/terms`, from [`content/legal/`](c
 | `NEXT_PUBLIC_OPERATOR_NAME`         | Who runs this copy                                                                                                                                                   |
 | `NEXT_PUBLIC_CONTACT_EMAIL`         | Where people write about privacy or the terms. Without it, the pages point to the repository's issues                                                                |
 | `NEXT_PUBLIC_OPERATOR_JURISDICTION` | Whose laws govern the terms, as it reads after "the laws of", such as `the State of New York, USA`. Without it, the terms name the place where the operator is based |
-
-Read both documents, change them in `content/legal/` wherever your copy works differently, and have them reviewed for where you are.
 
 ## 11. Check the daily cleanup
 
@@ -379,7 +377,7 @@ Your copy can have its own name, logo and colors:
 - **Name:** `NEXT_PUBLIC_APP_NAME` ([step 8](#8-add-the-environment-variables-to-vercel)). Pages, Help, emails, the legal pages, calendar files and the installed app all use it.
 - **Logo, icons and colors:** `pnpm brand`, below.
 - **Email sender:** the name in `EMAIL_FROM`, such as `Acme Meet <no-reply@mail.example.com>` ([step 7](#7-set-up-account-emails-resend-optional)).
-- **Legal pages:** [step 10](#10-make-the-legal-pages-yours).
+- **Legal pages:** [step 10](#10-legal-pages).
 - **Domain:** [step 12](#12-use-your-own-domain-optional).
 - **Source links:** `NEXT_PUBLIC_REPO_URL`, your fork's address. Every GitHub link in the app reads it: the footer's "View source on GitHub", Help's "Found an issue?", the legal pages' contact when there's no `NEXT_PUBLIC_CONTACT_EMAIL`, and `/llms.txt`. Leave it empty to hide them.
 

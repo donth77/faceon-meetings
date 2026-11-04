@@ -5,7 +5,7 @@
   <img src="public/brand/logo-mark.svg" width="128" alt="">
 </picture>
 
-# FaceOn
+# FaceOn Meetings
 
 **Free, open-source video meetings that run in your browser.**
 
@@ -21,19 +21,8 @@
 
 ---
 
-If you've used Zoom or Google Meet, you already know how to use FaceOn. Try it at [joinfaceon.app](https://joinfaceon.app), or [deploy your own](#deploy-your-own).
+Try it at [joinfaceon.app](https://joinfaceon.app), or [deploy your own](#deploy-your-own).
 
-**Familiar.** The words and buttons Zoom and Meet users already know.
-
-**Private.** Backgrounds, noise suppression and speech-to-text run on your own device. AI notes are made in your browser, on-device or with your own AI key.
-
-**Free.** MIT licensed, and it runs on free plans: Vercel, Neon and Stream.
-
-**Everywhere.** Any modern browser on Windows, macOS, Linux, iPhone, iPad and Android.
-
-> **Status:** early development. FaceOn is a working name.
-
----
 
 ## What works
 
@@ -47,8 +36,6 @@ If you've used Zoom or Google Meet, you already know how to use FaceOn. Try it a
 - Previous meetings, attendance and your data to download
 - A [desktop app](desktop/README.md) for Windows and Mac
 - FaceOn in [Google Calendar and Gmail](google-addon/README.md)
-
-**On the way:** more languages, and self-hosted [LiveKit](https://livekit.io) as an alternative to Stream.
 
 ## Tech stack
 
@@ -96,8 +83,8 @@ FaceOn runs on free plans. [DEPLOY.md](DEPLOY.md) walks through every step, from
 | Sign-in         | Google and GitHub                       |
 | Email sign-in   | [Resend](https://resend.com) (optional) |
 
-Optional, and free too:
+Optional:
 
-- **Protect and watch it:** bot checks, error reports, uptime checks and encrypted backups. See [Protect and watch your copy](DEPLOY.md#protect-and-watch-your-copy-optional).
+- **Protect and watch:** bot checks, error reports, uptime checks and encrypted backups. See [Protect and watch your copy](DEPLOY.md#protect-and-watch-your-copy-optional).
 - **Make it yours:** your own name, logo and colors. See [Make it yours](DEPLOY.md#make-it-yours).
-- **Apps:** the [desktop app](DEPLOY.md#the-desktop-app-optional) and the [Google Workspace add-on](DEPLOY.md#the-google-workspace-add-on-optional).
+- **Apps:** [Desktop app](DEPLOY.md#the-desktop-app-optional) and the [Google Workspace add-on](DEPLOY.md#the-google-workspace-add-on-optional).
