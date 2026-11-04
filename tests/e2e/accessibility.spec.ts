@@ -4,8 +4,12 @@ import { type Page } from "@playwright/test";
 import { createMeeting, createPastMeeting } from "./support/db";
 import { expect, expectNoErrors, test } from "./support/fixtures";
 
-/** Serious and critical WCAG 2.x A and AA problems axe finds on the page. */
+/**
+ * Serious and critical WCAG 2.x A and AA problems axe finds on the page, once dialogs and
+ * popovers have finished fading in or out: midway, their text is fainter than it ends up.
+ */
 async function axeProblems(page: Page) {
+  await expect(page.locator("[data-entering], [data-exiting]")).toHaveCount(0);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
