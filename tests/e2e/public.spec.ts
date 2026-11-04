@@ -162,6 +162,37 @@ test.describe("signed-out pages", () => {
     expectNoErrors(visitor);
   });
 
+  test("phones see each page settle where it first appears", async ({
+    people,
+  }) => {
+    const visitor = await people.guest({
+      viewport: { width: 375, height: 812 },
+    });
+    const { page } = visitor;
+    // Layout shifts as Cumulative Layout Shift counts them: none follow someone's input here.
+    await page.addInitScript(() => {
+      const totals = window as Window & { layoutShift?: number };
+      totals.layoutShift = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          totals.layoutShift =
+            (totals.layoutShift ?? 0) +
+            (entry as PerformanceEntry & { value: number }).value;
+        }
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    for (const path of ["/", "/download", "/sign-in", "/sign-up", "/help"]) {
+      await page.goto(path);
+      await expect(page.locator("h1").first()).toBeVisible();
+      await page.waitForLoadState("networkidle");
+      const shift = await page.evaluate(
+        () => (window as Window & { layoutShift?: number }).layoutShift ?? 0,
+      );
+      expect(shift, path).toBeLessThan(0.1);
+    }
+    expectNoErrors(visitor);
+  });
+
   test("phones get the same page without sideways scrolling", async ({
     people,
   }) => {
