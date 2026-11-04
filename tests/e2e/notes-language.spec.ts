@@ -51,37 +51,36 @@ const IN_ENGLISH = pt.Notes.inEnglish.replaceAll(
 );
 
 test.describe("AI notes in a language Chrome's AI doesn't write", () => {
-  test("Settings → AI notes says notes on this computer will be in English, and offers your own key", async ({
+  test("Settings → AI notes says notes on this computer will be in English, and offers a key", async ({
     people,
   }) => {
     const host = await people.signedIn({ aiNotes: true });
     await host.context.addInitScript({ content: chromeWhoseAiWrites(WRITES) });
 
-    // In English there's nothing to say.
+    // In English there's nothing to say but that notes here are free.
     await host.page.goto("/settings/ai-notes");
     await expect(
-      host.page.getByRole("radio", { name: /On this computer/ }),
-    ).toBeChecked();
+      host.page.getByText(
+        "Free: notes are made on this computer. Only people using Chrome are transcribed.",
+      ),
+    ).toBeVisible();
     await expect(host.page.getByText(/can't write notes in/)).toHaveCount(0);
 
-    // In Portuguese, notes on this computer would be in English.
+    // In Portuguese, notes on this computer would be in English: a key gives notes in
+    // Portuguese.
     await host.page.goto("/settings/ai-notes?hl=pt-BR");
+    await expect(host.page.getByText(pt.Notes.here.free)).toBeVisible();
     const notice = host.page.getByRole("note").filter({ hasText: IN_ENGLISH });
     await expect(notice).toBeVisible();
     await notice
       .getByRole("button", { name: pt.Settings.aiNotes.useOwnKey })
       .click();
+    const key = host.page.getByLabel(pt.Settings.aiNotes.key, { exact: true });
+    await expect(key).toBeFocused();
+    await key.fill("sk-e2e-not-a-real-key");
     await expect(notice).toHaveCount(0);
     await expect(
-      host.page.getByRole("radio", {
-        name: new RegExp(`^${pt.Settings.aiNotes.ownKey}`),
-      }),
-    ).toBeFocused();
-    await expect(
-      host.page.getByRole("heading", {
-        name: pt.Settings.aiNotes.yourKey,
-        exact: true,
-      }),
+      host.page.getByText(pt.Notes.here.writes.replace("{provider}", "OpenAI")),
     ).toBeVisible();
     expectNoErrors(host);
   });

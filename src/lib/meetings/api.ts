@@ -169,11 +169,22 @@ export const HandRequest = z.union([
 ]);
 export type HandRequest = z.infer<typeof HandRequest>;
 
+/**
+ * How the notetaker's browser makes a meeting's notes, as everyone in it is told: with
+ * this provider's key, or (null) on the notetaker's computer, for free.
+ */
+export const NotesMadeWith = z.object({
+  provider: z.enum(PROVIDERS).nullable(),
+});
+export type NotesMadeWith = z.infer<typeof NotesMadeWith>;
+
 /** AI notes: hosts and co-hosts turn them on or off, for everyone. */
 export const NotesRequest = z.object({
   on: z.boolean(),
   /** Started by themselves as a host joined: a stop earlier in the session wins. */
   auto: z.boolean().optional(),
+  /** Turning them on: how this browser makes them. */
+  madeWith: NotesMadeWith.optional(),
 });
 export type NotesRequest = z.infer<typeof NotesRequest>;
 

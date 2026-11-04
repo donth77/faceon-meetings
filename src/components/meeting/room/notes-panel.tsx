@@ -2,22 +2,22 @@
 
 import { Download, LoaderCircle, Settings, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button, Dialog } from "react-aria-components";
 
 import { EnglishNotesNotice } from "@/components/notes/english-notes-notice";
+import { useNotesSentence } from "@/components/notes/notes-here";
 import { NotesMaker } from "@/components/notes/notes-maker";
 import { SwitchRow } from "@/components/ui/form-fields";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
-import {
-  useOnDeviceModel,
-  useOnDeviceNotesInEnglish,
-} from "@/hooks/use-on-device-model";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { useOnDeviceNotesInEnglish } from "@/hooks/use-on-device-model";
 import { useViewerTimeZone } from "@/hooks/use-viewer-time-zone";
 import { dismiss, useDismissed } from "@/lib/dismissals";
 import type { NotesState } from "@/lib/media/types";
 import type { TranscriptionStatus } from "@/lib/meetings/events";
-import { preferredEngine } from "@/lib/notes/engines";
+import { notesPanelButton } from "@/lib/meetings/rules";
+import { engineFor } from "@/lib/notes/engines";
 import { useNotesSettings } from "@/lib/notes/settings";
 import { turnsOf, type TranscriptLine } from "@/lib/notes/transcript";
 import { useIntlLocale } from "@/lib/preferences";
@@ -118,6 +118,8 @@ function Transcript({
  * for everyone. The notetaker (whoever started them) sees the transcript as it grows,
  * and who isn't in it; once they stop, the notes are made from it here. Where the
  * meeting's host doesn't allow AI notes, it says so, and the host gets a way to Settings.
+ * Where this browser can't make notes, Start shows disabled, with why and a way to
+ * Settings → AI notes, where a key makes it work.
  */
 export function NotesPanel({
   code,
@@ -158,7 +160,7 @@ export function NotesPanel({
   hostName: string;
   /** You started them, so the transcript is in your browser. */
   isNotetaker: boolean;
-  /** This browser can make the notes (Chrome's model, or a key); else it says so first. */
+  /** This browser can make the notes (Chrome's model, or a key); else Start shows disabled, with why. */
   canMake: boolean;
   /** This tab's transcript. */
   lines: readonly TranscriptLine[];
@@ -177,15 +179,15 @@ export function NotesPanel({
   // Notes made on this computer, in a language Chrome's AI doesn't write yet: said once
   // they're on, until put away on this device.
   const settings = useNotesSettings();
-  const onDevice = useOnDeviceModel();
   const inEnglish = useOnDeviceNotesInEnglish();
   const englishSeen = useDismissed("notesInEnglish", { hiddenOnServer: true });
   const englishNotice =
     isNotetaker &&
     inEnglish &&
     !englishSeen &&
-    preferredEngine(settings, onDevice ?? "none") === "onDevice";
+    engineFor(settings) === "onDevice";
   const bodyRef = useRef<HTMLDivElement>(null);
+  const reasonId = useId();
 
   async function change(on: boolean) {
     setBusy(true);
@@ -281,16 +283,21 @@ export function NotesPanel({
       <div className="flex flex-col gap-3 px-5 pb-1 text-sm leading-normal">
         <p>{t("intro")}</p>
         <p className="text-muted-foreground">{note}</p>
-        {!demo && allowed && !canMake ? (
-          <p className="text-muted-foreground">{t("cantMakeHere")}</p>
-        ) : null}
       </div>
     );
   }
 
   // One button at the foot, whichever it is, so focus stays put as it changes.
+  const button = notesPanelButton({
+    on: notes !== null,
+    demo,
+    allowed,
+    isOwner,
+    canMake,
+  });
+  const startLabel = lines.length > 0 ? t("startAgain") : t("start");
   let footer = null;
-  if (notes) {
+  if (button === "stop") {
     footer = (
       <Button
         isPending={busy}
@@ -300,7 +307,7 @@ export function NotesPanel({
         {t("stop")}
       </Button>
     );
-  } else if (!demo && allowed) {
+  } else if (button === "start") {
     footer = (
       <Button
         isPending={busy}
@@ -308,10 +315,46 @@ export function NotesPanel({
         className={`${FOOTER_BUTTON} bg-primary text-primary-foreground hover:bg-primary/90`}
       >
         <Sparkles className="size-[18px]" aria-hidden="true" />
-        {lines.length > 0 ? t("startAgain") : t("start")}
+        {startLabel}
       </Button>
     );
-  } else if (!demo && isOwner) {
+  } else if (button === "cantMake") {
+    footer = (
+      <div className="flex flex-1 flex-col gap-2.5">
+        <p
+          id={reasonId}
+          className="text-muted-foreground text-[13px] leading-normal"
+        >
+          {t.rich("cantMakeYet", {
+            settings: (chunks) => (
+              <Button
+                onPress={onOpenSettings}
+                className="text-foreground focus-visible:focus-ring rounded-sm font-semibold underline underline-offset-2 outline-hidden"
+              >
+                {chunks}
+              </Button>
+            ),
+          })}
+        </p>
+        <TooltipTrigger>
+          {/* Disabled, but still focusable (aria-disabled, not disabled), so the reason
+              shows as its tooltip on keyboard focus as well as on hover. */}
+          <button
+            type="button"
+            aria-disabled="true"
+            aria-describedby={reasonId}
+            className={`${FOOTER_BUTTON} bg-primary text-primary-foreground cursor-not-allowed opacity-60`}
+          >
+            <Sparkles className="size-[18px]" aria-hidden="true" />
+            {startLabel}
+          </button>
+          <Tooltip>
+            {t.markup("cantMakeYet", { settings: (chunks) => chunks })}
+          </Tooltip>
+        </TooltipTrigger>
+      </div>
+    );
+  } else if (button === "turnOn") {
     footer = (
       <Button
         onPress={onOpenSettings}
@@ -336,8 +379,8 @@ export function NotesPanel({
 }
 
 /**
- * "AI notes on", in the top bar for everyone while they're on: who turned them on,
- * whether what you say goes into them, and Don't transcribe me. Where this browser needs
+ * "AI notes on", in the top bar for everyone while they're on: who turned them on, where
+ * what's said goes, whether what you say goes into them, and Don't transcribe me. Where this browser needs
  * its one-time download first, the chip is marked and this is where it's done, with its
  * progress. Hosts and co-hosts can open the notes from it.
  */
@@ -358,6 +401,7 @@ export function NotesChip({
   onOpenNotes?: (() => void) | undefined;
 }) {
   const t = useTranslations("Meeting.notes");
+  const sentence = useNotesSentence();
   /** Not in the notes until the one-time download is done. */
   const notYet = self === "download" || self === "downloading";
   // Once the download is done its box goes, with the focused button: focus stays in here.
@@ -396,6 +440,11 @@ export function NotesChip({
               <p className="text-sm leading-normal">
                 {t("banner", { name: notes.name })}
               </p>
+              {notes.madeWith ? (
+                <p className="text-muted-foreground text-[13px] leading-normal">
+                  {sentence.madeWith(notes.madeWith, notes.name)}
+                </p>
+              ) : null}
               {notYet ? (
                 <div className="flex flex-col gap-2 rounded-[10px] bg-white/5 p-3">
                   <p className="text-sm font-semibold">{t("notYetTitle")}</p>

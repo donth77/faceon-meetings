@@ -800,7 +800,7 @@
       "chipNotYet": "KI-Notizen an. Sie sind noch nicht dabei",
       "intro": "KI-Notizen fassen zusammen, was gesagt wird, mit Entscheidungen und Aufgaben. Sprache wird, wo möglich, auf dem Gerät jeder Person in Text umgewandelt.",
       "everyoneSees": "Alle sehen, dass KI-Notizen an sind, und alle können wählen, nicht transkribiert zu werden.",
-      "cantMakeHere": "Dieser Browser kann die Notizen noch nicht erstellen: Fügen Sie zuerst Ihren KI-Schlüssel in den Einstellungen hinzu, oder machen Sie Notizen in Chrome auf einem Computer, der sie selbst erstellen kann.",
+      "cantMakeYet": "<settings>Fügen Sie einen Schlüssel hinzu</settings>, um KI-Notizen in diesem Browser zu verwenden.",
       "everyoneSeesShared": "Alle sehen, dass KI-Notizen an sind, und alle können wählen, nicht transkribiert zu werden. Die Notizen werden mit den Teilnehmern geteilt, sobald sie erstellt sind.",
       "willBeShared": "Sobald sie erstellt sind, werden die Notizen mit allen hier geteilt, die ein Konto haben.",
       "start": "KI-Notizen starten",
@@ -1513,24 +1513,15 @@
       "inMeetingsHelp": "Sie und Ihre Co-Hosts können sie im Meeting starten. Jedes Meeting beginnt ohne sie, und wenn Sie dies ausschalten, werden laufende Notizen beendet.",
       "inMeetingsFailed": "KI-Notizen für Ihre Meetings konnten nicht geändert werden. Versuchen Sie es erneut.",
       "speechTitle": "Transkription auf diesem Gerät",
-      "how": "Wie Notizen erstellt werden",
-      "onDevice": "Auf diesem Computer",
-      "onDeviceHelp": "Kostenlos. Sprache und Zusammenfassungen bleiben auf dem Gerät jeder Person. Erfordert ein aktuelles Chrome auf einem Computer.",
-      "onDeviceState": {
-        "ready": "Hier bereit",
-        "download": "Wird beim ersten Mal heruntergeladen",
-        "update": "Erfordert ein neueres Chrome",
-        "enable": "In Chrome ausgeschaltet",
-        "none": "In diesem Browser nicht verfügbar"
-      },
-      "ownKey": "Ihr eigener KI-Schlüssel",
-      "ownKeyHelp": "Ihr KI-Anbieter schreibt die Zusammenfassung. Er rechnet mit Ihnen ab, nicht mit {appName}.",
+      "keyTitle": "KI-Schlüssel (optional)",
+      "keyRemoved": "Ihr KI-Schlüssel wurde aus diesem Browser entfernt, damit die Notizen wie gewählt auf diesem Computer bleiben. Um einen Schlüssel zu verwenden, fügen Sie ihn erneut hinzu.",
+      "gotIt": "Verstanden",
       "useOwnKey": "Eigenen KI-Schlüssel verwenden",
-      "yourKey": "Ihr KI-Anbieter",
       "provider": "Anbieter",
       "model": "Modell",
       "recommended": "{model} (empfohlen)",
       "modelHelp": "Wählen Sie eines oder geben Sie eine beliebige Modell-ID Ihres Anbieters ein.",
+      "moreOptions": "Weitere Optionen",
       "key": "API-Schlüssel",
       "keyPlaceholder": "Fügen Sie Ihren {provider}-Schlüssel ein",
       "show": "Anzeigen",
@@ -1791,15 +1782,9 @@
     "inEnglish": "Die integrierte KI von Chrome kann noch keine Notizen auf {language} schreiben, daher sind Notizen, die auf diesem Computer erstellt werden, auf Englisch. Für Notizen auf {language} verwenden Sie Ihren eigenen KI-Schlüssel.",
     "firstDownload": "Chrome lädt sie beim ersten Mal herunter: einige Gigabyte, was eine Weile dauern kann. Es wird nichts heruntergeladen, bevor Sie „Herunterladen und Notizen erstellen“ auswählen.",
     "notReady": {
-      "noKey": "Fügen Sie Ihren {provider}-Schlüssel in den Einstellungen für KI-Notizen hinzu.",
       "update": "Die integrierte KI von Chrome braucht eine neuere Chrome-Version. Sie können stattdessen Ihren eigenen KI-Schlüssel verwenden.",
       "enable": "Die integrierte KI von Chrome ist in diesem Browser ausgeschaltet. Sie können stattdessen Ihren eigenen KI-Schlüssel verwenden.",
       "none": "Dieser Browser hat die integrierte KI von Chrome nicht. Sie können stattdessen Ihren eigenen KI-Schlüssel verwenden."
-    },
-    "elsewhere": {
-      "update": "Für kostenlose Notizen direkt auf diesem Computer brauchen Sie eine neuere Chrome-Version.",
-      "enable": "Die integrierte KI von Chrome, die kostenlos Notizen auf diesem Computer erstellt, ist in diesem Chrome nicht verfügbar.",
-      "none": "Kostenlose Notizen direkt auf dem Computer gibt es in Chrome auf einem Computer."
     },
     "make": "Notizen erstellen",
     "downloadAndMake": "Herunterladen und Notizen erstellen",
@@ -1814,7 +1799,6 @@
     "failed": {
       "unreadable": "Die Antwort der KI ließ sich nicht als Notizen lesen. Versuchen Sie es erneut, oder wählen Sie ein anderes Modell.",
       "onDevice": "Die integrierte KI von Chrome konnte die Notizen nicht erstellen. Versuchen Sie es erneut, oder verwenden Sie Ihren eigenen KI-Schlüssel.",
-      "noKey": "Fügen Sie Ihren {provider}-Schlüssel in den Einstellungen für KI-Notizen hinzu.",
       "key": "{provider} hat Ihren Schlüssel nicht akzeptiert.",
       "model": "{provider} bietet dieses Modell nicht an.",
       "limit": "Laut {provider} haben Sie Ihr Limit überschritten oder kein Guthaben mehr.",
@@ -1863,6 +1847,15 @@
       "unavailable": "Dieser Browser kann Sprache nicht auf Ihrem Gerät in Text umwandeln, daher steht das, was Sie sagen, nicht in den KI-Notizen. Chrome auf einem Computer kann das.",
       "download": "Herunterladen",
       "failed": "Der Download wurde nicht abgeschlossen. Versuchen Sie es erneut."
+    },
+    "here": {
+      "free": "Kostenlos: Die Notizen werden auf diesem Computer erstellt. Nur wer Chrome verwendet, wird transkribiert.",
+      "needsKey": "Fügen Sie einen Schlüssel hinzu, um KI-Notizen in diesem Browser zu verwenden.",
+      "transcribes": "{provider} transkribiert alle und schreibt die Notizen.",
+      "writes": "{provider} schreibt die Notizen. Nur wer Chrome verwendet, wird transkribiert."
+    },
+    "made": {
+      "onDevice": "Die Notizen werden kostenlos auf dem Computer von {name} erstellt. Nur wer Chrome verwendet, wird transkribiert."
     }
   },
   "SavedNotes": {

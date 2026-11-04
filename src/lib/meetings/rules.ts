@@ -333,6 +333,30 @@ export function notesOnJoin(
 }
 
 /**
+ * The AI notes panel's button, for hosts and co-hosts: Stop while notes are on, Start where
+ * the meeting's host allows them. Where this browser can't make notes, Start shows disabled
+ * with why ("cantMake"), since a key added here, or Chrome on a computer, makes it work; the
+ * host's own switch, an account setting, stays on everywhere. Where the host doesn't allow
+ * them, the host gets a way to Settings; nobody else gets a button.
+ */
+export function notesPanelButton(input: {
+  /** AI notes are on. */
+  on: boolean;
+  demo: boolean;
+  /** The meeting's host allows AI notes in their meetings. */
+  allowed: boolean;
+  /** You host this meeting. */
+  isOwner: boolean;
+  /** This browser can make notes (Settings → AI notes); true until that's known. */
+  canMake: boolean;
+}): "stop" | "start" | "cantMake" | "turnOn" | null {
+  if (input.on) return "stop";
+  if (input.demo) return null;
+  if (input.allowed) return input.canMake ? "start" : "cantMake";
+  return input.isOwner ? "turnOn" : null;
+}
+
+/**
  * Whether the meeting room offers you AI notes (More → AI notes): you run them, and this
  * meeting has them (not a demo, and its host allows them), or there's something to come
  * back to: notes that are on, or this tab's transcript still to become notes. Where AI

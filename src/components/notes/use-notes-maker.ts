@@ -8,9 +8,9 @@ import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { modelApi } from "@/lib/ai/built-in";
 import {
   canMakeNotes,
+  engineFor,
   notesOnDevice,
   notesWithKey,
-  preferredEngine,
   providerChoice,
   UnreadableNotesError,
   type NotesProgress,
@@ -31,7 +31,7 @@ import { useIntlLocale } from "@/lib/preferences";
 
 /** Why notes couldn't be made. */
 export type NotesFailure =
-  | { kind: "unreadable" | "onDevice" | "noKey" }
+  | { kind: "unreadable" | "onDevice" }
   | { kind: ProviderFailure; detail: string };
 
 export type MakerState =
@@ -68,7 +68,7 @@ export function useNotesMaker({
   const timeLocale = useIntlLocale();
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
-  const engine = preferredEngine(settings, onDevice ?? "none");
+  const engine = engineFor(settings);
   const choice = providerChoice(settings);
   const [state, setState] = useState<MakerState>(() => settled(sessionId));
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -90,11 +90,6 @@ export function useNotesMaker({
   const outdated = state.step === "done" && notesOutdated(state.made, lines);
 
   async function make() {
-    if (engine === "ownKey" && !choice.key) {
-      run.stop();
-      setState({ step: "failed", failure: { kind: "noKey" } });
-      return;
-    }
     const signal = run.begin();
     setState({ step: "making", progress: null });
     setSaveState("idle");

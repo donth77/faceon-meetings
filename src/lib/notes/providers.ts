@@ -17,35 +17,48 @@ export type ProviderId = (typeof PROVIDERS)[number];
 export const isProvider = (value: unknown): value is ProviderId =>
   PROVIDERS.some((id) => id === value);
 
-/** What the settings show for each: its name, models to pick from, where to get a key. */
+/**
+ * What the settings show for each: its name, models to pick from, where to get a key, and
+ * whether FaceOn transcribes meetings with it (rather than only on each person's device).
+ */
 export const PROVIDER_INFO: Record<
   ProviderId,
-  { name: string; models: readonly string[]; keyUrl: string }
+  {
+    name: string;
+    models: readonly string[];
+    keyUrl: string;
+    transcribes: boolean;
+  }
 > = {
   openai: {
     name: "OpenAI",
     models: ["gpt-5-mini", "gpt-5", "gpt-5-nano"],
     keyUrl: "https://platform.openai.com/api-keys",
+    transcribes: false,
   },
   anthropic: {
     name: "Anthropic",
     models: ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-4-5"],
     keyUrl: "https://console.anthropic.com/settings/keys",
+    transcribes: false,
   },
   google: {
     name: "Google",
     models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"],
     keyUrl: "https://aistudio.google.com/apikey",
+    transcribes: false,
   },
   deepseek: {
     name: "DeepSeek",
     models: ["deepseek-chat", "deepseek-reasoner"],
     keyUrl: "https://platform.deepseek.com/api_keys",
+    transcribes: false,
   },
   openrouter: {
     name: "OpenRouter",
     models: ["openrouter/auto"],
     keyUrl: "https://openrouter.ai/keys",
+    transcribes: false,
   },
 };
 

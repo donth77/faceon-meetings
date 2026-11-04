@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { useNotesSentence } from "@/components/notes/notes-here";
 import { useOnDeviceModel } from "@/hooks/use-on-device-model";
 import { aiNotesEnabled } from "@/lib/env";
 import type {
@@ -12,7 +13,7 @@ import type {
   SessionInfo,
 } from "@/lib/meetings/api";
 import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
-import { canMakeNotes } from "@/lib/notes/engines";
+import { canMakeNotes, engineFor, providerChoice } from "@/lib/notes/engines";
 import { useNotesSettings } from "@/lib/notes/settings";
 import { markNotesTurnedOff } from "@/lib/notes/transcript";
 
@@ -102,6 +103,14 @@ export function useMeetingNotes({
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
   const state = media.sessionState;
+  /** How this browser makes notes, which everyone is told as it turns them on. */
+  const madeWith = {
+    provider:
+      engineFor(settings) === "ownKey"
+        ? providerChoice(settings).provider
+        : null,
+  };
+  const sentence = useNotesSentence();
 
   // Whether the meeting shares AI notes with its participants as they're made: the
   // session's state brings it to everyone, live. Its host can change it from the room;
@@ -139,7 +148,7 @@ export function useMeetingNotes({
     });
     if (action === "start") {
       meetingApi
-        .notes(code, { on: true, auto: true })
+        .notes(code, { on: true, auto: true, madeWith })
         .catch(() => toast.error(t("notes.failed")));
     } else if (action === "cantMake") {
       toast(t("notes.autoCantMake"), {
@@ -158,6 +167,7 @@ export function useMeetingNotes({
     code,
     t,
     onOpenSettings,
+    madeWith,
   ]);
 
   // Said up front, so everyone knows where the notes go before they speak.
@@ -178,6 +188,10 @@ export function useMeetingNotes({
       return;
     }
     const yours = notes.by === self.id;
+    // Where everyone's words go: the notetaker's provider, or their computer.
+    const where = notes.madeWith
+      ? sentence.madeWith(notes.madeWith, notes.name)
+      : undefined;
     if (selfState === "download") {
       toast(
         yours
@@ -188,6 +202,7 @@ export function useMeetingNotes({
         {
           id: "notes-banner",
           duration: 20_000,
+          description: yours ? undefined : where,
           action: {
             label: t("notes.downloadNow"),
             onClick: () => void download(),
@@ -206,6 +221,7 @@ export function useMeetingNotes({
         {
           id: "notes-banner",
           duration: 15_000,
+          description: where,
         },
       );
       return;
@@ -215,13 +231,14 @@ export function useMeetingNotes({
       {
         id: "notes-banner",
         duration: 15_000,
+        description: where,
         action: {
           label: t("notes.dontTranscribe"),
           onClick: () => setOptedOut(true),
         },
       },
     );
-  }, [notes, selfState, self.id, t, setOptedOut, download, shared]);
+  }, [notes, selfState, self.id, t, setOptedOut, download, shared, sentence]);
 
   // The meeting's host turned AI notes off: what this tab collected becomes notes only
   // when asked, here or after the meeting.
@@ -253,7 +270,7 @@ export function useMeetingNotes({
 
   async function setNotesOn(on: boolean) {
     try {
-      await meetingApi.notes(code, { on });
+      await meetingApi.notes(code, on ? { on, madeWith } : { on });
     } catch {
       toast.error(t("notes.failed"));
     }

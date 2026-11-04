@@ -51,7 +51,7 @@ Connectez **Google Agenda**, et les réunions que vous planifiez s’ajoutent à
 
 **Notes IA dans les réunions que vous organisez** est désactivé au départ. Activez-le pour pouvoir démarrer des notes IA dans vos réunions ; tant qu’il est désactivé, ni vous ni vos co-hôtes ne le pouvez. Ce choix est conservé avec votre compte, pas seulement sur cet appareil. Une fois l’option activée, chaque réunion peut aussi **Démarrer les notes IA automatiquement**, un choix fait quand vous la planifiez, sur sa page ou sur la page de votre Salle personnelle.
 
-Comment les notes IA sont rédigées : **Sur cet ordinateur**, avec l’IA intégrée de Chrome, ou avec **Votre propre clé d’IA** d’OpenAI, Anthropic, Google, DeepSeek ou OpenRouter. Votre clé reste dans ce navigateur. Consultez [Notes IA](/help/ai-notes).
+Une **clé d’IA**, si vous le souhaitez, d’OpenAI, Anthropic, Google, DeepSeek ou OpenRouter. Sans clé, Chrome sur un ordinateur rédige lui-même les notes, gratuitement ; une phrase indique ce qui se passe dans ce navigateur. Votre clé reste dans ce navigateur. Consultez [Notes IA](/help/ai-notes).
 
 ## Accessibilité
 

@@ -800,7 +800,7 @@
       "chipNotYet": "AI notes on. You're not in them yet",
       "intro": "AI notes write a summary, decisions and action items from what's said. Speech is turned into text on each person's device where possible.",
       "everyoneSees": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed.",
-      "cantMakeHere": "This browser can't make the notes yet: add your AI key in Settings first, or take notes from Chrome on a computer, which can make them itself.",
+      "cantMakeYet": "<settings>Add a key</settings> to use AI notes in this browser.",
       "everyoneSeesShared": "Everyone sees that AI notes are on, and anyone can choose not to be transcribed. The notes are shared with the participants as soon as they're made.",
       "willBeShared": "Once they're made, the notes are shared with everyone here who has an account.",
       "start": "Start AI notes",
@@ -1513,24 +1513,15 @@
       "inMeetingsHelp": "You and your co-hosts can start them in a meeting. Each meeting starts with them off, and turning this off stops any that are on.",
       "inMeetingsFailed": "Couldn't change AI notes for your meetings. Try again.",
       "speechTitle": "Transcription on this device",
-      "how": "How notes are made",
-      "onDevice": "On this computer",
-      "onDeviceHelp": "Free. Speech and summaries stay on each person's device. Needs a recent Chrome on a computer.",
-      "onDeviceState": {
-        "ready": "Ready here",
-        "download": "Downloads the first time",
-        "update": "Needs a newer Chrome",
-        "enable": "Turned off in Chrome",
-        "none": "Not in this browser"
-      },
-      "ownKey": "Your own AI key",
-      "ownKeyHelp": "Your AI provider writes the summary. They bill you, not {appName}.",
+      "keyTitle": "AI key (optional)",
+      "keyRemoved": "Your AI key was removed from this browser, so notes stay on this computer, as you chose. To use a key, add it again.",
+      "gotIt": "Got it",
       "useOwnKey": "Use your own AI key",
-      "yourKey": "Your AI provider",
       "provider": "Provider",
       "model": "Model",
       "recommended": "{model} (recommended)",
       "modelHelp": "Pick one, or type any model ID your provider offers.",
+      "moreOptions": "More options",
       "key": "API key",
       "keyPlaceholder": "Paste your {provider} key",
       "show": "Show",
@@ -1791,15 +1782,9 @@
     "inEnglish": "Chrome's built-in AI can't write notes in {language} yet, so notes made on this computer will be in English. For notes in {language}, use your own AI key.",
     "firstDownload": "Chrome downloads it the first time: a few gigabytes, which can take a while. Nothing downloads until you select Download and make notes.",
     "notReady": {
-      "noKey": "Add your {provider} key in AI notes settings.",
       "update": "Chrome's built-in AI needs a newer Chrome. You can use your own AI key instead.",
       "enable": "Chrome's built-in AI is turned off in this browser. You can use your own AI key instead.",
       "none": "This browser doesn't have Chrome's built-in AI. You can use your own AI key instead."
-    },
-    "elsewhere": {
-      "update": "Making notes on this computer, for free, needs a newer Chrome.",
-      "enable": "Chrome's built-in AI, which makes notes on this computer for free, isn't available in this Chrome.",
-      "none": "Making notes on the computer itself, for free, works in Chrome on a computer."
     },
     "make": "Make notes",
     "downloadAndMake": "Download and make notes",
@@ -1814,7 +1799,6 @@
     "failed": {
       "unreadable": "The AI's answer couldn't be read as notes. Try again, or choose another model.",
       "onDevice": "Chrome's built-in AI couldn't make the notes. Try again, or use your own AI key.",
-      "noKey": "Add your {provider} key in AI notes settings.",
       "key": "{provider} didn't accept your key.",
       "model": "{provider} doesn't offer that model.",
       "limit": "{provider} says you're over your limit or out of credit.",
@@ -1863,6 +1847,15 @@
       "unavailable": "This browser can't turn speech into text on your device, so what you say isn't in AI notes. Chrome on a computer can.",
       "download": "Download",
       "failed": "The download didn't finish. Try again."
+    },
+    "here": {
+      "free": "Free: notes are made on this computer. Only people using Chrome are transcribed.",
+      "needsKey": "Add a key to use AI notes in this browser.",
+      "transcribes": "{provider} will transcribe everyone and write the notes.",
+      "writes": "{provider} will write the notes. Only people using Chrome are transcribed."
+    },
+    "made": {
+      "onDevice": "{name}'s computer makes the notes, for free. Only people using Chrome are transcribed."
     }
   },
   "SavedNotes": {

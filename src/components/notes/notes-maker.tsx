@@ -367,21 +367,12 @@ export function NotesMaker({
       /** Making them starts Chrome's one-time model download, so the button says so. */
       const downloadFirst =
         maker.engine === "onDevice" && onDevice === "download";
-      /** Chrome's built-in AI can't run here: where it does, as it isn't offered here. */
-      const elsewhere =
-        onDevice === "update" || onDevice === "enable" || onDevice === "none"
-          ? onDevice
-          : null;
+      /** No key, and Chrome's built-in AI can't run here: why, and that a key would do. */
       const notReady =
-        maker.engine === "ownKey"
-          ? maker.ready
-            ? null
-            : elsewhere
-              ? `${t("notReady.noKey", { provider })} ${t(`elsewhere.${elsewhere}`)}`
-              : t("notReady.noKey", { provider })
-          : elsewhere
-            ? t(`notReady.${elsewhere}`)
-            : null;
+        maker.engine === "onDevice" &&
+        (onDevice === "update" || onDevice === "enable" || onDevice === "none")
+          ? t(`notReady.${onDevice}`)
+          : null;
       body = (
         <div className="flex flex-col gap-3 text-sm leading-normal">
           {state.step === "failed" ? (

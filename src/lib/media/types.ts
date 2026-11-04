@@ -4,6 +4,8 @@
  * types, which keeps Stream and self-hosted LiveKit interchangeable. ESLint enforces it.
  */
 
+import type { NotesMadeWith } from "@/lib/meetings/api";
+
 export type MediaProviderId = "stream" | "livekit";
 
 export type MeetingRole = "host" | "cohost" | "participant" | "guest";
@@ -49,7 +51,13 @@ export type CameraProcessor = StreamProcessor;
 export type MicrophoneProcessor = StreamProcessor;
 
 /** AI notes are on: who turned them on, and when (ISO 8601). */
-export type NotesState = { by: string; name: string; startedAt: string };
+export type NotesState = {
+  by: string;
+  name: string;
+  startedAt: string;
+  /** How the notetaker's browser makes them; null where it didn't say. */
+  madeWith?: NotesMadeWith | null;
+};
 
 /** Shared session state every participant sees the same way. */
 export type SessionState = {

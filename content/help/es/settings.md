@@ -51,7 +51,7 @@ Conecta **Google Calendar**, y las reuniones que programas se agregan a tu calen
 
 **Notas de IA en las reuniones que organizas** está desactivado al principio. Actívalo para poder iniciar notas de IA en tus reuniones; mientras esté desactivado, ni tú ni tus coanfitriones pueden hacerlo. Se guarda con tu cuenta, no solo en este dispositivo. Con esta opción activada, cada reunión también puede **Iniciar las notas de IA automáticamente**, algo que eliges al programarla, en su página o en la página de tu Sala personal.
 
-Cómo se crean las notas de IA: **En esta computadora**, con la IA integrada de Chrome, o con **Tu propia clave de IA** de OpenAI, Anthropic, Google, DeepSeek u OpenRouter. Tu clave se queda en este navegador. Consulta [Notas de IA](/help/ai-notes).
+Una **clave de IA**, si la quieres, de OpenAI, Anthropic, Google, DeepSeek u OpenRouter. Sin clave, Chrome en una computadora crea las notas por sí mismo, gratis; una frase dice qué pasa en este navegador. Tu clave se queda en este navegador. Consulta [Notas de IA](/help/ai-notes).
 
 ## Accesibilidad
 

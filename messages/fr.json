@@ -800,7 +800,7 @@
       "chipNotYet": "Notes IA activées. Vous n’y figurez pas encore",
       "intro": "Les notes IA rédigent un résumé, les décisions et les actions à mener à partir de ce qui est dit. Quand c’est possible, la parole est transcrite sur l’appareil de chaque personne.",
       "everyoneSees": "Tout le monde voit que les notes IA sont activées, et chacun peut choisir de ne pas être transcrit.",
-      "cantMakeHere": "Ce navigateur ne peut pas encore rédiger les notes : ajoutez d’abord votre clé d’IA dans les paramètres, ou prenez des notes depuis Chrome sur un ordinateur, qui peut les rédiger lui-même.",
+      "cantMakeYet": "<settings>Ajoutez une clé</settings> pour utiliser les notes IA dans ce navigateur.",
       "everyoneSeesShared": "Tout le monde voit que les notes IA sont activées, et chacun peut choisir de ne pas être transcrit. Les notes sont partagées avec les participants dès qu’elles sont prêtes.",
       "willBeShared": "Une fois prêtes, les notes seront partagées avec toutes les personnes présentes qui ont un compte.",
       "start": "Démarrer les notes IA",
@@ -1513,24 +1513,15 @@
       "inMeetingsHelp": "Vous et vos co-hôtes pouvez les démarrer pendant une réunion. Chaque réunion commence avec les notes désactivées, et désactiver cette option arrête celles en cours.",
       "inMeetingsFailed": "Impossible de modifier les notes IA de vos réunions. Réessayez.",
       "speechTitle": "Transcription sur cet appareil",
-      "how": "Comment les notes sont rédigées",
-      "onDevice": "Sur cet ordinateur",
-      "onDeviceHelp": "Gratuit. La parole et les résumés restent sur l’appareil de chaque personne. Nécessite une version récente de Chrome sur un ordinateur.",
-      "onDeviceState": {
-        "ready": "Prêt ici",
-        "download": "Téléchargé la première fois",
-        "update": "Nécessite un Chrome plus récent",
-        "enable": "Désactivé dans Chrome",
-        "none": "Indisponible dans ce navigateur"
-      },
-      "ownKey": "Votre propre clé d’IA",
-      "ownKeyHelp": "Votre fournisseur d’IA rédige le résumé. C’est lui qui vous facture, pas {appName}.",
+      "keyTitle": "Clé d’IA (facultative)",
+      "keyRemoved": "Votre clé d’IA a été retirée de ce navigateur pour que les notes restent sur cet ordinateur, comme vous l’aviez choisi. Pour utiliser une clé, ajoutez-la à nouveau.",
+      "gotIt": "J’ai compris",
       "useOwnKey": "Utiliser votre propre clé d’IA",
-      "yourKey": "Votre fournisseur d’IA",
       "provider": "Fournisseur",
       "model": "Modèle",
       "recommended": "{model} (recommandé)",
       "modelHelp": "Choisissez-en un, ou saisissez n’importe quel ID de modèle proposé par votre fournisseur.",
+      "moreOptions": "Plus d’options",
       "key": "Clé d’API",
       "keyPlaceholder": "Collez votre clé {provider}",
       "show": "Afficher",
@@ -1791,15 +1782,9 @@
     "inEnglish": "L’IA intégrée de Chrome n’écrit pas encore de notes en {language} : les notes créées sur cet ordinateur seront donc en anglais. Pour des notes en {language}, utilisez votre propre clé d’IA.",
     "firstDownload": "Chrome la télécharge la première fois : quelques gigaoctets, ce qui peut prendre du temps. Rien n’est téléchargé avant que vous sélectionniez Télécharger et rédiger les notes.",
     "notReady": {
-      "noKey": "Ajoutez votre clé {provider} dans les paramètres des notes IA.",
       "update": "L’IA intégrée de Chrome nécessite un Chrome plus récent. Vous pouvez utiliser votre propre clé d’IA à la place.",
       "enable": "L’IA intégrée de Chrome est désactivée dans ce navigateur. Vous pouvez utiliser votre propre clé d’IA à la place.",
       "none": "Ce navigateur n’a pas l’IA intégrée de Chrome. Vous pouvez utiliser votre propre clé d’IA à la place."
-    },
-    "elsewhere": {
-      "update": "Pour rédiger gratuitement les notes sur cet ordinateur, il faut un Chrome plus récent.",
-      "enable": "L’IA intégrée de Chrome, qui rédige gratuitement les notes sur cet ordinateur, n’est pas disponible dans ce Chrome.",
-      "none": "La rédaction gratuite des notes sur l’ordinateur lui-même fonctionne dans Chrome sur un ordinateur."
     },
     "make": "Rédiger les notes",
     "downloadAndMake": "Télécharger et rédiger les notes",
@@ -1814,7 +1799,6 @@
     "failed": {
       "unreadable": "La réponse de l’IA n’a pas pu être lue comme des notes. Réessayez ou choisissez un autre modèle.",
       "onDevice": "L’IA intégrée de Chrome n’a pas pu rédiger les notes. Réessayez ou utilisez votre propre clé d’IA.",
-      "noKey": "Ajoutez votre clé {provider} dans les paramètres des notes IA.",
       "key": "{provider} n’a pas accepté votre clé.",
       "model": "{provider} ne propose pas ce modèle.",
       "limit": "{provider} indique que vous avez dépassé votre limite ou épuisé votre crédit.",
@@ -1863,6 +1847,15 @@
       "unavailable": "Ce navigateur ne peut pas transcrire la parole sur votre appareil : ce que vous dites ne figure donc pas dans les notes IA. Chrome sur un ordinateur le peut.",
       "download": "Télécharger",
       "failed": "Le téléchargement n’a pas abouti. Réessayez."
+    },
+    "here": {
+      "free": "Gratuit : les notes sont rédigées sur cet ordinateur. Seules les personnes qui utilisent Chrome sont transcrites.",
+      "needsKey": "Ajoutez une clé pour utiliser les notes IA dans ce navigateur.",
+      "transcribes": "{provider} transcrira tout le monde et rédigera les notes.",
+      "writes": "{provider} rédigera les notes. Seules les personnes qui utilisent Chrome sont transcrites."
+    },
+    "made": {
+      "onDevice": "Les notes sont rédigées gratuitement sur l’ordinateur de {name}. Seules les personnes qui utilisent Chrome sont transcrites."
     }
   },
   "SavedNotes": {

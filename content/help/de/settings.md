@@ -51,7 +51,7 @@ Verbinden Sie **Google Kalender**, und Meetings, die Sie planen, landen in Ihrem
 
 **KI-Notizen in Meetings, die Sie veranstalten** ist anfangs aus. Schalten Sie es ein, um KI-Notizen in Ihren Meetings starten zu können; solange es aus ist, können weder Sie noch Ihre Co-Hosts das. Die Einstellung wird mit Ihrem Konto gespeichert, nicht nur auf diesem Gerät. Ist sie an, kann jedes Meeting außerdem **KI-Notizen automatisch starten**, was Sie beim Planen, auf der Seite des Meetings oder auf der Seite Ihres persönlichen Raums festlegen.
 
-Wie KI-Notizen erstellt werden: **Auf diesem Computer**, mit der integrierten KI von Chrome, oder mit **Ihr eigener KI-Schlüssel** von OpenAI, Anthropic, Google, DeepSeek oder OpenRouter. Ihr Schlüssel bleibt in diesem Browser. Siehe [KI-Notizen](/help/ai-notes).
+Ein **KI-Schlüssel**, wenn Sie einen möchten, von OpenAI, Anthropic, Google, DeepSeek oder OpenRouter. Ohne Schlüssel erstellt Chrome auf einem Computer die Notizen selbst, kostenlos; ein Satz sagt, was in diesem Browser passiert. Ihr Schlüssel bleibt in diesem Browser. Siehe [KI-Notizen](/help/ai-notes).
 
 ## Bedienungshilfen
 

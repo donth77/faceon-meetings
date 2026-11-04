@@ -247,6 +247,12 @@ test.describe("AI notes", () => {
       await expect(
         guest.page.getByText(/^Notes Host turned on AI notes/),
       ).toBeVisible();
+      // And where their words go: the host's key's provider.
+      await expect(
+        guest.page.getByText(
+          "OpenAI will write the notes. Only people using Chrome are transcribed.",
+        ),
+      ).toBeVisible();
       await expect(
         guest.page.getByRole("button", { name: "Don't transcribe me" }),
       ).toBeVisible();

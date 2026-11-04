@@ -800,7 +800,7 @@
       "chipNotYet": "Notas de IA ativadas. Você ainda não está nelas",
       "intro": "As notas de IA escrevem um resumo, as decisões e as tarefas a partir do que é dito. Sempre que possível, a fala vira texto no dispositivo de cada pessoa.",
       "everyoneSees": "Todos veem que as notas de IA estão ativadas, e qualquer pessoa pode escolher não ser transcrita.",
-      "cantMakeHere": "Este navegador ainda não consegue criar as notas: adicione sua chave de IA nas Configurações primeiro, ou faça as notas pelo Chrome em um computador, que consegue criá-las sozinho.",
+      "cantMakeYet": "<settings>Adicione uma chave</settings> para usar notas de IA neste navegador.",
       "everyoneSeesShared": "Todos veem que as notas de IA estão ativadas, e qualquer pessoa pode escolher não ser transcrita. As notas são compartilhadas com os participantes assim que ficam prontas.",
       "willBeShared": "Quando ficarem prontas, as notas serão compartilhadas com todos aqui que têm conta.",
       "start": "Iniciar notas de IA",
@@ -1513,24 +1513,15 @@
       "inMeetingsHelp": "Você e seus coanfitriões podem iniciá-las durante uma reunião. Cada reunião começa com elas desativadas, e desativar esta opção para as que estiverem ativas.",
       "inMeetingsFailed": "Não foi possível mudar as notas de IA das suas reuniões. Tente de novo.",
       "speechTitle": "Transcrição neste dispositivo",
-      "how": "Como as notas são feitas",
-      "onDevice": "Neste computador",
-      "onDeviceHelp": "Gratuito. A fala e os resumos ficam no dispositivo de cada pessoa. Precisa de uma versão recente do Chrome em um computador.",
-      "onDeviceState": {
-        "ready": "Pronto aqui",
-        "download": "Baixa na primeira vez",
-        "update": "Precisa de um Chrome mais novo",
-        "enable": "Desativado no Chrome",
-        "none": "Indisponível neste navegador"
-      },
-      "ownKey": "Sua própria chave de IA",
-      "ownKeyHelp": "Seu provedor de IA escreve o resumo. Ele cobra de você, não do {appName}.",
+      "keyTitle": "Chave de IA (opcional)",
+      "keyRemoved": "Sua chave de IA foi removida deste navegador para que as notas continuem neste computador, como você escolheu. Para usar uma chave, adicione-a de novo.",
+      "gotIt": "Entendi",
       "useOwnKey": "Usar sua própria chave de IA",
-      "yourKey": "Seu provedor de IA",
       "provider": "Provedor",
       "model": "Modelo",
       "recommended": "{model} (recomendado)",
       "modelHelp": "Escolha um ou digite qualquer ID de modelo que seu provedor oferece.",
+      "moreOptions": "Mais opções",
       "key": "Chave de API",
       "keyPlaceholder": "Cole sua chave do {provider}",
       "show": "Mostrar",
@@ -1791,15 +1782,9 @@
     "inEnglish": "A IA integrada do Chrome ainda não escreve notas em {language}, então as notas feitas neste computador vão ficar em inglês. Para ter notas em {language}, use sua própria chave de IA.",
     "firstDownload": "O Chrome baixa a IA na primeira vez: alguns gigabytes, o que pode demorar. Nada é baixado até você selecionar Baixar e fazer notas.",
     "notReady": {
-      "noKey": "Adicione sua chave do {provider} nas configurações de Notas de IA.",
       "update": "A IA integrada do Chrome precisa de um Chrome mais novo. Você pode usar sua própria chave de IA.",
       "enable": "A IA integrada do Chrome está desativada neste navegador. Você pode usar sua própria chave de IA.",
       "none": "Este navegador não tem a IA integrada do Chrome. Você pode usar sua própria chave de IA."
-    },
-    "elsewhere": {
-      "update": "Para fazer notas gratuitamente neste computador, você precisa de um Chrome mais novo.",
-      "enable": "A IA integrada do Chrome, que faz notas gratuitamente neste computador, não está disponível neste Chrome.",
-      "none": "Fazer notas gratuitamente no próprio computador funciona no Chrome em um computador."
     },
     "make": "Fazer notas",
     "downloadAndMake": "Baixar e fazer notas",
@@ -1814,7 +1799,6 @@
     "failed": {
       "unreadable": "Não foi possível ler a resposta da IA como notas. Tente de novo ou escolha outro modelo.",
       "onDevice": "A IA integrada do Chrome não conseguiu fazer as notas. Tente de novo ou use sua própria chave de IA.",
-      "noKey": "Adicione sua chave do {provider} nas configurações de Notas de IA.",
       "key": "O {provider} não aceitou sua chave.",
       "model": "O {provider} não oferece esse modelo.",
       "limit": "O {provider} diz que você passou do limite ou ficou sem crédito.",
@@ -1863,6 +1847,15 @@
       "unavailable": "Este navegador não consegue transformar fala em texto no seu dispositivo, então o que você diz não entra nas notas de IA. O Chrome em um computador consegue.",
       "download": "Baixar",
       "failed": "O download não terminou. Tente de novo."
+    },
+    "here": {
+      "free": "Grátis: as notas são feitas neste computador. Só quem usa o Chrome é transcrito.",
+      "needsKey": "Adicione uma chave para usar notas de IA neste navegador.",
+      "transcribes": "{provider} vai transcrever todo mundo e escrever as notas.",
+      "writes": "{provider} vai escrever as notas. Só quem usa o Chrome é transcrito."
+    },
+    "made": {
+      "onDevice": "As notas são feitas de graça no computador de {name}. Só quem usa o Chrome é transcrito."
     }
   },
   "SavedNotes": {

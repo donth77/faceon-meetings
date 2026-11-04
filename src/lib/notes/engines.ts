@@ -21,7 +21,12 @@ import {
   type EngineId,
   type MeetingNotes,
 } from "./notes";
-import { callProvider, defaultModel, type ProviderId } from "./providers";
+import {
+  callProvider,
+  defaultModel,
+  PROVIDER_INFO,
+  type ProviderId,
+} from "./providers";
 import type { NotesSettings } from "./settings";
 
 /** How far along the notes are. */
@@ -213,27 +218,47 @@ export const onDeviceUsable = (onDevice: ModelState) =>
   onDevice === "ready" || onDevice === "download";
 
 /**
- * How notes are made: what the host chose (never switched for them, since it decides
- * where the transcript goes), else this computer where Chrome's model can do it, else a
- * key.
+ * How notes are made: with the host's key when there is one (since it decides where the
+ * transcript goes, it's never switched for them), else on this computer, for free.
  */
-export function preferredEngine(
-  settings: NotesSettings,
-  onDevice: ModelState,
-): EngineId {
-  if (settings.engine) return settings.engine;
-  return onDeviceUsable(onDevice) ? "onDevice" : "ownKey";
+export function engineFor(settings: NotesSettings): EngineId {
+  return providerChoice(settings).key ? "ownKey" : "onDevice";
 }
 
 /**
- * Whether this browser can make notes as the settings say, without a trip to Settings:
- * Chrome's model works here (or downloads when asked), or there's a key.
+ * What happens to AI notes in this browser, as Settings → AI notes, the meeting's AI notes
+ * panel and its "AI notes on" notice say it:
+ * - "free": no key, and Chrome's built-in AI runs here (or will after its download);
+ * - "needsKey": no key, and nothing here can make notes, so Start AI notes waits for one;
+ * - "key": the key's provider writes the notes, and transcribes everyone where it can.
+ */
+export type NotesHere =
+  | { kind: "free" }
+  | { kind: "needsKey" }
+  | { kind: "key"; provider: ProviderId; transcribes: boolean };
+
+export function notesHere(
+  settings: NotesSettings,
+  onDevice: ModelState,
+): NotesHere {
+  const { provider, key } = providerChoice(settings);
+  if (key) {
+    return {
+      kind: "key",
+      provider,
+      transcribes: PROVIDER_INFO[provider].transcribes,
+    };
+  }
+  return onDeviceUsable(onDevice) ? { kind: "free" } : { kind: "needsKey" };
+}
+
+/**
+ * Whether this browser can make notes, without a trip to Settings: there's a key, or
+ * Chrome's model works here (or downloads when asked).
  */
 export function canMakeNotes(
   settings: NotesSettings,
   onDevice: ModelState,
 ): boolean {
-  return preferredEngine(settings, onDevice) === "onDevice"
-    ? onDeviceUsable(onDevice)
-    : providerChoice(settings).key !== "";
+  return notesHere(settings, onDevice).kind !== "needsKey";
 }

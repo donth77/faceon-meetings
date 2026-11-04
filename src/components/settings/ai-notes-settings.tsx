@@ -3,27 +3,28 @@
 import { cn } from "cn";
 import { Check, ChevronDown, ExternalLink, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useRef, useState, type Ref } from "react";
 import {
   Button,
   ComboBox,
+  Disclosure,
+  DisclosurePanel,
   Input,
   Label,
   ListBox,
   ListBoxItem,
   Popover,
-  Radio,
-  RadioGroup,
   TextField,
 } from "react-aria-components";
 import { toast } from "sonner";
 
 import { EnglishNotesNotice } from "@/components/notes/english-notes-notice";
+import { useNotesSentence } from "@/components/notes/notes-here";
 import { SpeechDownload } from "@/components/notes/speech-download";
+import { Button as UiButton } from "@/components/ui/button";
 import {
   FIELD_POPOVER,
   INPUT,
-  RadioDot,
   SelectField,
   SwitchRow,
 } from "@/components/ui/form-fields";
@@ -35,13 +36,7 @@ import {
 import { useSpeechLanguage } from "@/hooks/use-speech-language";
 import { setNotesInMeetingsAction } from "@/lib/account/actions";
 import { publicEnv } from "@/lib/env";
-import {
-  onDeviceUsable,
-  preferredEngine,
-  providerChoice,
-  testKey,
-} from "@/lib/notes/engines";
-import { ENGINES, type EngineId } from "@/lib/notes/notes";
+import { notesHere, providerChoice, testKey } from "@/lib/notes/engines";
 import {
   defaultModel,
   PROVIDER_INFO,
@@ -149,10 +144,13 @@ function KeyField({
   provider,
   model,
   value,
+  inputRef,
 }: {
   provider: ProviderId;
   model: string;
   value: string;
+  /** For notices that send the person to the key. */
+  inputRef?: Ref<HTMLInputElement>;
 }) {
   const t = useTranslations("Settings.aiNotes");
   const tf = useTranslations("Notes.failed");
@@ -187,6 +185,7 @@ function KeyField({
         <Label className="text-sm font-semibold">{t("key")}</Label>
         <div className="relative">
           <Input
+            ref={inputRef}
             type={shown ? "text" : "password"}
             spellCheck={false}
             autoComplete="off"
@@ -241,10 +240,6 @@ function KeyField({
 }
 
 /**
- * Settings → AI notes, as in the mockup: how notes are made (on this computer, or with
- * your own AI key), and the key, which stays in this browser.
- */
-/**
  * Whether meetings you host offer AI notes. It's kept with your account, so it holds for
  * your co-hosts too; in a meeting you host, `allowed` follows the meeting as it changes.
  */
@@ -295,8 +290,11 @@ function SpeechCard() {
 }
 
 /**
- * Settings → AI notes. `notesInMeetings` is the account's switch for meetings you host:
- * left out where it doesn't apply (a meeting someone else hosts).
+ * Settings → AI notes: whether meetings you host offer AI notes (your account's switch, the
+ * same in every browser), and an optional AI key, kept in this browser, with one sentence
+ * on what happens here. No key: free, on this computer, where Chrome's AI runs; a key: its
+ * provider. There's no other choice to make. `notesInMeetings` is left out where it
+ * doesn't apply (a meeting someone else hosts).
  */
 export function AiNotesSettings({
   notesInMeetings,
@@ -304,35 +302,13 @@ export function AiNotesSettings({
   notesInMeetings?: boolean | undefined;
 }) {
   const t = useTranslations("Settings.aiNotes");
-  const tn = useTranslations("Notes");
+  const sentence = useNotesSentence();
   const settings = useNotesSettings();
   const onDevice = useOnDeviceModel();
   const inEnglish = useOnDeviceNotesInEnglish();
-  const engine = preferredEngine(settings, onDevice ?? "none");
-  const engines = useRef<HTMLDivElement>(null);
-  /** From the English-notes notice: notes with the host's own key, in their language. */
-  function switchToOwnKey() {
-    // The notice goes with the choice, so focus moves to the choice first.
-    engines.current
-      ?.querySelector<HTMLInputElement>('input[value="ownKey"]')
-      ?.focus();
-    saveNotesSettings({ engine: "ownKey" });
-  }
-  // Chrome's built-in AI is a choice only where it can run (or download, here), or where
-  // it's the host's choice already, so they can change it.
-  const offersOnDevice =
-    onDevice === null ||
-    onDeviceUsable(onDevice) ||
-    settings.engine === "onDevice";
+  const keyInput = useRef<HTMLInputElement>(null);
   const { provider, model, key } = providerChoice(settings);
-
-  const choices: Record<EngineId, { title: string; help: string }> = {
-    onDevice: { title: t("onDevice"), help: t("onDeviceHelp") },
-    ownKey: {
-      title: t("ownKey"),
-      help: t("ownKeyHelp", { appName: publicEnv.NEXT_PUBLIC_APP_NAME }),
-    },
-  };
+  const here = onDevice === null ? null : notesHere(settings, onDevice);
 
   return (
     <>
@@ -341,98 +317,93 @@ export function AiNotesSettings({
         <NotesInMeetings allowed={notesInMeetings} />
       )}
       <SpeechCard />
-      <SettingsCard title={t("how")}>
-        {offersOnDevice ? (
-          <div className="flex flex-col gap-3">
-            <RadioGroup
-              ref={engines}
-              aria-label={t("how")}
-              value={engine}
-              onChange={(value) => {
-                const chosen = ENGINES.find((id) => id === value);
-                if (chosen) saveNotesSettings({ engine: chosen });
+      <SettingsCard title={t("keyTitle")}>
+        <p
+          aria-live="polite"
+          className="max-w-[64ch] text-[15px] leading-normal font-semibold"
+        >
+          {here ? sentence.here(here) : null}
+        </p>
+        {here?.kind === "free" && inEnglish ? (
+          <EnglishNotesNotice
+            actions={[
+              {
+                label: t("useOwnKey"),
+                onPress: () => keyInput.current?.focus(),
+              },
+            ]}
+          />
+        ) : null}
+        {settings.keyRemoved ? (
+          <div
+            role="note"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-amber-100 px-3.5 py-2.5 text-sm text-amber-950 dark:bg-amber-400/15 dark:text-amber-100"
+          >
+            <p className="min-w-[min(100%,15rem)] flex-1 leading-normal">
+              {t("keyRemoved")}
+            </p>
+            <UiButton
+              variant="outline"
+              size="sm"
+              className="border-amber-950/30 bg-transparent hover:bg-amber-950/5 dark:border-amber-100/30 dark:hover:bg-amber-100/10"
+              onPress={() => {
+                // The note goes with its button: focus moves to the key first.
+                keyInput.current?.focus();
+                saveNotesSettings({ keyRemoved: undefined });
               }}
-              className="flex flex-col gap-3"
             >
-              {ENGINES.map((id) => (
-                <Radio
-                  key={id}
-                  value={id}
-                  className="group bg-card ring-border data-selected:ring-primary data-focus-visible:focus-ring-strong flex items-start gap-3 rounded-xl p-4 ring-1 outline-hidden data-selected:ring-2"
-                >
-                  <RadioDot className="mt-0.5" showFocus={false} />
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[15px] font-bold">
-                      {choices[id].title}
-                      {id === "onDevice" && onDevice ? (
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${onDevice === "ready" ? "bg-live/15 text-live-text" : "bg-black/5 dark:bg-white/10"}`}
-                        >
-                          {t(`onDeviceState.${onDevice}`)}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-muted-foreground text-sm leading-normal">
-                      {choices[id].help}
-                    </span>
-                  </span>
-                </Radio>
-              ))}
-            </RadioGroup>
-            {engine === "onDevice" && inEnglish ? (
-              <EnglishNotesNotice
-                actions={[{ label: t("useOwnKey"), onPress: switchToOwnKey }]}
+              {t("gotIt")}
+            </UiButton>
+          </div>
+        ) : null}
+        <div className="flex max-w-[480px] flex-col gap-4">
+          <SelectField
+            label={t("provider")}
+            options={PROVIDERS.map((id) => ({
+              id,
+              label: PROVIDER_INFO[id].name,
+            }))}
+            value={provider}
+            onChange={(value) => {
+              const chosen = PROVIDERS.find((id) => id === value);
+              if (chosen) saveNotesSettings({ provider: chosen });
+            }}
+          />
+          <KeyField
+            key={`${provider}:${model}`}
+            provider={provider}
+            model={model}
+            value={key}
+            inputRef={keyInput}
+          />
+          {/* Open from the start where a model was chosen, so it's never out of sight. */}
+          <Disclosure
+            defaultExpanded={Boolean(settings.models?.[provider])}
+            className="group flex flex-col gap-3"
+          >
+            <Button
+              slot="trigger"
+              className="text-primary focus-visible:ring-ring flex items-center gap-1.5 self-start rounded-md text-sm font-semibold outline-none hover:underline focus-visible:ring-2"
+            >
+              <ChevronDown
+                className="size-4 transition-transform group-data-expanded:rotate-180 motion-reduce:transition-none"
+                aria-hidden="true"
               />
-            ) : null}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1">
-            <p className="text-[15px] font-bold">{choices.ownKey.title}</p>
-            <p className="text-muted-foreground max-w-[64ch] text-sm leading-normal">
-              {choices.ownKey.help}
-            </p>
-            {onDevice === "update" ||
-            onDevice === "enable" ||
-            onDevice === "none" ? (
-              <p className="text-muted-foreground mt-2 max-w-[64ch] text-[13px] leading-normal">
-                {tn(`elsewhere.${onDevice}`)}
-              </p>
-            ) : null}
-          </div>
-        )}
+              {t("moreOptions")}
+            </Button>
+            <DisclosurePanel>
+              <ModelField key={provider} provider={provider} model={model} />
+            </DisclosurePanel>
+          </Disclosure>
+        </div>
+        <div className="text-muted-foreground flex max-w-[64ch] flex-col gap-2 text-[13px] leading-normal">
+          <p className="flex items-start gap-2">
+            <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+            {t("keyStays", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
+          </p>
+          <p>{t("freeTiers")}</p>
+        </div>
       </SettingsCard>
-      {engine === "ownKey" ? (
-        <SettingsCard title={t("yourKey")}>
-          <div className="flex max-w-[480px] flex-col gap-4">
-            <SelectField
-              label={t("provider")}
-              options={PROVIDERS.map((id) => ({
-                id,
-                label: PROVIDER_INFO[id].name,
-              }))}
-              value={provider}
-              onChange={(value) => {
-                const chosen = PROVIDERS.find((id) => id === value);
-                if (chosen) saveNotesSettings({ provider: chosen });
-              }}
-            />
-            <ModelField key={provider} provider={provider} model={model} />
-            <KeyField
-              key={`${provider}:${model}`}
-              provider={provider}
-              model={model}
-              value={key}
-            />
-          </div>
-          <div className="text-muted-foreground flex max-w-[64ch] flex-col gap-2 text-[13px] leading-normal">
-            <p className="flex items-start gap-2">
-              <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-              {t("keyStays", { appName: publicEnv.NEXT_PUBLIC_APP_NAME })}
-            </p>
-            <p>{t("freeTiers")}</p>
-          </div>
-        </SettingsCard>
-      ) : null}
     </>
   );
 }

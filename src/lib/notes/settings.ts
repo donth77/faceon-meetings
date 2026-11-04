@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Settings → AI notes: how notes are made, and the host's own AI keys. Kept only in
- * this browser; keys go from here straight to their provider and nowhere else.
+ * Settings → AI notes: the host's own AI key, if any, and its provider and model. Kept only
+ * in this browser; keys go from here straight to their provider and nowhere else. No key
+ * means notes are made on this computer, for free; a key means it's used.
  */
 import { useSyncExternalStore } from "react";
 
@@ -21,12 +22,40 @@ const byProvider = z
   );
 
 const Stored = z.object({
+  /**
+   * How notes were made before there was only the key: "onDevice" or "ownKey". Read
+   * once, to carry the choice over, and never written again.
+   */
   engine: z.enum(ENGINES).optional().catch(undefined),
   provider: z.enum(PROVIDERS).optional().catch(undefined),
   models: byProvider.optional().catch(undefined),
   keys: byProvider.optional().catch(undefined),
+  /** The key was removed as the choice carried over; said once in Settings. */
+  keyRemoved: z.literal(true).optional().catch(undefined),
 });
-export type NotesSettings = z.infer<typeof Stored>;
+export type NotesSettings = Omit<z.infer<typeof Stored>, "engine">;
+
+/**
+ * Settings as stored, with an earlier choice carried over: "On this computer" stays free,
+ * so a key kept beside it is removed (and that's said once); "Your own AI key" keeps
+ * its key. `migrated` when that changed what's stored.
+ */
+export function fromStored(value: unknown): {
+  settings: NotesSettings;
+  migrated: boolean;
+} {
+  const parsed = Stored.safeParse(value);
+  if (!parsed.success) return { settings: {}, migrated: false };
+  const { engine, ...settings } = parsed.data;
+  if (!engine) return { settings, migrated: false };
+  if (engine === "ownKey") return { settings, migrated: true };
+  const { keys, ...rest } = settings;
+  const hadKey = Object.keys(keys ?? {}).length > 0;
+  return {
+    settings: hadKey ? { ...rest, keyRemoved: true } : rest,
+    migrated: true,
+  };
+}
 
 const KEY = "faceon.aiNotes";
 const CHANGED = "faceon:aiNotes";
@@ -38,12 +67,18 @@ let memory: NotesSettings = {};
 
 export function loadNotesSettings(): NotesSettings {
   try {
-    const raw = localStorage.getItem(KEY);
+    let raw = localStorage.getItem(KEY);
     if (raw === cached.raw) return cached.value;
     let value: NotesSettings = {};
     if (raw) {
-      const parsed = Stored.safeParse(JSON.parse(raw));
-      if (parsed.success) value = parsed.data;
+      const stored = fromStored(JSON.parse(raw));
+      value = stored.settings;
+      // Carried over once: what's stored from now on is only what's used, so a removed
+      // key is gone from this browser, not just unused.
+      if (stored.migrated) {
+        raw = JSON.stringify(value);
+        localStorage.setItem(KEY, raw);
+      }
     }
     cached = { raw, value };
     return value;
@@ -75,7 +110,11 @@ export function saveForProvider(
   const all = { ...loadNotesSettings()[field] };
   if (value.trim()) all[provider] = value.trim();
   else delete all[provider];
-  saveNotesSettings({ [field]: all });
+  saveNotesSettings({
+    [field]: all,
+    // A key added again: the note that it was removed has done its job.
+    ...(field === "keys" && value.trim() ? { keyRemoved: undefined } : {}),
+  });
 }
 
 function subscribe(onChange: () => void) {

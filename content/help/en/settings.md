@@ -51,7 +51,7 @@ Connect **Google Calendar**, and meetings you schedule go on your calendar, with
 
 **AI notes in meetings you host** is off to start. Turn it on to start AI notes in your meetings; while it's off, neither you nor your co-hosts can. It's kept with your account, not just this device. With it on, each meeting can also **start AI notes automatically**, chosen when you schedule it, on its page or on your Personal room page.
 
-How AI notes are made: **On this computer**, with Chrome's built-in AI, or with **Your own AI key** from OpenAI, Anthropic, Google, DeepSeek or OpenRouter. Your key stays in this browser. See [AI notes](/help/ai-notes).
+An **AI key**, if you want one, from OpenAI, Anthropic, Google, DeepSeek or OpenRouter. With no key, Chrome on a computer makes notes itself, for free; one sentence says what happens in this browser. Your key stays in this browser. See [AI notes](/help/ai-notes).
 
 ## Accessibility
 

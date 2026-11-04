@@ -4,13 +4,15 @@ import type { ModelApi, ModelOptions } from "@/lib/ai/built-in";
 
 import {
   canMakeNotes,
+  engineFor,
+  notesHere,
   notesOnDevice,
-  preferredEngine,
   providerChoice,
   UnreadableNotesError,
   type NotesProgress,
 } from "./engines";
 import type { MeetingNotes } from "./notes";
+import { PROVIDER_INFO, PROVIDERS } from "./providers";
 
 const notes = (summary: string): MeetingNotes => ({
   summary,
@@ -132,28 +134,20 @@ describe("notesOnDevice", () => {
   });
 });
 
-describe("preferredEngine", () => {
-  it("keeps the host's choice", () => {
-    expect(preferredEngine({ engine: "ownKey" }, "ready")).toBe("ownKey");
+describe("engineFor", () => {
+  it("makes notes with the key when there is one", () => {
+    expect(engineFor({ keys: { openai: "sk" } })).toBe("ownKey");
+    expect(
+      engineFor({ provider: "anthropic", keys: { anthropic: "sk-ant" } }),
+    ).toBe("ownKey");
   });
 
-  it("prefers this computer where Chrome's model works", () => {
-    expect(preferredEngine({ keys: { openai: "sk" } }, "ready")).toBe(
+  it("makes them on this computer, for free, without one", () => {
+    expect(engineFor({})).toBe("onDevice");
+    // A key for another provider than the one chosen isn't the key.
+    expect(engineFor({ provider: "anthropic", keys: { openai: "sk" } })).toBe(
       "onDevice",
     );
-    expect(preferredEngine({}, "download")).toBe("onDevice");
-  });
-
-  it("uses a key where the model can't run, with or without one yet", () => {
-    expect(preferredEngine({ keys: { openai: "sk" } }, "none")).toBe("ownKey");
-    expect(preferredEngine({}, "none")).toBe("ownKey");
-    expect(preferredEngine({}, "update")).toBe("ownKey");
-  });
-
-  it("never switches a host who chose this computer to their key", () => {
-    expect(
-      preferredEngine({ engine: "onDevice", keys: { openai: "sk" } }, "enable"),
-    ).toBe("onDevice");
   });
 });
 
@@ -177,6 +171,42 @@ describe("providerChoice", () => {
   });
 });
 
+describe("what happens to AI notes in this browser", () => {
+  it("is free, on this computer, with no key where Chrome's AI runs", () => {
+    expect(notesHere({}, "ready")).toEqual({ kind: "free" });
+    expect(notesHere({}, "download")).toEqual({ kind: "free" });
+  });
+
+  it("needs a key anywhere else", () => {
+    for (const state of ["update", "enable", "none"] as const) {
+      expect(notesHere({}, state)).toEqual({ kind: "needsKey" });
+    }
+    expect(
+      notesHere({ provider: "anthropic", keys: { openai: "sk" } }, "none"),
+    ).toEqual({ kind: "needsKey" });
+  });
+
+  it("is the key's provider once there's a key, Chrome or not", () => {
+    for (const state of ["ready", "download", "none"] as const) {
+      expect(
+        notesHere({ provider: "anthropic", keys: { anthropic: "sk" } }, state),
+      ).toEqual({ kind: "key", provider: "anthropic", transcribes: false });
+    }
+  });
+
+  it("says whether the provider transcribes too, as it says of itself", () => {
+    for (const provider of PROVIDERS) {
+      expect(
+        notesHere({ provider, keys: { [provider]: "sk" } }, "none"),
+      ).toEqual({
+        kind: "key",
+        provider,
+        transcribes: PROVIDER_INFO[provider].transcribes,
+      });
+    }
+  });
+});
+
 describe("canMakeNotes", () => {
   it("can with Chrome's model, ready or downloadable", () => {
     expect(canMakeNotes({}, "ready")).toBe(true);
@@ -192,10 +222,8 @@ describe("canMakeNotes", () => {
     expect(canMakeNotes({}, "enable")).toBe(false);
   });
 
-  it("follows the host's choice", () => {
-    expect(canMakeNotes({ engine: "ownKey" }, "ready")).toBe(false);
-    expect(
-      canMakeNotes({ engine: "onDevice", keys: { openai: "sk" } }, "update"),
-    ).toBe(false);
+  it("can with a key wherever it is", () => {
+    expect(canMakeNotes({ keys: { openai: "sk" } }, "update")).toBe(true);
+    expect(canMakeNotes({ keys: { openai: "sk" } }, "ready")).toBe(true);
   });
 });

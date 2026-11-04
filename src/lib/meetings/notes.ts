@@ -60,6 +60,7 @@ export async function setNotes(input: {
             by: principal.mediaUserId,
             name: member.displayName,
             startedAt: new Date().toISOString(),
+            madeWith: input.request.madeWith ?? null,
           },
           auto,
         }

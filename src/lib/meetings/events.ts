@@ -5,6 +5,7 @@
  */
 import { z } from "@/lib/zod";
 
+import { NotesMadeWith } from "./api";
 import { SessionPolicy } from "./policy";
 
 /** The reaction set, in menu order. Receivers ignore any other code. */
@@ -124,7 +125,12 @@ export const SharedSessionState = SessionPolicy.extend({
     .transform((hands) => hands ?? {}),
   /** AI notes, while a host has them on. */
   notes: z
-    .object({ by: z.string(), name: z.string(), startedAt: z.string() })
+    .object({
+      by: z.string(),
+      name: z.string(),
+      startedAt: z.string(),
+      madeWith: NotesMadeWith.nullish().catch(null),
+    })
     .nullish()
     .transform((notes) => notes ?? null),
   /** The meeting's host allows AI notes (Settings → AI notes). */

@@ -15,6 +15,7 @@ import {
   isSessionStale,
   joinGate,
   notesOnJoin,
+  notesPanelButton,
   notesStartAutomatically,
   offersNotes,
   passcodeMatches,
@@ -654,6 +655,52 @@ describe("AI notes that start automatically", () => {
     expect(notesOnJoin({ ...joining, autoNotes: false })).toBeNull();
     expect(
       notesOnJoin({ ...joining, autoNotes: false, canMake: false }),
+    ).toBeNull();
+  });
+});
+
+describe("the AI notes panel's button", () => {
+  const panel = {
+    on: false,
+    demo: false,
+    allowed: true,
+    isOwner: true,
+    canMake: true,
+  };
+
+  it("starts notes where the host allows them and this browser can make them", () => {
+    expect(notesPanelButton(panel)).toBe("start");
+    expect(notesPanelButton({ ...panel, isOwner: false })).toBe("start");
+  });
+
+  it("shows Start disabled, with why, where this browser can't make notes", () => {
+    expect(notesPanelButton({ ...panel, canMake: false })).toBe("cantMake");
+    expect(notesPanelButton({ ...panel, isOwner: false, canMake: false })).toBe(
+      "cantMake",
+    );
+  });
+
+  it("stops notes that are on, whichever browser can make them", () => {
+    expect(notesPanelButton({ ...panel, on: true })).toBe("stop");
+    expect(notesPanelButton({ ...panel, on: true, canMake: false })).toBe(
+      "stop",
+    );
+  });
+
+  it("offers the host Settings where they don't allow notes, and nobody else anything", () => {
+    expect(notesPanelButton({ ...panel, allowed: false })).toBe("turnOn");
+    expect(notesPanelButton({ ...panel, allowed: false, canMake: false })).toBe(
+      "turnOn",
+    );
+    expect(notesPanelButton({ ...panel, allowed: false, isOwner: false })).toBe(
+      null,
+    );
+  });
+
+  it("offers nothing in demo meetings", () => {
+    expect(notesPanelButton({ ...panel, demo: true })).toBeNull();
+    expect(
+      notesPanelButton({ ...panel, demo: true, canMake: false }),
     ).toBeNull();
   });
 });
