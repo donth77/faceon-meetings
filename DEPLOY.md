@@ -278,6 +278,8 @@ The privacy policy and terms (`/privacy` and `/terms`, from [`content/legal/`](c
 | `NEXT_PUBLIC_CONTACT_EMAIL`         | Where people write about privacy or the terms. Without it, the pages point to the repository's issues                                                                |
 | `NEXT_PUBLIC_OPERATOR_JURISDICTION` | Whose laws govern the terms, as it reads after "the laws of", such as `the State of New York, USA`. Without it, the terms name the place where the operator is based |
 
+The privacy policy, terms and credits are translated too, each saying the English version governs. A translation shows only while its `updated` date matches the English page's, so after you change a legal page, translate it again; until then, people see your English.
+
 ## 11. Check the daily cleanup
 
 [`vercel.json`](vercel.json) runs `/api/cron/sweep` once a day at 05:00 UTC (on Vercel's free plan, any time in that hour). It closes meetings left open, deletes meetings that have expired, drops old records as the privacy policy says, such as attendance and saved AI notes after 90 days, schedules the next two days' reminder emails, and checks usage against the free plans.
@@ -382,6 +384,7 @@ Your copy can have its own name, logo and colors:
 - **Logo, icons and colors:** `pnpm brand`, below.
 - **Email sender:** the name in `EMAIL_FROM`, such as `Acme Meet <no-reply@mail.example.com>` ([step 7](#7-set-up-account-emails-resend-optional)).
 - **Legal pages:** [step 10](#10-legal-pages).
+- **Languages:** English, Spanish, Portuguese (Brazil), French, German and Japanese. FaceOn follows each person's browser, they can choose from the language menu or Settings (kept with their account), and `?hl=` shows any page in a given language; the sitemap lists each. New text goes in `messages/en.json` first, and the other languages follow the glossary in AGENTS.md. The Google add-on follows each person's Google language.
 - **Domain:** [step 12](#12-use-your-own-domain-optional).
 - **Source links:** `NEXT_PUBLIC_REPO_URL`, your fork's address. Every GitHub link in the app reads it: the footer's "View source on GitHub", Help's "Found an issue?", the legal pages' contact when there's no `NEXT_PUBLIC_CONTACT_EMAIL`, and `/llms.txt`. Leave it empty to hide them.
 

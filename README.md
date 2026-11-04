@@ -35,6 +35,7 @@ Try it at [joinfaceon.app](https://joinfaceon.app), or [deploy your own](#deploy
 - Previous meetings, attendance and your data to download
 - A [desktop app](desktop/README.md) for Windows and Mac
 - FaceOn in [Google Calendar and Gmail](google-addon/README.md)
+- In English, Spanish, Portuguese (Brazil), French, German and Japanese
 
 ## Tech stack
 
