@@ -62,9 +62,17 @@ export type People = {
 
 /**
  * Messages that aren't the app's fault: a browser's own note about a failed request is
- * reported separately when it matters (the test checks the response instead).
+ * reported separately when it matters (the test checks the response instead); Stream's
+ * servers sometimes send one more message on a connection that's already closing, as a
+ * meeting ends; and now and then, as a camera stream with an effect stops, Chromium lets
+ * go of a frame it made but never handed to the page (the effects close every frame they
+ * read or make), then warns that nobody closed it.
  */
-const NOT_OURS = [/^Failed to load resource/];
+const NOT_OURS = [
+  /^Failed to load resource/,
+  /^WebSocket connection to 'wss:\/\/[^/']*\.stream-io-api\.com\/[^']*' failed: Data frame received after close$/,
+  /^A VideoFrame was garbage collected without being closed\./,
+];
 
 /**
  * While the Content Security Policy only reports, Chromium logs what it would block as
