@@ -24,7 +24,7 @@ The examples use `https://faceon.example.com` as the address. Use your own. [`.e
 | [Resend](https://resend.com/pricing), optional    | Emails for email-and-password accounts                          | 3,000 emails a month, 100 a day. Needs a domain you own                                                                                                                                                                    |
 | [Mailtrap](https://mailtrap.io/pricing), optional | A backup for account emails when Resend is at its limit or down | 4,000 emails a month, 150 a day. Needs a domain you own                                                                                                                                                                    |
 
-LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Turnstile), error reports (Sentry), uptime checks and backups are optional and free: [Protect and watch your copy](#protect-and-watch-your-copy-optional) sets them up.
+LiveKit's settings in `.env.example` aren't read yet. Bot checks (Cloudflare Turnstile), error reports (Sentry), page view counts (Vercel Web Analytics), uptime checks and backups are optional and free: [Protect and watch your copy](#protect-and-watch-your-copy-optional) sets them up.
 
 ### How much the free plans cover
 
@@ -246,7 +246,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 **Usage this month** (optional): `USAGE_STREAM_MINUTES`, `USAGE_EMAILS_PER_DAY`, `USAGE_EMAILS_PER_MONTH`, `USAGE_MAILTRAP_PER_DAY`, `USAGE_MAILTRAP_PER_MONTH` and `USAGE_NEON_CU_HOURS` if your plans differ from the free ones, and `NEON_API_KEY` with `NEON_PROJECT_ID` for the database's meter ([Usage this month](#usage-this-month)).
 
-**Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
+**Protection and monitoring** (optional): `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` for bot checks, `NEXT_PUBLIC_SENTRY_DSN` (with `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` for source maps) for error reports, `NEXT_PUBLIC_VERCEL_ANALYTICS=1` for page view counts, and `CONTENT_SECURITY_POLICY`, as in [Protect and watch your copy](#protect-and-watch-your-copy-optional).
 
 **AI notes:** `NEXT_PUBLIC_AI_NOTES` is optional; `off` removes AI notes from your copy. When it's on, each host still decides in Settings → AI notes whether their meetings offer them, and they're off until a host turns them on.
 
@@ -360,6 +360,15 @@ When something breaks, a report goes to [Sentry](https://sentry.io) so you can f
 5. Redeploy.
 
 [GlitchTip](https://glitchtip.com), an open-source service compatible with Sentry that you can host yourself, works the same way: use its DSN, and for source maps also set `SENTRY_URL` to its address.
+
+### Page views (Vercel Web Analytics)
+
+[Vercel Web Analytics](https://vercel.com/docs/analytics) counts which pages people view, without cookies, and shows the counts in your project's **Analytics** tab by page, referring site, country, browser and device. FaceOn tells it each page's route instead of its address, so it never receives meeting IDs, passcodes, tokens, email addresses or searches: `/j/1234567890#pwd=…` arrives as `/j/[code]`, `/reset-password?token=…` as `/reset-password`, and an address that isn't one of FaceOn's pages as `/[...rest]` (`src/lib/monitoring/page-views.ts`). Its code loads only once a page is interactive.
+
+1. In Vercel, open the project's **Analytics** tab and select **Enable**.
+2. Set `NEXT_PUBLIC_VERCEL_ANALYTICS=1` in Vercel (Production), and redeploy.
+
+The Hobby plan includes 50,000 page views a month, shared by your account's projects; past that, Vercel pauses counting, and nothing else changes. It works only on Vercel, which serves Web Analytics' script and endpoint at `/_vercel/insights` on your own address once it's enabled. A copy hosted anywhere else leaves it off: there, `/_vercel/insights` doesn't exist, and each page would show an error in the browser's console trying to load it.
 
 ### Uptime checks
 

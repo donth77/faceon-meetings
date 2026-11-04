@@ -4,12 +4,13 @@ import { getTranslations } from "next-intl/server";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { notFound } from "next/navigation";
 
+import { PageViews } from "@/components/analytics/page-views";
 import { AriaRouterProvider } from "@/components/providers/aria-router-provider";
 import { ServiceWorker } from "@/components/pwa/service-worker";
 import { ShortcutsProvider } from "@/components/shortcuts/shortcuts-dialog";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
-import { publicEnv } from "@/lib/env";
+import { publicEnv, vercelAnalyticsEnabled } from "@/lib/env";
 
 import "../globals.css";
 
@@ -91,6 +92,7 @@ export default async function LocaleLayout({
           </NextIntlClientProvider>
           <ServiceWorker />
         </ThemeProvider>
+        {vercelAnalyticsEnabled ? <PageViews /> : null}
       </body>
     </html>
   );

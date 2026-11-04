@@ -73,7 +73,25 @@ export const publicEnv = {
     "NEXT_PUBLIC_SENTRY_DSN",
     read(process.env.NEXT_PUBLIC_SENTRY_DSN),
   ),
+  /**
+   * "1" counts page views with Vercel Web Analytics. Only for a copy on Vercel with Web
+   * Analytics on for the project: /_vercel/insights exists nowhere else.
+   */
+  NEXT_PUBLIC_VERCEL_ANALYTICS: choice(
+    "NEXT_PUBLIC_VERCEL_ANALYTICS",
+    read(process.env.NEXT_PUBLIC_VERCEL_ANALYTICS),
+    ["1", "0"] as const,
+    "0",
+  ),
 };
 
 /** Whether this copy offers AI notes. */
 export const aiNotesEnabled = publicEnv.NEXT_PUBLIC_AI_NOTES === "on";
+
+/**
+ * Whether pages count their views with Vercel Web Analytics: where this copy turns it on,
+ * in production builds (`next dev` has no /_vercel/insights).
+ */
+export const vercelAnalyticsEnabled =
+  publicEnv.NEXT_PUBLIC_VERCEL_ANALYTICS === "1" &&
+  process.env.NODE_ENV === "production";

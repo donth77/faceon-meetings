@@ -70,7 +70,10 @@ export function dsnOrigin(dsn: string | undefined): string | null {
     : null;
 }
 
-/** The policy's directives, in order. */
+/**
+ * The policy's directives, in order. 'self' also covers Vercel Web Analytics, where it's
+ * on: its script and page views stay on the site (/_vercel/insights).
+ */
 export function cspDirectives(options: CspOptions): Array<[string, string[]]> {
   const turnstile = options.turnstile ? [TURNSTILE_SOURCE] : [];
   const reports = dsnOrigin(options.sentryDsn);

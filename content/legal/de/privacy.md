@@ -78,12 +78,12 @@ Um das Erraten von Passwörtern und Kenncodes zu bremsen, zählt {appName} die l
 
 ## Wofür {appName} die Daten verwendet
 
-Nur für den Betrieb des Dienstes: um Sie anzumelden, Ihre Meetings zu verbinden, Ihre anstehenden und vergangenen Meetings anzuzeigen, Ihren Google Kalender aktuell zu halten, wenn Sie ihn verbinden, die E-Mails zu senden, die Ihr Konto braucht (etwa zur Bestätigung Ihrer Adresse oder zum Zurücksetzen Ihres Passworts), und die Meeting-Erinnerungen, die Sie einschalten, sowie um {appName} und seine Nutzer vor Missbrauch zu schützen. Nichts wird für Werbung oder Profilbildung verwendet.
+Nur für den Betrieb des Dienstes: um Sie anzumelden, Ihre Meetings zu verbinden, Ihre anstehenden und vergangenen Meetings anzuzeigen, Ihren Google Kalender aktuell zu halten, wenn Sie ihn verbinden, die E-Mails zu senden, die Ihr Konto braucht (etwa zur Bestätigung Ihrer Adresse oder zum Zurücksetzen Ihres Passworts), und die Meeting-Erinnerungen, die Sie einschalten, sowie um {appName} und seine Nutzer vor Missbrauch zu schützen und, wenn es Seitenaufrufe zählt, zu sehen, welche Seiten genutzt werden. Nichts wird für Werbung oder Profilbildung verwendet.
 
 Wenn Sie sich im Europäischen Wirtschaftsraum, im Vereinigten Königreich oder an einem Ort mit vergleichbaren Gesetzen befinden, stützt sich {appName} auf diese Rechtsgrundlagen:
 
 - **Erbringung des von Ihnen gewünschten Dienstes:** Ihr Konto, Ihre Meetings und Einladungen, **Vergangen** und KI-Notizen, die ein Host speichert.
-- **Berechtigte Interessen** daran, {appName} sicher und funktionsfähig zu halten: Anmeldesitzungen, Versuchszähler und die Protokolle des Hosting-Anbieters.
+- **Berechtigte Interessen** daran, {appName} sicher und funktionsfähig zu halten und zu wissen, welche Seiten genutzt werden: Anmeldesitzungen, Versuchszähler, die Protokolle des Hosting-Anbieters und die Zahl der Seitenaufrufe.
 - **Ihre Einwilligung**, um Google Kalender zu verbinden. Sie können sie jederzeit widerrufen, indem Sie die Verbindung trennen.
 
 ## Cookies und der Speicher Ihres Browsers
@@ -107,6 +107,7 @@ Wenn Sie die App von {appName} für Mac oder Windows nutzen, speichert sie auf I
 {appName} nutzt diese Dienste. Jeder verarbeitet nur, was er braucht, nach seiner eigenen Datenschutzerklärung.
 
 - **Vercel** hostet die Website und betreibt ihren Server. Wie jeder Webhoster protokolliert Vercel Anfragen, einschließlich IP-Adressen, um die Website zu betreiben und zu schützen.
+- **Vercel Web Analytics**, wenn {appName} es einschaltet, zählt Seitenaufrufe: welche Seite aufgerufen wurde (ihre Adresse, ohne Meeting-IDs, Kenncodes und alle anderen IDs), die Website, von der Sie kamen, sowie Ihr Land, Ihren Browser, Ihr Betriebssystem und Ihren Gerätetyp. Dabei werden keine Cookies verwendet und keine personenbezogenen Daten gespeichert: Ein Seitenaufruf ist weder mit Ihnen noch mit Ihrer IP-Adresse verknüpft.
 - **Neon** hostet die Datenbank.
 - **Stream** betreibt die Meetings. Stream überträgt Audio, Video, Bildschirmfreigabe, Chat und Reaktionen sowie den Text für KI-Notizen auf dem Weg zum Host, der sie erstellt. Stream speichert den Namen und das Bild, das jede Person in Meetings verwendet, und einen Eintrag zu jedem Anruf und wer dabei war, und verarbeitet die technischen Daten, die nötig sind, um Sie zu verbinden, etwa Ihre IP-Adresse und die Verbindungsqualität.
 - **Resend** versendet Konto-E-Mails, etwa zur Bestätigung Ihrer Adresse oder zum Zurücksetzen Ihres Passworts, und die Meeting-Erinnerungen per E-Mail, die Sie einschalten, wobei Resend jede Erinnerung bis zu ihrem Termin zurückhält (bis zu zwei Tage).

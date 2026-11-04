@@ -78,12 +78,12 @@ To slow down password and passcode guessing, {appName} counts recent attempts. S
 
 ## How {appName} uses it
 
-Only to run the service: to sign you in, connect your meetings, show your upcoming and past meetings, keep your Google Calendar up to date if you connect it, send the emails your account needs (like verifying your address or resetting your password) and the meeting reminders you turn on, and protect {appName} and the people using it from abuse. Nothing is used for advertising or profiling.
+Only to run the service: to sign you in, connect your meetings, show your upcoming and past meetings, keep your Google Calendar up to date if you connect it, send the emails your account needs (like verifying your address or resetting your password) and the meeting reminders you turn on, protect {appName} and the people using it from abuse, and, if it counts page views, see which pages are used. Nothing is used for advertising or profiling.
 
 If you're in the European Economic Area, the United Kingdom or somewhere with similar laws, {appName} relies on these grounds:
 
 - **To provide the service you asked for:** your account, your meetings and invitations, **Previous**, and AI notes a host saves.
-- **Legitimate interests** in keeping {appName} secure and working: sign-in sessions, attempt counters and the hosting provider's logs.
+- **Legitimate interests** in keeping {appName} secure and working, and in knowing which pages are used: sign-in sessions, attempt counters, the hosting provider's logs and page view counts.
 - **Your consent**, to connect Google Calendar. You can withdraw it at any time by disconnecting.
 
 ## Cookies and your browser's storage
@@ -107,6 +107,7 @@ If you use {appName}'s app for Mac or Windows, it keeps on your computer its set
 {appName} relies on these services. Each handles only what it needs, under its own privacy policy.
 
 - **Vercel** hosts the website and runs its server. Like any web host, it logs requests, including IP addresses, to run and protect the site.
+- **Vercel Web Analytics**, if {appName} turns it on, counts page views: which page was viewed (its address, with meeting IDs, passcodes and every other ID taken out), the site that linked to it, and your country, browser, operating system and kind of device. It uses no cookies and keeps no personal data: a page view isn't tied to you or to your IP address.
 - **Neon** hosts the database.
 - **Stream** runs the meetings. It carries audio, video, screen sharing, chat and reactions, and the text for AI notes on its way to the host taking them. It keeps the name and picture each person uses in meetings and a record of each call and who was in it, and it handles the technical details needed to connect you, such as your IP address and connection quality.
 - **Resend** sends account emails, such as verifying your address or resetting your password, and the meeting reminder emails you turn on, holding each reminder until it's due (up to two days).

@@ -76,6 +76,15 @@ describe("contentSecurityPolicy", () => {
     }
   });
 
+  it("lets Vercel Web Analytics' script and page views through from the site itself", () => {
+    // /_vercel/insights/script.js and /_vercel/insights/view: nothing to add.
+    for (const options of [base, { ...base, mode: "enforce" as const }]) {
+      expect(directive(options, "script-src")).toContain("'self'");
+      expect(directive(options, "connect-src")).toContain("'self'");
+      expect(contentSecurityPolicy(options)).not.toMatch(/vercel/);
+    }
+  });
+
   it("adds Turnstile and the error reports' host only when they're on", () => {
     expect(directive(base, "frame-src")).toEqual(["'none'"]);
     const on = { ...base, turnstile: true };

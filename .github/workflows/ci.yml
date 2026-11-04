@@ -42,6 +42,9 @@ jobs:
       # browser tests stand in for Cloudflare's script, and with no secret key the server
       # doesn't check.
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      # Page views counted, as on Vercel: the browser tests stand in for /_vercel/insights
+      # and check what Vercel's script would send.
+      NEXT_PUBLIC_VERCEL_ANALYTICS: "1"
       # Stream's development app, for the tests that join calls. Without these
       # repository secrets those tests are skipped, and everything else still runs.
       NEXT_PUBLIC_STREAM_API_KEY: ${{ secrets.STREAM_DEV_API_KEY }}

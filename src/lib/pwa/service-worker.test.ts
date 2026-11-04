@@ -72,6 +72,15 @@ describe("the service worker's cache rules", () => {
     expect(rule("/api/auth/get-session")).toBe("bypass");
   });
 
+  it("leaves Vercel Web Analytics' script and page views to the network", () => {
+    expect(rule("/_vercel/insights/script.js", { mode: "no-cors" })).toBe(
+      "bypass",
+    );
+    expect(
+      rule("/_vercel/insights/view", { method: "POST", mode: "cors" }),
+    ).toBe("bypass");
+  });
+
   it("answers an API page once: a sign-in link works once", () => {
     // Unanswered, the browser fetches the page again after the navigation preload,
     // and the second exchange of the desktop app's sign-in failed.

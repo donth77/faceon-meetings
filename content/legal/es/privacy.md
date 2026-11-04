@@ -78,12 +78,12 @@ Para frenar los intentos de adivinar contraseñas y códigos de acceso, {appName
 
 ## Cómo lo usa {appName}
 
-Solo para que el servicio funcione: para iniciar tu sesión, conectar tus reuniones, mostrar tus reuniones próximas y anteriores, mantener actualizado tu Google Calendar si lo conectas, enviar los correos que necesita tu cuenta (como verificar tu dirección o restablecer tu contraseña) y los recordatorios de reuniones que activas, y proteger {appName} y a quienes lo usan contra el abuso. Nada se usa para publicidad ni para crear perfiles.
+Solo para que el servicio funcione: para iniciar tu sesión, conectar tus reuniones, mostrar tus reuniones próximas y anteriores, mantener actualizado tu Google Calendar si lo conectas, enviar los correos que necesita tu cuenta (como verificar tu dirección o restablecer tu contraseña) y los recordatorios de reuniones que activas, proteger {appName} y a quienes lo usan contra el abuso y, si cuenta las visitas a las páginas, saber qué páginas se usan. Nada se usa para publicidad ni para crear perfiles.
 
 Si estás en el Espacio Económico Europeo, el Reino Unido o algún lugar con leyes similares, {appName} se basa en estas bases legales:
 
 - **Prestar el servicio que pediste:** tu cuenta, tus reuniones e invitaciones, **Anteriores** y las notas de IA que guarda un anfitrión.
-- **Intereses legítimos** en mantener {appName} seguro y en funcionamiento: las sesiones, los contadores de intentos y los registros del proveedor de hosting.
+- **Intereses legítimos** en mantener {appName} seguro y en funcionamiento, y en saber qué páginas se usan: las sesiones, los contadores de intentos, los registros del proveedor de hosting y el recuento de visitas a las páginas.
 - **Tu consentimiento**, para conectar Google Calendar. Puedes retirarlo en cualquier momento desconectándolo.
 
 ## Cookies y el almacenamiento de tu navegador
@@ -107,6 +107,7 @@ Si usas la app de {appName} para Mac o Windows, guarda en tu computadora su conf
 {appName} depende de estos servicios. Cada uno maneja solo lo que necesita, según su propia política de privacidad.
 
 - **Vercel** aloja el sitio web y ejecuta su servidor. Como cualquier servicio de hosting, registra las solicitudes, incluidas las direcciones IP, para que el sitio funcione y esté protegido.
+- **Vercel Web Analytics**, si {appName} lo activa, cuenta las visitas a las páginas: qué página se vio (su dirección, sin los ID de reunión, los códigos de acceso ni ningún otro ID), el sitio desde el que llegaste, y tu país, tu navegador, tu sistema operativo y el tipo de dispositivo. No usa cookies ni guarda datos personales: una visita no queda vinculada a ti ni a tu dirección IP.
 - **Neon** aloja la base de datos.
 - **Stream** hace funcionar las reuniones. Transporta el audio, el video, la pantalla compartida, el chat y las reacciones, y el texto de las notas de IA camino al anfitrión que las toma. Guarda el nombre y la foto que usa cada persona en las reuniones y un registro de cada llamada y de quién estuvo en ella, y maneja los detalles técnicos necesarios para conectarte, como tu dirección IP y la calidad de tu conexión.
 - **Resend** envía los correos de la cuenta, como verificar tu dirección o restablecer tu contraseña, y los correos de recordatorio de reuniones que activas, y retiene cada recordatorio hasta el momento de enviarlo (hasta dos días).

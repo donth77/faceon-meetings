@@ -212,6 +212,17 @@ export async function createPastMeeting(
   return meeting;
 }
 
+/** The session of a meeting made with createPastMeeting. */
+export async function sessionOf(meetingId: string): Promise<string> {
+  const { rows } = await database().query<{ id: string }>(
+    `select id from meeting_session where meeting_id = $1`,
+    [meetingId],
+  );
+  const id = rows[0]?.id;
+  if (!id) throw new Error("The test session wasn't found.");
+  return id;
+}
+
 /**
  * Forgets the failed-attempt counters (wrong passcodes, unknown meeting IDs), which every
  * test from this machine shares. Only on a database that's here to be thrown away.

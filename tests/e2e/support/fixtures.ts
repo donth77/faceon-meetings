@@ -7,8 +7,9 @@ import {
   type ViewportSize,
 } from "@playwright/test";
 
+import { standInForAnalytics } from "./analytics";
 import { createUser, deleteUsers, type TestUser } from "./db";
-import { hasHumanCheck, hasStream } from "./env";
+import { hasAnalytics, hasHumanCheck, hasStream } from "./env";
 import { fakeHumanCheck } from "./human-check";
 
 export { expect };
@@ -92,6 +93,8 @@ export const test = base.extend<{ people: People }>({
       }
       // Cloudflare's script is a stand-in whose checks pass (support/human-check.ts).
       await fakeHumanCheck(context);
+      // So is Vercel Web Analytics', which counts nothing (support/analytics.ts).
+      await standInForAnalytics(context);
       const page = await context.newPage();
       return { page, context, user, errors: watch(page) };
     };
@@ -118,6 +121,11 @@ export function needsStream() {
 /** For tests of the check for a person: the build needs a Turnstile site key. */
 export function needsHumanCheck() {
   test.skip(!hasHumanCheck, "The build has no Turnstile site key");
+}
+
+/** For tests of page views: the build needs NEXT_PUBLIC_VERCEL_ANALYTICS=1. */
+export function needsAnalytics() {
+  test.skip(!hasAnalytics, "The build doesn't count page views");
 }
 
 /** No console errors or uncaught exceptions on anyone's page. */

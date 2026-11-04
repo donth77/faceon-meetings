@@ -60,6 +60,12 @@ export const hasHumanCheck = Boolean(
   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 );
 
+/**
+ * Whether the build counts page views with Vercel Web Analytics (CI's does); the tests
+ * stand in for /_vercel/insights, which only Vercel serves.
+ */
+export const hasAnalytics = process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === "1";
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 /** A database's host and name, the same for its pooled and direct addresses. */

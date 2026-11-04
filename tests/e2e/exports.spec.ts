@@ -1,21 +1,11 @@
 import { unzipSync } from "fflate";
 
-import { createPastMeeting, database } from "./support/db";
+import { createPastMeeting, database, sessionOf } from "./support/db";
 import { expect, expectNoErrors, test } from "./support/fixtures";
 
 /** Text as it was sent, keeping a CSV's byte-order mark. */
 const text = (bytes: Uint8Array) =>
   new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
-
-async function sessionOf(meetingId: string): Promise<string> {
-  const { rows } = await database().query<{ id: string }>(
-    `select id from meeting_session where meeting_id = $1`,
-    [meetingId],
-  );
-  const id = rows[0]?.id;
-  if (!id) throw new Error("The test session wasn't found.");
-  return id;
-}
 
 /** AI notes saved to a past session by its host, with their transcript. */
 async function saveNotes(sessionId: string, hostId: string): Promise<void> {

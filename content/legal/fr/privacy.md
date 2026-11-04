@@ -78,12 +78,12 @@ Pour freiner les tentatives de deviner des mots de passe et des codes secrets, {
 
 ## Comment {appName} les utilise
 
-Uniquement pour faire fonctionner le service : vous connecter, relier vos réunions, afficher vos réunions à venir et passées, tenir votre Google Agenda à jour si vous le connectez, envoyer les e-mails nécessaires à votre compte (comme la vérification de votre adresse ou la réinitialisation de votre mot de passe) et les rappels de réunion que vous activez, et protéger {appName} et ses utilisateurs contre les abus. Rien n’est utilisé à des fins publicitaires ou de profilage.
+Uniquement pour faire fonctionner le service : vous connecter, relier vos réunions, afficher vos réunions à venir et passées, tenir votre Google Agenda à jour si vous le connectez, envoyer les e-mails nécessaires à votre compte (comme la vérification de votre adresse ou la réinitialisation de votre mot de passe) et les rappels de réunion que vous activez, protéger {appName} et ses utilisateurs contre les abus et, s’il compte les pages vues, savoir quelles pages sont consultées. Rien n’est utilisé à des fins publicitaires ou de profilage.
 
 Si vous vous trouvez dans l’Espace économique européen, au Royaume-Uni ou dans un pays doté de lois similaires, {appName} s’appuie sur les bases légales suivantes :
 
 - **L’exécution du service que vous avez demandé :** votre compte, vos réunions et invitations, **Précédentes**, et les notes IA qu’un hôte enregistre.
-- **L’intérêt légitime** à garder {appName} sûr et opérationnel : les sessions de connexion, les compteurs de tentatives et les journaux de l’hébergeur.
+- **L’intérêt légitime** à garder {appName} sûr et opérationnel, et à savoir quelles pages sont consultées : les sessions de connexion, les compteurs de tentatives, les journaux de l’hébergeur et le décompte des pages vues.
 - **Votre consentement**, pour connecter Google Agenda. Vous pouvez le retirer à tout moment en le déconnectant.
 
 ## Les cookies et le stockage de votre navigateur
@@ -107,6 +107,7 @@ Si vous utilisez l’application {appName} pour Mac ou Windows, elle conserve su
 {appName} s’appuie sur les services suivants. Chacun ne traite que ce dont il a besoin, selon sa propre politique de confidentialité.
 
 - **Vercel** héberge le site web et exécute son serveur. Comme tout hébergeur, il journalise les requêtes, y compris les adresses IP, pour faire fonctionner et protéger le site.
+- **Vercel Web Analytics**, si {appName} l’active, compte les pages vues : la page consultée (son adresse, sans les ID de réunion, les codes secrets ni aucun autre ID), le site d’où vous venez, ainsi que votre pays, votre navigateur, votre système d’exploitation et votre type d’appareil. Il n’utilise aucun cookie et ne conserve aucune donnée personnelle : une page vue n’est liée ni à vous ni à votre adresse IP.
 - **Neon** héberge la base de données.
 - **Stream** fait fonctionner les réunions. Il transporte l’audio, la vidéo, le partage d’écran, le chat et les réactions, ainsi que le texte des notes IA jusqu’à l’hôte qui les prend. Il conserve le nom et la photo utilisés par chaque personne dans les réunions et une trace de chaque appel et de ses participants, et traite les données techniques nécessaires pour vous connecter, comme votre adresse IP et la qualité de votre connexion.
 - **Resend** envoie les e-mails du compte, comme la vérification de votre adresse ou la réinitialisation de votre mot de passe, et les e-mails de rappel de réunion que vous activez, en conservant chaque rappel jusqu’au moment de l’envoi (deux jours au plus).
