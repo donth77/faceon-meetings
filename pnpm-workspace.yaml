@@ -11,3 +11,11 @@ ignoredBuiltDependencies:
   - "@swc/core"
   - sharp
   - unrs-resolver
+
+# Fixes for dependencies of dependencies whose parents haven't taken them yet
+# (`pnpm audit --prod`): each pins only that one path.
+overrides:
+  "@vercel/cli-config>zod": ^4.6.6
+  "@sentry/bundler-plugins>glob": ^14.0.2
+  "@esbuild-kit/core-utils>esbuild": ^0.25.0
+  "@ts-morph/common>minimatch": ^11.0.1

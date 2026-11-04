@@ -34,7 +34,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           (cd google-addon/dist && zip -q "../../$GITHUB_REF_NAME.zip" Code.js appsscript.json)
+          # A prerelease, never the repository's latest release: the desktop app's updates and
+          # /download read that one.
           gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 ||
-            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" \
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --prerelease --latest=false \
               --notes "The Google Workspace add-on, a developer's build for $FACEON_URL (google-addon/DEVELOPING.md). People add their own copy from FaceOn's Settings → Calendar."
           gh release upload "$GITHUB_REF_NAME" "$GITHUB_REF_NAME.zip" --clobber
