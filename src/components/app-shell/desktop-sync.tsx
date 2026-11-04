@@ -10,9 +10,9 @@ import {
 } from "@/lib/preferences";
 
 /**
- * Settings → Notifications' reminder time, copied into the desktop app, which reminds
- * people of meetings even with no window open (its main process can't read this page's
- * storage). With Notifications off it's 0: no reminders.
+ * Settings → Notifications' reminder time, copied into the desktop app, whose main
+ * process shows the system notifications for meetings, even with no window open (it
+ * can't read this page's storage). With Notifications off it's 0: no reminders.
  */
 export function DesktopSync() {
   const desktop = useDesktop();

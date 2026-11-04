@@ -118,24 +118,26 @@ export async function createMeeting(
 }
 
 /**
- * A one-off scheduled meeting that's on now: it started a minute ago and lasts an hour,
- * with `invitees` invited by email, as the schedule form does.
+ * A one-off scheduled meeting that lasts an hour, with `invitees` invited by email, as the
+ * schedule form does. It's on now (it started a minute ago) unless `startsInMinutes`
+ * says when it starts.
  */
 export async function createScheduledMeeting(
   hostId: string,
-  options: { title: string; invitees?: string[] },
+  options: { title: string; invitees?: string[]; startsInMinutes?: number },
 ): Promise<TestMeeting> {
   const code = meetingCode();
   const passcode = "K7XQ2M";
   const { rows } = await database().query<{ id: string }>(
     `insert into meeting (code, host_id, type, title, passcode, settings, starts_at, duration_min, time_zone, expires_at)
-     values ($1, $2, 'scheduled', $3, $4, $5, now() - interval '1 minute', 60, 'America/New_York', now() + interval '1 day') returning id`,
+     values ($1, $2, 'scheduled', $3, $4, $5, now() + make_interval(mins => $6), 60, 'America/New_York', now() + interval '1 day') returning id`,
     [
       code,
       hostId,
       options.title,
       passcode,
       JSON.stringify(DEFAULT_SETTINGS.scheduled),
+      options.startsInMinutes ?? -1,
     ],
   );
   const id = rows[0]?.id;

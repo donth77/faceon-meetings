@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "sonner";
 
+import { isDesktopApp } from "@/lib/desktop/use-desktop";
 import { subscribeMeetingsChanged } from "@/lib/meetings/changes";
 import {
   reminderKey,
@@ -106,7 +107,8 @@ function markShown(key: string): void {
  * Meeting reminders while FaceOn is open in a tab (Settings → Notifications): a system
  * notification when the browser allows them, and a pop-up in the page, a few minutes
  * before each meeting you host or are invited to. Calendar files carry the same reminder
- * for when FaceOn is closed.
+ * for when FaceOn is closed. In the desktop app the page shows only the pop-up: the app
+ * shows the system notification itself.
  */
 export function MeetingReminders() {
   const t = useTranslations("Reminders");
@@ -131,7 +133,11 @@ export function MeetingReminders() {
       Math.round((new Date(row.start).getTime() - Date.now()) / 60_000),
     );
     const heading = t("startsSoon", { title, minutes: left });
+    // The desktop app shows its own system notification for each meeting, with its
+    // window open, hidden or closed (desktop/src/main/reminders.ts): one from the page
+    // too would be the same reminder twice.
     if (
+      !isDesktopApp() &&
       typeof Notification !== "undefined" &&
       Notification.permission === "granted"
     ) {

@@ -28,8 +28,10 @@ const Upcoming = z.object({
 const LIST_EVERY_MS = 10 * 60_000;
 
 /**
- * Reminders while no window is open: the next day's meetings from the server (with the
- * window's own session), checked every minute against Settings → Notifications' time.
+ * The app's meeting reminders, as system notifications with its window open, hidden or
+ * closed (the page in the window shows only its own pop-up): the next day's meetings from
+ * the server (with the window's own session), checked every minute against Settings →
+ * Notifications' time.
  */
 export class Reminders {
   private meetings: UpcomingMeeting[] = [];

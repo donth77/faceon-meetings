@@ -12,7 +12,7 @@ export type DesktopPlatform = "mac" | "windows" | "linux";
 export type DesktopCommand =
   { type: "toggleMute" } | { type: "leave" } | { type: "open"; path: string };
 
-/** Settings → Notifications' reminder, copied into the app for when no window is open. */
+/** Settings → Notifications' reminder, copied into the app, which shows the reminders. */
 export type DesktopReminderMinutes = 0 | 5 | 10 | 15;
 
 /** Settings → Desktop app. Kept by the app, on this computer. */
