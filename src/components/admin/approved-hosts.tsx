@@ -3,7 +3,7 @@
 import { Link2, Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState, useTransition, type FormEvent } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -416,9 +416,15 @@ function AddHost({
   const [problem, setProblem] = useState<string | null>(null);
   const [adding, startAdding] = useTransition();
 
-  function add(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const address = email.trim();
+  // The form's action rather than its submit event, reading the form rather than state:
+  // an address typed, and Enter pressed, before the page finished loading still counts
+  // (React holds that submit until the page is ready, instead of the browser reloading).
+  function add(form: FormData) {
+    const typed = String(form.get("email") ?? "");
+    const typedNote = String(form.get("note") ?? "");
+    setEmail(typed);
+    setNote(typedNote);
+    const address = typed.trim();
     if (!isEmailAddress(address)) {
       setProblem(t("invalidEmail"));
       field.current?.focus();
@@ -427,7 +433,7 @@ function AddHost({
     startAdding(async () => {
       const result = await addApprovedHostAction({
         email: address,
-        note: note.trim(),
+        note: typedNote.trim(),
         sendInvitation: emailEnabled && sendInvitation,
         message: sendInvitation ? message.trim() : "",
       }).catch(() => "failed" as const);
@@ -467,7 +473,7 @@ function AddHost({
   }
 
   return (
-    <form onSubmit={add} className="flex flex-col gap-3" noValidate>
+    <form action={add} className="flex flex-col gap-3" noValidate>
       <div className="flex flex-wrap items-end gap-3">
         <Field
           label={t("addLabel")}
@@ -477,6 +483,7 @@ function AddHost({
           <input
             ref={field}
             id={emailId}
+            name="email"
             type="email"
             inputMode="email"
             autoComplete="off"
@@ -499,6 +506,7 @@ function AddHost({
         >
           <input
             id={noteId}
+            name="note"
             maxLength={500}
             value={note}
             onChange={(event) => setNote(event.target.value)}
