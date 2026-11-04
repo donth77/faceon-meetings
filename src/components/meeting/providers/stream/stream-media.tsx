@@ -112,6 +112,9 @@ async function startScreenShare(call: Call, options: ShareOptions) {
       // when the call is joined. Text at 15 a second gives each frame twice the bitrate
       // it gets at 30, so it stays sharp while it scrolls; video clips get 30.
       frameRate: { max: options.motion ? 30 : 15 },
+      // Video clips also go at up to 720p rather than 1080p: under half the pixels for the
+      // same bitrate, so motion doesn't smear.
+      ...(options.motion ? { width: { max: 1280 }, height: { max: 720 } } : {}),
     },
     // Leave FaceOn's own tab out of the picker (no hall of mirrors), and offer Chrome's
     // "Share this tab instead".

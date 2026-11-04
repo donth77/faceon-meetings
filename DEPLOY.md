@@ -113,11 +113,12 @@ For local development, a second branch keeps test data apart: **Branches → New
 
    It's safe to run again. It:
    - creates the `meeting` call type and locks down Stream's built-in call types, so a person's token reaches only the calls FaceOn admitted them to. Host controls go through FaceOn's API, which checks who may do what.
+   - sets the `meeting` call type's media settings (`src/lib/stream/call-settings.ts`): cameras at 720p and 1.5 Mbps, shared screens at 1080p and 2.5 Mbps, and audio that sends nothing during silence and survives a lost packet. Run it again after updating FaceOn, so an existing app gets any new settings.
    - creates the `system` user that sends FaceOn's server events (`STREAM_SYSTEM_USER_ID`, `system` unless you change it).
    - adds the webhook, through which Stream tells FaceOn who joined and left, for **Previous**. Stream signs each delivery with your API secret, so there's no separate webhook secret. Stream can't reach `localhost`, so point it at your deployed address.
 
 5. Check the setup, with the same two keys set:
-   - `pnpm stream:check` reports anything that differs from what FaceOn expects (exit code 1 if something does).
+   - `pnpm stream:check` reports anything that differs from what FaceOn expects, permissions or media settings (exit code 1 if something does).
    - `pnpm stream:lockdown-test` proves the permission boundary against your app. It makes API calls only, no media, so it uses no meeting minutes.
 
    After that, the daily cleanup checks the permissions every day, read only: if they stop matching, **Settings → Admin → Call permissions** says so, and the admins (`ADMIN_EMAILS`) get one email (that needs Resend or Mailtrap). Run `pnpm stream:setup` again to put them back; FaceOn never changes them itself.

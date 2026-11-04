@@ -2,7 +2,8 @@
  * Sets up Stream Video for FaceOn. It is idempotent, so it's safe to run again.
  *
  * - The `meeting` call type: non-members get no grants; members, co-hosts and hosts get the
- *   same member grants (host controls go through FaceOn's API).
+ *   same member grants (host controls go through FaceOn's API). Its media settings (camera
+ *   and screen resolutions and bitrates, audio) are FaceOn's (call-settings.ts).
  * - Stream's built-in call types are locked down. Call tokens add access rather than confine
  *   it, so only call grants keep a user's token from reaching other calls.
  * - The `system` user, which sends server events.
@@ -18,6 +19,10 @@
  */
 import { StreamClient } from "@stream-io/node-sdk";
 
+import {
+  MEETING_SETTINGS,
+  settingsDrift,
+} from "../src/lib/stream/call-settings.ts";
 import { EXPECTED_GRANTS, grantsDrift } from "../src/lib/stream/grants.ts";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
@@ -30,30 +35,35 @@ if (!apiKey || !secret) {
 const checkOnly = process.argv.includes("--check");
 const client = new StreamClient(apiKey, secret);
 
-/** Each session's call overrides this with its own full or demo limits. */
-const MEETING_SETTINGS = { limits: { max_participants: 20 } };
-
 const { call_types: live } = await client.video.listCallTypes();
 const drifted = grantsDrift(live);
+const settingsDrifted = settingsDrift(live.meeting?.settings);
 
 for (const [name, grants] of Object.entries(EXPECTED_GRANTS)) {
   const drift = drifted.find((found) => found.callType === name);
-  if (!drift) {
+  const settings = name === "meeting" ? settingsDrifted : [];
+  if (!drift && settings.length === 0) {
     console.log(`ok       ${name}`);
     continue;
   }
+  const details = [
+    drift?.roles.length ? `roles: ${drift.roles.join(", ")}` : "",
+    settings.length > 0 && !drift?.missing
+      ? `settings: ${settings.join(", ")}`
+      : "",
+  ].filter(Boolean);
   console.log(
-    `${drift.missing ? "missing " : "drift   "} ${name}${drift.roles.length ? ` (roles: ${drift.roles.join(", ")})` : ""}`,
+    `${drift?.missing ? "missing " : "drift   "} ${name}${details.length ? ` (${details.join("; ")})` : ""}`,
   );
   if (checkOnly) continue;
 
-  if (drift.missing && name === "meeting") {
+  if (drift?.missing && name === "meeting") {
     await client.video.createCallType({
       name,
       grants,
       settings: MEETING_SETTINGS,
     });
-  } else if (!drift.missing) {
+  } else if (!drift?.missing) {
     await client.video.updateCallType({
       name,
       grants,
@@ -103,4 +113,6 @@ if (webhookUrl && !checkOnly) {
   console.log(`ok       webhook → ${webhookUrl}`);
 }
 
-if (checkOnly && drifted.length > 0) process.exit(1);
+if (checkOnly && (drifted.length > 0 || settingsDrifted.length > 0)) {
+  process.exit(1);
+}
