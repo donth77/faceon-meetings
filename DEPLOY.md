@@ -185,6 +185,13 @@ Resend's free plan stops at 100 emails a day and 3,000 a month. With [Mailtrap](
 
 Without Resend, Mailtrap alone sends account emails, and there are no reminders.
 
+### Stop others sending email as your domain (recommended)
+
+Sign-in and password-reset emails are what phishing imitates, so once yours arrive, tell other mail servers to turn away email that only claims to be from your domain. Resend and Mailtrap sign with your domain's DKIM keys, so theirs still gets through.
+
+1. If nothing else sends email from the domain in `EMAIL_FROM` (no Google Workspace or other mailbox), add a TXT record on it: `v=spf1 -all`. Resend and Mailtrap send bounces through subdomains of their own, so this doesn't touch them.
+2. Change your DMARC record (`_dmarc`) from `p=none` to `p=quarantine`, and after a few weeks without trouble to `p=reject`. If the domain sends other email too, first add a reporting address (`rua=mailto:…`; Cloudflare's DMARC Management gives you one free) and check that email passes.
+
 ## 8. Add the environment variables to Vercel
 
 In Vercel, open **Settings → Environment Variables** and add these for **Production**. If you want Vercel's preview deployments (one per branch and pull request) to work too, add them for **Preview** as well, perhaps with a separate Neon branch.
