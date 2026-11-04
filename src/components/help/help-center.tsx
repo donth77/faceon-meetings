@@ -14,7 +14,7 @@ import { publicEnv } from "@/lib/env";
 import type { HelpEntry, HelpSection } from "@/lib/help/sections";
 import { repoHomeUrl } from "@/lib/repo";
 
-import { HelpHeader } from "./help-header";
+import { HelpAssistant, HelpHeader } from "./help-header";
 
 function EntryLink({ entry }: { entry: HelpEntry }) {
   return (
@@ -39,8 +39,9 @@ function EntryLink({ entry }: { entry: HelpEntry }) {
 }
 
 /**
- * Help's front page: search across every article, the articles by category, the
- * keyboard shortcuts, and where to report a problem.
+ * Help's front page: search across every article, the articles by category, asking
+ * Chrome's built-in AI where it's offered, the keyboard shortcuts, and where to report a
+ * problem.
  */
 export function HelpIndex({
   sections,
@@ -53,6 +54,7 @@ export function HelpIndex({
   const openShortcuts = useOpenShortcuts();
   // The server's page has the shortcuts; a phone or tablet without a keyboard drops them.
   const keyboard = useCapability("keyboard", true);
+  const entries = sections.flatMap((section) => section.entries);
 
   return (
     <main className="mx-auto flex w-full max-w-[860px] flex-1 flex-col gap-9 px-5 py-8 sm:px-10 sm:py-10">
@@ -68,7 +70,7 @@ export function HelpIndex({
         {repoUrl ? <RepoLinks repoUrl={repoUrl} /> : null}
       </div>
 
-      <HelpHeader entries={sections.flatMap((section) => section.entries)} />
+      <HelpHeader entries={entries} />
 
       <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
         {sections.map((section) => (
@@ -86,6 +88,8 @@ export function HelpIndex({
           </section>
         ))}
       </div>
+
+      <HelpAssistant entries={entries} />
 
       {keyboard ? (
         <section

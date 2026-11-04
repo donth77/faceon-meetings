@@ -437,9 +437,17 @@ function Callout({
 
 /**
  * Chrome's own model answering questions from Help, on this device: the box where the
- * model is ready, a callout to download it where it can be had, nothing elsewhere.
+ * model is ready, a callout to download it where it can be had, nothing elsewhere. Pages
+ * put it after their content: it shows only once the browser has said what it can do,
+ * and anywhere above, it would push the page down in front of the reader.
  */
-function HelpAssistant({ entries }: { entries: HelpEntry[] }) {
+export function HelpAssistant({
+  entries,
+  className,
+}: {
+  entries: HelpEntry[];
+  className?: string;
+}) {
   const locale = useLocale();
   const language = modelLanguage(locale);
   const [state, setState] = useState<ModelState | null>(null);
@@ -469,27 +477,33 @@ function HelpAssistant({ entries }: { entries: HelpEntry[] }) {
   }, [language]);
 
   if (!language || state === null || state === "none") return null;
-  if (state === "ready") return <ChatBox docs={docs} language={language} />;
+  if (state === "ready") {
+    return (
+      <div className={className}>
+        <ChatBox docs={docs} language={language} />
+      </div>
+    );
+  }
   if (dismissed) return null;
   return (
-    <Callout
-      kind={state}
-      language={language}
-      onReady={() => setState("ready")}
-      onDismiss={() => {
-        dismissCallout();
-        setDismissed(true);
-      }}
-    />
+    <div className={className}>
+      <Callout
+        kind={state}
+        language={language}
+        onReady={() => setState("ready")}
+        onDismiss={() => {
+          dismissCallout();
+          setDismissed(true);
+        }}
+      />
+    </div>
   );
 }
 
-/** At the top of every Help page: search, and asking Chrome's built-in AI. */
+/**
+ * At the top of every Help page: search. Asking Chrome's built-in AI comes after the
+ * page's content (HelpAssistant).
+ */
 export function HelpHeader({ entries }: { entries: HelpEntry[] }) {
-  return (
-    <div className="flex flex-col gap-4">
-      <HelpSearch entries={entries} />
-      <HelpAssistant entries={entries} />
-    </div>
-  );
+  return <HelpSearch entries={entries} />;
 }

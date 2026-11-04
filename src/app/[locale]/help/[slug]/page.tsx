@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { HelpNav, RepoLinks } from "@/components/help/help-center";
-import { HelpHeader } from "@/components/help/help-header";
+import { HelpAssistant, HelpHeader } from "@/components/help/help-header";
 import { HelpHighlights } from "@/components/help/help-highlights";
 import { HelpMarkdown } from "@/components/help/help-markdown";
 import { NewTabNote } from "@/components/ui/new-tab-note";
@@ -60,6 +60,7 @@ export default async function HelpArticlePage({
     helpSections(locale, { withText: true }),
   ]);
 
+  const entries = sections.flatMap((section) => section.entries);
   const step =
     "group hover:bg-muted/60 focus-visible:ring-ring flex flex-col gap-1 rounded-xl p-3 ring-1 ring-[#e2e5ea] outline-none focus-visible:ring-2 dark:ring-white/10";
   return (
@@ -71,9 +72,7 @@ export default async function HelpArticlePage({
       </aside>
       <main className="max-w-[720px] min-w-0 flex-1">
         <div className="mb-8">
-          <HelpHeader
-            entries={sections.flatMap((section) => section.entries)}
-          />
+          <HelpHeader entries={entries} />
         </div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <nav
@@ -109,6 +108,7 @@ export default async function HelpArticlePage({
             <HelpMarkdown markdown={article.body} />
           </div>
         </article>
+        <HelpAssistant entries={entries} className="mt-10" />
         <nav
           aria-label={t("moreArticles")}
           className="mt-14 grid gap-3 border-t pt-6 sm:grid-cols-2"
