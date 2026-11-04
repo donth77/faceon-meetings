@@ -11,6 +11,7 @@ const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
     today: { sent: 3, resend: null },
     yesterday: { sent: 90, resend: 95, day: "2026-11-03" },
     month: { sent: 400, resend: 380 },
+    listing: "ok",
     perDay: 100,
     perMonth: 3000,
   },

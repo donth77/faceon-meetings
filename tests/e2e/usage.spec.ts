@@ -18,7 +18,7 @@ async function axeProblems(page: Page) {
 }
 
 test.describe("Settings → Admin → Usage this month", () => {
-  test("admins see each free allowance, in both themes and on a phone", async ({
+  test("admins see each free allowance last, in both themes and on a phone", async ({
     people,
   }) => {
     const admin = await people.signedIn({
@@ -28,9 +28,12 @@ test.describe("Settings → Admin → Usage this month", () => {
     const { page } = admin;
     await page.goto("/settings/admin#usage");
     const usage = page.locator("#usage");
-    await expect(
-      usage.getByRole("heading", { name: "Usage this month" }),
-    ).toBeVisible();
+    // The last section, so a warning's link (#usage) brings it into view.
+    const heading = usage.getByRole("heading", { name: "Usage this month" });
+    await expect(heading).toBeVisible();
+    await expect(heading).toBeInViewport();
+    await expect(page.locator("#usage ~ section")).toHaveCount(0);
+    await expect(page.locator("section:has(h3) ~ #usage")).toHaveCount(1);
 
     // Stream: a meter where Stream is set up, saying how much of the month's minutes.
     if (hasStream) {

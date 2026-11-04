@@ -4,9 +4,11 @@ import {
   alertKey,
   alertsDue,
   dayBefore,
+  emailsByDay,
   meterStatus,
   participantMinutes,
   quotaHeader,
+  resendInstant,
   usedShare,
   utcDay,
   utcMonth,
@@ -208,5 +210,56 @@ describe("Resend's quota headers", () => {
     expect(quotaHeader("lots")).toBeNull();
     expect(quotaHeader("-1")).toBeNull();
     expect(quotaHeader("4.5")).toBeNull();
+  });
+});
+
+describe("Resend's list of emails", () => {
+  it("reads Resend's timestamps", () => {
+    expect(resendInstant("2026-11-04 13:27:37.470000+00")?.toISOString()).toBe(
+      "2026-11-04T13:27:37.470Z",
+    );
+    expect(resendInstant("2026-11-04 08:00:00+05")?.toISOString()).toBe(
+      "2026-11-04T03:00:00.000Z",
+    );
+    expect(resendInstant("2026-11-04T13:27:37.47Z")?.toISOString()).toBe(
+      "2026-11-04T13:27:37.470Z",
+    );
+    expect(resendInstant(null)).toBeNull();
+    expect(resendInstant("soon")).toBeNull();
+  });
+
+  it("counts each email on the day it goes, once per recipient, never a cancelled one", () => {
+    const days = emailsByDay([
+      {
+        createdAt: at("2026-11-04T13:27:00Z"),
+        scheduledAt: null,
+        cancelled: false,
+        recipients: 1,
+      },
+      // A reminder made today for tomorrow counts tomorrow.
+      {
+        createdAt: at("2026-11-04T20:00:00Z"),
+        scheduledAt: at("2026-11-05T09:50:00Z"),
+        cancelled: false,
+        recipients: 1,
+      },
+      {
+        createdAt: at("2026-11-04T21:00:00Z"),
+        scheduledAt: at("2026-11-05T10:00:00Z"),
+        cancelled: true,
+        recipients: 1,
+      },
+      // Another app's email to three people counts three times.
+      {
+        createdAt: at("2026-11-04T22:00:00Z"),
+        scheduledAt: null,
+        cancelled: false,
+        recipients: 3,
+      },
+    ]);
+    expect(Object.fromEntries(days)).toEqual({
+      "2026-11-04": 4,
+      "2026-11-05": 1,
+    });
   });
 });

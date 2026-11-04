@@ -9,6 +9,7 @@ import { meterStatus, usedShare, type MeterStatus } from "@/lib/usage/meters";
 import { emailsUsed, type UsageReport } from "@/lib/usage/usage";
 
 import { AdminCard } from "./admin-card";
+import { UsageAnchor } from "./usage-anchor";
 
 const STREAM_DASHBOARD = "https://dashboard.getstream.io/";
 const NEON_CONSOLE = "https://console.neon.tech/";
@@ -143,10 +144,10 @@ function Note({ children }: { children: ReactNode }) {
 }
 
 /**
- * Settings → Admin → Usage this month: how much of each service's free plan this copy
- * has used, so nothing runs out by surprise. Stream's minutes are FaceOn's own count;
- * emails show FaceOn's count and Resend's (which includes anything else on the same
- * Resend account); Neon's compute hours come from Neon's API where it's set up; Vercel
+ * Settings → Admin → Usage this month, the page's last section: how much of each
+ * service's free plan this copy has used, so nothing runs out by surprise. Stream's
+ * minutes are FaceOn's own count; emails show FaceOn's count and Resend's for the
+ * whole account, from its list of emails where the key can read it (lib/usage/resend.ts); Neon's compute hours come from Neon's API where it's set up; Vercel
  * warns by email itself. The daily sweep emails the admins at 80% and 100%
  * (lib/usage/alerts.ts), linking here (#usage).
  */
@@ -162,6 +163,7 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
     id: "emailsToday" | "emailsMonth",
     count: UsageReport["emails"]["today"],
     limit: number,
+    more?: ReactNode,
   ) => {
     const used = emailsUsed(count);
     return (
@@ -185,6 +187,7 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
                 resend: count.resend,
               })}
         </Note>
+        {more}
       </MeterRow>
     );
   };
@@ -195,6 +198,7 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
       title={t("title")}
       description={t("body", { appName })}
     >
+      <UsageAnchor />
       <ul className="flex flex-col divide-y border-t">
         {stream.configured ? (
           <MeterRow
@@ -224,7 +228,14 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
         {emails.configured ? (
           <>
             {emailRow("emailsToday", emails.today, emails.perDay)}
-            {emailRow("emailsMonth", emails.month, emails.perMonth)}
+            {emailRow(
+              "emailsMonth",
+              emails.month,
+              emails.perMonth,
+              emails.listing === "restricted" ? (
+                <Note>{t("emailsKey", { appName })}</Note>
+              ) : null,
+            )}
           </>
         ) : (
           <li className="flex flex-col gap-1 py-4">

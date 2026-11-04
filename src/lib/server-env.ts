@@ -122,6 +122,13 @@ const ServerEnv = z.object({
     .string()
     .regex(/^[a-z0-9-]+$/)
     .optional(),
+  /**
+   * A Resend key that can list the account's emails, for the usage meter's email counts
+   * (lib/usage/resend.ts). Resend's keys either only send or have full access, so a
+   * sending key (RESEND_API_KEY) can't list; without this, the meter counts what FaceOn
+   * sends and what Resend reports as it does.
+   */
+  RESEND_USAGE_API_KEY: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;

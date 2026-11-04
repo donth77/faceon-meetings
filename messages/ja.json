@@ -339,11 +339,12 @@
       },
       "emailsMonth": {
         "title": "今月のメール",
-        "resend": "{appName} は今月 {sent, number} 通を送信しました。Resend の集計では請求月に {resend, plural, other {# 通}}で、同じ Resend アカウントから送信されたほかのメールも含まれます。"
+        "resend": "{appName} は今月 {sent, number} 通を送信しました。Resend の集計では今月 {resend, plural, other {# 通}}で、同じ Resend アカウントから送信されたほかのメールも含まれます。"
       },
       "emailsValue": "{used, number} / {limit, plural, other {# 通}}",
       "emailsCount": "{used, plural, other {# 通}}（上限なし）",
       "emailsOwn": "{appName} 自身による、送信した{sent, plural, other {メール}}の集計です。",
+      "emailsKey": "{appName} が送信に使っている Resend のキーではメールの一覧を取得できないため、ここに表示される Resend の集計は {appName} がメールを送信したときにだけ更新されます。ほかのアプリの分も含め、アカウントのすべてのメールをすぐに集計するには、{appName} をホストしている環境でフルアクセスの Resend キーを RESEND_USAGE_API_KEY として追加し、再デプロイしてください。",
       "emailsOff": {
         "title": "メール",
         "body": "Resend が設定されていないため、{appName} はメールを送信しません。"

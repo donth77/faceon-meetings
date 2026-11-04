@@ -339,11 +339,12 @@
       },
       "emailsMonth": {
         "title": "Correos de este mes",
-        "resend": "{appName} envió {sent, number} este mes. Resend cuenta {resend, plural, one {# correo} other {# correos}} en su mes de facturación, incluido cualquier otro envío desde la misma cuenta de Resend."
+        "resend": "{appName} envió {sent, number} este mes. Resend cuenta {resend, plural, one {# correo} other {# correos}} este mes, incluido cualquier otro envío desde la misma cuenta de Resend."
       },
       "emailsValue": "{used, number} de {limit, plural, one {# correo} other {# correos}}",
       "emailsCount": "{used, plural, one {# correo} other {# correos}}, sin límite establecido",
       "emailsOwn": "Recuento propio de {appName} {sent, plural, one {del correo que envió} other {de los correos que envió}}.",
+      "emailsKey": "La clave de Resend con la que envía {appName} no puede listar correos, así que los recuentos de Resend aquí solo se ponen al día cuando {appName} envía uno. Para contar al instante todos los correos de la cuenta, incluidos los de otras apps, agrega una clave de Resend con acceso completo como RESEND_USAGE_API_KEY donde esté alojado {appName} y vuelve a implementarlo.",
       "emailsOff": {
         "title": "Correos",
         "body": "Resend no está configurado, así que {appName} no envía correos."

@@ -339,11 +339,12 @@
       },
       "emailsMonth": {
         "title": "E-mails ce mois-ci",
-        "resend": "{appName} en a envoyé {sent, number} ce mois-ci. Resend compte {resend, plural, one {# e-mail} other {# e-mails}} sur son mois de facturation, y compris tout autre envoi depuis le même compte Resend."
+        "resend": "{appName} en a envoyé {sent, number} ce mois-ci. Resend compte {resend, plural, one {# e-mail} other {# e-mails}} ce mois-ci, y compris tout autre envoi depuis le même compte Resend."
       },
       "emailsValue": "{used, number} sur {limit, plural, one {# e-mail} other {# e-mails}}",
       "emailsCount": "{used, plural, one {# e-mail} other {# e-mails}}, sans limite définie",
       "emailsOwn": "Le décompte de {appName} lui-même {sent, plural, one {de l’e-mail qu’il a envoyé} other {des e-mails qu’il a envoyés}}.",
+      "emailsKey": "La clé Resend avec laquelle {appName} envoie ne peut pas lister les e-mails : les décomptes de Resend ici ne se mettent donc à jour que lorsque {appName} en envoie un. Pour compter tout de suite chaque e-mail du compte, y compris ceux d’autres applications, ajoutez une clé Resend à accès complet comme RESEND_USAGE_API_KEY là où {appName} est hébergé, et redéployez.",
       "emailsOff": {
         "title": "E-mails",
         "body": "Resend n’est pas configuré : {appName} n’envoie donc aucun e-mail."

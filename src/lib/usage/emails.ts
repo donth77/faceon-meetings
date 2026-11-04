@@ -1,11 +1,12 @@
 import "server-only";
 
-import { and, desc, eq, gte, isNotNull, lt, sql, sum } from "drizzle-orm";
+import { and, eq, gte, isNotNull, lt, sql, sum } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { emailDay } from "@/lib/db/schema";
 
 import { dayBefore, quotaHeader, utcDay, utcMonth } from "./meters";
+import { freshResendCounts, type Listing } from "./resend";
 
 /**
  * Counts one email Resend accepted, on the day it goes (UTC): today, or for an email
@@ -64,12 +65,18 @@ export type EmailUsage = {
   today: EmailCount;
   /** Yesterday (UTC), which the daily sweep warns about once it's over. */
   yesterday: EmailCount & { day: string };
-  /** This month (UTC) for FaceOn's count; Resend's is its latest for its billing month. */
+  /** This month (UTC): FaceOn's count, and Resend's for the whole account. */
   month: EmailCount;
+  /** Whether Resend's list of the account's emails could be read (resend.ts). */
+  listing: Listing;
 };
 
-/** The emails sent today, yesterday and this month. */
+/**
+ * The emails sent today, yesterday and this month: FaceOn's own count, and Resend's for
+ * the whole account, brought up to date from Resend's list first when it's stale.
+ */
 export async function emailUsage(now = new Date()): Promise<EmailUsage> {
+  const listing = await freshResendCounts(now);
   const today = utcDay(now);
   const yesterday = dayBefore(today);
   const month = utcMonth(now);
@@ -98,7 +105,7 @@ export async function emailUsage(now = new Date()): Promise<EmailUsage> {
           isNotNull(emailDay.resendMonthly),
         ),
       )
-      .orderBy(desc(emailDay.resendAt))
+      .orderBy(sql`${emailDay.resendAt} desc nulls last`)
       .limit(1),
   ]);
   const on = (day: string): EmailCount => {
@@ -112,6 +119,7 @@ export async function emailUsage(now = new Date()): Promise<EmailUsage> {
       sent: total?.sent ?? 0,
       resend: latest?.resendMonthly ?? null,
     },
+    listing,
   };
 }
 

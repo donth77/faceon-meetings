@@ -5,6 +5,7 @@ import { serverEnv } from "@/lib/server-env";
 import { emailUsage, type EmailCount } from "./emails";
 import { utcMonth, type Reading } from "./meters";
 import { neonUsage, type NeonUsage } from "./neon";
+import type { Listing } from "./resend";
 import { streamMinutesThisMonth } from "./stream";
 
 /** Everything Settings → Admin → Usage this month shows, and the daily sweep warns about. */
@@ -17,6 +18,8 @@ export type UsageReport = {
     today: EmailCount;
     yesterday: EmailCount & { day: string };
     month: EmailCount;
+    /** Whether Resend's list of the account's emails could be read. */
+    listing: Listing;
     perDay: number;
     perMonth: number;
   };

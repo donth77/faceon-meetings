@@ -339,11 +339,12 @@
       },
       "emailsMonth": {
         "title": "Emails this month",
-        "resend": "{appName} sent {sent, number} this month. Resend counts {resend, plural, one {# email} other {# emails}} in its billing month, including anything else sent from the same Resend account."
+        "resend": "{appName} sent {sent, number} this month. Resend counts {resend, plural, one {# email} other {# emails}} this month, including anything else sent from the same Resend account."
       },
       "emailsValue": "{used, number} of {limit, plural, one {# email} other {# emails}}",
       "emailsCount": "{used, plural, one {# email} other {# emails}}, with no limit set",
       "emailsOwn": "{appName}’s own count of the {sent, plural, one {email} other {emails}} it sent.",
+      "emailsKey": "The Resend key {appName} sends with can’t list emails, so Resend’s counts here catch up only when {appName} sends one. To count every email on the account right away, other apps’ included, add a full-access Resend key as RESEND_USAGE_API_KEY where {appName} is hosted, and redeploy.",
       "emailsOff": {
         "title": "Emails",
         "body": "Resend isn’t set up, so {appName} sends no email."

@@ -339,11 +339,12 @@
       },
       "emailsMonth": {
         "title": "E-Mails in diesem Monat",
-        "resend": "{appName} hat in diesem Monat {sent, number} gesendet. Resend zählt in seinem Abrechnungsmonat {resend, plural, one {# E-Mail} other {# E-Mails}}, einschließlich allem anderen, was über dasselbe Resend-Konto gesendet wird."
+        "resend": "{appName} hat in diesem Monat {sent, number} gesendet. Resend zählt in diesem Monat {resend, plural, one {# E-Mail} other {# E-Mails}}, einschließlich allem anderen, was über dasselbe Resend-Konto gesendet wird."
       },
       "emailsValue": "{used, number} von {limit, plural, one {# E-Mail} other {# E-Mails}}",
       "emailsCount": "{used, plural, one {# E-Mail} other {# E-Mails}}, ohne festgelegtes Limit",
       "emailsOwn": "Die eigene Zählung von {appName} {sent, plural, one {der gesendeten E-Mail} other {der gesendeten E-Mails}}.",
+      "emailsKey": "Mit dem Resend-Schlüssel, mit dem {appName} sendet, lassen sich keine E-Mails auflisten. Die Zählungen von Resend hier holen daher nur auf, wenn {appName} eine E-Mail sendet. Um sofort jede E-Mail des Kontos zu zählen, auch die anderer Apps, fügen Sie dort, wo {appName} gehostet wird, einen Resend-Schlüssel mit Vollzugriff als RESEND_USAGE_API_KEY hinzu, und stellen Sie die App neu bereit.",
       "emailsOff": {
         "title": "E-Mails",
         "body": "Resend ist nicht eingerichtet, daher sendet {appName} keine E-Mails."

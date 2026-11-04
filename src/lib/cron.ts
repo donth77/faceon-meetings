@@ -6,7 +6,8 @@ import { serverEnv } from "@/lib/server-env";
 
 /**
  * Only the scheduler, which sends "Authorization: Bearer <CRON_SECRET>": Vercel Cron, for
- * the daily sweep. Without a secret, nothing is let in.
+ * the daily sweep, and scripts or monitors reading the usage figures (/api/cron/usage).
+ * Without a secret, nothing is let in.
  */
 export function cronAuthorized(request: Request): boolean {
   const secret = serverEnv().CRON_SECRET;

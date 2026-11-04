@@ -27,12 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Settings → Admin: who hosts full meetings, and how much of the free plans is used.
- * Requests to answer, this month's usage (UsageCard; usage warnings link to it), the
- * approved hosts (add an address, or move one back to demos) and who the admins are.
+ * Requests to answer, the approved hosts (add an address, or move one back to demos), who
+ * the admins are, and last, since it only shows figures, this month's usage (UsageCard;
+ * usage warnings link to it, #usage).
  * Only for admins (ADMIN_EMAILS); for anyone else there's no such page, and Settings
  * doesn't list it. Each list is paged, its page in the address (`?requests=`,
  * `?answers=`, `?hosts=`, `?admins=`); the loading state is in the layout above.
- * Later sections go in as more AdminCards.
+ * Later sections go above usage, as more AdminCards.
  */
 export default async function AdminPage({
   searchParams,
@@ -71,7 +72,6 @@ export default async function AdminPage({
         decisionsPage={answers.page}
         askAgainDays={ASK_AGAIN_AFTER_DAYS}
       />
-      <UsageCard usage={usage} />
       <ApprovedHosts
         hosts={hosts.rows.map((host) => ({
           ...host,
@@ -81,6 +81,7 @@ export default async function AdminPage({
         full={fullTerms()}
       />
       <AdminList admins={admins.rows} page={admins.page} />
+      <UsageCard usage={usage} />
     </>
   );
 }

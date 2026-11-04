@@ -151,3 +151,46 @@ export function quotaHeader(value: string | null): number | null {
   const count = Number(value.trim());
   return Number.isSafeInteger(count) && count >= 0 ? count : null;
 }
+
+/**
+ * One of the account's emails as Resend lists them: when it was made, when it's
+ * scheduled to go (if it is), whether it was cancelled, and how many recipients it has
+ * (Resend's quota counts each one).
+ */
+export type ListedEmail = {
+  createdAt: Date;
+  scheduledAt: Date | null;
+  cancelled: boolean;
+  recipients: number;
+};
+
+/**
+ * Resend's timestamps ("2026-11-04 13:27:37.47+00"), as instants; null when one can't
+ * be read.
+ */
+export function resendInstant(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const iso = value
+    .trim()
+    .replace(" ", "T")
+    .replace(/(\.\d{3})\d+/, "$1")
+    .replace(/([+-]\d{2})$/, "$1:00");
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? null : at;
+}
+
+/**
+ * The account's emails per UTC day, each on the day it goes (a scheduled one on its
+ * day, not the day it was made) and once per recipient; cancelled ones never go.
+ */
+export function emailsByDay(
+  emails: readonly ListedEmail[],
+): Map<string, number> {
+  const days = new Map<string, number>();
+  for (const email of emails) {
+    if (email.cancelled) continue;
+    const day = utcDay(email.scheduledAt ?? email.createdAt);
+    days.set(day, (days.get(day) ?? 0) + Math.max(1, email.recipients));
+  }
+  return days;
+}
