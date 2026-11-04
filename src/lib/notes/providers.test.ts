@@ -48,6 +48,51 @@ describe("providerRequest", () => {
     }
   });
 
+  const where = [
+    ["openai", "api.openai.com", "/v1/chat/completions", "authorization"],
+    ["anthropic", "api.anthropic.com", "/v1/messages", "x-api-key"],
+    [
+      "google",
+      "generativelanguage.googleapis.com",
+      "/v1beta/models/some-model:generateContent",
+      "x-goog-api-key",
+    ],
+    ["deepseek", "api.deepseek.com", "/chat/completions", "authorization"],
+    [
+      "openrouter",
+      "openrouter.ai",
+      "/api/v1/chat/completions",
+      "authorization",
+    ],
+  ] as const;
+
+  it("covers every provider", () => {
+    expect(where.map(([provider]) => provider).sort()).toEqual(
+      [...PROVIDERS].sort(),
+    );
+  });
+
+  it.each(where)(
+    "%s: its own API at %s%s, the key only in %s, the transcript only in the body",
+    (provider, host, path, keyHeader) => {
+      const { url, init } = providerRequest(call(provider));
+      const address = new URL(url);
+      expect(address.host).toBe(host);
+      expect(address.pathname).toBe(path);
+      expect(init.method).toBe("POST");
+      const carrying = Object.entries(headersOf(init))
+        .filter(([, value]) => value.includes("sk-test"))
+        .map(([name]) => name);
+      expect(carrying).toEqual([keyHeader]);
+      const body = String(init.body);
+      expect(body).not.toContain("sk-test");
+      expect(body).toContain("Notes, please.");
+      expect(url).not.toContain("Notes, please.");
+      if (provider === "google") expect(path).toContain("some-model");
+      else expect(bodyOf(init).model).toBe("some-model");
+    },
+  );
+
   it("asks OpenAI for the notes' JSON Schema", () => {
     const body = bodyOf(providerRequest(call("openai")).init);
     expect(body).toMatchObject({

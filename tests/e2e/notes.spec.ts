@@ -1,3 +1,10 @@
+import {
+  defaultModel,
+  PROVIDER_INFO,
+  PROVIDERS,
+  type ProviderId,
+} from "@/lib/notes/providers";
+
 import { createMeeting, database } from "./support/db";
 import {
   expect,
@@ -17,8 +24,73 @@ const GUEST_LINES = [
   "Agreed. I will send the release checklist by Friday.",
   "We should also drop the old billing page.",
 ];
-/** The host's own Anthropic key, as Settings → AI notes keeps it. */
-const KEY = "sk-ant-e2e-not-a-real-key";
+/** The host's own key for each provider, as Settings → AI notes keeps them. */
+const keyFor = (provider: ProviderId) => `e2e-${provider}-not-a-real-key`;
+/** Stream's API, which carries each person's transcript lines to the host. */
+const STREAM_API = "video.stream-io-api.com";
+
+const bearer = (key: string) => ({ authorization: `Bearer ${key}` });
+const chatAnswer = (text: string) => ({
+  choices: [{ message: { role: "assistant", content: text } }],
+});
+/** Each provider's API as the host's browser calls it, and its answer, to stand in for. */
+const APIS: Record<
+  ProviderId,
+  {
+    route: string;
+    host: string;
+    path: (model: string) => string;
+    auth: (key: string) => Record<string, string>;
+    answer: (text: string) => object;
+  }
+> = {
+  openai: {
+    route: "https://api.openai.com/v1/chat/completions",
+    host: "api.openai.com",
+    path: () => "/v1/chat/completions",
+    auth: bearer,
+    answer: chatAnswer,
+  },
+  anthropic: {
+    route: "https://api.anthropic.com/v1/messages",
+    host: "api.anthropic.com",
+    path: () => "/v1/messages",
+    auth: (key) => ({
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    }),
+    answer: (text) => ({
+      type: "message",
+      role: "assistant",
+      content: [{ type: "text", text }],
+      stop_reason: "end_turn",
+    }),
+  },
+  google: {
+    route: "https://generativelanguage.googleapis.com/v1beta/models/**",
+    host: "generativelanguage.googleapis.com",
+    path: (model) => `/v1beta/models/${model}:generateContent`,
+    auth: (key) => ({ "x-goog-api-key": key }),
+    answer: (text) => ({
+      candidates: [{ content: { role: "model", parts: [{ text }] } }],
+    }),
+  },
+  deepseek: {
+    route: "https://api.deepseek.com/chat/completions",
+    host: "api.deepseek.com",
+    path: () => "/chat/completions",
+    auth: bearer,
+    answer: chatAnswer,
+  },
+  openrouter: {
+    route: "https://openrouter.ai/api/v1/chat/completions",
+    host: "openrouter.ai",
+    path: () => "/api/v1/chat/completions",
+    auth: bearer,
+    answer: chatAnswer,
+  },
+};
 /** Anthropic's notes, as the model answers them. */
 const NOTES = {
   summary:
@@ -92,7 +164,7 @@ function watchFor(person: Person, secret: string) {
 }
 
 test.describe("AI notes", () => {
-  test("everyone's words reach the host's transcript, and notes made with the host's own key are saved, shared and deleted", async ({
+  test("everyone's words reach the host's transcript, notes made with each provider's key reach only that provider, and they're saved, shared and deleted", async ({
     people,
     baseURL,
   }) => {
@@ -110,46 +182,58 @@ test.describe("AI notes", () => {
       await host.context.addInitScript({
         content: browserLike(HOST_LINES, {
           engine: "ownKey",
-          provider: "anthropic",
-          keys: { anthropic: KEY },
+          provider: PROVIDERS[0],
+          keys: Object.fromEntries(PROVIDERS.map((p) => [p, keyFor(p)])),
         }),
       });
       await guest.context.addInitScript({ content: browserLike(GUEST_LINES) });
 
-      // The host's key goes to Anthropic and nowhere else. Until the host saves, the
-      // transcript goes only to Anthropic, which makes the notes, and Stream's API, which
-      // carries each person's lines to the host, as the privacy policy says: any other
+      // Each provider's key goes to that provider and nowhere else. Until the host saves,
+      // the transcript goes only to Stream's API, which carries each person's lines to the
+      // host, and to the provider making the notes, as the privacy policy says: any other
       // host fails, FaceOn's own server and error reports included.
-      const keySentTo = watchFor(host, KEY);
+      const keySentTo = Object.fromEntries(
+        PROVIDERS.map((provider) => [
+          provider,
+          watchFor(host, keyFor(provider)),
+        ]),
+      ) as Record<ProviderId, string[]>;
       const transcriptSentTo = watchFor(host, "March 3rd");
-      const asked: Array<Record<string, string | undefined>> = [];
-      await host.context.route(
-        "https://api.anthropic.com/v1/messages",
-        async (route) => {
+      const asked: Array<Record<string, unknown>> = [];
+      for (const provider of PROVIDERS) {
+        const api = APIS[provider];
+        await host.context.route(api.route, async (route) => {
           const request = route.request();
+          if (request.method() === "OPTIONS") {
+            await route.fulfill({
+              status: 204,
+              headers: {
+                "access-control-allow-origin": "*",
+                "access-control-allow-headers": "*",
+                "access-control-allow-methods": "POST",
+              },
+            });
+            return;
+          }
+          const address = new URL(request.url());
           const headers = request.headers();
           asked.push({
-            key: headers["x-api-key"],
-            version: headers["anthropic-version"],
-            fromBrowser: headers["anthropic-dangerous-direct-browser-access"],
-            model: JSON.parse(request.postData() ?? "{}").model,
+            provider,
+            host: address.host,
+            path: address.pathname,
+            model: JSON.parse(request.postData() ?? "{}").model ?? null,
+            auth: Object.fromEntries(
+              Object.keys(api.auth("")).map((name) => [name, headers[name]]),
+            ),
           });
           await route.fulfill({
             status: 200,
             contentType: "application/json",
             headers: { "access-control-allow-origin": "*" },
-            body: JSON.stringify({
-              id: "msg_e2e",
-              type: "message",
-              role: "assistant",
-              model: "claude-opus-5-5",
-              content: [{ type: "text", text: JSON.stringify(NOTES) }],
-              stop_reason: "end_turn",
-              usage: { input_tokens: 1, output_tokens: 1 },
-            }),
+            body: JSON.stringify(api.answer(JSON.stringify(NOTES))),
           });
-        },
-      );
+        });
+      }
 
       await openMeeting(host.page, meeting);
       await joinFromPreJoin(host.page);
@@ -181,32 +265,67 @@ test.describe("AI notes", () => {
         ).toEqual({ lang: "en-US", onDevice: true, track: "audio" });
       }
 
-      // Stopping AI notes makes the notes, with the host's key.
-      await host.page.getByRole("button", { name: "Stop AI notes" }).click();
-      await expect(
-        host.page.getByRole("heading", { name: "Summary" }),
-      ).toBeVisible({ timeout: 30_000 });
-      await expect(
-        host.page.getByText("Launch the beta on March 3rd", { exact: true }),
-      ).toBeVisible();
-      expect(asked).toEqual([
-        {
-          key: KEY,
-          version: "2023-06-01",
-          fromBrowser: "true",
-          model: "claude-opus-5-5",
-        },
-      ]);
-      expect(keySentTo).toEqual(["POST api.anthropic.com"]);
-      const carriers = new Set([
-        "api.anthropic.com",
-        "video.stream-io-api.com",
-      ]);
+      // Before any notes, the transcript has gone only to Stream.
       expect(
         transcriptSentTo.filter(
-          (request) => !carriers.has(request.split(" ")[1] ?? ""),
+          (request) => request.split(" ")[1] !== STREAM_API,
         ),
       ).toEqual([]);
+
+      // Stopping AI notes makes the notes with the host's provider; then the host switches
+      // to each of the others in Settings and makes them again.
+      for (const [index, provider] of PROVIDERS.entries()) {
+        const before = transcriptSentTo.length;
+        await host.page.evaluate((chosen) => {
+          const saved = JSON.parse(
+            localStorage.getItem("faceon.aiNotes") ?? "{}",
+          );
+          localStorage.setItem(
+            "faceon.aiNotes",
+            JSON.stringify({ ...saved, provider: chosen }),
+          );
+          window.dispatchEvent(new Event("faceon:aiNotes"));
+        }, provider);
+        await host.page
+          .getByRole("button", {
+            name: index === 0 ? "Stop AI notes" : "Make again",
+          })
+          .click();
+        await expect(
+          host.page.getByText(
+            new RegExp(`^Made by ${PROVIDER_INFO[provider].name} at`),
+          ),
+        ).toBeVisible({ timeout: 30_000 });
+        await expect(
+          host.page.getByText("Launch the beta on March 3rd", { exact: true }),
+        ).toBeVisible();
+        const api = APIS[provider];
+        const model = defaultModel(provider);
+        expect(
+          asked.filter((request) => request.provider === provider),
+        ).toEqual([
+          {
+            provider,
+            host: api.host,
+            path: api.path(model),
+            model: provider === "google" ? null : model,
+            auth: api.auth(keyFor(provider)),
+          },
+        ]);
+        expect(keySentTo[provider]).toEqual([`POST ${api.host}`]);
+        expect(
+          transcriptSentTo
+            .slice(before)
+            .filter(
+              (request) =>
+                ![api.host, STREAM_API].includes(request.split(" ")[1] ?? ""),
+            ),
+        ).toEqual([]);
+      }
+      // No key went anywhere but its own provider.
+      for (const provider of PROVIDERS) {
+        expect(keySentTo[provider]).toEqual([`POST ${APIS[provider].host}`]);
+      }
 
       // Saved with the meeting, then shared with its participants.
       await host.page.getByRole("button", { name: "Save to meeting" }).click();
@@ -236,7 +355,9 @@ test.describe("AI notes", () => {
             shared,
           })),
         )
-        .toEqual([{ engine: "ownKey", provider: "anthropic", shared: false }]);
+        .toEqual([
+          { engine: "ownKey", provider: PROVIDERS.at(-1), shared: false },
+        ]);
       expect((await saved())[0]?.transcript).toContain("March 3rd");
       await host.page
         .getByRole("button", { name: "Share with participants" })
