@@ -3,13 +3,13 @@
 import { Clock3, Info, LoaderCircle, MailCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth/client";
 import { authProblem, type AuthProblem } from "@/lib/auth/problems";
 import { isEmailAddress } from "@/lib/email-address";
+import { linkParam } from "@/lib/link-params";
 import { safeRedirectPath } from "@/lib/routes";
 
 import {
@@ -25,8 +25,6 @@ const forgotLinkClass =
 /** Email and password sign-in. Problems show above the form, worded without blame. */
 export function EmailSignInForm() {
   const t = useTranslations("Auth");
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -48,7 +46,7 @@ export function EmailSignInForm() {
     const { error } = await signIn.email({
       email: email.trim(),
       password,
-      callbackURL: safeRedirectPath(next),
+      callbackURL: safeRedirectPath(linkParam("next")),
     });
     if (error) {
       setPending(false);

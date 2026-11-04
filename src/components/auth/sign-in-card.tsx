@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { Suspense } from "react";
 
 import { LegalConsent } from "@/components/legal/legal-links";
 import { JoinForm } from "@/components/meetings/join-form";
@@ -23,16 +22,11 @@ export async function SignInCard() {
       title={t("signInTitle", { appName })}
       subtitle={t(emailEnabled ? "signInSubtitle" : "signInSubtitleSocial")}
     >
-      {/* These read ?next= and ?error=, which needs a Suspense boundary to prerender. */}
-      <Suspense fallback={<div className="h-[110px]" aria-hidden="true" />}>
-        <SocialSignIn mode="sign-in" />
-      </Suspense>
+      <SocialSignIn mode="sign-in" />
       {emailEnabled ? (
         <>
           <OrDivider label={t("or")} />
-          <Suspense fallback={<div className="h-72" aria-hidden="true" />}>
-            <EmailSignInForm />
-          </Suspense>
+          <EmailSignInForm />
         </>
       ) : null}
       {/* A first sign-in with Google or GitHub creates the account. */}

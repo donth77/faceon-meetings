@@ -3,12 +3,12 @@
 import { cn } from "cn";
 import { Info, LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth/client";
 import { desktopBridge } from "@/lib/desktop/use-desktop";
+import { linkParam, useLinkParam } from "@/lib/link-params";
 import { safeRedirectPath } from "@/lib/routes";
 
 import { FormNotice } from "./fields";
@@ -47,9 +47,10 @@ const PROVIDERS: ReadonlyArray<{
  */
 export function SocialSignIn({ mode }: { mode: AuthMode }) {
   const t = useTranslations("Auth");
-  const searchParams = useSearchParams();
+  // A sign-in that didn't finish comes back here with ?error=.
+  const cameBackFailed = useLinkParam("error") !== null;
   const [pending, setPending] = useState<Provider | null>(null);
-  const [failed, setFailed] = useState(searchParams.has("error"));
+  const [failed, setFailed] = useState<boolean | null>(null);
   // In the desktop app, Google and GitHub sign-in happen in the browser.
   const [inBrowser, setInBrowser] = useState<Provider | null>(null);
 
@@ -64,7 +65,7 @@ export function SocialSignIn({ mode }: { mode: AuthMode }) {
     setFailed(false);
     const { error } = await signIn.social({
       provider,
-      callbackURL: safeRedirectPath(searchParams.get("next")),
+      callbackURL: safeRedirectPath(linkParam("next")),
       errorCallbackURL: `/${mode}?error=1`,
     });
     if (error) {
@@ -75,7 +76,9 @@ export function SocialSignIn({ mode }: { mode: AuthMode }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      {failed ? <FormNotice icon={Info}>{t("failed")}</FormNotice> : null}
+      {(failed ?? cameBackFailed) ? (
+        <FormNotice icon={Info}>{t("failed")}</FormNotice>
+      ) : null}
       {inBrowser ? (
         <FormNotice icon={Info}>
           {t("finishInBrowser")}{" "}

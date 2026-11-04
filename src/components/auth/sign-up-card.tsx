@@ -3,7 +3,6 @@
 import { Clock3, Info, LoaderCircle, Mail, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { useHumanCheck } from "@/components/human-check/use-human-check";
@@ -16,6 +15,7 @@ import { isEmailAddress } from "@/lib/email-address";
 import { publicEnv } from "@/lib/env";
 import { invitedEmail } from "@/lib/hosting/invites";
 import { humanCheckFetchOptions, isHumanCheckError } from "@/lib/human-check";
+import { linkParam, useLinkParam } from "@/lib/link-params";
 
 import { AuthCard, AuthCardIcon, OrDivider } from "./auth-card";
 import {
@@ -34,11 +34,9 @@ type FieldErrors = { name?: string; email?: string; password?: string };
 /** After signing up with email: open the link we sent, or send it again. */
 function CheckEmail({
   email,
-  callbackURL,
   onDifferentEmail,
 }: {
   email: string;
-  callbackURL: string;
   onDifferentEmail: () => void;
 }) {
   const t = useTranslations("Auth.checkEmail");
@@ -57,7 +55,7 @@ function CheckEmail({
     }
     const { error } = await sendVerificationEmail({
       email,
-      callbackURL,
+      callbackURL: verifyEmailCallback(linkParam("next")),
       fetchOptions: humanCheckFetchOptions(token),
     });
     setResend(
@@ -130,12 +128,11 @@ function CheckEmail({
  */
 export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
   const t = useTranslations("Auth");
-  const searchParams = useSearchParams();
-  const callbackURL = verifyEmailCallback(searchParams.get("next"));
   const [name, setName] = useState("");
-  const [email, setEmail] = useState(
-    () => invitedEmail(searchParams.get("email")) ?? "",
-  );
+  // Filled in from an invite link once the page runs here, until someone types.
+  const invited = invitedEmail(useLinkParam("email"));
+  const [typedEmail, setTypedEmail] = useState<string | null>(null);
+  const email = typedEmail ?? invited ?? "";
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [problem, setProblem] = useState<AuthProblem | null>(null);
@@ -174,7 +171,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
       name: name.trim(),
       email: email.trim(),
       password,
-      callbackURL,
+      callbackURL: verifyEmailCallback(linkParam("next")),
       fetchOptions: humanCheckFetchOptions(token),
     });
     setPending(false);
@@ -202,7 +199,6 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
     return (
       <CheckEmail
         email={sentTo}
-        callbackURL={callbackURL}
         onDifferentEmail={() => {
           setSentTo(null);
           setPassword("");
@@ -250,7 +246,7 @@ export function SignUpCard({ emailEnabled }: { emailEnabled: boolean }) {
               label={t("email")}
               type="email"
               value={email}
-              onChange={setEmail}
+              onChange={setTypedEmail}
               autoComplete="email"
               error={errors.email}
               pending={pending}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 
 import { AuthPage } from "@/components/auth/auth-page";
 import { SignUpCard } from "@/components/auth/sign-up-card";
@@ -17,10 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function SignUpPage() {
   return (
     <AuthPage links="sign-in">
-      {/* The card reads ?next=, which needs a Suspense boundary to prerender. */}
-      <Suspense fallback={<div className="h-[560px]" aria-hidden="true" />}>
-        <SignUpCard emailEnabled={emailPasswordEnabled()} />
-      </Suspense>
+      <SignUpCard emailEnabled={emailPasswordEnabled()} />
     </AuthPage>
   );
 }
