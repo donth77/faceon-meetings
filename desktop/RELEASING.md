@@ -162,8 +162,9 @@ Actions for free, as "SignPath Foundation". Since installed apps accept updates 
 
 1. Raise `version` in `desktop/package.json` and commit it.
 2. On your Windows PC: `pnpm desktop:win --publish`. It signs, checks the signatures and
-   uploads the installer to a **draft** release in the releases repository. It refuses to
-   publish a build that isn't signed.
+   uploads the installer to a **draft** release in the releases repository, which it
+   makes first, so every file lands in the one draft. It refuses to publish a build that
+   isn't signed.
 3. On your Mac: `pnpm desktop:mac --publish`. It signs, notarizes and uploads the Mac
    files to the same draft. It refuses to publish a Mac build that isn't signed and
    notarized.

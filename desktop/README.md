@@ -19,8 +19,8 @@ version yet.
 ## Install
 
 - **Windows:** run `FaceOn-Setup.exe`. It installs just for you, without asking for an
-  administrator. Until the app is signed, Windows may say it "protected your PC": select
-  **More info**, then **Run anyway**.
+  administrator. For a short while after a new version comes out, Windows may still say
+  it "protected your PC": select **More info**, then **Run anyway**.
 - **Mac:** open `FaceOn.dmg` and drag FaceOn to Applications.
 
 ## Sign in

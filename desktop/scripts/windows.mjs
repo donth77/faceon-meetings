@@ -13,6 +13,7 @@ import { join, relative } from "node:path";
 import builder from "electron-builder";
 
 import { desktopDir, loadDesktopEnv } from "./env.mjs";
+import { prepareRelease } from "./release.mjs";
 import {
   certificateName,
   publishRefusal,
@@ -64,6 +65,12 @@ const result = spawnSync(
 );
 if (result.status !== 0) process.exit(result.status ?? 1);
 
+if (publish) {
+  await prepareRelease({
+    productName: config.productName,
+    version: require("../package.json").version,
+  });
+}
 const { build, Platform, Arch } = builder;
 await build({
   projectDir: desktopDir,

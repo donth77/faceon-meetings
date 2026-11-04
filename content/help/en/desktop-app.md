@@ -22,10 +22,10 @@ order: 6
 
 On a Mac or a Windows PC, **Download for Mac** or **Download for Windows** (on the front page, in a one-time card on **Home**, in your account menu, or in **Settings → General**) gets the installer for your computer; so does the **Download** page, [/download](/download), which offers every build on other computers and links to all releases. On a Mac, open the `.dmg` and drag {appName} to Applications. On Windows, run the installer; it installs just for you, without asking for an administrator.
 
-If your copy of the app isn't signed yet, your computer warns you the first time:
+Your computer may warn you the first time you open it:
 
-- **Mac:** right-click {appName} in Applications and choose **Open**, or go to **System Settings → Privacy & Security → Open Anyway**.
-- **Windows:** in "Windows protected your PC", choose **More info → Run anyway**.
+- **Mac:** if your copy of the app isn't signed yet, right-click {appName} in Applications and choose **Open**, or go to **System Settings → Privacy & Security → Open Anyway**.
+- **Windows:** if "Windows protected your PC" appears, choose **More info → Run anyway**. A signed app can show this for a short while after a new version comes out. An app that isn't signed shows it the first time, and doesn't open at all on a PC with Smart App Control on.
 
 ## Sign in
 

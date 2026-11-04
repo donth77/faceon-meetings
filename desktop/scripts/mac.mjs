@@ -13,6 +13,7 @@ import { join } from "node:path";
 import builder from "electron-builder";
 
 import { desktopDir, loadDesktopEnv } from "./env.mjs";
+import { prepareRelease } from "./release.mjs";
 
 if (process.platform !== "darwin") {
   console.error(
@@ -93,6 +94,12 @@ run("build.mjs");
 
 const require = createRequire(import.meta.url);
 const base = require("../electron-builder.config.cjs");
+if (publish) {
+  await prepareRelease({
+    productName: base.productName,
+    version: require("../package.json").version,
+  });
+}
 const { build, Platform, Arch } = builder;
 await build({
   projectDir: desktopDir,
