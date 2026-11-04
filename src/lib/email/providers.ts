@@ -169,18 +169,19 @@ function mailtrap(apiKey: string, from: string): Provider {
   };
 }
 
-/**
- * The providers set up here, in the order to try them: Resend (RESEND_API_KEY and
- * EMAIL_FROM), then Mailtrap (MAILTRAP_API_KEY, sending as MAILTRAP_FROM or EMAIL_FROM).
- */
+/** Mailtrap is set up: its API token and a sender (MAILTRAP_FROM, or EMAIL_FROM). */
+export function mailtrapConfig(): { apiKey: string; from: string } | null {
+  const { MAILTRAP_API_KEY, MAILTRAP_FROM, EMAIL_FROM } = serverEnv();
+  const from = MAILTRAP_FROM ?? EMAIL_FROM;
+  return MAILTRAP_API_KEY && from ? { apiKey: MAILTRAP_API_KEY, from } : null;
+}
+
+/** The providers set up here, in the order to try them: Resend, then Mailtrap. */
 export function emailProviders(): Provider[] {
-  const env = serverEnv();
   const providers: Provider[] = [];
   const primary = resendConfig();
   if (primary) providers.push(resend(primary.apiKey, primary.from));
-  const mailtrapFrom = env.MAILTRAP_FROM ?? env.EMAIL_FROM;
-  if (env.MAILTRAP_API_KEY && mailtrapFrom) {
-    providers.push(mailtrap(env.MAILTRAP_API_KEY, mailtrapFrom));
-  }
+  const backup = mailtrapConfig();
+  if (backup) providers.push(mailtrap(backup.apiKey, backup.from));
   return providers;
 }

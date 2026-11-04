@@ -156,7 +156,8 @@ function Note({ children }: { children: ReactNode }) {
  *   it bills.
  * - Emails: the whole Resend account's count leads, with FaceOn's share beside it, from
  *   Resend's list of emails where the key can read it, or its answer to FaceOn's last
- *   email (lib/usage/resend.ts, emails.ts).
+ *   email (lib/usage/resend.ts, emails.ts). Mailtrap's, where it's the backup, by
+ *   FaceOn's own count.
  * - Neon: compute hours from Neon's API, where it's set up.
  * - Vercel: a link only. Vercel's API has no read-only token, and it warns by email.
  * Figures from other services refresh at most every five minutes while someone looks,
@@ -167,7 +168,7 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
   const t = useTranslations("Admin.usage");
   const format = useFormatter();
   const appName = publicEnv.NEXT_PUBLIC_APP_NAME;
-  const { stream, emails, neon } = usage;
+  const { stream, emails, mailtrap, neon } = usage;
   const day = (at: Date) =>
     format.dateTime(at, { month: "short", day: "numeric", timeZone: "UTC" });
 
@@ -192,7 +193,7 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
     return (
       <MeterRow
         id={id}
-        title={t(`${id}.title`)}
+        title={t(mailtrap.configured ? `${id}.titleResend` : `${id}.title`)}
         used={used}
         limit={limit}
         value={value}
@@ -211,6 +212,27 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
       </MeterRow>
     );
   };
+
+  // Mailtrap's rows: FaceOn's count is all there is.
+  const mailtrapRow = (
+    id: "mailtrapToday" | "mailtrapMonth",
+    sent: number,
+    limit: number,
+  ) => (
+    <MeterRow
+      id={id}
+      title={t(`${id}.title`)}
+      used={sent}
+      limit={limit}
+      value={
+        limit > 0
+          ? t("emailsValue", { used: sent, limit })
+          : t("emailsCount", { used: sent })
+      }
+    >
+      <Note>{t("mailtrapOwn", { appName, sent })}</Note>
+    </MeterRow>
+  );
 
   return (
     <AdminCard
@@ -262,9 +284,20 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
         ) : (
           <li className="flex flex-col gap-1 py-4">
             <h4 className="font-semibold">{t("emailsOff.title")}</h4>
-            <Note>{t("emailsOff.body", { appName })}</Note>
+            <Note>
+              {t(mailtrap.configured ? "emailsOff.backup" : "emailsOff.body", {
+                appName,
+              })}
+            </Note>
           </li>
         )}
+
+        {mailtrap.configured ? (
+          <>
+            {mailtrapRow("mailtrapToday", mailtrap.today, mailtrap.perDay)}
+            {mailtrapRow("mailtrapMonth", mailtrap.month, mailtrap.perMonth)}
+          </>
+        ) : null}
 
         {neon.state === "ok" ? (
           <MeterRow

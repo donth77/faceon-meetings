@@ -34,7 +34,12 @@ const alert = (changes: Partial<Alert>): Alert => ({
 
 describe("usage warning emails", () => {
   it("says how much of Stream's minutes is used, and that 100% comes next", async () => {
-    const email = await usageAlertEmail(alert({}), "admin@example.com", "en");
+    const email = await usageAlertEmail(
+      alert({}),
+      "admin@example.com",
+      "en",
+      false,
+    );
     expect(email.to).toBe("admin@example.com");
     expect(email.subject).toBe("FaceOn: Stream video minutes at 82%");
     expect(email.text).toContain("Stream video minutes are at 82%");
@@ -58,14 +63,52 @@ describe("usage warning emails", () => {
       }),
       "admin@example.com",
       "en",
+      false,
     );
     expect(email.subject).toBe("FaceOn: a day’s emails at 100%");
     expect(email.text).toContain(
       "On November 3, FaceOn sent 100 of the 100 emails Resend allows in a day.",
     );
     expect(email.text).toContain(
+      "Past the limit, Resend refuses emails until the next day (UTC)",
+    );
+    expect(email.text).toContain(
       "That’s the last email about it until the next month.",
     );
+  });
+
+  it("says Mailtrap takes over past Resend's limit, where it's the backup", async () => {
+    const email = await usageAlertEmail(
+      alert({ meter: "emailsMonth", used: 2400, limit: 3000 }),
+      "admin@example.com",
+      "en",
+      true,
+    );
+    expect(email.text).toContain(
+      "Past the limit, Mailtrap sends account emails instead, up to its own limit, until the month is over.",
+    );
+    expect(email.text).not.toContain("Resend refuses");
+  });
+
+  it("warns about Mailtrap's own limits", async () => {
+    const email = await usageAlertEmail(
+      alert({
+        meter: "mailtrapDay",
+        used: 120,
+        limit: 150,
+        day: "2026-11-03",
+      }),
+      "admin@example.com",
+      "en",
+      true,
+    );
+    expect(email.subject).toBe(
+      "FaceOn: a day’s emails through Mailtrap at 80%",
+    );
+    expect(email.text).toContain(
+      "On November 3, FaceOn sent 120 of the 150 emails Mailtrap allows in a day, as the backup when Resend can’t.",
+    );
+    expect(email.text).toContain("You’ll hear again if it reaches 100%.");
   });
 
   it("speaks of Neon's billing period, in compute hours to a tenth", async () => {
@@ -79,6 +122,7 @@ describe("usage warning emails", () => {
       }),
       "admin@example.com",
       "en",
+      false,
     );
     expect(email.subject).toBe("FaceOn: database compute at 101%");
     expect(email.text).toContain(

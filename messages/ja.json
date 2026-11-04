@@ -375,10 +375,12 @@
         "off": "Stream が設定されていないため、集計する通話はありません。"
       },
       "emailsToday": {
-        "title": "今日のメール（UTC）"
+        "title": "今日のメール（UTC）",
+        "titleResend": "今日の Resend のメール（UTC）"
       },
       "emailsMonth": {
-        "title": "今月のメール"
+        "title": "今月のメール",
+        "titleResend": "今月の Resend のメール"
       },
       "emailsValue": "{used, number} / {limit, plural, other {# 通}}",
       "emailsCount": "{used, plural, other {# 通}}（上限なし）",
@@ -387,9 +389,17 @@
       "emailsVia": "Resend アカウント全体の集計です（{via, select, list {Resend のメール一覧から} other {{appName} が最後に送信したメールへの Resend の応答から}}）。最終更新: {when}",
       "emailsOwn": "{appName} 自身による、送信した{sent, plural, other {メール}}の集計です。",
       "emailsKey": "{appName} が送信に使っている Resend のキーではメールの一覧を取得できないため、ここに表示される Resend の集計は {appName} がメールを送信したときにだけ更新されます。ほかのアプリの分も含め、アカウントのすべてのメールをすぐに集計するには、{appName} をホストしている環境でフルアクセスの Resend キーを RESEND_USAGE_API_KEY として追加し、再デプロイしてください。",
+      "mailtrapToday": {
+        "title": "今日の Mailtrap のメール（UTC）"
+      },
+      "mailtrapMonth": {
+        "title": "今月の Mailtrap のメール"
+      },
+      "mailtrapOwn": "{appName} 自身による、Resend が上限に達したときや停止しているときの予備として Mailtrap が送信した{sent, plural, other {メール}}の集計です。",
       "emailsOff": {
         "title": "メール",
-        "body": "Resend が設定されていないため、{appName} はメールを送信しません。"
+        "body": "Resend が設定されていないため、{appName} はメールを送信しません。",
+        "backup": "Resend が設定されていないため、{appName} は Mailtrap だけでメールを送信し、リマインダーは送信しません。リマインダーを予約できるのは Resend だけです。"
       },
       "neon": {
         "title": "データベースのコンピューティング（Neon）",
@@ -998,9 +1008,9 @@
       "note": "同じアドレスの Google または GitHub でサインインすることもできます。心当たりのない場合は、このメールを無視してください。"
     },
     "usageAlert": {
-      "subject": "{appName}: {meter, select, stream {Stream のビデオ時間} emailsDay {1 日のメール送信数} emailsMonth {今月のメール送信数} neon {データベースのコンピューティング} other {使用量}}が {share, number, ::percent} に達しました",
-      "heading": "{meter, select, stream {Stream のビデオ時間が {share, number, ::percent} に達しました} emailsDay {1 日のメール送信数が {share, number, ::percent} に達しました} emailsMonth {今月のメール送信数が {share, number, ::percent} に達しました} neon {データベースのコンピューティングが {share, number, ::percent} に達しました} other {使用量が {share, number, ::percent} に達しました}}",
-      "body": "{meter, select, stream {{appName} 自身の集計で、今月の Stream の {limit, number} 参加者・分のうち {used, number} を使用しました。Stream は HD ビデオをその 2 倍の料金で課金するため、ダッシュボードではより多く表示される場合があります。} emailsDay {{day, date, ::MMMMd}、{appName} は Resend で 1 日に送信できる {limit, number} 通のうち {used, number} 通を送信しました。上限を超えると、Resend は翌日（UTC）まで、登録用のメールも含めてメールの送信を拒否します。} emailsMonth {{appName} は Resend で今月送信できる {limit, number} 通のうち {used, number} 通を送信しました。上限を超えると、Resend は月末まで、登録用のメールも含めてメールの送信を拒否します。} neon {データベースは、この請求期間の {limit, number} コンピューティング時間のうち {used, number} 時間を使用しました。使い切ると、Neon は次の期間までデータベースを一時停止し、それまで {appName} は動作しなくなります。} other {{appName} は {limit, number} のうち {used, number} を使用しました。}}",
+      "subject": "{appName}: {meter, select, stream {Stream のビデオ時間} emailsDay {1 日のメール送信数} emailsMonth {今月のメール送信数} mailtrapDay {1 日の Mailtrap でのメール送信数} mailtrapMonth {今月の Mailtrap でのメール送信数} neon {データベースのコンピューティング} other {使用量}}が {share, number, ::percent} に達しました",
+      "heading": "{meter, select, stream {Stream のビデオ時間が {share, number, ::percent} に達しました} emailsDay {1 日のメール送信数が {share, number, ::percent} に達しました} emailsMonth {今月のメール送信数が {share, number, ::percent} に達しました} mailtrapDay {1 日の Mailtrap でのメール送信数が {share, number, ::percent} に達しました} mailtrapMonth {今月の Mailtrap でのメール送信数が {share, number, ::percent} に達しました} neon {データベースのコンピューティングが {share, number, ::percent} に達しました} other {使用量が {share, number, ::percent} に達しました}}",
+      "body": "{meter, select, stream {{appName} 自身の集計で、今月の Stream の {limit, number} 参加者・分のうち {used, number} を使用しました。Stream は HD ビデオをその 2 倍の料金で課金するため、ダッシュボードではより多く表示される場合があります。} emailsDay {{day, date, ::MMMMd}、{appName} は Resend で 1 日に送信できる {limit, number} 通のうち {used, number} 通を送信しました。{backup, select, on {上限を超えると、翌日（UTC）まで、Mailtrap が自身の上限までアカウントのメールを代わりに送信します。リマインダーは Resend でのみ送信されます。} other {上限を超えると、Resend は翌日（UTC）まで、登録用のメールも含めてメールの送信を拒否します。}}} emailsMonth {{appName} は Resend で今月送信できる {limit, number} 通のうち {used, number} 通を送信しました。{backup, select, on {上限を超えると、月末まで、Mailtrap が自身の上限までアカウントのメールを代わりに送信します。リマインダーは Resend でのみ送信されます。} other {上限を超えると、Resend は月末まで、登録用のメールも含めてメールの送信を拒否します。}}} mailtrapDay {{day, date, ::MMMMd}、{appName} は Resend が送信できないときの予備として、Mailtrap で 1 日に送信できる {limit, number} 通のうち {used, number} 通を送信しました。両方の上限を超えると、翌日（UTC）まで、登録用のメールも含めてメールは拒否されます。} mailtrapMonth {{appName} は Resend が送信できないときの予備として、Mailtrap で今月送信できる {limit, number} 通のうち {used, number} 通を送信しました。両方の上限を超えると、月末まで、登録用のメールも含めてメールは拒否されます。} neon {データベースは、この請求期間の {limit, number} コンピューティング時間のうち {used, number} 時間を使用しました。使い切ると、Neon は次の期間までデータベースを一時停止し、それまで {appName} は動作しなくなります。} other {{appName} は {limit, number} のうち {used, number} を使用しました。}}",
       "action": "使用状況を見る",
       "note": "{appName} の管理者であるため、このメールをお送りしています。{next, select, full {100% に達した場合は、もう一度お知らせします。} other {{meter, select, neon {次の請求期間} other {来月}}まで、この件に関するメールはこれが最後です。}}"
     },

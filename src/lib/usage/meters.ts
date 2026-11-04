@@ -6,9 +6,16 @@
 
 /**
  * What's measured: Stream's participant-minutes, the emails sent in a day and in a
- * month (against Resend's limits), and Neon's compute hours.
+ * month (against Resend's limits, and Mailtrap's where it's the backup), and Neon's
+ * compute hours.
  */
-export type MeterId = "stream" | "emailsDay" | "emailsMonth" | "neon";
+export type MeterId =
+  | "stream"
+  | "emailsDay"
+  | "emailsMonth"
+  | "mailtrapDay"
+  | "mailtrapMonth"
+  | "neon";
 
 /** Admins are emailed when a meter reaches each of these percentages, once per period. */
 export const THRESHOLDS = [80, 100] as const;

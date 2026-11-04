@@ -1,0 +1,1 @@
+ALTER TABLE "email_day" ADD COLUMN "mailtrap_sent" integer DEFAULT 0 NOT NULL;

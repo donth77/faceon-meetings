@@ -375,10 +375,12 @@
         "off": "Stream isn’t set up, so there are no calls to count."
       },
       "emailsToday": {
-        "title": "Emails today (UTC)"
+        "title": "Emails today (UTC)",
+        "titleResend": "Emails through Resend today (UTC)"
       },
       "emailsMonth": {
-        "title": "Emails this month"
+        "title": "Emails this month",
+        "titleResend": "Emails through Resend this month"
       },
       "emailsValue": "{used, number} of {limit, plural, one {# email} other {# emails}}",
       "emailsCount": "{used, plural, one {# email} other {# emails}}, with no limit set",
@@ -387,9 +389,17 @@
       "emailsVia": "The whole Resend account’s count, from {via, select, list {its list of emails} other {its answer to the last email {appName} sent}}. Updated {when}.",
       "emailsOwn": "{appName}’s own count of the {sent, plural, one {email} other {emails}} it sent.",
       "emailsKey": "The Resend key {appName} sends with can’t list emails, so Resend’s counts here catch up only when {appName} sends one. To count every email on the account right away, other apps’ included, add a full-access Resend key as RESEND_USAGE_API_KEY where {appName} is hosted, and redeploy.",
+      "mailtrapToday": {
+        "title": "Emails through Mailtrap today (UTC)"
+      },
+      "mailtrapMonth": {
+        "title": "Emails through Mailtrap this month"
+      },
+      "mailtrapOwn": "{appName}’s own count of the {sent, plural, one {email} other {emails}} Mailtrap sent, as the backup when Resend is at its limit or down.",
       "emailsOff": {
         "title": "Emails",
-        "body": "Resend isn’t set up, so {appName} sends no email."
+        "body": "Resend isn’t set up, so {appName} sends no email.",
+        "backup": "Resend isn’t set up, so {appName} sends its emails through Mailtrap alone, and sends no reminders: only Resend can schedule them."
       },
       "neon": {
         "title": "Database compute (Neon)",
@@ -998,9 +1008,9 @@
       "note": "Signing in with Google or GitHub with this same address works too. If you weren’t expecting this, you can ignore this email."
     },
     "usageAlert": {
-      "subject": "{appName}: {meter, select, stream {Stream video minutes} emailsDay {a day’s emails} emailsMonth {this month’s emails} neon {database compute} other {usage}} at {share, number, ::percent}",
-      "heading": "{meter, select, stream {Stream video minutes are at {share, number, ::percent}} emailsDay {A day’s emails reached {share, number, ::percent}} emailsMonth {This month’s emails are at {share, number, ::percent}} neon {Database compute is at {share, number, ::percent}} other {Usage is at {share, number, ::percent}}}",
-      "body": "{meter, select, stream {{appName} has used {used, number} of this month’s {limit, number} participant-minutes on Stream, by its own count. Stream charges HD video at twice that rate, so its dashboard may show more.} emailsDay {On {day, date, ::MMMMd}, {appName} sent {used, number} of the {limit, number} emails Resend allows in a day. Past the limit, Resend refuses emails until the next day (UTC), sign-up emails included.} emailsMonth {{appName} has sent {used, number} of the {limit, number} emails Resend allows this month. Past the limit, Resend refuses emails until the month is over, sign-up emails included.} neon {The database has used {used, number} of its {limit, number} compute hours this billing period. When they run out, Neon pauses it until the next period, and {appName} stops working until then.} other {{appName} has used {used, number} of {limit, number}.}}",
+      "subject": "{appName}: {meter, select, stream {Stream video minutes} emailsDay {a day’s emails} emailsMonth {this month’s emails} mailtrapDay {a day’s emails through Mailtrap} mailtrapMonth {this month’s emails through Mailtrap} neon {database compute} other {usage}} at {share, number, ::percent}",
+      "heading": "{meter, select, stream {Stream video minutes are at {share, number, ::percent}} emailsDay {A day’s emails reached {share, number, ::percent}} emailsMonth {This month’s emails are at {share, number, ::percent}} mailtrapDay {A day’s emails through Mailtrap reached {share, number, ::percent}} mailtrapMonth {This month’s emails through Mailtrap are at {share, number, ::percent}} neon {Database compute is at {share, number, ::percent}} other {Usage is at {share, number, ::percent}}}",
+      "body": "{meter, select, stream {{appName} has used {used, number} of this month’s {limit, number} participant-minutes on Stream, by its own count. Stream charges HD video at twice that rate, so its dashboard may show more.} emailsDay {On {day, date, ::MMMMd}, {appName} sent {used, number} of the {limit, number} emails Resend allows in a day. {backup, select, on {Past the limit, Mailtrap sends account emails instead, up to its own limit, until the next day (UTC). Reminders only go through Resend.} other {Past the limit, Resend refuses emails until the next day (UTC), sign-up emails included.}}} emailsMonth {{appName} has sent {used, number} of the {limit, number} emails Resend allows this month. {backup, select, on {Past the limit, Mailtrap sends account emails instead, up to its own limit, until the month is over. Reminders only go through Resend.} other {Past the limit, Resend refuses emails until the month is over, sign-up emails included.}}} mailtrapDay {On {day, date, ::MMMMd}, {appName} sent {used, number} of the {limit, number} emails Mailtrap allows in a day, as the backup when Resend can’t. Past both providers’ limits, emails are refused until the next day (UTC), sign-up emails included.} mailtrapMonth {{appName} has sent {used, number} of the {limit, number} emails Mailtrap allows this month, as the backup when Resend can’t. Past both providers’ limits, emails are refused until the month is over, sign-up emails included.} neon {The database has used {used, number} of its {limit, number} compute hours this billing period. When they run out, Neon pauses it until the next period, and {appName} stops working until then.} other {{appName} has used {used, number} of {limit, number}.}}",
       "action": "See usage",
       "note": "You’re getting this because you’re an admin of {appName}. {next, select, full {You’ll hear again if it reaches 100%.} other {That’s the last email about it until the next {meter, select, neon {billing period} other {month}}.}}"
     },

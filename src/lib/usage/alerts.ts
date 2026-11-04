@@ -26,12 +26,14 @@ const shown = (alert: Alert) =>
 /**
  * The warning about one meter, to one admin: how much of how much, linking to Settings →
  * Admin → Usage this month. At 80% it says another comes at 100%; at 100%, that it's
- * the last until the next period.
+ * the last until the next period. With a `backup` (Mailtrap), a warning about Resend's
+ * limits says the backup takes over past them.
  */
 export function usageAlertEmail(
   alert: Alert,
   to: string,
   locale: Locale,
+  backup: boolean,
 ): Promise<Email> {
   return accountEmail("usageAlert", {
     to,
@@ -45,12 +47,13 @@ export function usageAlertEmail(
       limit: alert.limit,
       day: alert.day ? noonOf(alert.day) : 0,
       next: alert.threshold < 100 ? "full" : "period",
+      backup: backup ? "on" : "off",
     },
   });
 }
 
 /** Emails one warning to every admin, each in their own language where they have an account. */
-async function emailAdmins(alert: Alert): Promise<void> {
+async function emailAdmins(alert: Alert, backup: boolean): Promise<void> {
   const admins = serverEnv().ADMIN_EMAILS;
   const accounts = await db()
     .select({ email: user.email, locale: user.locale })
@@ -61,7 +64,7 @@ async function emailAdmins(alert: Alert): Promise<void> {
       (found) => found.email.toLowerCase() === address,
     );
     await sendEmail(
-      await usageAlertEmail(alert, address, emailLocale(account ?? {})),
+      await usageAlertEmail(alert, address, emailLocale(account ?? {}), backup),
     );
   }
 }
@@ -77,7 +80,8 @@ export async function warnAboutUsage(now = new Date()): Promise<number> {
   const env = serverEnv();
   // The daily check asks Resend and Neon afresh, whatever the page asked lately, so
   // every figure is at most a day old even when nobody opens Settings → Admin.
-  const readings = readingsOf(await usageReport(now, true));
+  const report = await usageReport(now, true);
+  const readings = readingsOf(report);
   if (
     env.ADMIN_EMAILS.length === 0 ||
     !canSendEmail() ||
@@ -118,7 +122,7 @@ export async function warnAboutUsage(now = new Date()): Promise<number> {
       .returning({ threshold: usageAlert.threshold });
     if (!claimed.some((row) => row.threshold === alert.threshold)) continue;
     try {
-      await emailAdmins(alert);
+      await emailAdmins(alert, report.mailtrap.configured);
       warned++;
     } catch (error) {
       reportError("A usage warning failed to send", error);

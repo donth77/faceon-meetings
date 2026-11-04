@@ -9,16 +9,19 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * The emails FaceOn sent each day (UTC), for Settings → Admin's usage meter: counts
- * only, nothing about who they went to. With each send, the counts Resend reported in
- * its response headers: its daily count is for the UTC day, and its monthly count is
- * for its billing month and includes anything else sent from the same Resend account.
- * Kept two months (retention.ts).
+ * The emails FaceOn sent each day (UTC), for Settings → Admin's usage meter, by the
+ * provider that sent them: counts only, nothing about who they went to. With each send
+ * through Resend, the counts Resend reported in its response headers: its daily count is
+ * for the UTC day, and its monthly count is for its billing month and includes anything
+ * else sent from the same Resend account. Kept two months (retention.ts).
  */
 export const emailDay = pgTable("email_day", {
   /** The UTC day, as YYYY-MM-DD. */
   day: date("day", { mode: "string" }).primaryKey(),
+  /** Emails Resend took for the day: sent on it, or scheduled to go on it. */
   sent: integer("sent").notNull().default(0),
+  /** Emails Mailtrap sent on the day, as the backup when Resend couldn't (lib/email). */
+  mailtrapSent: integer("mailtrap_sent").notNull().default(0),
   resendDaily: integer("resend_daily"),
   resendMonthly: integer("resend_monthly"),
   /** When Resend last reported them. */

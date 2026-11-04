@@ -16,6 +16,7 @@ const env = vi.hoisted(() => ({
 }));
 const usage = vi.hoisted(() => ({
   recordSentEmail: vi.fn<(headers: Headers, goesAt?: Date) => Promise<void>>(),
+  recordMailtrapEmail: vi.fn<() => Promise<void>>(),
   resendSpent: vi.fn<() => Promise<boolean>>(),
 }));
 const reportError = vi.hoisted(() => vi.fn());
@@ -41,6 +42,7 @@ beforeEach(() => {
   env.MAILTRAP_API_KEY = undefined;
   env.MAILTRAP_FROM = undefined;
   usage.recordSentEmail.mockReset().mockResolvedValue(undefined);
+  usage.recordMailtrapEmail.mockReset().mockResolvedValue(undefined);
   usage.resendSpent.mockReset().mockResolvedValue(false);
   reportError.mockReset();
   fetchMock.mockReset();
@@ -127,7 +129,8 @@ describe("falling back to Mailtrap", () => {
       text: "Join",
       html: "<p>Join</p>",
     });
-    // Resend's count is for what Resend sent.
+    // Each provider's count is for what it sent.
+    expect(usage.recordMailtrapEmail).toHaveBeenCalledOnce();
     expect(usage.recordSentEmail).not.toHaveBeenCalled();
     // A limit is expected; it isn't an error.
     expect(reportError).not.toHaveBeenCalled();
@@ -197,6 +200,7 @@ describe("falling back to Mailtrap", () => {
     expect(await sendEmail(email)).toBe("email-3");
     expect(urls()).toEqual([MAILTRAP, RESEND]);
     expect(usage.recordSentEmail).toHaveBeenCalledOnce();
+    expect(usage.recordMailtrapEmail).not.toHaveBeenCalled();
   });
 
   it("keeps reminders on Resend, which can schedule them", async () => {

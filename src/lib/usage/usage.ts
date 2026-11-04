@@ -1,5 +1,6 @@
 import "server-only";
 
+import { mailtrapConfig, resendConfig } from "@/lib/email/providers";
 import { serverEnv } from "@/lib/server-env";
 
 import { emailUsage, type EmailUsage } from "./emails";
@@ -34,6 +35,12 @@ export type UsageReport = {
     perDay: number;
     perMonth: number;
   };
+  /** Mailtrap, the backup for emails that go now: FaceOn's count of what it sent. */
+  mailtrap: EmailUsage["mailtrap"] & {
+    configured: boolean;
+    perDay: number;
+    perMonth: number;
+  };
   neon: NeonUsage & { limit: number };
 };
 
@@ -50,7 +57,7 @@ export async function usageReport(
   const streamConfigured = Boolean(
     env.NEXT_PUBLIC_STREAM_API_KEY && env.STREAM_API_SECRET,
   );
-  const [minutes, emails, neon] = await Promise.all([
+  const [minutes, { mailtrap, ...emails }, neon] = await Promise.all([
     streamConfigured ? streamMinutesThisMonth(now) : 0,
     emailUsage(now, force),
     neonUsage(now, force),
@@ -64,18 +71,25 @@ export async function usageReport(
       countedAt: now,
     },
     emails: {
-      configured: Boolean(env.RESEND_API_KEY && env.EMAIL_FROM),
+      configured: resendConfig() !== null,
       ...emails,
       perDay: env.USAGE_EMAILS_PER_DAY,
       perMonth: env.USAGE_EMAILS_PER_MONTH,
+    },
+    mailtrap: {
+      configured: mailtrapConfig() !== null,
+      ...mailtrap,
+      perDay: env.USAGE_MAILTRAP_PER_DAY,
+      perMonth: env.USAGE_MAILTRAP_PER_MONTH,
     },
     neon: { ...neon, limit: env.USAGE_NEON_CU_HOURS },
   };
 }
 
 /**
- * What the daily sweep checks: this month's Stream minutes and emails, yesterday's
- * emails against a day's limit (the day is over by then), and Neon's billing period.
+ * What the daily sweep checks: this month's Stream minutes and emails (Resend's, and
+ * Mailtrap's where it's the backup), yesterday's emails against a day's limit (the day
+ * is over by then), and Neon's billing period.
  */
 export function readingsOf(report: UsageReport): Reading[] {
   const readings: Reading[] = [];
@@ -101,6 +115,23 @@ export function readingsOf(report: UsageReport): Reading[] {
         period: report.month,
         used: emailsUsed(report.emails.month),
         limit: report.emails.perMonth,
+      },
+    );
+  }
+  if (report.mailtrap.configured) {
+    readings.push(
+      {
+        meter: "mailtrapDay",
+        period: report.month,
+        used: report.mailtrap.yesterday,
+        limit: report.mailtrap.perDay,
+        day: report.emails.yesterday.day,
+      },
+      {
+        meter: "mailtrapMonth",
+        period: report.month,
+        used: report.mailtrap.month,
+        limit: report.mailtrap.perMonth,
       },
     );
   }

@@ -21,6 +21,14 @@ const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
     perDay: 100,
     perMonth: 3000,
   },
+  mailtrap: {
+    configured: false,
+    today: 0,
+    yesterday: 0,
+    month: 0,
+    perDay: 150,
+    perMonth: 4000,
+  },
   neon: {
     state: "ok",
     cuHours: 50,
@@ -100,5 +108,32 @@ describe("what the daily sweep checks", () => {
         (reading) => reading.meter,
       ),
     ).toEqual(["stream", "emailsDay", "emailsMonth"]);
+  });
+
+  it("reads Mailtrap's meters where it's the backup, by FaceOn's count", () => {
+    const readings = readingsOf(
+      report({
+        mailtrap: {
+          configured: true,
+          today: 2,
+          yesterday: 120,
+          month: 300,
+          perDay: 150,
+          perMonth: 4000,
+        },
+      }),
+    );
+    expect(
+      readings.filter((reading) => reading.meter.startsWith("mailtrap")),
+    ).toEqual([
+      {
+        meter: "mailtrapDay",
+        period: "2026-11",
+        used: 120,
+        limit: 150,
+        day: "2026-11-03",
+      },
+      { meter: "mailtrapMonth", period: "2026-11", used: 300, limit: 4000 },
+    ]);
   });
 });

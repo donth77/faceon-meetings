@@ -68,6 +68,17 @@ export async function uncountEmail(goesAt: Date): Promise<void> {
     .where(eq(emailDay.day, utcDay(goesAt)));
 }
 
+/** Counts one email Mailtrap sent, today (UTC): as the backup, it only sends emails now. */
+export async function recordMailtrapEmail(now = new Date()): Promise<void> {
+  await db()
+    .insert(emailDay)
+    .values({ day: utcDay(now), mailtrapSent: 1 })
+    .onConflictDoUpdate({
+      target: emailDay.day,
+      set: { mailtrapSent: sql`${emailDay.mailtrapSent} + 1` },
+    });
+}
+
 export type EmailUsage = {
   /** Today (UTC). */
   today: EmailCount;
@@ -83,6 +94,8 @@ export type EmailUsage = {
   account: { via: "list" | "headers"; at: Date } | null;
   /** Whether Resend's list of the account's emails could be read (resend.ts). */
   listing: Listing;
+  /** What Mailtrap sent as the backup, by FaceOn's count: today, yesterday, this month. */
+  mailtrap: { today: number; yesterday: number; month: number };
 };
 
 /**
@@ -123,12 +136,16 @@ async function savedCounts(now: Date): Promise<Omit<EmailUsage, "listing">> {
       .select({
         day: emailDay.day,
         sent: emailDay.sent,
+        mailtrapSent: emailDay.mailtrapSent,
         resendDaily: emailDay.resendDaily,
       })
       .from(emailDay)
       .where(and(gte(emailDay.day, yesterday), lt(emailDay.day, monthEnd))),
     db()
-      .select({ sent: sum(emailDay.sent).mapWith(Number) })
+      .select({
+        sent: sum(emailDay.sent).mapWith(Number),
+        mailtrapSent: sum(emailDay.mailtrapSent).mapWith(Number),
+      })
       .from(emailDay)
       .where(and(gte(emailDay.day, monthStart), lt(emailDay.day, monthEnd))),
     db()
@@ -148,8 +165,9 @@ async function savedCounts(now: Date): Promise<Omit<EmailUsage, "listing">> {
       .orderBy(sql`${emailDay.resendAt} desc nulls last`)
       .limit(1),
   ]);
+  const rowOn = (day: string) => days.find((found) => found.day === day);
   const on = (day: string): EmailCount => {
-    const row = days.find((found) => found.day === day);
+    const row = rowOn(day);
     return { sent: row?.sent ?? 0, resend: row?.resendDaily ?? null };
   };
   return {
@@ -162,6 +180,11 @@ async function savedCounts(now: Date): Promise<Omit<EmailUsage, "listing">> {
     account: latest?.resendAt
       ? { via: latest.resendVia ?? "headers", at: latest.resendAt }
       : null,
+    mailtrap: {
+      today: rowOn(today)?.mailtrapSent ?? 0,
+      yesterday: rowOn(yesterday)?.mailtrapSent ?? 0,
+      month: total?.mailtrapSent ?? 0,
+    },
   };
 }
 

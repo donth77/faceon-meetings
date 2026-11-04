@@ -375,10 +375,12 @@
         "off": "O Stream não está configurado, então não há chamadas para contar."
       },
       "emailsToday": {
-        "title": "E-mails de hoje (UTC)"
+        "title": "E-mails de hoje (UTC)",
+        "titleResend": "E-mails pelo Resend hoje (UTC)"
       },
       "emailsMonth": {
-        "title": "E-mails deste mês"
+        "title": "E-mails deste mês",
+        "titleResend": "E-mails pelo Resend neste mês"
       },
       "emailsValue": "{used, number} de {limit, plural, one {# e-mail} other {# e-mails}}",
       "emailsCount": "{used, plural, one {# e-mail} other {# e-mails}}, sem limite definido",
@@ -387,9 +389,17 @@
       "emailsVia": "A contagem de toda a conta do Resend, {via, select, list {pela lista de e-mails dele} other {pela resposta dele ao último e-mail que o {appName} enviou}}. Atualizado em {when}.",
       "emailsOwn": "A contagem do próprio {appName} {sent, plural, one {do e-mail que ele enviou} other {dos e-mails que ele enviou}}.",
       "emailsKey": "A chave do Resend que o {appName} usa para enviar não consegue listar e-mails, então as contagens do Resend aqui só se atualizam quando o {appName} envia um. Para contar na hora todos os e-mails da conta, incluindo os de outros apps, adicione uma chave do Resend com acesso total como RESEND_USAGE_API_KEY onde o {appName} está hospedado e faça um novo deploy.",
+      "mailtrapToday": {
+        "title": "E-mails pelo Mailtrap hoje (UTC)"
+      },
+      "mailtrapMonth": {
+        "title": "E-mails pelo Mailtrap neste mês"
+      },
+      "mailtrapOwn": "A contagem do próprio {appName} {sent, plural, one {do e-mail que o Mailtrap enviou} other {dos e-mails que o Mailtrap enviou}}, como reserva quando o Resend atinge o limite ou está fora do ar.",
       "emailsOff": {
         "title": "E-mails",
-        "body": "O Resend não está configurado, então o {appName} não envia e-mails."
+        "body": "O Resend não está configurado, então o {appName} não envia e-mails.",
+        "backup": "O Resend não está configurado, então o {appName} envia seus e-mails só pelo Mailtrap e não envia lembretes: só o Resend consegue agendá-los."
       },
       "neon": {
         "title": "Processamento do banco de dados (Neon)",
@@ -998,9 +1008,9 @@
       "note": "Entrar com o Google ou o GitHub usando este mesmo endereço também funciona. Se você não esperava este e-mail, pode ignorá-lo."
     },
     "usageAlert": {
-      "subject": "{appName}: {meter, select, stream {minutos de vídeo do Stream} emailsDay {e-mails de um dia} emailsMonth {e-mails deste mês} neon {processamento do banco de dados} other {uso}} em {share, number, ::percent}",
-      "heading": "{meter, select, stream {Os minutos de vídeo do Stream estão em {share, number, ::percent}} emailsDay {Os e-mails de um dia chegaram a {share, number, ::percent}} emailsMonth {Os e-mails deste mês estão em {share, number, ::percent}} neon {O processamento do banco de dados está em {share, number, ::percent}} other {O uso está em {share, number, ::percent}}}",
-      "body": "{meter, select, stream {O {appName} usou {used, number} dos {limit, number} minutos por participante deste mês no Stream, pela própria contagem. O Stream cobra vídeo em HD pelo dobro dessa taxa, então o painel dele pode mostrar mais.} emailsDay {Em {day, date, ::MMMMd}, o {appName} enviou {used, number} dos {limit, number} e-mails que o Resend permite por dia. Acima do limite, o Resend recusa e-mails até o dia seguinte (UTC), inclusive os de cadastro.} emailsMonth {O {appName} enviou {used, number} dos {limit, number} e-mails que o Resend permite neste mês. Acima do limite, o Resend recusa e-mails até o fim do mês, inclusive os de cadastro.} neon {O banco de dados usou {used, number} das {limit, number} horas de processamento deste período de cobrança. Quando elas acabam, o Neon pausa o banco até o próximo período, e o {appName} para de funcionar até lá.} other {O {appName} usou {used, number} de {limit, number}.}}",
+      "subject": "{appName}: {meter, select, stream {minutos de vídeo do Stream} emailsDay {e-mails de um dia} emailsMonth {e-mails deste mês} mailtrapDay {e-mails de um dia pelo Mailtrap} mailtrapMonth {e-mails deste mês pelo Mailtrap} neon {processamento do banco de dados} other {uso}} em {share, number, ::percent}",
+      "heading": "{meter, select, stream {Os minutos de vídeo do Stream estão em {share, number, ::percent}} emailsDay {Os e-mails de um dia chegaram a {share, number, ::percent}} emailsMonth {Os e-mails deste mês estão em {share, number, ::percent}} mailtrapDay {Os e-mails de um dia pelo Mailtrap chegaram a {share, number, ::percent}} mailtrapMonth {Os e-mails deste mês pelo Mailtrap estão em {share, number, ::percent}} neon {O processamento do banco de dados está em {share, number, ::percent}} other {O uso está em {share, number, ::percent}}}",
+      "body": "{meter, select, stream {O {appName} usou {used, number} dos {limit, number} minutos por participante deste mês no Stream, pela própria contagem. O Stream cobra vídeo em HD pelo dobro dessa taxa, então o painel dele pode mostrar mais.} emailsDay {Em {day, date, ::MMMMd}, o {appName} enviou {used, number} dos {limit, number} e-mails que o Resend permite por dia. {backup, select, on {Acima do limite, o Mailtrap envia os e-mails da conta no lugar dele, até o próprio limite, até o dia seguinte (UTC). Os lembretes só saem pelo Resend.} other {Acima do limite, o Resend recusa e-mails até o dia seguinte (UTC), inclusive os de cadastro.}}} emailsMonth {O {appName} enviou {used, number} dos {limit, number} e-mails que o Resend permite neste mês. {backup, select, on {Acima do limite, o Mailtrap envia os e-mails da conta no lugar dele, até o próprio limite, até o fim do mês. Os lembretes só saem pelo Resend.} other {Acima do limite, o Resend recusa e-mails até o fim do mês, inclusive os de cadastro.}}} mailtrapDay {Em {day, date, ::MMMMd}, o {appName} enviou {used, number} dos {limit, number} e-mails que o Mailtrap permite por dia, como reserva quando o Resend não consegue. Acima dos limites dos dois, os e-mails são recusados até o dia seguinte (UTC), inclusive os de cadastro.} mailtrapMonth {O {appName} enviou {used, number} dos {limit, number} e-mails que o Mailtrap permite neste mês, como reserva quando o Resend não consegue. Acima dos limites dos dois, os e-mails são recusados até o fim do mês, inclusive os de cadastro.} neon {O banco de dados usou {used, number} das {limit, number} horas de processamento deste período de cobrança. Quando elas acabam, o Neon pausa o banco até o próximo período, e o {appName} para de funcionar até lá.} other {O {appName} usou {used, number} de {limit, number}.}}",
       "action": "Ver o uso",
       "note": "Você está recebendo isto porque é administrador do {appName}. {next, select, full {Você vai receber outro aviso se chegar a 100%.} other {Este é o último e-mail sobre isso até {meter, select, neon {o próximo período de cobrança} other {o próximo mês}}.}}"
     },

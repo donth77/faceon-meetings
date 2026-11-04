@@ -3,7 +3,11 @@ import "server-only";
 import { waitUntil } from "@vercel/functions";
 
 import { reportError } from "@/lib/monitoring/report";
-import { recordSentEmail, resendSpent } from "@/lib/usage/emails";
+import {
+  recordMailtrapEmail,
+  recordSentEmail,
+  resendSpent,
+} from "@/lib/usage/emails";
 import { z } from "@/lib/zod";
 
 import {
@@ -156,15 +160,15 @@ export async function sendEmail(
       );
     }
   }
-  // Counted for Settings → Admin → Usage this month, on the day it goes, with the counts
-  // Resend reports; a count that fails to save never fails the email.
-  if (sent.provider.id === "resend") {
-    await recordSentEmail(sent.headers, options.scheduledAt).catch(
-      (error: unknown) => {
-        reportError("Couldn't count a sent email", error);
-      },
-    );
-  }
+  // Counted for Settings → Admin → Usage this month, by provider, on the day it goes
+  // (with the counts Resend reports); a count that fails to save never fails the email.
+  await (
+    sent.provider.id === "resend"
+      ? recordSentEmail(sent.headers, options.scheduledAt)
+      : recordMailtrapEmail()
+  ).catch((error: unknown) => {
+    reportError("Couldn't count a sent email", error);
+  });
   return sent.id;
 }
 
