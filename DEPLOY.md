@@ -363,13 +363,35 @@ The limits default to the free plans; set the `USAGE_*` settings if yours differ
 
 ### Backups
 
-`.github/workflows/backup.yml` makes a copy of the database every Monday: it dumps it, restores the dump into a throwaway Postgres to prove it works (the run's summary lists each table's rows), encrypts it for a key only you hold, and keeps it as an artifact of the run for 90 days.
+`.github/workflows/backup.yml` makes a copy of the database: it dumps it, restores the dump into a throwaway Postgres to prove it works (the run's summary lists each table's rows), encrypts it for a key only you hold, and keeps it as an artifact of the run for 90 days.
+
+A run's summary and artifacts are as visible as its repository, so the workflow backs up only in a **private** repository and refuses in a public one. Your copy's code can stay public: a small private repository of your own runs its backups, on its own schedule.
 
 1. Install [age](https://age-encryption.org) and make a key: `age-keygen -o faceon-backup-key.txt`. It prints the public key, `age1…`. Keep the file somewhere safe outside the repository, such as a password manager: without it, the backups can't be opened.
-2. In GitHub, under **Settings → Secrets and variables → Actions**, add `BACKUP_DATABASE_URL` (the direct connection string, your `DATABASE_URL_UNPOOLED`) and `BACKUP_AGE_RECIPIENT` (the public key).
-3. To try it all on a throwaway database first, open **Actions → Backup → Run workflow** and tick **selftest**: no secrets needed, and nothing is kept.
+2. Create a private repository in GitHub, such as `faceon-backups`, with this as `.github/workflows/backup.yml`. In `uses`, put your fork and a full commit ID from it after the `@`, so a later change to the workflow reaches your secrets only once you move it there:
 
-To restore one, download it from the run (**Actions → Backup →** the run **→ Artifacts**; the zip holds `faceon-<date>.dump.age`), then:
+   ```yaml
+   name: Backup
+   on:
+     schedule:
+       - cron: "17 4 * * 1" # Mondays, 04:17 UTC
+     workflow_dispatch:
+   permissions:
+     contents: read
+   jobs:
+     backup:
+       uses: <you>/faceon-meetings/.github/workflows/backup.yml@<commit ID>
+       secrets:
+         BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+         BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+   ```
+
+   If your copy's repository is private itself, it can run them: add the same file to it as `.github/workflows/backup-schedule.yml`, with `uses: ./.github/workflows/backup.yml`.
+
+3. In the private repository, under **Settings → Secrets and variables → Actions**, add `BACKUP_DATABASE_URL` (the direct connection string, your `DATABASE_URL_UNPOOLED`) and `BACKUP_AGE_RECIPIENT` (the public key). Never add them to a public repository.
+4. To try it all on a throwaway database first, open your copy's **Actions → Backup → Run workflow** and tick **selftest**: no secrets needed, and nothing is kept. Then run the private repository's **Backup** once by hand.
+
+To restore one, download it from the private repository's run (**Actions → Backup →** the run **→ Artifacts**; the zip holds `faceon-<date>.dump.age`), then:
 
 ```bash
 age --decrypt --identity faceon-backup-key.txt --output faceon.dump faceon-<date>.dump.age

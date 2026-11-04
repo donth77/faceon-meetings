@@ -1,14 +1,19 @@
 name: Backup
 
-# Every Monday: the database is dumped, restored into a throwaway Postgres to prove the
-# backup works, encrypted for the age key in BACKUP_AGE_RECIPIENT, and kept as an artifact
-# for 90 days. Nothing happens until the repository secrets BACKUP_DATABASE_URL and
-# BACKUP_AGE_RECIPIENT are set (DEPLOY.md, "Backups"). Run it by hand with "selftest" to
-# try the whole path on a throwaway database with FaceOn's tables instead: no secrets,
-# nothing kept.
+# The database is dumped, restored into a throwaway Postgres to prove the backup works,
+# encrypted for the age key in BACKUP_AGE_RECIPIENT, and kept as an artifact for 90 days.
+# A run's summary and artifacts are as visible as its repository, so it backs up only in
+# a private one: a private repository calls this workflow on its own schedule, with the
+# BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT secrets (DEPLOY.md, "Backups"). Run it by
+# hand with "selftest" to try the whole path on a throwaway database with FaceOn's tables
+# instead: no secrets, nothing kept, in any repository.
 on:
-  schedule:
-    - cron: "17 4 * * 1"
+  workflow_call:
+    secrets:
+      BACKUP_DATABASE_URL:
+        required: false
+      BACKUP_AGE_RECIPIENT:
+        required: false
   workflow_dispatch:
     inputs:
       selftest:
@@ -19,14 +24,14 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: backup
-  cancel-in-progress: false
-
 jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # One at a time. Named apart from a calling workflow's own group, which would wait on it.
+    concurrency:
+      group: backup-dump
+      cancel-in-progress: false
     services:
       # Every backup is restored into this, which goes when the job ends.
       restore:
@@ -64,10 +69,18 @@ jobs:
     steps:
       - name: Check it's set up
         id: ready
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # A selftest keeps nothing, so it runs anywhere; a backup only where the run is
+          # private. If the repository's visibility can't be read, nothing is dumped.
+          if [ "$SELFTEST" != "true" ] && [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" != "true" ]; then
+            echo "::error title=Backup::Backups run only from a private repository. Call this workflow from one (DEPLOY.md, \"Backups\")."
+            exit 1
+          fi
           if [ "$SELFTEST" != "true" ] && { [ -z "$SOURCE_URL" ] || [ -z "$AGE_RECIPIENT" ]; }; then
-            echo "::notice title=Backup::Backups are off. Set the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT repository secrets to turn them on (DEPLOY.md, \"Backups\")."
-            echo "Backups are off: the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT repository secrets aren't set (DEPLOY.md, \"Backups\")." >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice title=Backup::Backups are off. Set the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT secrets to turn them on (DEPLOY.md, \"Backups\")."
+            echo "Backups are off: the BACKUP_DATABASE_URL and BACKUP_AGE_RECIPIENT secrets aren't set (DEPLOY.md, \"Backups\")." >> "$GITHUB_STEP_SUMMARY"
             echo "on=false" >> "$GITHUB_OUTPUT"
           else
             echo "on=true" >> "$GITHUB_OUTPUT"
