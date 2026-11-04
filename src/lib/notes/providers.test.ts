@@ -6,6 +6,7 @@ import {
   defaultModel,
   errorDetail,
   failureOf,
+  PROVIDER_INFO,
   ProviderError,
   providerRequest,
   PROVIDERS,
@@ -187,6 +188,14 @@ describe("callProvider", () => {
 describe("defaultModel", () => {
   it("is each provider's first model", () => {
     expect(defaultModel("openai")).toBe("gpt-5-mini");
+    expect(defaultModel("anthropic")).toBe("claude-opus-5-5");
+    expect(defaultModel("google")).toBe("gemini-3.8-flash");
     expect(defaultModel("openrouter")).toBe("openrouter/auto");
+  });
+
+  it("offers no Gemini 2.x model: Google has deprecated them", () => {
+    expect(
+      PROVIDER_INFO.google.models.filter((model) => /^gemini-2\./.test(model)),
+    ).toEqual([]);
   });
 });

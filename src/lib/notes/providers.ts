@@ -34,7 +34,7 @@ export const PROVIDER_INFO: Record<
   },
   google: {
     name: "Google",
-    models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite"],
+    models: ["gemini-3.8-flash", "gemini-4-argon", "gemini-3.5-flash-lite"],
     keyUrl: "https://aistudio.google.com/apikey",
   },
   deepseek: {
