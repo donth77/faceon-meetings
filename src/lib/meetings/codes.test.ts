@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatMeetingCode,
+  formatTypedMeetingId,
   Passcode,
   passcodeProblem,
   randomPasscode,
@@ -16,6 +17,159 @@ describe("formatMeetingCode", () => {
   it("leaves anything that isn't a valid ID unchanged", () => {
     expect(formatMeetingCode("0123456789")).toBe("0123456789");
     expect(formatMeetingCode("12345")).toBe("12345");
+  });
+});
+
+describe("formatTypedMeetingId", () => {
+  /** Types `digits` one at a time at the end, as a person would. */
+  function typeAtEnd(digits: string): string[] {
+    let value = "";
+    const shown: string[] = [];
+    for (const digit of digits) {
+      const next = value + digit;
+      const typed = formatTypedMeetingId(next, next.length, value);
+      expect(typed.caret).toBe(typed.value.length);
+      value = typed.value;
+      shown.push(value);
+    }
+    return shown;
+  }
+
+  it("groups an ID 3 3 4 as it's typed, the caret staying at the end", () => {
+    expect(typeAtEnd("4815162342")).toEqual([
+      "4",
+      "48",
+      "481",
+      "481 5",
+      "481 51",
+      "481 516",
+      "481 516 2",
+      "481 516 23",
+      "481 516 234",
+      "481 516 2342",
+    ]);
+  });
+
+  it("keeps the caret after the same digit when typing in the middle", () => {
+    // A 0 typed at "123 |456 789" lands at "123 0|45 6789".
+    expect(formatTypedMeetingId("123 0456 789", 5, "123 456 789")).toEqual({
+      value: "123 045 6789",
+      caret: 5,
+    });
+  });
+
+  it("deletes the digit before a space with Backspace, not just the space", () => {
+    // Backspace at "123 456 |7890" removes the space, so the 6 goes instead.
+    expect(
+      formatTypedMeetingId(
+        "123 4567890",
+        7,
+        "123 456 7890",
+        "deleteContentBackward",
+      ),
+    ).toEqual({ value: "123 457 890", caret: 6 });
+    // Without an input type to go by, it's taken as Backspace.
+    expect(formatTypedMeetingId("123 4567890", 7, "123 456 7890")).toEqual({
+      value: "123 457 890",
+      caret: 6,
+    });
+  });
+
+  it("deletes the digit after a space with Delete", () => {
+    // Delete at "123 456| 7890" removes the space, so the 7 goes instead.
+    expect(
+      formatTypedMeetingId(
+        "123 4567890",
+        7,
+        "123 456 7890",
+        "deleteContentForward",
+      ),
+    ).toEqual({ value: "123 456 890", caret: 7 });
+  });
+
+  it("puts back a space cut on its own, without losing a digit", () => {
+    expect(formatTypedMeetingId("123456", 3, "123 456", "deleteByCut")).toEqual(
+      { value: "123 456", caret: 3 },
+    );
+  });
+
+  it("groups a pasted ID however it was written", () => {
+    for (const pasted of ["4815162342", "481-516-2342", "481 516 2342"]) {
+      expect(formatTypedMeetingId(pasted, pasted.length, "")).toEqual({
+        value: "481 516 2342",
+        caret: 12,
+      });
+    }
+  });
+
+  it("leaves links, invitations and other text exactly as typed", () => {
+    for (const text of [
+      "https://example.com/j/4815162342#pwd=K7XQ2M",
+      "example.com/j/4815162342",
+      "Meeting ID: 481 516 2342",
+      "hello there",
+    ]) {
+      expect(formatTypedMeetingId(text, 4, "")).toEqual({
+        value: text,
+        caret: 4,
+      });
+    }
+  });
+
+  it("drops digits typed past an ID's length", () => {
+    // At the end, an eleventh digit doesn't go in.
+    expect(formatTypedMeetingId("123 456 78901", 13, "123 456 7890")).toEqual({
+      value: "123 456 7890",
+      caret: 12,
+    });
+    // In the middle, the ID stays as it was, and so does the caret.
+    expect(formatTypedMeetingId("1523 456 7890", 2, "123 456 7890")).toEqual({
+      value: "123 456 7890",
+      caret: 1,
+    });
+    // A longer paste keeps its first ten digits.
+    expect(formatTypedMeetingId("123456789012", 12, "")).toEqual({
+      value: "123 456 7890",
+      caret: 12,
+    });
+  });
+
+  it("leaves a longer number already in the field for the person to shorten", () => {
+    expect(formatTypedMeetingId("12345678901", 11, "123456789012")).toEqual({
+      value: "12345678901",
+      caret: 11,
+    });
+    expect(formatTypedMeetingId("1234567890", 10, "12345678901")).toEqual({
+      value: "123 456 7890",
+      caret: 12,
+    });
+  });
+
+  it("reads a Japanese keyboard's full-width digits", () => {
+    expect(formatTypedMeetingId("１２３４", 4, "")).toEqual({
+      value: "123 4",
+      caret: 5,
+    });
+  });
+
+  it("drops a space typed by hand, and empties to nothing", () => {
+    expect(formatTypedMeetingId("123 ", 4, "123")).toEqual({
+      value: "123",
+      caret: 3,
+    });
+    expect(formatTypedMeetingId("", 0, "1")).toEqual({ value: "", caret: 0 });
+    expect(formatTypedMeetingId("1234567890", null)).toEqual({
+      value: "123 456 7890",
+      caret: null,
+    });
+  });
+
+  it("gives a value readMeetingInput reads as the same meeting", () => {
+    const { value } = formatTypedMeetingId("4815162342", 10, "");
+    expect(readMeetingInput(value, ["example.com"])).toEqual({
+      ok: true,
+      code: "4815162342",
+    });
   });
 });
 

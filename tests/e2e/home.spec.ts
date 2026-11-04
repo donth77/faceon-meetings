@@ -94,4 +94,36 @@ test.describe("Home", () => {
     });
     expectNoErrors(host);
   });
+
+  test("the join field groups an ID as it's typed", async ({ people }) => {
+    const host = await people.signedIn();
+    const { page } = host;
+    await page.goto("/home");
+    await page.getByRole("button", { name: /New meeting/ }).click();
+    await page.getByRole("menuitem", { name: /for later/ }).click();
+    const link = await linkDialog(page).getByRole("textbox").inputValue();
+    const code = /\/j\/(\d{10})/.exec(link)?.[1] ?? "";
+    await linkDialog(page).getByRole("button", { name: "Close" }).click();
+    const grouped = (digits: string) =>
+      [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)]
+        .filter(Boolean)
+        .join(" ");
+
+    const field = page.getByLabel("Meeting ID or link");
+    await field.pressSequentially(code.slice(0, 4));
+    await expect(field).toHaveValue(grouped(code.slice(0, 4)));
+    await field.pressSequentially(code.slice(4));
+    await expect(field).toHaveValue(grouped(code));
+
+    // Backspace just after a space takes the digit before it; typing it puts it back.
+    for (let step = 0; step < 4; step += 1) await field.press("ArrowLeft");
+    await field.press("Backspace");
+    await expect(field).toHaveValue(grouped(code.slice(0, 5) + code.slice(6)));
+    await field.pressSequentially(code.charAt(5));
+    await expect(field).toHaveValue(grouped(code));
+
+    await page.getByRole("button", { name: "Join", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/j/${code}`));
+    expectNoErrors(host);
+  });
 });

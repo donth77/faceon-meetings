@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { publicEnv } from "@/lib/env";
 import {
+  formatTypedMeetingId,
   readMeetingInput,
   type MeetingInputProblem,
 } from "@/lib/meetings/codes";
@@ -41,7 +42,8 @@ type JoinFormVariant = "row" | "card" | "hero";
 /**
  * "Enter a meeting ID or link" + Join. Accepts "123 456 7890", a meeting link or a
  * pasted invitation, and checks the meeting exists before opening it, so a mistake is
- * explained right here, with the text and focus still in the field.
+ * explained right here, with the text and focus still in the field. An ID's digits are
+ * grouped as they're typed (formatTypedMeetingId); links and other text are left alone.
  */
 export function JoinForm({
   variant,
@@ -123,7 +125,30 @@ export function JoinForm({
             placeholder={look === "hero" ? t("example") : t("placeholder")}
             value={value}
             onChange={(event) => {
-              setValue(event.target.value);
+              const input = event.currentTarget;
+              const native = event.nativeEvent;
+              const typed =
+                "isComposing" in native && native.isComposing === true
+                  ? // An input method still composing is left alone until it's done.
+                    { value: input.value, caret: null }
+                  : formatTypedMeetingId(
+                      input.value,
+                      input.selectionStart,
+                      value,
+                      "inputType" in native &&
+                        typeof native.inputType === "string"
+                        ? native.inputType
+                        : undefined,
+                    );
+              if (typed.value !== input.value) {
+                // Grouped as it's typed ("123 456 7890"). Set here, so React finds it in
+                // place and the caret stays after the same digit.
+                input.value = typed.value;
+                if (typed.caret !== null) {
+                  input.setSelectionRange(typed.caret, typed.caret);
+                }
+              }
+              setValue(typed.value);
               setProblem(null);
             }}
             aria-invalid={problem ? true : undefined}

@@ -24,14 +24,28 @@ test.describe("joining from the meeting ID field", () => {
     await hydrated(page.getByRole("button", { name: "Join" }));
     const field = page.getByLabel("Enter a meeting ID or link");
     const join = page.getByRole("button", { name: "Join" });
-    const cases: Array<[string, RegExp]> = [
-      ["12345", /A meeting ID has 10 digits/],
-      ["hello there", /Enter a meeting ID, like .*, or paste a meeting link/],
-      ["https://zoom.us/j/1234567890", /That link is for another site/],
-      [`${baseURL}/help`, /That link isn.t to a meeting/],
-      [`${baseURL}/j/12345`, /That link.s meeting ID isn.t complete/],
+    // What's typed, what the field then shows (digits are grouped as they're typed), and
+    // what it says.
+    const cases: Array<[string, string, RegExp]> = [
+      ["12345", "123 45", /A meeting ID has 10 digits/],
+      [
+        "hello there",
+        "hello there",
+        /Enter a meeting ID, like .*, or paste a meeting link/,
+      ],
+      [
+        "https://zoom.us/j/1234567890",
+        "https://zoom.us/j/1234567890",
+        /That link is for another site/,
+      ],
+      [`${baseURL}/help`, `${baseURL}/help`, /That link isn.t to a meeting/],
+      [
+        `${baseURL}/j/12345`,
+        `${baseURL}/j/12345`,
+        /That link.s meeting ID isn.t complete/,
+      ],
     ];
-    for (const [input, message] of cases) {
+    for (const [input, shown, message] of cases) {
       await field.fill(input);
       await join.click();
       await expect(page.getByRole("main").getByRole("alert")).toHaveText(
@@ -39,7 +53,7 @@ test.describe("joining from the meeting ID field", () => {
       );
       // The text and the focus stay, so it can be fixed in place.
       await expect(field).toBeFocused();
-      await expect(field).toHaveValue(input);
+      await expect(field).toHaveValue(shown);
       await expect(field).toHaveAttribute("aria-invalid", "true");
     }
     expectNoErrors(visitor);

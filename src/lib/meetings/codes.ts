@@ -54,6 +54,113 @@ export function formatMeetingCode(code: string): string {
   return `${code.slice(0, 3)} ${code.slice(3, 6)} ${code.slice(6)}`;
 }
 
+/** How many digits a meeting ID has. */
+const MEETING_CODE_LENGTH = 10;
+
+/** What someone typing an ID has so far: digits, perhaps with spaces or dashes between. */
+const TYPED_ID = /^[\d\s-]*$/;
+
+/** A Japanese keyboard's full-width digits, space and hyphen, as their ASCII ones. */
+function halfWidth(text: string): string {
+  return text
+    .replace(/[０-９]/g, (digit) =>
+      String.fromCharCode(digit.charCodeAt(0) - 0xfee0),
+    )
+    .replace(/　/g, " ")
+    .replace(/－/g, "-");
+}
+
+/** Where the caret goes to sit just after the `count`th digit of `text`. */
+function caretAfterDigits(text: string, count: number): number {
+  if (count <= 0) return 0;
+  let seen = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    if (/\d/.test(text.charAt(index))) {
+      seen += 1;
+      if (seen === count) return index + 1;
+    }
+  }
+  return text.length;
+}
+
+/**
+ * What the Join field shows as someone types or pastes into it: an ID's digits grouped
+ * 3 3 4, as the placeholder shows them, with the caret after the same digit as before.
+ * Anything with letters in it (a link, an invitation) is left exactly as typed.
+ *
+ * `previous` is the field's value before this edit, and `inputType` the input event's.
+ * Deleting a space on its own deletes the digit beside it instead (before it for
+ * Backspace, after it for Delete), so the caret never sticks at a space. Digits typed
+ * past an ID's length are dropped, but a longer number already in the field (a mistyped
+ * link's, say) is left as digits for the person to shorten.
+ */
+export function formatTypedMeetingId(
+  value: string,
+  caret: number | null,
+  previous?: string,
+  inputType?: string,
+): { value: string; caret: number | null } {
+  let text = halfWidth(value);
+  if (!TYPED_ID.test(text)) return { value, caret };
+  let at = caret;
+
+  if (
+    previous !== undefined &&
+    TYPED_ID.test(previous) &&
+    text.length === previous.length - 1
+  ) {
+    let removed = 0;
+    while (removed < text.length && text[removed] === previous[removed]) {
+      removed += 1;
+    }
+    const separator =
+      /[\s-]/.test(previous.charAt(removed)) &&
+      previous.slice(removed + 1) === text.slice(removed);
+    // Without an input type to go by, it was most likely Backspace.
+    const backward =
+      inputType === undefined || inputType === "deleteContentBackward";
+    if (
+      separator &&
+      inputType === "deleteContentForward" &&
+      /\d/.test(text.charAt(removed))
+    ) {
+      text = text.slice(0, removed) + text.slice(removed + 1);
+      at = removed;
+    } else if (
+      separator &&
+      backward &&
+      removed > 0 &&
+      /\d/.test(text.charAt(removed - 1))
+    ) {
+      text = text.slice(0, removed - 1) + text.slice(removed);
+      at = removed - 1;
+    }
+  }
+
+  let digits = text.replace(/\D/g, "");
+  let before =
+    at === null ? digits.length : text.slice(0, at).replace(/\D/g, "").length;
+  if (digits.length > MEETING_CODE_LENGTH) {
+    const had = (previous ?? "").replace(/\D/g, "").length;
+    if (had > MEETING_CODE_LENGTH) {
+      return { value: digits, caret: at === null ? null : before };
+    }
+    // The digits that went past an ID's length, just before the caret, don't fit.
+    const extra = digits.length - MEETING_CODE_LENGTH;
+    const keep = Math.max(before - extra, 0);
+    digits = digits.slice(0, keep) + digits.slice(keep + extra);
+    before = keep;
+  }
+
+  const grouped = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)]
+    .filter(Boolean)
+    .join(" ");
+  return {
+    value: grouped,
+    caret: at === null ? null : caretAfterDigits(grouped, before),
+  };
+}
+
 /** Why what someone entered in the Join field isn't a meeting to open. */
 export type MeetingInputProblem =
   /** Only digits, but not the 10 a meeting ID has. */
