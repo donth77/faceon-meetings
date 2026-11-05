@@ -515,7 +515,7 @@ Without them, those tests are skipped and every other test still runs; the job's
 
 ## Updating your copy
 
-Migrations aren't applied when Vercel deploys, so apply them before the new code goes live:
+Migrations aren't applied when Vercel deploys, so apply them before the new code goes live. They only add to the database, never taking away what the code that's live still reads (that waits for a later release), so your copy keeps working in between:
 
 ```bash
 git remote add upstream <this repository's address>   # once
