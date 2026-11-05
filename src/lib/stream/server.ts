@@ -255,8 +255,11 @@ export const streamProvider: MediaProvider = {
   },
 };
 
-/** Whether a webhook really came from Stream: its body signed with our API secret. */
-export function verifyStreamWebhook(body: string, signature: string): boolean {
+/**
+ * Whether a webhook really came from Stream: its body, as Stream signed it
+ * (`signedWebhookBody`), signed with our API secret.
+ */
+export function verifyStreamWebhook(body: Buffer, signature: string): boolean {
   try {
     return stream().verifyWebhook(body, signature);
   } catch {

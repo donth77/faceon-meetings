@@ -1,6 +1,11 @@
+import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 
-import { parseStreamWebhook } from "./webhook";
+import {
+  parseStreamWebhook,
+  refusedDelivery,
+  signedWebhookBody,
+} from "./webhook";
 
 const SESSION = "4f3c2b1a-0e9d-4c8b-a7f6-5e4d3c2b1a09";
 
@@ -73,5 +78,76 @@ describe("parseStreamWebhook", () => {
     expect(parseStreamWebhook({ type: "call.ended" })).toBeNull();
     expect(parseStreamWebhook(null)).toBeNull();
     expect(parseStreamWebhook("text")).toBeNull();
+  });
+});
+
+describe("signedWebhookBody", () => {
+  const json = Buffer.from(JSON.stringify(joined));
+
+  it("keeps a body Stream sent as it is", () => {
+    expect(signedWebhookBody(json)).toEqual(json);
+  });
+
+  it("unzips a body Stream gzipped", () => {
+    expect(signedWebhookBody(gzipSync(json))).toEqual(json);
+  });
+
+  it("has nothing for a broken gzip, or one that unzips past 1 MB", () => {
+    expect(signedWebhookBody(Buffer.from([0x1f, 0x8b, 1, 2, 3]))).toBeNull();
+    expect(
+      signedWebhookBody(gzipSync(Buffer.alloc(2 * 1024 * 1024))),
+    ).toBeNull();
+    expect(signedWebhookBody(Buffer.alloc(2 * 1024 * 1024, " "))).toBeNull();
+  });
+});
+
+describe("refusedDelivery", () => {
+  it("says what a delivery looked like, not what it held", () => {
+    const body = gzipSync(Buffer.from(JSON.stringify(joined)));
+    const details = refusedDelivery(
+      new Headers({
+        "user-agent": "Go-http-client/1.1",
+        "content-encoding": "gzip",
+        "x-signature": "a".repeat(64),
+        "x-api-key": "key-1",
+        "x-webhook-id": "d-1",
+        "x-forwarded-for": "203.0.113.9",
+        "x-vercel-id": "iad1::abc",
+      }),
+      body,
+      "key-1",
+    );
+    expect(details).toEqual({
+      bytes: body.length,
+      gzipped: "yes",
+      encoding: "gzip",
+      signature: "sha256 hex",
+      api_key: "ours",
+      headers: "x-api-key x-signature x-webhook-id",
+      agent: "Go-http-client",
+    });
+  });
+
+  it("tells a delivery from another app or nobody apart", () => {
+    expect(
+      refusedDelivery(
+        new Headers({ "x-signature": "sha256=abc", "x-api-key": "key-2" }),
+        Buffer.from("{}"),
+        "key-1",
+      ),
+    ).toMatchObject({
+      gzipped: "no",
+      encoding: "none",
+      signature: "other, 10 characters",
+      api_key: "another",
+    });
+    expect(
+      refusedDelivery(new Headers(), Buffer.from(""), "key-1"),
+    ).toMatchObject({
+      signature: "none",
+      api_key: "none",
+      headers: "none",
+      agent: "none",
+    });
   });
 });

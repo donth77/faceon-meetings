@@ -563,7 +563,7 @@ Then:
 
 **Guests can't join.** Set `GUEST_SESSION_SECRET`, check that `ALLOW_GUESTS` isn't `false`, and check that the host allows guests in that meeting.
 
-**Previous stays empty.** The webhook must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: FaceOn turns away deliveries it can't verify. Stream's dashboard shows webhook deliveries.
+**Previous stays empty, or Usage this month shows no Stream minutes.** Both come from Stream's webhook. It must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: FaceOn turns away deliveries it can't verify, and the server log (and your error reports) says so at most once an hour, with what the delivery looked like. Stream's dashboard shows webhook deliveries, and Vercel's request logs show what `/api/webhooks/stream` answered.
 
 **The cleanup returns 401.** Set `CRON_SECRET` in Vercel and redeploy.
 

@@ -1,3 +1,5 @@
+import { gunzipSync } from "node:zlib";
+
 import type { AttendanceEvent } from "@/lib/media/types";
 import { isUuid } from "@/lib/uuid";
 import { z } from "@/lib/zod";
@@ -8,6 +10,58 @@ const STREAM_WEBHOOK = {
   joined: "call.session_participant_joined",
   left: "call.session_participant_left",
 };
+
+/** The most a delivery may hold, unzipped: Stream's events are a few kilobytes. */
+const MAX_BODY_BYTES = 1024 * 1024;
+
+/**
+ * A delivery's body as Stream signed it, or null when there's no such thing. Stream may
+ * gzip what it sends, and signs the JSON before that, so a gzipped body (known by its
+ * first bytes, in case something on the way unzipped it already) is unzipped first, and
+ * never past 1 MB, since anyone can send one.
+ */
+export function signedWebhookBody(body: Buffer): Buffer | null {
+  if (body.length > MAX_BODY_BYTES) return null;
+  if (body[0] !== 0x1f || body[1] !== 0x8b) return body;
+  try {
+    return gunzipSync(body, { maxOutputLength: MAX_BODY_BYTES });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What a delivery that was turned away looked like, for an error report: enough to tell
+ * Stream's from anyone else's and what about it didn't match, never its body or signature.
+ */
+export function refusedDelivery(
+  headers: Headers,
+  body: Buffer,
+  apiKey: string | undefined,
+): Record<string, string | number> {
+  const signature = headers.get("x-signature");
+  const key = headers.get("x-api-key");
+  const sent = [...headers.keys()]
+    .filter(
+      (name) =>
+        name.startsWith("x-") &&
+        !/^x-(vercel|forwarded|real-ip|middleware|matched)/.test(name),
+    )
+    .sort();
+  return {
+    bytes: body.length,
+    gzipped: body[0] === 0x1f && body[1] === 0x8b ? "yes" : "no",
+    encoding: headers.get("content-encoding") ?? "none",
+    signature: !signature
+      ? "none"
+      : /^[0-9a-f]{64}$/.test(signature)
+        ? "sha256 hex"
+        : `other, ${signature.length} characters`,
+    api_key: !key ? "none" : key === apiKey ? "ours" : "another",
+    headers: sent.join(" ").slice(0, 200) || "none",
+    agent: (headers.get("user-agent") ?? "none").split("/")[0]!.slice(0, 40),
+  };
+}
 
 /** A time Stream sent, or none when it's missing or unreadable. */
 const Timestamp = z.iso.datetime({ offset: true }).optional().catch(undefined);
