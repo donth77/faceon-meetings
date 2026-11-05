@@ -212,6 +212,24 @@ describe("FrameBudget", () => {
     expect(results).not.toContain(true);
   });
 
+  it("takes frames two at a time where the person is found every other frame", () => {
+    // Finding the person takes 60 ms; the frame after, which doesn't, 2 ms.
+    const budget = new FrameBudget(24, 10, 0);
+    const results = Array.from({ length: 10 }, (_, i) =>
+      budget.record(i % 2 === 0 ? 60 : 2, 2),
+    );
+    expect(results.slice(0, 9)).not.toContain(true);
+    expect(results[9]).toBe(true);
+  });
+
+  it("keeps going when two frames fit the budget between them", () => {
+    const budget = new FrameBudget(24, 10, 0);
+    const results = Array.from({ length: 10 }, (_, i) =>
+      budget.record(i % 2 === 0 ? 40 : 2, 2),
+    );
+    expect(results).not.toContain(true);
+  });
+
   it("ignores the first frames while things warm up", () => {
     const budget = new FrameBudget(20, 2, 3);
     expect([30, 30, 30].map((ms) => budget.record(ms))).toEqual([

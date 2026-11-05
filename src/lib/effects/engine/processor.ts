@@ -131,7 +131,7 @@ export function startEffects(
     }
     // The GPU hasn't finished the last frame: skip this one, and count it as slow.
     if (compositor.busy) {
-      if (segmenter && budget.record(Infinity)) stepDown();
+      if (segmenter && budget.record(Infinity, every)) stepDown();
       return false;
     }
     const begun = performance.now();
@@ -151,7 +151,9 @@ export function startEffects(
       fail();
       return false;
     }
-    if (segmenter && budget.record(performance.now() - begun)) stepDown();
+    if (segmenter && budget.record(performance.now() - begun, every)) {
+      stepDown();
+    }
     return true;
   };
 

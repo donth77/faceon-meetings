@@ -116,11 +116,16 @@ export class FramePacer {
 
 /**
  * Watches how long frames take. When most frames in a stretch ran over budget, it says
- * to step down (see the processor), then starts counting again.
+ * to step down (see the processor), then starts counting again. Where the person is
+ * found every `every` frames, those frames are taken together, at their average: the
+ * one that finds them costs the most, and the others hardly anything.
  */
 export class FrameBudget {
   private over = 0;
   private counted = 0;
+  /** The frames since the person was last found, and their time. */
+  private pending = 0;
+  private pendingMs = 0;
 
   constructor(
     private readonly budgetMs: number,
@@ -131,15 +136,22 @@ export class FrameBudget {
   ) {}
 
   /** Records a frame's time; true when it's time to step down. */
-  record(ms: number): boolean {
+  record(ms: number, every = 1): boolean {
     if (this.warmUp > 0) {
       this.warmUp--;
       return false;
     }
-    this.counted++;
-    if (ms > this.budgetMs) this.over++;
+    this.pending++;
+    this.pendingMs += ms;
+    if (this.pending < every) return false;
+    const frames = this.pending;
+    const average = this.pendingMs / frames;
+    this.pending = 0;
+    this.pendingMs = 0;
+    this.counted += frames;
+    if (average > this.budgetMs) this.over += frames;
     if (this.counted < this.stretch) return false;
-    const slow = this.over > this.stretch * 0.6;
+    const slow = this.over > this.counted * 0.6;
     this.over = 0;
     this.counted = 0;
     return slow;
