@@ -79,6 +79,42 @@ export function uncertainty(confidence: number): number {
 }
 
 /**
+ * Where frames are drawn on a timer (Firefox, Safari), which ticks draw. A camera slower
+ * than the timer (in low light, say) would have each frame found and drawn twice, so
+ * while the browser says when it shows a new frame, a tick draws only a new one. Once
+ * it hasn't said for a while (a background tab, a window out of sight, or a browser that
+ * never says), every tick draws, as before.
+ */
+export class FramePacer {
+  private shownAt = -Infinity;
+  private drawn = false;
+
+  /** `quietMs`: how long without word of a new frame before every tick draws again. */
+  constructor(private readonly quietMs: number) {}
+
+  /** The browser showed a new frame. */
+  shown(now: number): void {
+    this.shownAt = now;
+    this.drawn = false;
+  }
+
+  /** The page went to the background or came back: every tick draws until word comes. */
+  forget(): void {
+    this.shownAt = -Infinity;
+  }
+
+  /** Whether this tick draws. */
+  due(now: number): boolean {
+    return !this.drawn || now - this.shownAt > this.quietMs;
+  }
+
+  /** This tick drew the frame. */
+  done(): void {
+    this.drawn = true;
+  }
+}
+
+/**
  * Watches how long frames take. When most frames in a stretch ran over budget, it says
  * to step down (see the processor), then starts counting again.
  */

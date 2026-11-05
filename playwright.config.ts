@@ -88,6 +88,9 @@ export default defineConfig({
           firefoxUserPrefs: {
             "media.navigator.streams.fake": true,
             "media.navigator.permission.disabled": true,
+            // Slower than the timer backgrounds are drawn on here, as a camera in low
+            // light is (nightly.spec.ts).
+            "media.navigator.video.default_fps": 15,
           },
         },
       },

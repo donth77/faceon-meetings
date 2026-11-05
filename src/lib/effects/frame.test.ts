@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   coverScale,
   FrameBudget,
+  FramePacer,
   MaskSmoother,
   uncertainty,
   wideCrop,
@@ -110,6 +111,86 @@ describe("uncertainty", () => {
     expect(uncertainty(0.75)).toBeLessThan(uncertainty(0.6));
     expect(uncertainty(0.9)).toBeLessThan(uncertainty(0.75));
     expect(uncertainty(0.25)).toBeCloseTo(uncertainty(0.75), 6);
+  });
+});
+
+describe("FramePacer", () => {
+  /**
+   * A 30-a-second timer for `ms`, with the browser saying it showed a camera frame every
+   * `frameEvery` ms until `framesUntil`: the times of the ticks that drew.
+   */
+  function ticks(
+    pacer: FramePacer,
+    {
+      ms,
+      frameEvery,
+      framesUntil = ms,
+    }: { ms: number; frameEvery: number; framesUntil?: number },
+  ) {
+    const drew: number[] = [];
+    let frame = 0;
+    for (let now = 5; now < ms; now += 1000 / 30) {
+      for (; frame <= now && frame < framesUntil; frame += frameEvery) {
+        pacer.shown(frame);
+      }
+      if (pacer.due(now)) {
+        pacer.done();
+        drew.push(now);
+      }
+    }
+    return drew;
+  }
+
+  it("draws each frame of a camera slower than the timer once", () => {
+    const drew = ticks(new FramePacer(250), {
+      ms: 1000,
+      frameEvery: 1000 / 15,
+    });
+    expect(drew).toHaveLength(15);
+  });
+
+  it("draws on every tick where the browser never says when it shows a frame", () => {
+    const drew = ticks(new FramePacer(250), {
+      ms: 1000,
+      frameEvery: 1000 / 15,
+      framesUntil: 0,
+    });
+    expect(drew).toHaveLength(30);
+  });
+
+  it("draws on every tick once the browser stops saying, as in a background tab", () => {
+    const camera = { ms: 1500, frameEvery: 1000 / 15 };
+    const drew = ticks(new FramePacer(250), { ...camera, framesUntil: 500 });
+    const everyTick = ticks(new FramePacer(250), { ...camera, framesUntil: 0 });
+    // Quiet from the last frame, at 467 ms; every tick draws from 250 ms after it.
+    expect(drew.filter((at) => at > 500 && at < 700)).toEqual([]);
+    expect(drew.filter((at) => at > 720)).toEqual(
+      everyTick.filter((at) => at > 720),
+    );
+  });
+
+  it("draws a frame on the next tick when this one couldn't", () => {
+    const pacer = new FramePacer(250);
+    pacer.shown(0);
+    expect(pacer.due(5)).toBe(true);
+    // Not drawn (the GPU was busy), so not done.
+    expect(pacer.due(38)).toBe(true);
+    pacer.done();
+    expect(pacer.due(71)).toBe(false);
+  });
+
+  it("draws on every tick from when the page goes to the background until word comes", () => {
+    const pacer = new FramePacer(250);
+    pacer.shown(0);
+    pacer.done();
+    expect(pacer.due(5)).toBe(false);
+    pacer.forget();
+    expect(pacer.due(10)).toBe(true);
+    pacer.done();
+    expect(pacer.due(43)).toBe(true);
+    pacer.shown(60);
+    pacer.done();
+    expect(pacer.due(76)).toBe(false);
   });
 });
 

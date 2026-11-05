@@ -1,7 +1,7 @@
 import type { ImageSegmenter } from "@mediapipe/tasks-vision";
 
 import type { Effect } from "../effects";
-import { FrameBudget, MaskSmoother } from "../frame";
+import { FrameBudget, FramePacer, MaskSmoother } from "../frame";
 import { loadBackdrop, readyBackdrop, type LoadedBackdrop } from "./backdrops";
 import { Compositor } from "./compositor";
 import { loadSegmenter, segment } from "./segmenter";
@@ -28,6 +28,8 @@ export type EffectsProcessor = {
 
 /** Frames per second where we pace frames ourselves (no track processors). */
 const PACED_FPS = 30;
+/** How long without word of a new camera frame before every tick draws (FramePacer). */
+const QUIET_MS = 250;
 /** Past this, a frame is too slow (there's other work on the page too). */
 const FRAME_BUDGET_MS = 24;
 
@@ -255,7 +257,9 @@ function throughTrackProcessor(
 /**
  * Firefox and Safari: the camera plays in a hidden video element, and each tick of a
  * worker's timer (which keeps time in a background tab) draws a frame onto the canvas,
- * whose stream is the output.
+ * whose stream is the output. Where the browser says when it shows a new frame, a tick
+ * draws only a new one (FramePacer), so a camera slower than the timer has each frame
+ * drawn once.
  */
 function throughCanvas(
   input: MediaStreamTrack,
@@ -270,11 +274,24 @@ function throughCanvas(
   video.srcObject = new MediaStream([input]);
   void video.play().catch(() => {});
 
+  const pacer = new FramePacer(QUIET_MS);
+  let watching: number | null = null;
+  const shown = () => {
+    pacer.shown(performance.now());
+    watching = video.requestVideoFrameCallback(shown);
+  };
+  if ("requestVideoFrameCallback" in video) {
+    watching = video.requestVideoFrameCallback(shown);
+  }
+  // Word of new frames stops in a background tab, while the timer keeps going.
+  const forget = () => pacer.forget();
+  document.addEventListener("visibilitychange", forget);
+
   const timer = new Worker("/effects/timer.js");
   timer.onmessage = () => {
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      render(video, video.videoWidth, video.videoHeight);
-    }
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+    if (!pacer.due(performance.now())) return;
+    if (render(video, video.videoWidth, video.videoHeight)) pacer.done();
   };
   timer.postMessage(Math.round(1000 / PACED_FPS));
 
@@ -282,6 +299,8 @@ function throughCanvas(
     track,
     stop() {
       timer.terminate();
+      document.removeEventListener("visibilitychange", forget);
+      if (watching !== null) video.cancelVideoFrameCallback(watching);
       video.pause();
       video.srcObject = null;
       track.stop();
