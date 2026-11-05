@@ -49,7 +49,28 @@ const Page = z.object({
  */
 export type Listing = "ok" | "restricted" | "unavailable" | "unconfigured";
 
+/** A list that couldn't be read, and why: Resend's HTTP status, or why there was none. */
+export type Refusal = {
+  listing: "restricted" | "unavailable";
+  answer: number | "none" | "unreadable";
+};
+
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** How long Resend asks to wait after too many requests (Retry-After), at most 2 s. */
+function retryAfterMs(response: Response): number {
+  const seconds = Number(response.headers.get("retry-after"));
+  return Number.isFinite(seconds) && seconds > 0
+    ? Math.min(seconds * 1000, 2000)
+    : 1000;
+}
+
+const askFor = (url: URL, key: string) =>
+  fetch(url, {
+    headers: { Authorization: `Bearer ${key}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
+  }).catch(() => null);
 
 /**
  * The account's emails made since `since`, newest first as Resend lists them, page by
@@ -59,7 +80,7 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function listResendEmails(
   key: string,
   since: Date,
-): Promise<ListedEmail[] | Exclude<Listing, "ok" | "unconfigured">> {
+): Promise<ListedEmail[] | Refusal> {
   const emails: ListedEmail[] = [];
   let after: string | null = null;
   for (let page = 0; page < MAX_PAGES; page++) {
@@ -67,16 +88,23 @@ export async function listResendEmails(
     const url = new URL(EMAILS);
     url.searchParams.set("limit", String(PAGE_SIZE));
     if (after) url.searchParams.set("after", after);
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${key}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
-    }).catch(() => null);
-    if (!response) return "unavailable";
-    if (response.status === 401 || response.status === 403) return "restricted";
-    if (!response.ok) return "unavailable";
+    let response = await askFor(url, key);
+    // Over Resend's rate limit (another server listing too): once more, when it says.
+    if (response?.status === 429) {
+      await response.body?.cancel().catch(() => {});
+      await pause(retryAfterMs(response));
+      response = await askFor(url, key);
+    }
+    if (!response) return { listing: "unavailable", answer: "none" };
+    if (response.status === 401 || response.status === 403) {
+      return { listing: "restricted", answer: response.status };
+    }
+    if (!response.ok) {
+      return { listing: "unavailable", answer: response.status };
+    }
     const parsed = Page.safeParse(await response.json().catch(() => null));
-    if (!parsed.success) return "unavailable";
+    if (!parsed.success)
+      return { listing: "unavailable", answer: "unreadable" };
     for (const item of parsed.data.data) {
       const createdAt = resendInstant(item.created_at);
       if (!createdAt) continue;
@@ -103,6 +131,9 @@ const Tried = z.object({
   listing: z.enum(["ok", "restricted", "unavailable"]),
 });
 
+/** The refresh under way on this server. */
+let refreshing: Promise<Listing> | null = null;
+
 /**
  * Brings Resend's own counts up to date from its list of the account's emails, so the
  * usage meter sees every email: those sent before it existed, scheduled reminders on the
@@ -112,12 +143,20 @@ const Tried = z.object({
  * daily check asks regardless, with `force`), and the outcome is kept, so every server
  * knows whether the key can list. RESEND_USAGE_API_KEY is used where it's set, since a
  * key that can only send can't list. A failure is reported when the outcome changes,
- * except a sending key that can't list.
+ * except a sending key that can't list. Whatever asks while a refresh is under way on
+ * this server shares it, rather than each listing at once into Resend's rate limit.
  */
-export async function refreshResendCounts(
+export function refreshResendCounts(
   now = new Date(),
   force = false,
 ): Promise<Listing> {
+  refreshing ??= refresh(now, force).finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+async function refresh(now: Date, force: boolean): Promise<Listing> {
   const env = serverEnv();
   const key = env.RESEND_USAGE_API_KEY ?? env.RESEND_API_KEY;
   if (!key) return "unconfigured";
@@ -131,23 +170,25 @@ export async function refreshResendCounts(
     new Date(month.start.getTime() - SCHEDULED_AHEAD_MS),
   );
   if (!Array.isArray(listed)) {
+    const { listing, answer } = listed;
     // A sending key that can't list is how most copies run, and Settings → Admin says
     // what to add; a usage key that can't, or Resend not answering, is worth a look.
-    const expected = listed === "restricted" && !env.RESEND_USAGE_API_KEY;
-    if (tried !== listed && !expected) {
+    const expected = listing === "restricted" && !env.RESEND_USAGE_API_KEY;
+    if (tried !== listing && !expected) {
       reportError(
         "Couldn't list Resend's emails for the usage meter.",
         undefined,
         {
-          state: listed,
+          state: listing,
+          answer,
           key: env.RESEND_USAGE_API_KEY
             ? "RESEND_USAGE_API_KEY"
             : "RESEND_API_KEY",
         },
       );
     }
-    await saveReading("resend", { listing: listed }, now);
-    return listed;
+    await saveReading("resend", { listing }, now);
+    return listing;
   }
 
   const byDay = emailsByDay(listed);

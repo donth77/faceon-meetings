@@ -108,21 +108,68 @@ describe("listing the account's emails", () => {
         ),
       ),
     );
-    expect(await listResendEmails("re_send_only", new Date())).toBe(
-      "restricted",
-    );
+    expect(await listResendEmails("re_send_only", new Date())).toEqual({
+      listing: "restricted",
+      answer: 401,
+    });
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response("busy", { status: 500 })),
     );
-    expect(await listResendEmails("re_test", new Date())).toBe("unavailable");
+    expect(await listResendEmails("re_test", new Date())).toEqual({
+      listing: "unavailable",
+      answer: 500,
+    });
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
         throw new Error("offline");
       }),
     );
-    expect(await listResendEmails("re_test", new Date())).toBe("unavailable");
+    expect(await listResendEmails("re_test", new Date())).toEqual({
+      listing: "unavailable",
+      answer: "none",
+    });
+  });
+
+  it("asks once more, when Resend says, after too many requests", async () => {
+    vi.useFakeTimers();
+    try {
+      const page = Response.json({ object: "list", has_more: false, data: [] });
+      const fetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response("slow down", {
+            status: 429,
+            headers: { "retry-after": "1" },
+          }),
+        )
+        .mockResolvedValueOnce(page);
+      vi.stubGlobal("fetch", fetch);
+      const listed = listResendEmails("re_test", new Date());
+      await vi.advanceTimersByTimeAsync(999);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await listed).toEqual([]);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("gives up when Resend still says too many", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => new Response("slow down", { status: 429 })),
+      );
+      const listed = listResendEmails("re_test", new Date());
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(await listed).toEqual({ listing: "unavailable", answer: 429 });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -167,7 +214,7 @@ describe("refreshing Resend's counts", () => {
     expect(reportError).toHaveBeenCalledWith(
       "Couldn't list Resend's emails for the usage meter.",
       undefined,
-      { state: "restricted", key: "RESEND_USAGE_API_KEY" },
+      { state: "restricted", answer: 401, key: "RESEND_USAGE_API_KEY" },
     );
     // The next try finds the same outcome kept, and says nothing more.
     stand.reading = { data: { listing: "restricted" }, readAt: now };
@@ -185,7 +232,23 @@ describe("refreshing Resend's counts", () => {
     expect(reportError).toHaveBeenCalledWith(
       "Couldn't list Resend's emails for the usage meter.",
       undefined,
-      { state: "unavailable", key: "RESEND_API_KEY" },
+      { state: "unavailable", answer: 500, key: "RESEND_API_KEY" },
     );
+  });
+
+  it("shares one listing among everything that asks while it's under way", async () => {
+    stand.env = { RESEND_API_KEY: "re_full_access" };
+    const fetch = vi.fn(async () => new Response("busy", { status: 500 }));
+    vi.stubGlobal("fetch", fetch);
+    const both = await Promise.all([
+      refreshResendCounts(now),
+      refreshResendCounts(now),
+    ]);
+    expect(both).toEqual(["unavailable", "unavailable"]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(reportError).toHaveBeenCalledTimes(1);
+    // Once it's done, the next one asks Resend again.
+    await refreshResendCounts(now);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
