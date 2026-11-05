@@ -34,10 +34,12 @@ export function db(): NodePgDatabase<typeof schema> {
   });
   // On Vercel, lets idle connections close cleanly before a function instance is suspended.
   attachDatabasePool(pool);
-  // An idle connection the database closed (Neon suspending, or restarting) is reported
-  // on the pool once the pool has dropped it; with nothing listening, it would crash the
-  // function. Nothing was using it, and the next query opens a new one.
+  // A connection the database closes (Neon suspending, or restarting) reports an error on
+  // itself, and the pool reports it again for an idle one once it has dropped it: with
+  // nothing listening, either would crash the function. Queries on it fail as usual, and
+  // the next one opens a new connection.
   pool.on("error", () => {});
+  pool.on("connect", (client) => client.on("error", () => {}));
   database = drizzle(pool, { schema });
   return database;
 }
