@@ -82,6 +82,8 @@ export type MeetingSummary = {
   askToJoin: boolean;
   /** AI notes are on in the meeting now, so everyone joining is told. */
   notesOn: boolean;
+  /** ...for a transcript only, which is what they're told. */
+  notesTranscriptOnly: boolean;
   /** AI notes start by themselves once a host or co-host is in: told in advance too. */
   notesAuto: boolean;
   /** AI notes are shared with the participants as soon as they're made: said up front. */
@@ -632,7 +634,13 @@ export function PreJoin({
                 <div className="flex min-w-0 flex-col gap-3">
                   <p>
                     {meeting.notesOn
-                      ? t(meeting.notesShared ? "notesOnShared" : "notesOn")
+                      ? t(
+                          meeting.notesTranscriptOnly
+                            ? "notesOnTranscript"
+                            : meeting.notesShared
+                              ? "notesOnShared"
+                              : "notesOn",
+                        )
                       : t(
                           meeting.notesShared ? "notesAutoShared" : "notesAuto",
                         )}

@@ -72,8 +72,32 @@ export const NOTES_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-/** What the model is told, whatever it's given. */
-export function systemPrompt(language: string): string {
+/** The most words to know kept, and the longest each may be. */
+const MAX_WORDS = 50;
+const MAX_WORD_LENGTH = 60;
+
+/**
+ * Settings → AI notes' Words to know as a list: one per line, or separated by commas or
+ * semicolons, each once (whatever its case), within limits.
+ */
+export function wordsToKnow(text: string | undefined): string[] {
+  const seen = new Set<string>();
+  const words: string[] = [];
+  for (const piece of (text ?? "").split(/[\n,;]+/)) {
+    const word = piece.trim().slice(0, MAX_WORD_LENGTH).trim();
+    if (!word || seen.has(word.toLowerCase())) continue;
+    seen.add(word.toLowerCase());
+    words.push(word);
+    if (words.length === MAX_WORDS) break;
+  }
+  return words;
+}
+
+/** What the model is told, whatever it's given; `words` are spelled as the host wrote them. */
+export function systemPrompt(
+  language: string,
+  words: readonly string[] = [],
+): string {
   const name =
     new Intl.DisplayNames(["en"], { type: "language" }).of(language) ??
     language;
@@ -87,6 +111,11 @@ export function systemPrompt(language: string): string {
     '- actionItems: what someone agreed to do. owner: who will do it, by name, or "" if that isn\'t clear. due: when, as it was said, or "".',
     "- decisions: what was agreed or decided, one per item.",
     "Lists may be empty.",
+    ...(words.length > 0
+      ? [
+          `Names and terms to spell exactly as written here when they come up (never add them otherwise): ${words.join(", ")}.`,
+        ]
+      : []),
   ].join("\n");
 }
 
@@ -185,6 +214,18 @@ export type NotesLabels = {
 };
 
 /** The notes as a Markdown document: for Copy, Download and saving. */
+/** The transcript alone as Markdown, for a meeting kept as a transcript only. */
+export function transcriptMarkdown(input: {
+  title: string;
+  /** When the meeting was, already written out. */
+  when: string;
+  transcript: string;
+  /** The transcript's heading, in the reader's language. */
+  heading: string;
+}): string {
+  return `${[`# ${input.title}`, input.when, `## ${input.heading}`, input.transcript].join("\n\n")}\n`;
+}
+
 export function notesMarkdown(input: {
   title: string;
   /** When the meeting was, already written out. */

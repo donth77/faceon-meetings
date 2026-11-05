@@ -38,7 +38,7 @@ export const PROVIDER_INFO: Record<
   },
   anthropic: {
     name: "Anthropic",
-    models: ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-4-5"],
+    models: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-4-5"],
     keyUrl: "https://console.anthropic.com/settings/keys",
     transcribes: false,
   },

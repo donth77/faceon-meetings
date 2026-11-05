@@ -175,6 +175,8 @@ export type HandRequest = z.infer<typeof HandRequest>;
  */
 export const NotesMadeWith = z.object({
   provider: z.enum(PROVIDERS).nullable(),
+  /** A transcript only: notes are made only if the notetaker asks, later. */
+  transcriptOnly: z.literal(true).optional(),
 });
 export type NotesMadeWith = z.infer<typeof NotesMadeWith>;
 

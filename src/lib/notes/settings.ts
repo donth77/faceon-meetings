@@ -32,6 +32,10 @@ const Stored = z.object({
   keys: byProvider.optional().catch(undefined),
   /** The key was removed as the choice carried over; said once in Settings. */
   keyRemoved: z.literal(true).optional().catch(undefined),
+  /** Words to know: names and terms the notes spell exactly, as typed (`wordsToKnow`). */
+  words: z.string().max(1000).optional().catch(undefined),
+  /** Transcript only: notes are made only when asked for, after AI notes stop. */
+  transcriptOnly: z.literal(true).optional().catch(undefined),
 });
 export type NotesSettings = Omit<z.infer<typeof Stored>, "engine">;
 

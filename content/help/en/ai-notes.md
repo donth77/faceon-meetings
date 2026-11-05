@@ -50,6 +50,8 @@ When the notetaker stops AI notes, or leaves, the notes are made from the transc
 
 In a browser with neither Chrome's built-in AI nor a key, **Start AI notes** is dimmed, with a link to add a key. Allowing AI notes in your meetings is part of your account, so it's the same in every browser; a key stays in the browser you add it to. Everyone in the meeting is told who makes the notes: the notetaker's computer, or their key's provider.
 
+Under **More options**, **Model** picks the model your key uses, **Words to know** lists names, product terms and acronyms the notes should spell exactly, and **Transcript only** keeps just the transcript: notes are made only when you select **Make notes**, and **Start AI notes** works in any browser. Everyone is told it's a transcript only.
+
 > **Your key stays in your browser.** {appName} never receives or stores it. Some providers' free plans may use what you send to improve their products, so check your provider's terms before using a free key for private meetings.
 
 ## After the meeting

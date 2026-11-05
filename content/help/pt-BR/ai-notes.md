@@ -50,6 +50,8 @@ Quando quem faz as notas para as notas de IA, ou sai, as notas são feitas a par
 
 Em um navegador sem a IA integrada do Chrome e sem chave, **Iniciar notas de IA** aparece esmaecido, com um link para adicionar uma chave. Permitir notas de IA nas suas reuniões faz parte da sua conta, então vale em todos os navegadores; uma chave fica no navegador em que você a adiciona. Todos na reunião ficam sabendo quem faz as notas: o computador de quem está fazendo as notas ou o provedor da chave dessa pessoa.
 
+Em **Mais opções**, **Modelo** escolhe o modelo que sua chave usa, **Vocabulário** reúne nomes, termos de produtos e siglas que as notas devem escrever exatamente assim, e **Só transcrição** guarda só a transcrição: as notas são feitas só quando você seleciona **Fazer notas**, e **Iniciar notas de IA** funciona em qualquer navegador. Todos veem que é só uma transcrição.
+
 > **Sua chave fica no seu navegador.** O {appName} nunca a recebe nem a guarda. Os planos gratuitos de alguns provedores podem usar o que você envia para melhorar os produtos deles, então confira os termos do seu provedor antes de usar uma chave gratuita em reuniões privadas.
 
 ## Depois da reunião

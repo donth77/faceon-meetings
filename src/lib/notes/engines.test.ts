@@ -4,6 +4,7 @@ import type { ModelApi, ModelOptions } from "@/lib/ai/built-in";
 
 import {
   canMakeNotes,
+  canStartNotes,
   engineFor,
   notesHere,
   notesOnDevice,
@@ -121,6 +122,22 @@ describe("notesOnDevice", () => {
     );
   });
 
+  it("tells the model the words to know", async () => {
+    const { api, created } = fakeModel([JSON.stringify(notes("Done."))]);
+    await notesOnDevice({
+      api,
+      locale: "en",
+      words: ["Priya Raman", "SSO"],
+      title: "Launch review",
+      transcript: "Ana (10:02): Hi.",
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    });
+    expect(JSON.stringify(created[0]?.initialPrompts)).toContain(
+      "Priya Raman, SSO.",
+    );
+  });
+
   it("asks a fresh session each time", async () => {
     const model = fakeModel([
       JSON.stringify(notes("One.")),
@@ -160,7 +177,7 @@ describe("providerChoice", () => {
       }),
     ).toEqual({
       provider: "anthropic",
-      model: "claude-opus-5-5",
+      model: "claude-sonnet-5-5",
       key: "sk-ant",
     });
     expect(providerChoice({ models: { openai: "gpt-5" } })).toEqual({
@@ -204,6 +221,27 @@ describe("what happens to AI notes in this browser", () => {
         transcribes: PROVIDER_INFO[provider].transcribes,
       });
     }
+  });
+});
+
+describe("a transcript only", () => {
+  it("is what's said here, key or not, Chrome or not", () => {
+    for (const state of ["ready", "none"] as const) {
+      expect(notesHere({ transcriptOnly: true }, state)).toEqual({
+        kind: "transcriptOnly",
+      });
+      expect(
+        notesHere({ transcriptOnly: true, keys: { openai: "sk" } }, state),
+      ).toEqual({ kind: "transcriptOnly" });
+    }
+  });
+
+  it("starts anywhere, but notes from it still need a key or Chrome's model", () => {
+    expect(canStartNotes({ transcriptOnly: true }, "none")).toBe(true);
+    expect(canMakeNotes({ transcriptOnly: true }, "none")).toBe(false);
+    expect(canMakeNotes({ transcriptOnly: true }, "ready")).toBe(true);
+    expect(canStartNotes({}, "none")).toBe(false);
+    expect(canStartNotes({}, "ready")).toBe(true);
   });
 });
 

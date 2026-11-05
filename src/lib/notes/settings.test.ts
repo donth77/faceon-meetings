@@ -58,6 +58,16 @@ describe("AI notes settings carried over from the choice of how notes were made"
     });
   });
 
+  it("keep words to know and a transcript only, and drop either when it isn't one", () => {
+    expect(fromStored({ words: "Priya, SSO", transcriptOnly: true })).toEqual({
+      settings: { words: "Priya, SSO", transcriptOnly: true },
+      migrated: false,
+    });
+    expect(
+      fromStored({ words: "x".repeat(1001), transcriptOnly: "yes" }),
+    ).toEqual({ settings: {}, migrated: false });
+  });
+
   it("drop what isn't settings", () => {
     expect(
       fromStored({ engine: "somewhere", keys: { nobody: "x", openai: "" } }),

@@ -22,6 +22,7 @@ export function useNotesSentence() {
       });
     },
     madeWith(madeWith: NotesMadeWith, name: string): string {
+      if (madeWith.transcriptOnly) return t("made.transcriptOnly", { name });
       if (!madeWith.provider) return t("made.onDevice", { name });
       const info = PROVIDER_INFO[madeWith.provider];
       return t(info.transcribes ? "here.transcribes" : "here.writes", {

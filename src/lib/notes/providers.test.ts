@@ -233,7 +233,7 @@ describe("callProvider", () => {
 describe("defaultModel", () => {
   it("is each provider's first model", () => {
     expect(defaultModel("openai")).toBe("gpt-5-mini");
-    expect(defaultModel("anthropic")).toBe("claude-opus-5-5");
+    expect(defaultModel("anthropic")).toBe("claude-sonnet-5-5");
     expect(defaultModel("google")).toBe("gemini-3.8-flash");
     expect(defaultModel("openrouter")).toBe("openrouter/auto");
   });

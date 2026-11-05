@@ -77,6 +77,8 @@ function groupsOf(parts: readonly MeetingNotes[], max: number) {
 export async function notesOnDevice(input: {
   api: ModelApi;
   locale: string;
+  /** Words to know, spelled as the host wrote them. */
+  words?: readonly string[];
   title: string;
   transcript: string;
   signal: AbortSignal;
@@ -87,7 +89,7 @@ export async function notesOnDevice(input: {
     input.locale,
     await modelWrites(input.api, baseLanguage(input.locale)),
   );
-  const system = systemPrompt(language);
+  const system = systemPrompt(language, input.words);
   const max = partSize(language);
 
   async function ask(prompt: string): Promise<MeetingNotes> {
@@ -162,6 +164,8 @@ export async function notesWithKey(input: {
   model: string;
   key: string;
   locale: string;
+  /** Words to know, spelled as the host wrote them. */
+  words?: readonly string[];
   title: string;
   transcript: string;
   signal: AbortSignal;
@@ -173,7 +177,7 @@ export async function notesWithKey(input: {
       provider: input.provider,
       key: input.key,
       model: input.model,
-      system: systemPrompt(input.locale),
+      system: systemPrompt(input.locale, input.words),
       prompt: transcriptPrompt({
         title: input.title,
         transcript: input.transcript,
@@ -230,9 +234,11 @@ export function engineFor(settings: NotesSettings): EngineId {
  * panel and its "AI notes on" notice say it:
  * - "free": no key, and Chrome's built-in AI runs here (or will after its download);
  * - "needsKey": no key, and nothing here can make notes, so Start AI notes waits for one;
- * - "key": the key's provider writes the notes, and transcribes everyone where it can.
+ * - "key": the key's provider writes the notes, and transcribes everyone where it can;
+ * - "transcriptOnly": a transcript, and notes only when asked for, however they'd be made.
  */
 export type NotesHere =
+  | { kind: "transcriptOnly" }
   | { kind: "free" }
   | { kind: "needsKey" }
   | { kind: "key"; provider: ProviderId; transcribes: boolean };
@@ -241,6 +247,7 @@ export function notesHere(
   settings: NotesSettings,
   onDevice: ModelState,
 ): NotesHere {
+  if (settings.transcriptOnly) return { kind: "transcriptOnly" };
   const { provider, key } = providerChoice(settings);
   if (key) {
     return {
@@ -260,5 +267,16 @@ export function canMakeNotes(
   settings: NotesSettings,
   onDevice: ModelState,
 ): boolean {
-  return notesHere(settings, onDevice).kind !== "needsKey";
+  return Boolean(providerChoice(settings).key) || onDeviceUsable(onDevice);
+}
+
+/**
+ * Whether Start AI notes works in this browser: notes can be made here, or they're a
+ * transcript only, which needs nothing to make them.
+ */
+export function canStartNotes(
+  settings: NotesSettings,
+  onDevice: ModelState,
+): boolean {
+  return settings.transcriptOnly === true || canMakeNotes(settings, onDevice);
 }

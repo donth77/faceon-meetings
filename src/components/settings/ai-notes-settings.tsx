@@ -14,6 +14,7 @@ import {
   ListBox,
   ListBoxItem,
   Popover,
+  TextArea,
   TextField,
 } from "react-aria-components";
 import { toast } from "sonner";
@@ -132,6 +133,32 @@ function ModelField({
         </ListBox>
       </Popover>
     </ComboBox>
+  );
+}
+
+/**
+ * Words to know: names, product terms and acronyms the notes spell exactly, whichever way
+ * they're made. Kept in this browser, and sent only with the transcript.
+ */
+function WordsField({ value }: { value: string }) {
+  const t = useTranslations("Settings.aiNotes");
+  return (
+    <TextField
+      value={value}
+      onChange={(next) => saveNotesSettings({ words: next || undefined })}
+      maxLength={1000}
+      className="flex min-w-0 flex-col gap-1.5"
+    >
+      <Label className="text-sm font-semibold">{t("words")}</Label>
+      <TextArea
+        rows={3}
+        spellCheck={false}
+        className={`${INPUT} h-auto min-h-[88px] resize-y py-2.5 leading-normal`}
+      />
+      <span className="text-muted-foreground text-[13px]">
+        {t("wordsHelp")}
+      </span>
+    </TextField>
   );
 }
 
@@ -365,9 +392,13 @@ export function AiNotesSettings({
             value={key}
             inputRef={keyInput}
           />
-          {/* Open from the start where a model was chosen, so it's never out of sight. */}
+          {/* Open from the start where any of it was chosen, so it's never out of sight. */}
           <Disclosure
-            defaultExpanded={Boolean(settings.models?.[provider])}
+            defaultExpanded={
+              Boolean(settings.models?.[provider]) ||
+              Boolean(settings.words) ||
+              settings.transcriptOnly === true
+            }
             className="group flex flex-col gap-3"
           >
             <Button
@@ -381,7 +412,18 @@ export function AiNotesSettings({
               {t("moreOptions")}
             </Button>
             <DisclosurePanel>
-              <ModelField key={provider} provider={provider} model={model} />
+              <div className="flex flex-col gap-4">
+                <ModelField key={provider} provider={provider} model={model} />
+                <WordsField value={settings.words ?? ""} />
+                <SwitchRow
+                  label={t("transcriptOnly")}
+                  help={t("transcriptOnlyHelp")}
+                  isSelected={settings.transcriptOnly === true}
+                  onChange={(on) =>
+                    saveNotesSettings({ transcriptOnly: on ? true : undefined })
+                  }
+                />
+              </div>
             </DisclosurePanel>
           </Disclosure>
         </div>

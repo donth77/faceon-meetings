@@ -6,7 +6,11 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/clipboard";
 import { downloadFile } from "@/lib/download";
-import { notesMarkdown, type MeetingNotes } from "@/lib/notes/notes";
+import {
+  notesMarkdown,
+  transcriptMarkdown,
+  type MeetingNotes,
+} from "@/lib/notes/notes";
 
 export const NOTES_ACTION =
   "h-10 gap-2 rounded-[10px] px-3.5 text-sm font-semibold";
@@ -34,15 +38,27 @@ export function useNotesMarkdown() {
     });
 }
 
-/** Copy and Download .md, for notes in the meeting, after it, and on their page. */
+/** The transcript alone as Markdown, for a meeting kept as a transcript only. */
+export function useTranscriptMarkdown() {
+  const t = useTranslations("Notes");
+  return (input: { title: string; when: string; transcript: string }) =>
+    transcriptMarkdown({ ...input, heading: t("transcript") });
+}
+
+/**
+ * Copy and Download .md, for notes in the meeting, after it, and on their page, or for
+ * a transcript only (`transcript`, which names the file for it).
+ */
 export function NotesFileButtons({
   title,
   markdown,
+  transcript = false,
 }: {
   /** Names the downloaded file. */
   title: string;
-  /** The notes as Markdown, made when asked for. */
+  /** The notes (or the transcript) as Markdown, made when asked for. */
   markdown: () => string;
+  transcript?: boolean;
 }) {
   const t = useTranslations("Notes");
 
@@ -64,7 +80,7 @@ export function NotesFileButtons({
         className={NOTES_ACTION}
         onPress={() =>
           downloadFile({
-            name: t("fileName", { title }),
+            name: t(transcript ? "transcriptFileName" : "fileName", { title }),
             extension: "md",
             content: markdown(),
             type: "text/markdown",

@@ -85,6 +85,7 @@ async function MeetingGate({
         hostName: summary.hostName,
         askToJoin: summary.waitingRoom && !youHost && !summary.joinsAsCohost,
         notesOn: summary.notesOn,
+        notesTranscriptOnly: summary.notesTranscriptOnly,
         notesAuto: summary.notesAuto,
         notesShared: summary.notesShared,
         limits: summary.limits,

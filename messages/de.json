@@ -812,6 +812,7 @@
       "stop": "KI-Notizen beenden",
       "banner": "{name} hat KI-Notizen eingeschaltet. Aus dem Gesagten wird eine Zusammenfassung erstellt, und Sie können wählen, nicht transkribiert zu werden.",
       "bannerShared": "{name} hat KI-Notizen eingeschaltet. Aus dem Gesagten wird eine Zusammenfassung erstellt und mit den Teilnehmern geteilt, und Sie können wählen, nicht transkribiert zu werden.",
+      "bannerTranscript": "{name} hat KI-Notizen nur für ein Transkript eingeschaltet. Sie können wählen, nicht transkribiert zu werden.",
       "bannerDownload": "{name} hat KI-Notizen eingeschaltet. Damit Ihre Beiträge darin vorkommen, braucht Ihr Browser zuerst einen einmaligen Download.",
       "bannerUnsupported": "{name} hat KI-Notizen eingeschaltet. Dieser Browser kann auf Ihrem Gerät nicht transkribieren, daher kommt Ihr Gesagtes darin nicht vor.",
       "bannerDownloadShared": "{name} hat KI-Notizen eingeschaltet, die mit den Teilnehmern geteilt werden. Damit Ihre Beiträge darin vorkommen, braucht Ihr Browser zuerst einen einmaligen Download.",
@@ -920,6 +921,7 @@
     "leaveWaitingRoom": "Verlassen",
     "notesOn": "In diesem Meeting sind KI-Notizen an. Aus dem Gesagten wird eine Zusammenfassung erstellt, und Sie können wählen, nicht transkribiert zu werden.",
     "notesOnShared": "In diesem Meeting sind KI-Notizen an. Aus dem Gesagten wird eine Zusammenfassung erstellt und mit den Teilnehmern geteilt, und Sie können wählen, nicht transkribiert zu werden.",
+    "notesOnTranscript": "In diesem Meeting sind KI-Notizen eingeschaltet, nur für ein Transkript. Sie können wählen, nicht transkribiert zu werden.",
     "notesAutoShared": "In diesem Meeting starten KI-Notizen automatisch. Aus dem Gesagten wird eine Zusammenfassung erstellt und mit den Teilnehmern geteilt, und Sie können wählen, nicht transkribiert zu werden.",
     "youCohost": "Sie sind Co-Host dieses Meetings und nehmen als Co-Host teil.",
     "notesAuto": "In diesem Meeting starten KI-Notizen automatisch. Aus dem Gesagten wird eine Zusammenfassung erstellt, und Sie können wählen, nicht transkribiert zu werden."
@@ -1528,6 +1530,10 @@
       "model": "Modell",
       "recommended": "{model} (empfohlen)",
       "modelHelp": "Wählen Sie eines oder geben Sie eine beliebige Modell-ID Ihres Anbieters ein.",
+      "words": "Wichtige Begriffe",
+      "wordsHelp": "Namen, Produktbegriffe und Abkürzungen, die die Notizen genau so schreiben sollen. Einer pro Zeile oder durch Kommas getrennt.",
+      "transcriptOnly": "Nur Transkript",
+      "transcriptOnlyHelp": "Das Transkript behalten und Notizen nur erstellen, wenn Sie es möchten.",
       "moreOptions": "Weitere Optionen",
       "key": "API-Schlüssel",
       "keyPlaceholder": "Fügen Sie Ihren {provider}-Schlüssel ein",
@@ -1784,6 +1790,7 @@
     "dueBy": "bis {when}",
     "none": "Keine",
     "lineCount": "{count, plural, one {# Zeile} other {# Zeilen}} im Transkript.",
+    "transcriptOnlyNote": "Nur Transkript: Notizen werden nur erstellt, wenn Sie es möchten.",
     "engineOnDevice": "Die Notizen entstehen auf diesem Computer, mit der integrierten KI von Chrome.",
     "engineOwnKey": "Die Notizen schreibt {provider}, mit Ihrem Schlüssel.",
     "inEnglish": "Die integrierte KI von Chrome kann noch keine Notizen auf {language} schreiben, daher sind Notizen, die auf diesem Computer erstellt werden, auf Englisch. Für Notizen auf {language} verwenden Sie Ihren eigenen KI-Schlüssel.",
@@ -1822,6 +1829,7 @@
     "copyFailed": "Kopieren nicht möglich. Laden Sie die Notizen stattdessen herunter.",
     "download": ".md herunterladen",
     "fileName": "KI-Notizen - {title}",
+    "transcriptFileName": "Transkript - {title}",
     "onlyYou": "Nur Sie sehen diese Notizen. Nichts wird gespeichert, bis Sie „Im Meeting speichern“ wählen, und Audio wird nie gespeichert.",
     "discard": "Notizen und Transkript löschen",
     "discardConfirm": "Aus diesem Tab löschen?",
@@ -1860,10 +1868,12 @@
       "free": "Kostenlos: Die Notizen werden auf diesem Computer erstellt. Nur wer Chrome verwendet, wird transkribiert.",
       "needsKey": "Fügen Sie einen Schlüssel hinzu, um KI-Notizen in diesem Browser zu verwenden.",
       "transcribes": "{provider} transkribiert alle und schreibt die Notizen.",
-      "writes": "{provider} schreibt die Notizen. Nur wer Chrome verwendet, wird transkribiert."
+      "writes": "{provider} schreibt die Notizen. Nur wer Chrome verwendet, wird transkribiert.",
+      "transcriptOnly": "Nur Transkript: Notizen werden nur erstellt, wenn Sie es möchten. Nur wer Chrome verwendet, wird transkribiert."
     },
     "made": {
-      "onDevice": "Die Notizen werden kostenlos auf dem Computer von {name} erstellt. Nur wer Chrome verwendet, wird transkribiert."
+      "onDevice": "Die Notizen werden kostenlos auf dem Computer von {name} erstellt. Nur wer Chrome verwendet, wird transkribiert.",
+      "transcriptOnly": "{name} behält nur ein Transkript und erstellt Notizen nur auf Wunsch. Nur wer Chrome verwendet, wird transkribiert."
     }
   },
   "SavedNotes": {

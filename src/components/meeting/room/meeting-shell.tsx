@@ -315,6 +315,7 @@ export function MeetingShell({
           allowed={notes.notesAllowed}
           canMake={notes.canMake}
           keyProblem={notes.keyProblem}
+          onlyWhenAsked={notes.onlyWhenAsked}
           shared={notes.shareNotes}
           isOwner={selfRole === "host"}
           hostName={meeting.hostName}

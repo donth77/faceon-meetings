@@ -97,6 +97,8 @@ const saved = (settings: object) =>
 const FREE =
   "Free: notes are made on this computer. Only people using Chrome are transcribed.";
 const NEEDS_KEY = "Add a key to use AI notes in this browser.";
+const TRANSCRIPT_ONLY =
+  "Transcript only: notes are made only if you choose. Only people using Chrome are transcribed.";
 const writes = (provider: string) =>
   `${provider} will write the notes. Only people using Chrome are transcribed.`;
 const KEY = "sk-e2e-not-a-real-key";
@@ -366,6 +368,179 @@ test.describe("AI notes in this browser", () => {
       // notes it refused.
       expect(toOpenAi).toHaveLength(2);
       expectNoErrors(host);
+    } finally {
+      await database().query(`delete from host_allowlist where email = $1`, [
+        host.user.email.toLowerCase(),
+      ]);
+    }
+  });
+
+  test("More options keeps words to know and a transcript only, which starts in any browser", async ({
+    people,
+  }) => {
+    const host = await people.signedIn({ aiNotes: true });
+    await host.context.addInitScript({ content: NO_BUILT_IN_AI });
+    await standInForProviders(host.context);
+    await host.page.goto("/settings/ai-notes");
+    await expect(host.page.getByText(NEEDS_KEY)).toBeVisible();
+
+    // Out of sight until asked for.
+    const words = host.page.getByLabel("Words to know");
+    const only = host.page.getByRole("switch", { name: "Transcript only" });
+    await expect(words).toBeHidden();
+    await expect(only).toBeHidden();
+    await host.page.getByRole("button", { name: "More options" }).click();
+    await words.fill("Priya Raman, SSO");
+    await host.page.locator("label", { has: only }).click();
+    await expect(only).toBeChecked();
+    // Nothing's needed to make a transcript, so this browser can start one.
+    await expect(host.page.getByText(TRANSCRIPT_ONLY)).toBeVisible();
+    await expect(host.page.getByText(NEEDS_KEY)).toHaveCount(0);
+
+    // Kept, and in sight, next time.
+    await host.page.reload();
+    await expect(host.page.getByText(TRANSCRIPT_ONLY)).toBeVisible();
+    await expect(words).toHaveValue("Priya Raman, SSO");
+    await expect(only).toBeChecked();
+    expectNoErrors(host);
+  });
+
+  test("a transcript only is said to everyone, sends the transcript nowhere, and makes notes only when asked, with the words to know", async ({
+    people,
+  }) => {
+    needsStream();
+    test.setTimeout(180_000);
+    const host = await people.signedIn({ name: "Notes Host", aiNotes: true });
+    // Only full meetings offer AI notes.
+    await database().query(
+      `insert into host_allowlist (email, note) values ($1, 'e2e') on conflict do nothing`,
+      [host.user.email.toLowerCase()],
+    );
+    try {
+      const meeting = await createMeeting(host.user.id);
+      await host.context.addInitScript({
+        content: `${CHROME_MAKING_NOTES}${saved({
+          transcriptOnly: true,
+          words: "Priya Raman\nSSO",
+          provider: "openai",
+          keys: { openai: KEY },
+        })}`,
+      });
+      // OpenAI, for the notes asked for in the end; what it's sent is noted.
+      const toOpenAi: string[] = [];
+      await host.context.route(
+        "https://api.openai.com/v1/chat/completions",
+        async (route) => {
+          const cors = { "access-control-allow-origin": "*" };
+          if (route.request().method() === "OPTIONS") {
+            await route.fulfill({
+              status: 204,
+              headers: {
+                ...cors,
+                "access-control-allow-headers": "*",
+                "access-control-allow-methods": "POST",
+              },
+            });
+            return;
+          }
+          toOpenAi.push(route.request().postData() ?? "");
+          await route.fulfill({
+            status: 200,
+            headers: cors,
+            json: {
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: JSON.stringify(NOTES),
+                  },
+                },
+              ],
+            },
+          });
+        },
+      );
+      const guest = await people.guest();
+      await guest.context.addInitScript({ content: CHROME_WITH_AI });
+      await openMeeting(host.page, meeting);
+      await joinFromPreJoin(host.page);
+      await openMeeting(guest.page, meeting);
+      await joinFromPreJoin(guest.page, "Riley Guest");
+
+      // The panel says what Start will do here, and everyone's told as it does.
+      await host.page.getByRole("button", { name: /^More/ }).click();
+      await host.page.getByRole("menuitem", { name: "AI notes" }).click();
+      await expect(host.page.getByText(TRANSCRIPT_ONLY)).toBeVisible();
+      await host.page.getByRole("button", { name: "Start AI notes" }).click();
+      await expect(
+        guest.page.getByText(
+          "Notes Host turned on AI notes for a transcript only. You can choose not to be transcribed.",
+        ),
+      ).toBeVisible();
+      await expect(
+        guest.page
+          .getByText(
+            "Notes Host keeps a transcript only, and makes notes only if they choose. Only people using Chrome are transcribed.",
+          )
+          .first(),
+      ).toBeVisible();
+      const late = await people.guest();
+      await openMeeting(late.page, meeting);
+      await expect(
+        late.page.getByText(
+          "AI notes are on in this meeting, for a transcript only. You can choose not to be transcribed.",
+        ),
+      ).toBeVisible();
+      await expect(host.page.getByText(LINES[0]!)).toBeVisible({
+        timeout: 30_000,
+      });
+
+      // Stopped, it's the transcript, to copy or keep, and no notes.
+      await host.page.getByRole("button", { name: "Stop AI notes" }).click();
+      await expect(
+        host.page.getByText(
+          "Transcript only: notes are made only if you choose.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+      await expect(
+        host.page.getByRole("button", { name: "Download .md" }),
+      ).toBeVisible();
+      await expect(host.page.getByText(/^Made by/)).toHaveCount(0);
+
+      // Started again as a transcript only, it stays one, though Settings changes
+      // before it stops: no notes nobody was told about.
+      await host.page
+        .getByRole("button", { name: "Start AI notes again" })
+        .click();
+      await expect(host.page.getByText(LINES[1]!)).toBeVisible({
+        timeout: 30_000,
+      });
+      await host.page.getByRole("button", { name: /^More/ }).click();
+      await host.page.getByRole("menuitem", { name: "Settings" }).click();
+      const settings = host.page.getByRole("dialog");
+      await settings.getByRole("tab", { name: "AI notes" }).click();
+      const only = settings.getByRole("switch", { name: "Transcript only" });
+      await settings
+        .locator("label", {
+          has: host.page.getByRole("switch", { name: "Transcript only" }),
+        })
+        .click();
+      await expect(only).not.toBeChecked();
+      await host.page.keyboard.press("Escape");
+      await host.page.getByRole("button", { name: "Stop AI notes" }).click();
+      await host.page.getByRole("button", { name: "Make notes" }).click();
+      await expect(host.page.getByText(/^Made by OpenAI at/)).toBeVisible({
+        timeout: 30_000,
+      });
+      // The transcript went to OpenAI once, for these notes, with the words to know.
+      // (Settings tests a key it shows, with a word or two and nothing of the meeting.)
+      const withTranscript = toOpenAi.filter((body) =>
+        body.includes("March 3rd"),
+      );
+      expect(withTranscript).toHaveLength(1);
+      expect(withTranscript[0]).toContain("Priya Raman, SSO.");
+      expectNoErrors(host, guest, late);
     } finally {
       await database().query(`delete from host_allowlist where email = $1`, [
         host.user.email.toLowerCase(),

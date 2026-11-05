@@ -50,6 +50,8 @@ Cuando quien toma las notas detiene las notas de IA, o sale, las notas se crean 
 
 En un navegador sin la IA integrada de Chrome ni una clave, **Iniciar notas de IA** aparece atenuado, con un enlace para agregar una clave. Permitir notas de IA en tus reuniones forma parte de tu cuenta, así que es igual en todos los navegadores; una clave se queda en el navegador donde la agregas. A todos en la reunión se les dice quién crea las notas: la computadora de quien toma las notas o el proveedor de su clave.
 
+En **Más opciones**, **Modelo** elige el modelo que usa tu clave, **Vocabulario** reúne nombres, términos de productos y siglas que las notas deben escribir tal cual, y **Solo transcripción** conserva solo la transcripción: las notas se crean solo cuando seleccionas **Crear notas**, y **Iniciar notas de IA** funciona en cualquier navegador. Todos ven que es solo una transcripción.
+
 > **Tu clave se queda en tu navegador.** {appName} nunca la recibe ni la guarda. Los planes gratuitos de algunos proveedores pueden usar lo que envías para mejorar sus productos, así que revisa las condiciones de tu proveedor antes de usar una clave gratuita en reuniones privadas.
 
 ## Después de la reunión

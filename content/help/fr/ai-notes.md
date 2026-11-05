@@ -50,6 +50,8 @@ Quand la personne qui prend les notes arrête les notes IA, ou part, les notes s
 
 Dans un navigateur sans l’IA intégrée de Chrome ni clé, **Démarrer les notes IA** est grisé, avec un lien pour ajouter une clé. Autoriser les notes IA dans vos réunions fait partie de votre compte, c’est donc pareil dans tous les navigateurs ; une clé reste dans le navigateur où vous l’ajoutez. Tout le monde dans la réunion sait qui rédige les notes : l’ordinateur de la personne qui les prend, ou le fournisseur de sa clé.
 
+Dans **Plus d’options**, **Modèle** choisit le modèle qu’utilise votre clé, **Vocabulaire** réunit les noms, termes de produits et sigles que les notes doivent écrire exactement ainsi, et **Transcription seule** garde seulement la transcription : les notes ne sont rédigées que lorsque vous sélectionnez **Rédiger les notes**, et **Démarrer les notes IA** fonctionne dans n’importe quel navigateur. Tout le monde voit qu’il s’agit d’une transcription seule.
+
 > **Votre clé reste dans votre navigateur.** {appName} ne la reçoit ni ne la conserve jamais. Les offres gratuites de certains fournisseurs peuvent utiliser ce que vous envoyez pour améliorer leurs produits : vérifiez les conditions de votre fournisseur avant d’utiliser une clé gratuite pour des réunions privées.
 
 ## Après la réunion

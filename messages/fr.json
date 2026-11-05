@@ -812,6 +812,7 @@
       "stop": "Arrêter les notes IA",
       "banner": "{name} a activé les notes IA. Un résumé sera rédigé à partir de ce qui est dit, et vous pouvez choisir de ne pas être transcrit.",
       "bannerShared": "{name} a activé les notes IA. Un résumé sera rédigé à partir de ce qui est dit et partagé avec les participants, et vous pouvez choisir de ne pas être transcrit.",
+      "bannerTranscript": "{name} a activé les notes IA pour une transcription seule. Vous pouvez choisir de ne pas être transcrit.",
       "bannerDownload": "{name} a activé les notes IA. Pour y inclure ce que vous dites, votre navigateur doit d’abord effectuer un téléchargement unique.",
       "bannerUnsupported": "{name} a activé les notes IA. Ce navigateur ne peut pas transcrire sur votre appareil : ce que vous dites n’y figurera donc pas.",
       "bannerDownloadShared": "{name} a activé les notes IA, qui sont partagées avec les participants. Pour y inclure ce que vous dites, votre navigateur doit d’abord effectuer un téléchargement unique.",
@@ -920,6 +921,7 @@
     "leaveWaitingRoom": "Quitter",
     "notesOn": "Les notes IA sont activées dans cette réunion. Un résumé est rédigé à partir de ce qui est dit, et vous pouvez choisir de ne pas être transcrit.",
     "notesOnShared": "Les notes IA sont activées dans cette réunion. Un résumé est rédigé à partir de ce qui est dit et partagé avec les participants, et vous pouvez choisir de ne pas être transcrit.",
+    "notesOnTranscript": "Les notes IA sont activées dans cette réunion, pour une transcription seule. Vous pouvez choisir de ne pas être transcrit.",
     "notesAutoShared": "Les notes IA démarrent automatiquement dans cette réunion. Un résumé est rédigé à partir de ce qui est dit et partagé avec les participants, et vous pouvez choisir de ne pas être transcrit.",
     "youCohost": "Vous êtes co-hôte de cette réunion : vous la rejoindrez en tant que tel.",
     "notesAuto": "Les notes IA démarrent automatiquement dans cette réunion. Un résumé est rédigé à partir de ce qui est dit, et vous pouvez choisir de ne pas être transcrit."
@@ -1528,6 +1530,10 @@
       "model": "Modèle",
       "recommended": "{model} (recommandé)",
       "modelHelp": "Choisissez-en un, ou saisissez n’importe quel ID de modèle proposé par votre fournisseur.",
+      "words": "Vocabulaire",
+      "wordsHelp": "Noms, termes de produits et sigles que les notes doivent écrire exactement ainsi. Un par ligne, ou séparés par des virgules.",
+      "transcriptOnly": "Transcription seule",
+      "transcriptOnlyHelp": "Gardez la transcription, et rédigez des notes seulement quand vous le choisissez.",
       "moreOptions": "Plus d’options",
       "key": "Clé d’API",
       "keyPlaceholder": "Collez votre clé {provider}",
@@ -1784,6 +1790,7 @@
     "dueBy": "d’ici {when}",
     "none": "Aucune",
     "lineCount": "{count, plural, one {# ligne} other {# lignes}} dans la transcription.",
+    "transcriptOnlyNote": "Transcription seule : les notes ne sont rédigées que si vous le choisissez.",
     "engineOnDevice": "Les notes sont rédigées sur cet ordinateur, avec l’IA intégrée de Chrome.",
     "engineOwnKey": "Les notes sont rédigées par {provider}, avec votre clé.",
     "inEnglish": "L’IA intégrée de Chrome n’écrit pas encore de notes en {language} : les notes créées sur cet ordinateur seront donc en anglais. Pour des notes en {language}, utilisez votre propre clé d’IA.",
@@ -1822,6 +1829,7 @@
     "copyFailed": "Impossible de copier. Essayez plutôt Télécharger.",
     "download": "Télécharger le .md",
     "fileName": "Notes IA - {title}",
+    "transcriptFileName": "Transcription - {title}",
     "onlyYou": "Vous seul pouvez voir ces notes. Rien n’est enregistré tant que vous ne choisissez pas Enregistrer dans la réunion, et l’audio n’est jamais conservé.",
     "discard": "Supprimer les notes et la transcription",
     "discardConfirm": "Les supprimer de cet onglet ?",
@@ -1860,10 +1868,12 @@
       "free": "Gratuit : les notes sont rédigées sur cet ordinateur. Seules les personnes qui utilisent Chrome sont transcrites.",
       "needsKey": "Ajoutez une clé pour utiliser les notes IA dans ce navigateur.",
       "transcribes": "{provider} transcrira tout le monde et rédigera les notes.",
-      "writes": "{provider} rédigera les notes. Seules les personnes qui utilisent Chrome sont transcrites."
+      "writes": "{provider} rédigera les notes. Seules les personnes qui utilisent Chrome sont transcrites.",
+      "transcriptOnly": "Transcription seule : les notes ne sont rédigées que si vous le choisissez. Seules les personnes qui utilisent Chrome sont transcrites."
     },
     "made": {
-      "onDevice": "Les notes sont rédigées gratuitement sur l’ordinateur de {name}. Seules les personnes qui utilisent Chrome sont transcrites."
+      "onDevice": "Les notes sont rédigées gratuitement sur l’ordinateur de {name}. Seules les personnes qui utilisent Chrome sont transcrites.",
+      "transcriptOnly": "{name} garde seulement une transcription, et ne rédige des notes que s’il ou elle le choisit. Seules les personnes qui utilisent Chrome sont transcrites."
     }
   },
   "SavedNotes": {

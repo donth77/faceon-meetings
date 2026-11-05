@@ -146,6 +146,7 @@ export function NotesPanel({
   hostName,
   isNotetaker,
   canMake,
+  onlyWhenAsked,
   keyProblem,
   lines,
   notTranscribed,
@@ -176,6 +177,8 @@ export function NotesPanel({
   isNotetaker: boolean;
   /** This browser can make the notes (Chrome's model, or a key); else Start shows disabled, with why. */
   canMake: boolean;
+  /** These AI notes were announced as a transcript only: notes are made only when asked. */
+  onlyWhenAsked: boolean;
   /** Your key, refused by its provider as AI notes started: said while there's time to fix it. */
   keyProblem: { failure: ProviderFailure; provider: ProviderId } | null;
   /** This tab's transcript. */
@@ -193,6 +196,7 @@ export function NotesPanel({
 }) {
   const t = useTranslations("Meeting.notes");
   const tn = useTranslations("Notes");
+  const sentence = useNotesSentence();
   const [busy, setBusy] = useState(false);
   // Notes made on this computer, in a language Chrome's AI doesn't write yet: said once
   // they're on, until put away on this device.
@@ -203,6 +207,7 @@ export function NotesPanel({
     isNotetaker &&
     inEnglish &&
     !englishSeen &&
+    !settings.transcriptOnly &&
     engineFor(settings) === "onDevice";
   const bodyRef = useRef<HTMLDivElement>(null);
   const reasonId = useId();
@@ -303,8 +308,9 @@ export function NotesPanel({
           lines={lines}
           settings={{ onPress: onOpenSettings }}
           autoStart={
-            // Turned off by the meeting's host, rather than stopped: only when asked.
-            allowed
+            // Turned off by the meeting's host, rather than stopped, or a transcript only:
+            // only when asked.
+            allowed && !onlyWhenAsked
           }
           autoShare={shared}
           onDiscard={onDiscard}
@@ -323,7 +329,11 @@ export function NotesPanel({
     }
     body = (
       <div className="flex flex-col gap-3 px-5 pb-1 text-sm leading-normal">
-        <p>{t("intro")}</p>
+        <p>
+          {settings.transcriptOnly
+            ? sentence.here({ kind: "transcriptOnly" })
+            : t("intro")}
+        </p>
         <p className="text-muted-foreground">{note}</p>
       </div>
     );

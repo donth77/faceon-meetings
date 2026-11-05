@@ -812,6 +812,7 @@
       "stop": "Stop AI notes",
       "banner": "{name} turned on AI notes. A summary will be made from what's said, and you can choose not to be transcribed.",
       "bannerShared": "{name} turned on AI notes. A summary will be made from what's said and shared with the participants, and you can choose not to be transcribed.",
+      "bannerTranscript": "{name} turned on AI notes for a transcript only. You can choose not to be transcribed.",
       "bannerDownload": "{name} turned on AI notes. To put what you say in them, your browser needs a one-time download first.",
       "bannerUnsupported": "{name} turned on AI notes. This browser can't transcribe on your device, so what you say isn't in them.",
       "bannerDownloadShared": "{name} turned on AI notes, which are shared with the participants. To put what you say in them, your browser needs a one-time download first.",
@@ -920,6 +921,7 @@
     "leaveWaitingRoom": "Leave",
     "notesOn": "AI notes are on in this meeting. A summary is made from what's said, and you can choose not to be transcribed.",
     "notesOnShared": "AI notes are on in this meeting. A summary is made from what's said and shared with the participants, and you can choose not to be transcribed.",
+    "notesOnTranscript": "AI notes are on in this meeting, for a transcript only. You can choose not to be transcribed.",
     "notesAutoShared": "AI notes start automatically in this meeting. A summary is made from what's said and shared with the participants, and you can choose not to be transcribed.",
     "youCohost": "You're a co-host of this meeting, so you'll join as one.",
     "notesAuto": "AI notes start automatically in this meeting. A summary is made from what's said, and you can choose not to be transcribed."
@@ -1528,6 +1530,10 @@
       "model": "Model",
       "recommended": "{model} (recommended)",
       "modelHelp": "Pick one, or type any model ID your provider offers.",
+      "words": "Words to know",
+      "wordsHelp": "Names, product terms and acronyms the notes should spell exactly. One per line, or separated by commas.",
+      "transcriptOnly": "Transcript only",
+      "transcriptOnlyHelp": "Keep the transcript, and make notes only when you choose.",
       "moreOptions": "More options",
       "key": "API key",
       "keyPlaceholder": "Paste your {provider} key",
@@ -1784,6 +1790,7 @@
     "dueBy": "by {when}",
     "none": "None",
     "lineCount": "{count, plural, one {# line} other {# lines}} in the transcript.",
+    "transcriptOnlyNote": "Transcript only: notes are made only if you choose.",
     "engineOnDevice": "Notes are made on this computer, with Chrome's built-in AI.",
     "engineOwnKey": "Notes are made by {provider}, with your key.",
     "inEnglish": "Chrome's built-in AI can't write notes in {language} yet, so notes made on this computer will be in English. For notes in {language}, use your own AI key.",
@@ -1822,6 +1829,7 @@
     "copyFailed": "Couldn't copy. Try Download instead.",
     "download": "Download .md",
     "fileName": "{title} AI notes",
+    "transcriptFileName": "{title} transcript",
     "onlyYou": "Only you can see these notes. Nothing is saved until you choose Save to meeting, and audio is never stored.",
     "discard": "Delete notes and transcript",
     "discardConfirm": "Delete them from this tab?",
@@ -1860,10 +1868,12 @@
       "free": "Free: notes are made on this computer. Only people using Chrome are transcribed.",
       "needsKey": "Add a key to use AI notes in this browser.",
       "transcribes": "{provider} will transcribe everyone and write the notes.",
-      "writes": "{provider} will write the notes. Only people using Chrome are transcribed."
+      "writes": "{provider} will write the notes. Only people using Chrome are transcribed.",
+      "transcriptOnly": "Transcript only: notes are made only if you choose. Only people using Chrome are transcribed."
     },
     "made": {
-      "onDevice": "{name}'s computer makes the notes, for free. Only people using Chrome are transcribed."
+      "onDevice": "{name}'s computer makes the notes, for free. Only people using Chrome are transcribed.",
+      "transcriptOnly": "{name} keeps a transcript only, and makes notes only if they choose. Only people using Chrome are transcribed."
     }
   },
   "SavedNotes": {

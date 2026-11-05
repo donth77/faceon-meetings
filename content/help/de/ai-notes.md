@@ -50,6 +50,8 @@ Wenn die Person, die die Notizen erstellt, die KI-Notizen beendet oder das Meeti
 
 In einem Browser ohne die integrierte KI von Chrome und ohne Schlüssel ist **KI-Notizen starten** ausgegraut, mit einem Link, um einen Schlüssel hinzuzufügen. Das Zulassen von KI-Notizen in Ihren Meetings gehört zu Ihrem Konto und gilt deshalb in jedem Browser; ein Schlüssel bleibt in dem Browser, in dem Sie ihn hinzufügen. Alle im Meeting erfahren, wer die Notizen erstellt: der Computer der Person, die sie macht, oder der Anbieter ihres Schlüssels.
 
+Unter **Weitere Optionen** wählt **Modell** das Modell, das Ihr Schlüssel verwendet, **Wichtige Begriffe** sammelt Namen, Produktbegriffe und Abkürzungen, die die Notizen genau so schreiben sollen, und **Nur Transkript** behält nur das Transkript: Notizen entstehen erst, wenn Sie **Notizen erstellen** wählen, und **KI-Notizen starten** funktioniert in jedem Browser. Alle sehen, dass es nur ein Transkript ist.
+
 > **Ihr Schlüssel bleibt in Ihrem Browser.** {appName} empfängt oder speichert ihn nie. Die kostenlosen Tarife mancher Anbieter dürfen das, was Sie senden, zur Verbesserung ihrer Produkte nutzen, prüfen Sie also die Bedingungen Ihres Anbieters, bevor Sie einen kostenlosen Schlüssel für vertrauliche Meetings verwenden.
 
 ## Nach dem Meeting

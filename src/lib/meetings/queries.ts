@@ -270,6 +270,8 @@ export async function getMeetingSummary(
   waitingRoom: boolean;
   /** AI notes are on in the session running now. */
   notesOn: boolean;
+  /** ...for a transcript only: no summary unless the notetaker asks for one. */
+  notesTranscriptOnly: boolean;
   /** AI notes start by themselves once a host or co-host is in. */
   notesAuto: boolean;
   /** AI notes are shared with the participants as soon as they're made. */
@@ -327,6 +329,7 @@ export async function getMeetingSummary(
     allowGuests: found.meeting.settings.allowGuests,
     waitingRoom: found.meeting.settings.waitingRoom,
     notesOn: open?.notes != null,
+    notesTranscriptOnly: open?.notes?.madeWith?.transcriptOnly === true,
     // As the session has it once one is open; before that, as it would open.
     notesAuto:
       aiNotesEnabled &&

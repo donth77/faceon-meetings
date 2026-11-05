@@ -17,7 +17,11 @@ import {
   type NotesProgress,
 } from "@/lib/notes/engines";
 import { TEST_AFTER_MS, useKeyCheck } from "@/lib/notes/key-check";
-import { MAX_SAVED_NOTES_BYTES, savedNotesBytes } from "@/lib/notes/notes";
+import {
+  MAX_SAVED_NOTES_BYTES,
+  savedNotesBytes,
+  wordsToKnow,
+} from "@/lib/notes/notes";
 import { ProviderError, type ProviderFailure } from "@/lib/notes/providers";
 import { NotesRun } from "@/lib/notes/run";
 import { useNotesSettings } from "@/lib/notes/settings";
@@ -122,6 +126,7 @@ export function useNotesMaker({
     const downloads = using === "onDevice" && onDevice !== "ready";
     const job = {
       locale,
+      words: wordsToKnow(settings.words),
       title,
       transcript: transcriptOf(),
       signal,
@@ -221,6 +226,8 @@ export function useNotesMaker({
   return {
     state,
     engine,
+    /** A transcript only: notes are made when asked for, never by themselves. */
+    transcriptOnly: settings.transcriptOnly === true,
     onDevice,
     provider: choice.provider,
     ready,

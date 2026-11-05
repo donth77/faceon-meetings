@@ -14,7 +14,7 @@ import type {
   SessionInfo,
 } from "@/lib/meetings/api";
 import { notesOnJoin, offersNotes } from "@/lib/meetings/rules";
-import { canMakeNotes, engineFor, providerChoice } from "@/lib/notes/engines";
+import { canStartNotes, engineFor, providerChoice } from "@/lib/notes/engines";
 import {
   keyProblem,
   TEST_AFTER_MS,
@@ -114,9 +114,13 @@ export function useMeetingNotes({
   const onDevice = useOnDeviceModel();
   const state = media.sessionState;
   const choice = providerChoice(settings);
-  const withKey = engineFor(settings) === "ownKey";
+  /** A transcript only: no provider is asked for anything, and everyone's told. */
+  const transcriptOnly = settings.transcriptOnly === true;
+  const withKey = !transcriptOnly && engineFor(settings) === "ownKey";
   /** How this browser makes notes, which everyone is told as it turns them on. */
-  const madeWith = { provider: withKey ? choice.provider : null };
+  const madeWith = transcriptOnly
+    ? { provider: null, transcriptOnly: true as const }
+    : { provider: withKey ? choice.provider : null };
   const sentence = useNotesSentence();
   /** Settings → AI notes, with focus on the key. */
   function openKey() {
@@ -156,7 +160,7 @@ export function useMeetingNotes({
       demo: session.demo,
       stopped: state.notesStopped,
       on: state.notes !== null,
-      canMake: canMakeNotes(settings, onDevice),
+      canMake: canStartNotes(settings, onDevice),
     });
     if (action === "start") {
       meetingApi
@@ -264,7 +268,14 @@ export function useMeetingNotes({
       return;
     }
     toast(
-      t(shared ? "notes.bannerShared" : "notes.banner", { name: notes.name }),
+      t(
+        notes.madeWith?.transcriptOnly
+          ? "notes.bannerTranscript"
+          : shared
+            ? "notes.bannerShared"
+            : "notes.banner",
+        { name: notes.name },
+      ),
       {
         id: "notes-banner",
         duration: 15_000,
@@ -277,14 +288,22 @@ export function useMeetingNotes({
     );
   }, [notes, selfState, self.id, t, setOptedOut, download, shared, sentence]);
 
-  // The meeting's host turned AI notes off: what this tab collected becomes notes only
-  // when asked, here or after the meeting.
+  // A transcript only, as everyone was told when this tab's AI notes went on: its notes
+  // are made only when asked, even if Settings changes before AI notes stop.
+  const [announcedTranscriptOnly, setAnnouncedTranscriptOnly] = useState(false);
+  const announcedNow = notes?.madeWith?.transcriptOnly === true;
+  if (isNotetaker && announcedNow !== announcedTranscriptOnly) {
+    setAnnouncedTranscriptOnly(announcedNow);
+  }
+
+  // The meeting's host turned AI notes off, or they were a transcript only: what this tab
+  // collected becomes notes only when asked, here or after the meeting.
   const allowedNow = media.sessionState?.notesAllowed;
   const collected = transcript.lines.length > 0;
   useEffect(() => {
     if (allowedNow === undefined || !collected) return;
-    markNotesTurnedOff(session.id, !allowedNow);
-  }, [allowedNow, collected, session.id]);
+    markNotesTurnedOff(session.id, !allowedNow || announcedTranscriptOnly);
+  }, [allowedNow, collected, session.id, announcedTranscriptOnly]);
 
   // Who isn't in the notes, for the notetaker; you see your own state in the chip.
   const notTranscribed: NotTranscribed[] = [];
@@ -320,8 +339,10 @@ export function useMeetingNotes({
     notesAllowed,
     notesOffered,
     /** This browser can make the notes from the transcript; true until that's known. */
-    canMake: onDevice === null || canMakeNotes(settings, onDevice),
+    canMake: onDevice === null || canStartNotes(settings, onDevice),
     /** The notetaker's key, refused by its provider as AI notes started. */
+    /** This tab's notes were announced as a transcript only: made only when asked. */
+    onlyWhenAsked: announcedTranscriptOnly,
     keyProblem: problem
       ? { failure: problem.failure, provider: choice.provider }
       : null,

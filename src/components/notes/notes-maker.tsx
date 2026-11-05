@@ -30,6 +30,7 @@ import {
   NOTES_ACTION as ACTION,
   NotesFileButtons,
   useNotesMarkdown,
+  useTranscriptMarkdown,
 } from "./notes-file";
 import { NotesView } from "./notes-view";
 import { useNotesMaker, type SaveState } from "./use-notes-maker";
@@ -153,6 +154,35 @@ function SaveControls({
       </div>
     </div>
   );
+}
+
+/** Copy and Download the transcript alone, for a meeting kept as a transcript only. */
+function TranscriptFileButtons({
+  title,
+  lines,
+}: {
+  title: string;
+  lines: readonly TranscriptLine[];
+}) {
+  const locale = useIntlLocale();
+  const timeZone = useViewerTimeZone();
+  const toMarkdown = useTranscriptMarkdown();
+  const markdown = () => {
+    const time = new Intl.DateTimeFormat(locale, {
+      timeStyle: "short",
+      timeZone,
+    });
+    return toMarkdown({
+      title,
+      when: new Intl.DateTimeFormat(locale, {
+        dateStyle: "full",
+        timeStyle: "short",
+        timeZone,
+      }).format(lines[0]?.at ?? Date.now()),
+      transcript: transcriptText(lines, (at) => time.format(at)),
+    });
+  };
+  return <NotesFileButtons title={title} markdown={markdown} transcript />;
 }
 
 /** The notes, how and when they were made, saving, Copy and Download, and Make again. */
@@ -306,7 +336,8 @@ export function NotesMaker({
 
   // Stopping AI notes, or leaving, makes the notes at once where nothing needs asking
   // (Chrome's model already on this computer, or a key), and makes them again when the
-  // transcript has grown since. Never a download nobody asked for.
+  // transcript has grown since. Never a download nobody asked for, and never notes for
+  // a transcript only: those wait for Make notes.
   const started = useRef(false);
   const start = useEffectEvent(() => void maker.make());
   const instant =
@@ -314,10 +345,11 @@ export function NotesMaker({
   const due =
     state.step === "ready" || (state.step === "done" && maker.outdated);
   useEffect(() => {
-    if (!autoStart || started.current || !due || !instant) return;
+    if (!autoStart || maker.transcriptOnly || started.current || !due) return;
+    if (!instant) return;
     started.current = true;
     start();
-  }, [autoStart, due, instant]);
+  }, [autoStart, maker.transcriptOnly, due, instant]);
 
   // Shared as soon as they're made, once; afterwards Stop sharing (here or in Previous)
   // is the notetaker's, as is saving notes made again.
@@ -396,6 +428,30 @@ export function NotesMaker({
           ? t(`notReady.${onDevice}`)
           : null;
       const failure = state.step === "failed" ? state.failure.kind : null;
+      if (maker.transcriptOnly && state.step === "ready") {
+        // A transcript only: it, to copy or keep, and notes if they're wanted after all.
+        body = (
+          <div className="flex flex-col gap-3 text-sm leading-normal">
+            <p>{t("lineCount", { count: lines.length })}</p>
+            <p className="text-muted-foreground">{t("transcriptOnlyNote")}</p>
+            <div className="flex flex-wrap gap-2">
+              <TranscriptFileButtons title={title} lines={lines} />
+              {maker.ready && lines.length > 0 ? (
+                <Button
+                  variant="outline"
+                  className={ACTION}
+                  onPress={() => void maker.make()}
+                >
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  {downloadFirst ? t("downloadAndMake") : t("make")}
+                </Button>
+              ) : null}
+              <SettingsButton settings={settings} />
+            </div>
+          </div>
+        );
+        break;
+      }
       /** The key's provider refused: in Chrome, these notes can still be made here, for free. */
       const insteadHere =
         failure !== null &&
