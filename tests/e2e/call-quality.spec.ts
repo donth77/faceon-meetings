@@ -86,6 +86,23 @@ const closePictureInPicture = (page: Page) =>
     (window as WithPictureInPicture).documentPictureInPicture?.window?.close(),
   );
 
+/**
+ * Makes a page say it's in the background, or back, as switching tabs does: a headless
+ * browser never hides one.
+ */
+const setHidden = (page: Page, hidden: boolean) =>
+  page.evaluate((hidden) => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => hidden,
+    });
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => (hidden ? "hidden" : "visible"),
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, hidden);
+
 /** How wide someone's tile is, in device pixels. */
 const tileDeviceWidth = (page: Page, name: string) =>
   tileVideo(page, name).evaluate(
@@ -209,6 +226,30 @@ test.describe("call quality", () => {
     // Scrolled into view, it plays.
     await samTile.scrollIntoViewIfNeeded();
     await expectFlowing(host.page, samTrack, "Sam");
+    expectNoErrors(host, jordan, sam);
+  });
+
+  test("a page in the background gets everyone's smallest copy, and larger ones once it's back", async ({
+    people,
+  }) => {
+    const { host, jordan, sam, tracks } = await threePeople(people);
+    const widths = async () => [
+      (await received(host.page, tracks.hostSeesJordan))?.width ?? 0,
+      (await received(host.page, tracks.hostSeesSam))?.width ?? 0,
+    ];
+
+    // Stream sends each camera 320, 640 and 1280 wide; Maya's tiles take more than 320.
+    await expect
+      .poll(async () => Math.min(...(await widths())), { timeout: 30_000 })
+      .toBeGreaterThan(320);
+    await setHidden(host.page, true);
+    await expect
+      .poll(async () => Math.max(...(await widths())), { timeout: 20_000 })
+      .toBeLessThanOrEqual(320);
+    await setHidden(host.page, false);
+    await expect
+      .poll(async () => Math.min(...(await widths())), { timeout: 30_000 })
+      .toBeGreaterThan(320);
     expectNoErrors(host, jordan, sam);
   });
 
