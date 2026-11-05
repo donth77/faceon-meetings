@@ -21,15 +21,16 @@ export { expect };
  * it has taken over with its own properties.
  */
 export async function hydrated(locator: Locator): Promise<void> {
-  const element = await locator.elementHandle();
-  await locator
-    .page()
-    .waitForFunction(
-      (node) =>
-        node !== null &&
+  // The element is found again each time: as a page hydrates, React can replace the one
+  // the server sent (a boundary rendered again on the client), and the old one never gets
+  // React's properties.
+  await expect
+    .poll(() =>
+      locator.evaluate((node) =>
         Object.keys(node).some((key) => key.startsWith("__reactProps$")),
-      element,
-    );
+      ),
+    )
+    .toBe(true);
 }
 
 /** Someone in the test: a browser of their own, and their account if they have one. */
