@@ -731,6 +731,8 @@
       "browserHint": "Lo mejor para video y sonido",
       "window": "Una ventana",
       "monitor": "Toda la pantalla",
+      "part": "Parte de la pantalla",
+      "partHint": "Beta · Elige una zona para compartir",
       "options": "Opciones para compartir",
       "sound": "Compartir sonido",
       "motion": "Optimizar para video",
@@ -738,7 +740,18 @@
       "takeoverBody": "¿Compartir la tuya en su lugar? Dejará de compartirse la de {name}.",
       "takeover": "Compartir la mía",
       "cancel": "Cancelar",
-      "failed": "No se pudo compartir tu pantalla. Vuelve a intentarlo."
+      "failed": "No se pudo compartir tu pantalla. Vuelve a intentarlo.",
+      "area": {
+        "title": "Elige la parte que quieres compartir",
+        "body": "Arrastra el recuadro sobre lo que quieres compartir, o arrastra sus bordes y esquinas para cambiar su tamaño. Solo se comparte lo que queda dentro del recuadro.",
+        "keys": "Con el recuadro seleccionado, las flechas lo mueven, Mayús con las flechas cambia su tamaño e Intro lo confirma.",
+        "box": "Parte para compartir, {size}",
+        "size": "{width} × {height}",
+        "share": "Compartir esta parte",
+        "done": "Listo",
+        "cancel": "Cancelar",
+        "change": "Cambiar zona"
+      }
     },
     "lobby": {
       "waiting": "Esperando para entrar ({count})",

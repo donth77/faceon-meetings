@@ -731,6 +731,8 @@
       "browserHint": "Idéal pour la vidéo et le son",
       "window": "Une fenêtre",
       "monitor": "Tout votre écran",
+      "part": "Une partie de votre écran",
+      "partHint": "Bêta · Choisissez une zone à partager",
       "options": "Options de partage",
       "sound": "Partager le son",
       "motion": "Optimiser pour la vidéo",
@@ -738,7 +740,18 @@
       "takeoverBody": "Partager le vôtre à la place ? Le partage de {name} s’arrêtera.",
       "takeover": "Partager le mien",
       "cancel": "Annuler",
-      "failed": "Impossible de partager votre écran. Réessayez."
+      "failed": "Impossible de partager votre écran. Réessayez.",
+      "area": {
+        "title": "Choisissez la partie à partager",
+        "body": "Faites glisser le cadre sur ce que vous voulez partager, ou faites glisser ses bords et ses coins pour le redimensionner. Seul ce qui est dans le cadre est partagé.",
+        "keys": "Une fois le cadre sélectionné, les flèches le déplacent, Maj avec les flèches le redimensionne, et Entrée le valide.",
+        "box": "Partie à partager, {size}",
+        "size": "{width} × {height}",
+        "share": "Partager cette partie",
+        "done": "OK",
+        "cancel": "Annuler",
+        "change": "Changer la zone"
+      }
     },
     "lobby": {
       "waiting": "En attente d’admission ({count})",

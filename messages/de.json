@@ -731,6 +731,8 @@
       "browserHint": "Am besten für Video und Ton",
       "window": "Ein Fenster",
       "monitor": "Den ganzen Bildschirm",
+      "part": "Einen Teil des Bildschirms",
+      "partHint": "Beta · Bereich zum Freigeben wählen",
       "options": "Freigabeoptionen",
       "sound": "Ton freigeben",
       "motion": "Für Video optimieren",
@@ -738,7 +740,18 @@
       "takeoverBody": "Stattdessen Ihren freigeben? Die Freigabe von {name} wird beendet.",
       "takeover": "Stattdessen freigeben",
       "cancel": "Abbrechen",
-      "failed": "Ihr Bildschirm konnte nicht freigegeben werden. Versuchen Sie es erneut."
+      "failed": "Ihr Bildschirm konnte nicht freigegeben werden. Versuchen Sie es erneut.",
+      "area": {
+        "title": "Wählen Sie den Teil, den Sie freigeben möchten",
+        "body": "Ziehen Sie den Rahmen über das, was Sie freigeben möchten, oder ziehen Sie an seinen Kanten und Ecken, um die Größe zu ändern. Freigegeben wird nur, was im Rahmen liegt.",
+        "keys": "Ist der Rahmen ausgewählt, verschieben ihn die Pfeiltasten, Umschalt mit den Pfeiltasten ändert seine Größe, und die Eingabetaste bestätigt ihn.",
+        "box": "Freizugebender Teil, {size}",
+        "size": "{width} × {height}",
+        "share": "Diesen Teil freigeben",
+        "done": "Fertig",
+        "cancel": "Abbrechen",
+        "change": "Bereich ändern"
+      }
     },
     "lobby": {
       "waiting": "Warten auf Zulassung ({count})",

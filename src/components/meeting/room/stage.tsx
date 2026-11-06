@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "cn";
-import { Eye, EyeOff, MonitorUp } from "lucide-react";
+import { Eye, EyeOff, MonitorUp, SquareDashed } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -18,6 +18,7 @@ import {
 } from "../media";
 import { useRoomTransition } from "./motion";
 import { useRoomControls } from "./room-controls";
+import { useChangeArea } from "./share-area";
 import {
   ANY_SHAPE,
   croppable,
@@ -379,6 +380,7 @@ function FloatingSelf({
 /**
  * Your own shared screen as everyone else sees it, with Stop sharing. Sharing the whole
  * screen shows the preview inside itself, so you can hide it; only you stop seeing it.
+ * Sharing part of it, Change area moves the part without stopping.
  */
 function OwnScreen({
   participant,
@@ -390,6 +392,7 @@ function OwnScreen({
 }) {
   const t = useTranslations("Meeting");
   const { screenShare } = useRoomMedia();
+  const changeArea = useChangeArea();
   const [hidden, setHidden] = useState(false);
   const pill =
     "flex h-9 items-center gap-2 rounded-full px-4 text-sm font-semibold outline-hidden focus-visible:focus-ring";
@@ -428,6 +431,15 @@ function OwnScreen({
             )}
             {hidden ? t("showPreview") : t("hidePreview")}
           </Button>
+          {changeArea ? (
+            <Button
+              onPress={changeArea}
+              className={cn(pill, "bg-white/15 text-white hover:bg-white/25")}
+            >
+              <SquareDashed className="size-4" aria-hidden="true" />
+              {t("share.area.change")}
+            </Button>
+          ) : null}
           <Button
             onPress={() => {
               void screenShare.stop();

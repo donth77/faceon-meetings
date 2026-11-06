@@ -1,6 +1,6 @@
 ---
 title: Compartir la pantalla
-summary: Comparte una pestaña, una ventana o toda la pantalla, con sonido si lo necesitas.
+summary: Comparte una pestaña, una ventana, toda la pantalla o solo una parte, con sonido si lo necesitas.
 category: in-a-meeting
 order: 2
 ---
@@ -12,9 +12,21 @@ order: 2
    - **Una pestaña** es lo mejor para video y sonido.
    - **Una ventana** comparte una sola app.
    - **Toda la pantalla** comparte todo lo que ves.
+   - **Parte de la pantalla** (Beta) comparte solo una zona de una pantalla.
 3. Elige lo que quieres en la ventana del navegador y selecciona **Compartir**.
 
 En Firefox y Safari, se abre directamente el selector del propio navegador.
+
+## Comparte parte de la pantalla
+
+En Chrome y Edge en una computadora, **Parte de la pantalla** comparte solo una zona de una pantalla, como una app o una diapositiva sin tus notas.
+
+1. Selecciona **Compartir pantalla** y luego **Parte de la pantalla**.
+2. Elige la pantalla en la ventana del navegador y selecciona **Compartir**.
+3. Arrastra el recuadro sobre lo que quieres compartir, o arrastra sus bordes y esquinas para cambiar su tamaño. Con el teclado, las flechas lo mueven y Mayús con las flechas cambia su tamaño.
+4. Selecciona **Compartir esta parte**.
+
+Solo lo que queda dentro del recuadro sale de tu computadora: {appName} lo recorta antes de enviarlo. Para moverlo mientras compartes, selecciona **Cambiar zona** en tu vista previa. Puede que tu navegador indique que compartes toda la pantalla, pero los demás solo ven esa parte.
 
 ## Comparte sonido y video
 

@@ -1,6 +1,6 @@
 ---
 title: Share your screen
-summary: Share a tab, a window or your whole screen, with sound if you need it.
+summary: Share a tab, a window, your whole screen or just part of it, with sound if you need it.
 category: in-a-meeting
 order: 2
 ---
@@ -12,9 +12,21 @@ order: 2
    - **A tab** is best for video and sound.
    - **A window** shares one app.
    - **Your entire screen** shares everything you see.
+   - **Part of your screen** (Beta) shares just an area of a screen.
 3. Pick what you want in your browser's window, then select **Share**.
 
 In Firefox and Safari, your browser's own picker opens straight away.
+
+## Share part of your screen
+
+In Chrome and Edge on a computer, **Part of your screen** shares just an area of one screen, like one app or a slide without your notes.
+
+1. Select **Share screen**, then **Part of your screen**.
+2. Pick the screen in your browser's window, then select **Share**.
+3. Drag the box over what you want to share, or drag its edges and corners to resize it. With the keyboard, the arrow keys move it, and Shift with the arrow keys resizes it.
+4. Select **Share this part**.
+
+Only what's inside the box leaves your computer: {appName} crops it before sending it. To move it while you share, select **Change area** on your preview. Your browser may say you're sharing your entire screen, but everyone else sees only that part.
 
 ## Share sound and video
 

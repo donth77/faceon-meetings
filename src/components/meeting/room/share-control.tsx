@@ -6,6 +6,7 @@ import {
   MonitorUp,
   MonitorX,
   PanelsTopLeft,
+  SquareDashed,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -33,8 +34,9 @@ const SURFACES: Array<{ surface: Surface; icon: typeof AppWindow }> = [
 
 /**
  * Share screen, as in Meet: in Chrome and Edge a menu opens the browser's picker on a
- * tab, a window or the entire screen, with Share sound and Optimize for video. Other
- * browsers go straight to their own picker. While you share, it's Stop sharing.
+ * tab, a window or the entire screen, with Share sound and Optimize for video, and Part
+ * of your screen (Beta), whose area is chosen next. Other browsers go straight to their
+ * own picker. While you share, it's Stop sharing.
  */
 export function ShareControl({
   sharing,
@@ -52,6 +54,7 @@ export function ShareControl({
   // Chrome and Edge take hints for their picker and can share sound; elsewhere the
   // browser's own picker opens straight away.
   const options = useCapability("shareOptions");
+  const part = useCapability("sharePart");
   const [sound, setSound] = useState(true);
   const [motion, setMotion] = useState(false);
 
@@ -138,6 +141,28 @@ export function ShareControl({
                 </span>
               </DropdownMenuItem>
             ))}
+            {part ? (
+              <DropdownMenuItem
+                textValue={t("share.part")}
+                onAction={() =>
+                  onStart({
+                    surface: "monitor",
+                    part: true,
+                    audio: sound,
+                    motion,
+                  })
+                }
+                className="py-1.5"
+              >
+                <SquareDashed aria-hidden="true" />
+                <span className="flex flex-col">
+                  <span>{t("share.part")}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {t("share.partHint")}
+                  </span>
+                </span>
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup

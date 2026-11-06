@@ -62,6 +62,7 @@ import { RoomBadgesProvider } from "./room-badges";
 import { RoomControlsProvider, type RoomControls } from "./room-controls";
 import { useRoomEffects } from "./room-effects";
 import { useRoomNoise } from "./room-noise";
+import { ChangeAreaProvider, ShareAreaDialog } from "./share-area";
 import { Stage, type StageView } from "./stage";
 import { TopBar } from "./top-bar";
 import { useAutoHideControls, useCompactRoom } from "./use-auto-hide";
@@ -454,7 +455,9 @@ export function MeetingShell({
                 <ShowControlsButton onPress={showControlsForScreenReader} />
               ) : null}
               <RoomBadgesProvider value={badges}>
-                <Stage view={view} />
+                <ChangeAreaProvider value={share.changeArea}>
+                  <Stage view={view} />
+                </ChangeAreaProvider>
               </RoomBadgesProvider>
               <FloatingReactions
                 reactions={reactions.shown}
@@ -528,6 +531,11 @@ export function MeetingShell({
             presenterName={share.takeover}
             onConfirm={() => void share.takeOver()}
             onClose={share.cancelTakeover}
+          />
+          <ShareAreaDialog
+            choice={share.choice}
+            onChoose={share.chooseArea}
+            onCancel={share.cancelArea}
           />
           <UnmuteRequestDialog
             isOpen={notices.unmuteAsked}

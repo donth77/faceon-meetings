@@ -123,6 +123,27 @@ describe("capabilities", () => {
     expect(found.supports("shareOptions")).toBe(false);
   });
 
+  it("share part of a screen only where Chromium hands over its frames to crop", async () => {
+    const mediaDevices = { getDisplayMedia: () => {} };
+    const frames = {
+      MediaStreamTrackProcessor: class {},
+      MediaStreamTrackGenerator: class {},
+    };
+    vi.stubGlobal("VideoFrame", class {});
+    browser({ navigator: { mediaDevices }, window: frames });
+    expect((await load()).supports("sharePart")).toBe(true);
+
+    vi.resetModules();
+    vi.stubGlobal("VideoFrame", class {});
+    browser({ chromium: false, navigator: { mediaDevices }, window: frames });
+    expect((await load()).supports("sharePart")).toBe(false);
+
+    vi.resetModules();
+    vi.stubGlobal("VideoFrame", class {});
+    browser({ navigator: { mediaDevices } });
+    expect((await load()).supports("sharePart")).toBe(false);
+  });
+
   it("run AI on the device only in Google Chrome on a computer", async () => {
     const chrome = { brands: [{ brand: "Google Chrome" }], mobile: false };
     browser({ navigator: { userAgentData: chrome } });

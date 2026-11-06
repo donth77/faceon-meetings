@@ -1,6 +1,6 @@
 ---
 title: Partager votre écran
-summary: Partagez un onglet, une fenêtre ou tout votre écran, avec le son si besoin.
+summary: Partagez un onglet, une fenêtre, tout votre écran ou seulement une partie, avec le son si besoin.
 category: in-a-meeting
 order: 2
 ---
@@ -12,9 +12,21 @@ order: 2
    - **Un onglet** convient le mieux à la vidéo et au son.
    - **Une fenêtre** partage une application.
    - **Tout votre écran** partage tout ce que vous voyez.
+   - **Une partie de votre écran** (Bêta) ne partage qu’une zone d’un écran.
 3. Choisissez ce que vous voulez dans la fenêtre de votre navigateur, puis sélectionnez **Partager**.
 
 Dans Firefox et Safari, le sélecteur du navigateur s’ouvre directement.
+
+## Partager une partie de votre écran
+
+Dans Chrome et Edge sur un ordinateur, **Une partie de votre écran** ne partage qu’une zone d’un écran, comme une application ou une diapositive sans vos notes.
+
+1. Sélectionnez **Partager l’écran**, puis **Une partie de votre écran**.
+2. Choisissez l’écran dans la fenêtre de votre navigateur, puis sélectionnez **Partager**.
+3. Faites glisser le cadre sur ce que vous voulez partager, ou faites glisser ses bords et ses coins pour le redimensionner. Au clavier, les flèches le déplacent, et Maj avec les flèches le redimensionne.
+4. Sélectionnez **Partager cette partie**.
+
+Seul ce qui est dans le cadre quitte votre ordinateur : {appName} le recadre avant de l’envoyer. Pour le déplacer pendant le partage, sélectionnez **Changer la zone** sur votre aperçu. Votre navigateur peut indiquer que vous partagez tout votre écran, mais les autres ne voient que cette partie.
 
 ## Partager le son et la vidéo
 

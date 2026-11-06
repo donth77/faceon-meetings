@@ -731,6 +731,8 @@
       "browserHint": "Melhor para vídeo e som",
       "window": "Uma janela",
       "monitor": "A tela inteira",
+      "part": "Parte da tela",
+      "partHint": "Beta · Escolha uma área para compartilhar",
       "options": "Opções de compartilhamento",
       "sound": "Compartilhar som",
       "motion": "Otimizar para vídeo",
@@ -738,7 +740,18 @@
       "takeoverBody": "Compartilhar a sua no lugar? O compartilhamento de {name} vai parar.",
       "takeover": "Compartilhar a minha",
       "cancel": "Cancelar",
-      "failed": "Não foi possível compartilhar sua tela. Tente de novo."
+      "failed": "Não foi possível compartilhar sua tela. Tente de novo.",
+      "area": {
+        "title": "Escolha a parte que você quer compartilhar",
+        "body": "Arraste o retângulo sobre o que você quer compartilhar, ou arraste as bordas e os cantos para mudar o tamanho. Só o que estiver dentro do retângulo é compartilhado.",
+        "keys": "Com o retângulo selecionado, as setas o movem, Shift com as setas muda o tamanho e Enter confirma.",
+        "box": "Parte a compartilhar, {size}",
+        "size": "{width} × {height}",
+        "share": "Compartilhar esta parte",
+        "done": "Concluído",
+        "cancel": "Cancelar",
+        "change": "Mudar área"
+      }
     },
     "lobby": {
       "waiting": "Aguardando para entrar ({count})",

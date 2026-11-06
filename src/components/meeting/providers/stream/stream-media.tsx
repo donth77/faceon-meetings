@@ -125,6 +125,43 @@ async function startScreenShare(call: Call, options: ShareOptions) {
   await manager.enable();
 }
 
+/** What a stream made on this device asks Stream's encoder for: smooth motion or sharp detail. */
+const contentHintOf = (track: MediaStreamTrack | undefined) =>
+  track?.contentHint === "motion" ? "motion" : "detail";
+
+/**
+ * A screen share made on this device (part of a screen, cropped here), published as the
+ * screen share beside Stream's own share manager, which doesn't know of it. `onChange`
+ * says whether one is being shared.
+ */
+function ownScreenShare(call: Call, onChange: (sharing: boolean) => void) {
+  let current: { stream: MediaStream; onStopped: () => void } | null = null;
+  return {
+    sharing: () => current !== null,
+    async publish(stream: MediaStream, onStopped: () => void) {
+      await call.publish(stream, SfuModels.TrackType.SCREEN_SHARE, {
+        contentHint: contentHintOf(stream.getVideoTracks()[0]),
+      });
+      current = { stream, onStopped };
+      onChange(true);
+    },
+    async stop() {
+      const share = current;
+      if (!share) return;
+      current = null;
+      await call
+        .stopPublish(
+          SfuModels.TrackType.SCREEN_SHARE,
+          SfuModels.TrackType.SCREEN_SHARE_AUDIO,
+        )
+        .catch(() => {});
+      share.stream.getTracks().forEach((track) => track.stop());
+      onChange(false);
+      share.onStopped();
+    },
+  };
+}
+
 /** The browser's own noise suppression on the live microphone, and on any it restarts with. */
 async function setNoiseSuppression(call: Call, on: boolean) {
   call.microphone.setDefaultConstraints({
@@ -206,6 +243,8 @@ export function StreamMedia({
   } = useSpeakerState();
   const { screenShare: screenShareManager, optionsAwareIsMute: notSharing } =
     useScreenShareState({ optimisticUpdates: true });
+  const [sharingOwn, setSharingOwn] = useState(false);
+  const [ownShare] = useState(() => ownScreenShare(call, setSharingOwn));
   // Hosts' policies revoke these; Stream stops the track when one is taken away.
   const canSendAudio = useHasPermissions(OwnCapability.SEND_AUDIO);
   const canSendVideo = useHasPermissions(OwnCapability.SEND_VIDEO);
@@ -459,14 +498,36 @@ export function StreamMedia({
       speakerSelected,
     ],
   );
+  // Stream's manager stops its own share when a host stops it or sharing is taken away;
+  // a share made here is stopped here then, and when the room goes.
+  useEffect(
+    () =>
+      call.on("trackUnpublished", (event) => {
+        if (
+          event.cause === SfuModels.TrackUnpublishReason.MODERATION &&
+          event.sessionId === call.state.localParticipant?.sessionId &&
+          event.type === SfuModels.TrackType.SCREEN_SHARE
+        ) {
+          void ownShare.stop();
+        }
+      }),
+    [call, ownShare],
+  );
+  useEffect(() => {
+    if (!canShare) void ownShare.stop();
+  }, [canShare, ownShare]);
+  useEffect(() => () => void ownShare.stop(), [ownShare]);
+
   const screenShare = useMemo<RoomMedia["screenShare"]>(
     () => ({
-      enabled: !notSharing,
+      enabled: sharingOwn || !notSharing,
       allowed: canShare,
       start: (options) => startScreenShare(call, options),
-      stop: () => screenShareManager.disable(),
+      publish: (stream, onStopped) => ownShare.publish(stream, onStopped),
+      stop: () =>
+        ownShare.sharing() ? ownShare.stop() : screenShareManager.disable(),
     }),
-    [call, canShare, notSharing, screenShareManager],
+    [call, canShare, notSharing, ownShare, screenShareManager, sharingOwn],
   );
 
   const media = useMemo<RoomMedia>(

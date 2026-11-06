@@ -22,6 +22,8 @@ export const CAPABILITIES = [
   "screenShare",
   /** Choosing what to share before the browser's picker, and sharing a tab's sound: Chrome and Edge on a computer. */
   "shareOptions",
+  /** Sharing part of a screen, cropped on the device from its frames: Chrome and Edge on a computer. */
+  "sharePart",
   /** Choosing where sound plays (setSinkId): Chrome, Edge and Firefox on a computer. */
   "chooseSpeaker",
   /** Filling the screen with the page: everywhere but iPhone. */
@@ -98,6 +100,11 @@ const CHECKS: Record<Exclude<Capability, "keyboard">, () => boolean> = {
   screenShare: () =>
     typeof navigator.mediaDevices?.getDisplayMedia === "function",
   shareOptions: () => supports("screenShare") && isChromium(),
+  sharePart: () =>
+    supports("shareOptions") &&
+    "MediaStreamTrackProcessor" in window &&
+    "MediaStreamTrackGenerator" in window &&
+    typeof VideoFrame === "function",
   chooseSpeaker: () =>
     typeof HTMLMediaElement !== "undefined" &&
     "setSinkId" in HTMLMediaElement.prototype,

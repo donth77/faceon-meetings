@@ -1,6 +1,6 @@
 ---
 title: Bildschirm freigeben
-summary: Geben Sie einen Tab, ein Fenster oder den ganzen Bildschirm frei, bei Bedarf mit Ton.
+summary: Geben Sie einen Tab, ein Fenster, den ganzen Bildschirm oder nur einen Teil davon frei, bei Bedarf mit Ton.
 category: in-a-meeting
 order: 2
 ---
@@ -12,9 +12,21 @@ order: 2
    - **Einen Tab** eignet sich am besten für Video und Ton.
    - **Ein Fenster** gibt eine App frei.
    - **Den ganzen Bildschirm** gibt alles frei, was Sie sehen.
+   - **Einen Teil des Bildschirms** (Beta) gibt nur einen Bereich eines Bildschirms frei.
 3. Wählen Sie im Fenster Ihres Browsers aus, was Sie möchten, und dann **Teilen**.
 
 In Firefox und Safari öffnet sich direkt die Auswahl des Browsers.
+
+## Einen Teil des Bildschirms freigeben
+
+In Chrome und Edge auf einem Computer gibt **Einen Teil des Bildschirms** nur einen Bereich eines Bildschirms frei, etwa eine App oder eine Folie ohne Ihre Notizen.
+
+1. Wählen Sie **Bildschirm freigeben** und dann **Einen Teil des Bildschirms**.
+2. Wählen Sie im Fenster Ihres Browsers den Bildschirm aus und dann **Teilen**.
+3. Ziehen Sie den Rahmen über das, was Sie freigeben möchten, oder ziehen Sie an seinen Kanten und Ecken, um die Größe zu ändern. Mit der Tastatur verschieben ihn die Pfeiltasten, und Umschalt mit den Pfeiltasten ändert seine Größe.
+4. Wählen Sie **Diesen Teil freigeben**.
+
+Nur was im Rahmen liegt, verlässt Ihren Computer: {appName} schneidet es zu, bevor es gesendet wird. Um den Bereich während der Freigabe zu verschieben, wählen Sie in Ihrer Vorschau **Bereich ändern**. Ihr Browser zeigt womöglich an, dass Sie den ganzen Bildschirm freigeben, aber die anderen sehen nur diesen Teil.
 
 ## Ton und Video freigeben
 

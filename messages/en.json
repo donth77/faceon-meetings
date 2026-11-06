@@ -731,6 +731,8 @@
       "browserHint": "Best for video and sound",
       "window": "A window",
       "monitor": "Your entire screen",
+      "part": "Part of your screen",
+      "partHint": "Beta · Choose an area to share",
       "options": "Sharing options",
       "sound": "Share sound",
       "motion": "Optimize for video",
@@ -738,7 +740,18 @@
       "takeoverBody": "Share yours instead? {name}’s sharing will stop.",
       "takeover": "Share instead",
       "cancel": "Cancel",
-      "failed": "Couldn’t share your screen. Try again."
+      "failed": "Couldn’t share your screen. Try again.",
+      "area": {
+        "title": "Choose the part to share",
+        "body": "Drag the box over what to share, or drag its edges and corners to resize it. Only what’s inside the box is shared.",
+        "keys": "With the box selected, the arrow keys move it, Shift with the arrow keys resizes it, and Enter confirms it.",
+        "box": "Part to share, {size}",
+        "size": "{width} × {height}",
+        "share": "Share this part",
+        "done": "Done",
+        "cancel": "Cancel",
+        "change": "Change area"
+      }
     },
     "lobby": {
       "waiting": "Waiting to join ({count})",

@@ -73,6 +73,8 @@ export type ShareOptions = {
   audio: boolean;
   /** Smooth motion for video clips, instead of sharp text at a low frame rate. */
   motion: boolean;
+  /** Only part of a screen, cropped on this device (lib/screen-share): Chrome and Edge. */
+  part?: boolean;
 };
 
 /** Why the room closed; the left-meeting screen words its message from it. */
@@ -116,6 +118,12 @@ export type RoomMedia = {
     allowed: boolean;
     /** Opens the browser's picker and shares what you choose. */
     start: (options: ShareOptions) => Promise<void>;
+    /**
+     * Shares a stream made on this device (part of a screen, cropped here) as your screen
+     * share. `onStopped` runs once it stops: Stop sharing, a host stopping it, or sharing
+     * being taken away; the stream's tracks are stopped by then.
+     */
+    publish: (stream: MediaStream, onStopped: () => void) => Promise<void>;
     stop: () => Promise<void>;
   };
   leave: () => Promise<void>;
