@@ -1,16 +1,20 @@
 import { cn } from "cn";
+import { ChevronLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { LogoLockup } from "@/components/brand/logo-lockup";
 import { PUBLIC_CONTAINER } from "@/components/marketing/layout";
+import { publicEnv } from "@/lib/env";
 
 import { SignInLink } from "./sign-in-link";
 
 /**
  * Pages around a meeting (pre-join, notices, after leaving): the public header's logo
- * (plus Sign in for guests), content centered. The language is in Settings → General,
- * which the join screen's Settings has too.
+ * (plus Sign in for guests), with Home spelled out under it, since a logo isn't plainly a
+ * way back (in the desktop app, it's the only one); content centered. The language is in
+ * Settings → General, which the join screen's Settings has too.
  */
 export function MeetingPageFrame({
   signInHref,
@@ -20,17 +24,34 @@ export function MeetingPageFrame({
   signInHref?: string;
   children: ReactNode;
 }) {
+  const landing = useTranslations("Landing");
+  const nav = useTranslations("Nav");
   return (
     <div className="flex min-h-dvh flex-col">
       <header
         className={cn(
           PUBLIC_CONTAINER,
-          "flex min-h-18 items-center justify-between gap-3 py-4",
+          "flex min-h-18 items-start justify-between gap-3 py-4",
         )}
       >
-        <Link href="/" className="inline-flex shrink-0 rounded-md">
-          <LogoLockup className="h-7 sm:h-[30px]" />
-        </Link>
+        <div className="flex flex-col items-start gap-2">
+          <Link
+            href="/"
+            aria-label={landing("homeLink", {
+              appName: publicEnv.NEXT_PUBLIC_APP_NAME,
+            })}
+            className="inline-flex h-10 shrink-0 items-center rounded-md"
+          >
+            <LogoLockup className="h-7 sm:h-[30px]" />
+          </Link>
+          <Link
+            href="/"
+            className="text-primary focus-visible:focus-ring -ml-1 flex items-center gap-1 rounded-md pr-1 text-sm font-semibold outline-hidden hover:underline"
+          >
+            <ChevronLeft className="size-4" aria-hidden="true" />
+            {nav("home")}
+          </Link>
+        </div>
         {signInHref ? <SignInLink href={signInHref} /> : null}
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-14 sm:px-10">
