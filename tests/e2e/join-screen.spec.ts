@@ -1,7 +1,13 @@
 import { type Page } from "@playwright/test";
 
 import { createMeeting, createPastMeeting } from "./support/db";
-import { expect, expectNoErrors, needsStream, test } from "./support/fixtures";
+import {
+  expect,
+  expectNoErrors,
+  hydrated,
+  needsStream,
+  test,
+} from "./support/fixtures";
 import { joinFromPreJoin, openMeeting } from "./support/meeting";
 
 /** The avatar beside the name on the join screen. */
@@ -331,6 +337,76 @@ test.describe("Previous's attendees", () => {
     await expect(page.getByRole("tooltip")).toHaveText(
       /^(Maya Host and Jordan Lee|Jordan Lee and Maya Host)$/,
     );
+    expectNoErrors(host);
+  });
+});
+
+test.describe("going home from the join screen, and coming back", () => {
+  test("Home is spelled out under the logo, and coming back starts the screen over", async ({
+    people,
+  }) => {
+    const host = await people.signedIn({ name: "Maya Host" });
+    const meeting = await createMeeting(host.user.id);
+    const guest = await people.guest();
+    const { page } = guest;
+    await page.goto(`/j/${meeting.code}`);
+    // Both lead home: the logo, named for it, and Home in words.
+    await expect(
+      page.getByRole("link", { name: "FaceOn home" }),
+    ).toHaveAttribute("href", "/");
+    const home = page.getByRole("link", { name: "Home", exact: true });
+    await expect(home).toHaveAttribute("href", "/");
+
+    const passcode = page.getByLabel("Passcode");
+    await hydrated(passcode);
+    await page.getByLabel("Your name").fill("Jordan Lee");
+    await passcode.fill("WRONG1");
+    await page.getByRole("button", { name: "Join now" }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+      /That passcode isn’t right/,
+    );
+
+    await home.click();
+    await expect(page).toHaveURL(/\/$/);
+    // Next.js keeps the page it left; back on it, nothing from before is left over.
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/j/${meeting.code}$`));
+    await expect(
+      page.getByLabel("Passcode").filter({ visible: true }),
+    ).toHaveValue("");
+    await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+    expectNoErrors(guest);
+  });
+
+  test("your personal room, once you've left it: Start leads to the join screen again", async ({
+    people,
+  }) => {
+    needsStream();
+    const host = await people.signedIn({ name: "Maya Host" });
+    const { page } = host;
+    // Pages left behind stay in the document, hidden: only the one on screen counts.
+    const start = page
+      .getByRole("link", { name: "Start" })
+      .filter({ visible: true });
+    await page.goto("/personal-room");
+    await start.click();
+    await joinFromPreJoin(page);
+    await page.locator("footer").getByRole("button", { name: "Leave" }).click();
+    await page.getByRole("menuitem", { name: "Leave meeting" }).click();
+    const left = page.getByText("You left the meeting");
+    await expect(left).toBeVisible();
+
+    await page.getByRole("link", { name: "Return home" }).click();
+    await page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Personal room" })
+      .click();
+    await expect(page).toHaveURL(/\/personal-room$/);
+    await start.click();
+    await expect(
+      page.getByRole("button", { name: "Join now" }).filter({ visible: true }),
+    ).toBeVisible();
+    await expect(left.filter({ visible: true })).toHaveCount(0);
     expectNoErrors(host);
   });
 });
