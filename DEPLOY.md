@@ -480,7 +480,7 @@ The colors come from your one color. The light theme uses it as it is. The dark 
 pnpm brand --try "#0f766e"
 ```
 
-FaceOn's own `brand/` uses every option: its mark and a version for dark backgrounds, the wordmark's spacing, the link preview's art and its hand-picked colors.
+FaceOn's own `brand/` uses almost every option: its mark and a version for dark backgrounds, the wordmark's spacing and its hand-picked colors. Its link preview has no art, so the logo, title and subtitle sit centered, and a square crop (as WhatsApp makes) still shows the logo.
 
 The four abstract backgrounds are drawn in FaceOn's colors by `scripts/backgrounds.ts`. They're backgrounds, not branding, but you can change their colors and run it too.
 
