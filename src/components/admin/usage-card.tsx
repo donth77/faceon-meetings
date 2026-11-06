@@ -155,7 +155,8 @@ function Note({ children }: { children: ReactNode }) {
  * service's free plan this copy has used, so nothing runs out by surprise, each figure
  * with when it was last updated. The rows go most critical first (USAGE_ORDER):
  * - Stream: FaceOn's own count of participant-minutes; Stream's API doesn't report what
- *   it bills.
+ *   it bills. When the latest call has no attendance, it says the webhook isn't getting
+ *   through, and how to look.
  * - Neon: compute hours from Neon's API, where it's set up.
  * - Vercel: a link only. Vercel's API has no read-only token, and it warns by email.
  * - Emails: the whole Resend account's count leads, with FaceOn's share beside it, from
@@ -254,6 +255,24 @@ export function UsageCard({ usage }: { usage: UsageReport }) {
             : t("stream.count", { used: Math.round(stream.minutes) })
         }
       >
+        {stream.attendanceMissing ? (
+          <p className="flex gap-1.5 text-[13px] leading-normal">
+            <TriangleAlert
+              className="mt-0.5 size-3.5 shrink-0 text-amber-700 dark:text-amber-400"
+              aria-hidden="true"
+            />
+            <span>
+              {t.rich("stream.missing", {
+                appName,
+                code: (chunks) => (
+                  <code className="bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[12px] whitespace-nowrap">
+                    {chunks}
+                  </code>
+                ),
+              })}
+            </span>
+          </p>
+        ) : null}
         <Note>{t("stream.note", { appName })}</Note>
         <Note>
           <UsageUpdated at={stream.countedAt.toISOString()} />

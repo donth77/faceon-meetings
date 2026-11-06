@@ -4,6 +4,7 @@ import {
   alertKey,
   alertsDue,
   allowanceSpent,
+  attendanceMissing,
   dayBefore,
   emailsByDay,
   emailsUsed,
@@ -163,6 +164,53 @@ describe("participant-minutes", () => {
         now,
       ),
     ).toBe(40);
+  });
+});
+
+describe("missing attendance", () => {
+  const call = (minutes: number, connections: number, endedAt: string) => {
+    const end = at(endedAt);
+    return {
+      startedAt: new Date(end.getTime() - minutes * 60_000),
+      endedAt: end,
+      connections,
+    };
+  };
+
+  it("is missing when the latest call that ran a minute or more has nobody in it", () => {
+    expect(attendanceMissing([call(3, 0, "2026-11-04T18:20:00Z")])).toBe(true);
+    expect(
+      attendanceMissing([
+        call(1, 0, "2026-11-04T18:20:00Z"),
+        call(12, 2, "2026-11-04T17:00:00Z"),
+      ]),
+    ).toBe(true);
+  });
+
+  it("isn't, once a later call has attendance again", () => {
+    expect(
+      attendanceMissing([
+        call(2, 1, "2026-11-05T09:00:00Z"),
+        call(3, 0, "2026-11-04T18:20:00Z"),
+      ]),
+    ).toBe(false);
+  });
+
+  it("skips calls shorter than a minute: someone let in who never connected", () => {
+    expect(
+      attendanceMissing([
+        call(0.5, 0, "2026-11-05T09:00:00Z"),
+        call(0, 0, "2026-11-05T08:00:00Z"),
+        call(20, 3, "2026-11-04T18:20:00Z"),
+      ]),
+    ).toBe(false);
+  });
+
+  it("says nothing without a call long enough to tell", () => {
+    expect(attendanceMissing([])).toBe(false);
+    expect(attendanceMissing([call(0.9, 0, "2026-11-05T09:00:00Z")])).toBe(
+      false,
+    );
   });
 });
 

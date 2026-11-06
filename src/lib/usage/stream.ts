@@ -1,11 +1,21 @@
 import "server-only";
 
-import { and, eq, gte, isNull, lt, or } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+} from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { meetingSession, participantSession } from "@/lib/db/schema";
 
-import { participantMinutes, utcMonth } from "./meters";
+import { attendanceMissing, participantMinutes, utcMonth } from "./meters";
 
 /**
  * Stream participant-minutes so far this month (UTC), from the attendance FaceOn keeps
@@ -38,4 +48,40 @@ export async function streamMinutesThisMonth(
       ),
     );
   return participantMinutes(connections, month, now);
+}
+
+/** Calls looked at for missing attendance: the latest few, in case the very latest was short. */
+const LATEST_CALLS = 5;
+
+/**
+ * Whether the latest call on Stream that ran a minute or more has no attendance
+ * (`attendanceMissing`): Stream's webhook isn't reaching FaceOn, so the minutes above
+ * and Previous miss its calls.
+ */
+export async function streamAttendanceMissing(): Promise<boolean> {
+  const calls = await db()
+    .select({
+      startedAt: meetingSession.startedAt,
+      endedAt: meetingSession.endedAt,
+      connections: count(participantSession.id),
+    })
+    .from(meetingSession)
+    .leftJoin(
+      participantSession,
+      eq(participantSession.sessionId, meetingSession.id),
+    )
+    .where(
+      and(
+        eq(meetingSession.provider, "stream"),
+        isNotNull(meetingSession.endedAt),
+      ),
+    )
+    .groupBy(meetingSession.id)
+    .orderBy(desc(meetingSession.endedAt))
+    .limit(LATEST_CALLS);
+  return attendanceMissing(
+    calls.flatMap(({ endedAt, ...call }) =>
+      endedAt ? [{ ...call, endedAt }] : [],
+    ),
+  );
 }

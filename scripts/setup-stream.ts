@@ -9,7 +9,10 @@
  * - The `system` user, which sends server events.
  * - With STREAM_WEBHOOK_URL set, the app's webhook (attendance for Previous), for example
  *   https://faceon.example.com/api/webhooks/stream. Stream can't reach localhost. A new
- *   domain replaces the old one's webhook.
+ *   domain replaces the old one's webhook. --check says whether it's there, on, for
+ *   video and sending both events (event-hooks.ts), and with STREAM_WEBHOOK_URL whether
+ *   it's that address. A development app has none (Stream can't reach localhost), so a
+ *   missing webhook is drift only with STREAM_WEBHOOK_URL.
  *
  * Usage:
  *   node --env-file=.env.local scripts/setup-stream.ts           apply
@@ -23,6 +26,12 @@ import {
   MEETING_SETTINGS,
   settingsDrift,
 } from "../src/lib/stream/call-settings.ts";
+import {
+  checkWebhook,
+  isOurWebhook,
+  ourWebhook,
+  WEBHOOK_PATH,
+} from "../src/lib/stream/event-hooks.ts";
 import { EXPECTED_GRANTS, grantsDrift } from "../src/lib/stream/grants.ts";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
@@ -33,6 +42,16 @@ if (!apiKey || !secret) {
 }
 
 const checkOnly = process.argv.includes("--check");
+const webhookUrl = process.env.STREAM_WEBHOOK_URL;
+if (
+  webhookUrl &&
+  (!URL.canParse(webhookUrl) || new URL(webhookUrl).pathname !== WEBHOOK_PATH)
+) {
+  console.error(
+    `STREAM_WEBHOOK_URL should be your site's address with ${WEBHOOK_PATH}.`,
+  );
+  process.exit(1);
+}
 const client = new StreamClient(apiKey, secret);
 
 const { call_types: live } = await client.video.listCallTypes();
@@ -85,34 +104,31 @@ if (!checkOnly) {
   console.log(`ok       user "${systemUserId}"`);
 }
 
-const webhookUrl = process.env.STREAM_WEBHOOK_URL;
-if (webhookUrl && !checkOnly) {
-  // Stream's event hooks: keep any others, and (re)place ours, found by its path on any domain.
-  const ourPath = new URL(webhookUrl).pathname;
-  const isOurs = (url: string | undefined) =>
-    !!url && URL.canParse(url) && new URL(url).pathname === ourPath;
-  const { app } = await client.getApp();
+// Stream's event hooks: keep any others, and (re)place ours, found by its path on any
+// domain. Checking, say where ours points and what's wrong with it.
+const { app } = await client.getApp();
+const webhook = checkWebhook(app.event_hooks, webhookUrl);
+const webhookDrifted =
+  webhook.state === "drift" || (webhook.state === "missing" && !!webhookUrl);
+if (checkOnly) {
+  console.log(
+    webhook.state === "missing"
+      ? "missing  webhook (Previous stays empty: run pnpm stream:setup with STREAM_WEBHOOK_URL)"
+      : `${webhook.state === "ok" ? "ok      " : "drift   "} webhook → ${webhook.url}${webhook.problems.length ? ` (${webhook.problems.join("; ")})` : ""}`,
+  );
+} else if (webhookUrl) {
   const others = (app.event_hooks ?? []).filter(
-    (hook) => !isOurs(hook.webhook_url),
+    (hook) => !isOurWebhook(hook.webhook_url),
   );
   await client.updateApp({
-    event_hooks: [
-      ...others,
-      {
-        hook_type: "webhook",
-        enabled: true,
-        product: "video",
-        webhook_url: webhookUrl,
-        event_types: [
-          "call.session_participant_joined",
-          "call.session_participant_left",
-        ],
-      },
-    ],
+    event_hooks: [...others, ourWebhook(webhookUrl)],
   });
   console.log(`ok       webhook → ${webhookUrl}`);
 }
 
-if (checkOnly && (drifted.length > 0 || settingsDrifted.length > 0)) {
+if (
+  checkOnly &&
+  (drifted.length > 0 || settingsDrifted.length > 0 || webhookDrifted)
+) {
   process.exit(1);
 }

@@ -376,6 +376,7 @@
         "value": "{used, number} sur {limit, plural, one {# minute-participant} other {# minutes-participant}}",
         "count": "{used, plural, one {# minute-participant} other {# minutes-participant}}, sans limite définie",
         "note": "Le décompte de {appName} lui-même : le temps de chaque personne dans chaque appel. L’API de Stream n’indique pas ce qu’il facture, qui dépend de la vidéo que les gens reçoivent (la HD coûte le double de l’audio et de la SD) : le montant facturé se trouve donc dans son tableau de bord.",
+        "missing": "Le dernier appel d’une minute ou plus n’a aucune participation enregistrée : ses minutes ne sont donc pas comptées ici, et Précédentes ne peut pas montrer qui est venu. Le webhook de Stream n’arrive pas jusqu’à {appName}. Pour voir sa configuration, exécutez <code>pnpm stream:check</code> dans votre copie du code de {appName}, avec les clés Stream de ce site dans .env.local. Le journal du serveur indique quand une livraison est refusée.",
         "dashboard": "Ouvrir le tableau de bord de Stream",
         "off": "Stream n’est pas configuré : il n’y a donc aucun appel à compter."
       },

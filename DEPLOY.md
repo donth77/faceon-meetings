@@ -118,7 +118,7 @@ For local development, a second branch keeps test data apart: **Branches → New
    - adds the webhook, through which Stream tells FaceOn who joined and left, for **Previous**. Stream signs each delivery with your API secret, so there's no separate webhook secret. Stream can't reach `localhost`, so point it at your deployed address.
 
 5. Check the setup, with the same two keys set:
-   - `pnpm stream:check` reports anything that differs from what FaceOn expects, permissions or media settings (exit code 1 if something does).
+   - `pnpm stream:check` reports anything that differs from what FaceOn expects: permissions, media settings and the webhook (exit code 1 if something does). Add `STREAM_WEBHOOK_URL` to check the webhook is that address; without it, a missing webhook is reported but isn't a difference, since a development app has none.
    - `pnpm stream:lockdown-test` proves the permission boundary against your app. It makes API calls only, no media, so it uses no meeting minutes.
 
    After that, the daily cleanup checks the permissions every day, read only: if they stop matching, **Settings → Admin → Call permissions** says so, and the admins (`ADMIN_EMAILS`) get one email (that needs Resend or Mailtrap). Run `pnpm stream:setup` again to put them back; FaceOn never changes them itself.
@@ -529,7 +529,7 @@ Then:
 
 - Compare `.env.example` with what you have, and add any new settings in Vercel.
 - If you've [made it yours](#make-it-yours), keep your `brand/` folder and run `pnpm brand` again, so the files it writes stay yours.
-- Run `pnpm stream:check` with your production keys. If it reports a difference, run `pnpm stream:setup` again (with `STREAM_WEBHOOK_URL`, so the webhook stays).
+- Run `pnpm stream:check` with your production keys and `STREAM_WEBHOOK_URL`. If it reports a difference, run `pnpm stream:setup` again (with `STREAM_WEBHOOK_URL`, so the webhook stays).
 
 ## Moving to another domain
 
@@ -563,7 +563,7 @@ Then:
 
 **Guests can't join.** Set `GUEST_SESSION_SECRET`, check that `ALLOW_GUESTS` isn't `false`, and check that the host allows guests in that meeting.
 
-**Previous stays empty, or Usage this month shows no Stream minutes.** Both come from Stream's webhook. It must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: FaceOn turns away deliveries it can't verify, and the server log (and your error reports) says so at most once an hour, with what the delivery looked like. Stream's dashboard shows webhook deliveries, and Vercel's request logs show what `/api/webhooks/stream` answered.
+**Previous stays empty, or Usage this month shows no Stream minutes.** Both come from Stream's webhook, and **Settings → Admin → Usage this month** says so when the latest call that ran a minute or more has no attendance. The webhook must point at `https://<your address>/api/webhooks/stream` and belong to the same Stream app whose secret is in Vercel: `pnpm stream:check` with your production keys and `STREAM_WEBHOOK_URL` says whether it does. FaceOn turns away deliveries it can't verify, and the server log (and your error reports) says so at most once an hour, with what the delivery looked like. Stream's dashboard shows webhook deliveries, and Vercel's request logs show what `/api/webhooks/stream` answered.
 
 **The cleanup returns 401.** Set `CRON_SECRET` in Vercel and redeploy.
 

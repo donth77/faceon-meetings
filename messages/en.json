@@ -376,6 +376,7 @@
         "value": "{used, number} of {limit, plural, one {# participant-minute} other {# participant-minutes}}",
         "count": "{used, plural, one {# participant-minute} other {# participant-minutes}}, with no limit set",
         "note": "{appName}’s own count: each person’s time in each call. Stream’s API doesn’t report what it bills, which depends on the video people receive (HD costs twice as much as audio and SD), so its dashboard has the billed figure.",
+        "missing": "The latest call that ran a minute or more has no attendance, so its minutes aren’t counted here and Previous can’t show who came: Stream’s webhook isn’t getting through to {appName}. To see how it’s set up, run <code>pnpm stream:check</code> in your copy of {appName}’s code, with this site’s Stream keys in .env.local. The server log says when a delivery is turned away.",
         "dashboard": "Open Stream’s dashboard",
         "off": "Stream isn’t set up, so there are no calls to count."
       },

@@ -10,6 +10,7 @@ const report = (changes: Partial<UsageReport> = {}): UsageReport => ({
     minutes: 1200.5,
     limit: 333_000,
     countedAt: new Date("2026-11-04T09:30:00Z"),
+    attendanceMissing: false,
   },
   emails: {
     configured: true,
@@ -97,6 +98,7 @@ describe("what the daily sweep checks", () => {
           minutes: 0,
           limit: 333_000,
           countedAt: new Date(),
+          attendanceMissing: false,
         },
         emails: { ...report().emails, configured: false },
         neon: { state: "unconfigured", limit: 100 },

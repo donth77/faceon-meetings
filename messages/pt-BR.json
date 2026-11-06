@@ -376,6 +376,7 @@
         "value": "{used, number} de {limit, plural, one {# minuto por participante} other {# minutos por participante}}",
         "count": "{used, plural, one {# minuto por participante} other {# minutos por participante}}, sem limite definido",
         "note": "A contagem do próprio {appName}: o tempo de cada pessoa em cada chamada. A API do Stream não informa o que ele cobra, que depende do vídeo que as pessoas recebem (o HD custa o dobro do áudio e do SD), então o valor cobrado está no painel dele.",
+        "missing": "A última chamada que durou um minuto ou mais está sem presença, então os minutos dela não são contados aqui e Anteriores não consegue mostrar quem participou: o webhook do Stream não está chegando ao {appName}. Para ver como ele está configurado, execute <code>pnpm stream:check</code> na sua cópia do código do {appName}, com as chaves do Stream deste site no .env.local. O log do servidor informa quando uma entrega é recusada.",
         "dashboard": "Abrir o painel do Stream",
         "off": "O Stream não está configurado, então não há chamadas para contar."
       },

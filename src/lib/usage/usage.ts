@@ -13,7 +13,7 @@ import {
 } from "./meters";
 import { neonUsage, type NeonUsage } from "./neon";
 import type { Listing } from "./resend";
-import { streamMinutesThisMonth } from "./stream";
+import { streamAttendanceMissing, streamMinutesThisMonth } from "./stream";
 
 /** Everything Settings → Admin → Usage this month shows, and the daily sweep warns about. */
 export type UsageReport = {
@@ -29,6 +29,8 @@ export type UsageReport = {
     minutes: number;
     limit: number;
     countedAt: Date;
+    /** The latest call that ran a minute or more has no attendance: the webhook isn't arriving. */
+    attendanceMissing: boolean;
   };
   emails: {
     configured: boolean;
@@ -63,11 +65,13 @@ export async function usageReport(
   const streamConfigured = Boolean(
     env.NEXT_PUBLIC_STREAM_API_KEY && env.STREAM_API_SECRET,
   );
-  const [minutes, { mailtrap, ...emails }, neon] = await Promise.all([
-    streamConfigured ? streamMinutesThisMonth(now) : 0,
-    emailUsage(now, force),
-    neonUsage(now, force),
-  ]);
+  const [minutes, attendanceMissing, { mailtrap, ...emails }, neon] =
+    await Promise.all([
+      streamConfigured ? streamMinutesThisMonth(now) : 0,
+      streamConfigured ? streamAttendanceMissing() : false,
+      emailUsage(now, force),
+      neonUsage(now, force),
+    ]);
   return {
     month: utcMonth(now).key,
     stream: {
@@ -75,6 +79,7 @@ export async function usageReport(
       minutes,
       limit: env.USAGE_STREAM_MINUTES,
       countedAt: now,
+      attendanceMissing,
     },
     emails: {
       configured: resendConfig() !== null,

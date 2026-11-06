@@ -376,6 +376,7 @@
         "value": "{used, number} / {limit, plural, other {# 参加者・分}}",
         "count": "{used, plural, other {# 参加者・分}}（上限なし）",
         "note": "{appName} 自身の集計で、各通話での各参加者の時間です。Stream の API は請求額を報告しません。請求額は参加者が受信したビデオによって変わり（HD は音声や SD の 2 倍の料金）、Stream のダッシュボードで確認できます。",
+        "missing": "1 分以上続いた直近の通話に出席記録がないため、その通話の時間はここに集計されず、「過去」にも参加者を表示できません。Stream の Webhook が {appName} に届いていません。設定を確認するには、{appName} のコードのコピーで、このサイトの Stream のキーを .env.local に入れて <code>pnpm stream:check</code> を実行してください。配信が拒否されたときはサーバーログに記録されます。",
         "dashboard": "Stream のダッシュボードを開く",
         "off": "Stream が設定されていないため、集計する通話はありません。"
       },

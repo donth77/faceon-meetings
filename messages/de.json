@@ -376,6 +376,7 @@
         "value": "{used, number} von {limit, plural, one {# Teilnehmerminute} other {# Teilnehmerminuten}}",
         "count": "{used, plural, one {# Teilnehmerminute} other {# Teilnehmerminuten}}, ohne festgelegtes Limit",
         "note": "Die eigene Zählung von {appName}: die Zeit jeder Person in jedem Anruf. Die API von Stream meldet nicht, was Stream berechnet; das hängt vom Video ab, das Personen empfangen (HD kostet doppelt so viel wie Audio und SD). Den abgerechneten Wert zeigt daher das Dashboard von Stream.",
+        "missing": "Für den letzten Anruf, der eine Minute oder länger dauerte, gibt es keine Anwesenheit. Seine Minuten werden hier daher nicht gezählt, und Vergangen kann nicht zeigen, wer dabei war: Der Webhook von Stream kommt bei {appName} nicht an. Um zu sehen, wie er eingerichtet ist, führen Sie <code>pnpm stream:check</code> in Ihrer Kopie des Codes von {appName} aus, mit den Stream-Schlüsseln dieser Website in .env.local. Das Serverprotokoll zeigt, wann eine Zustellung abgewiesen wird.",
         "dashboard": "Stream-Dashboard öffnen",
         "off": "Stream ist nicht eingerichtet, daher gibt es keine Anrufe zu zählen."
       },

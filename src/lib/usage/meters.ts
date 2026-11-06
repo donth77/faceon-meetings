@@ -108,6 +108,31 @@ export function participantMinutes(
   return ms / 60_000;
 }
 
+/** A call that ended: when it started and ended, and how many connections its attendance has. */
+export type EndedCall = {
+  startedAt: Date;
+  endedAt: Date;
+  connections: number;
+};
+
+/** How long a call must have run for its missing attendance to mean something. */
+const CALL_LONG_ENOUGH_MS = 60_000;
+
+/**
+ * Whether Stream's webhook seems not to be reaching FaceOn: the latest call (of
+ * `calls`, latest first) that ran a minute or more has nobody in its attendance. A
+ * call's length comes from the meeting page and Stream's own view of the call, never
+ * the webhook, while the attendance comes only from it. Shorter calls say nothing
+ * (someone let in who never connected), and the next call with attendance clears it.
+ */
+export function attendanceMissing(calls: readonly EndedCall[]): boolean {
+  const latest = calls.find(
+    (call) =>
+      call.endedAt.getTime() - call.startedAt.getTime() >= CALL_LONG_ENOUGH_MS,
+  );
+  return latest !== undefined && latest.connections === 0;
+}
+
 /**
  * A meter's reading, for warnings: the period it counts over, how much is used of how
  * much, and for a day's emails, which day.

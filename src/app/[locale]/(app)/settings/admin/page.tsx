@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { connection } from "next/server";
 
 import { AdminList } from "@/components/admin/admin-list";
 import { AdminRequests } from "@/components/admin/admin-requests";
@@ -55,6 +56,10 @@ export default async function AdminPage({
   if (!session || !isAdmin(session.user)) {
     return <NotFoundContent heading="h2" />;
   }
+  // The figures only when someone really opens the page, never in Next.js's prerender of
+  // it with their cookies (connection() waits for that): it cuts off the requests to
+  // Stream, Resend and Neon as it ends, which reported them as failing on every visit.
+  await connection();
   const t = await getTranslations("Admin");
   const query = await searchParams;
   const [requests, answers, hosts, admins, permissions, usage] =
