@@ -123,8 +123,9 @@ test("strong noise suppression, once chosen, runs in a call @nightly", async ({
   await expect(noise).toContainText("Strong");
 
   const meeting = await createMeeting(host.user.id);
-  // RNNoise loads only for a microphone that uses it.
-  const rnnoise = page.waitForRequest("**/noise/rnnoise-worklet.js");
+  // RNNoise loads only for a microphone that uses it. Its worklet module never shows as a
+  // request in Playwright, so wait for its Wasm, which the page fetches beside it.
+  const rnnoise = page.waitForRequest(/\/noise\/rnnoise(_simd)?\.wasm$/);
   await openMeeting(page, meeting);
   await joinFromPreJoin(page);
   await rnnoise;
