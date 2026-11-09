@@ -1,7 +1,13 @@
 import { type Page } from "@playwright/test";
 
 import { createMeeting } from "./support/db";
-import { expect, expectNoErrors, needsStream, test } from "./support/fixtures";
+import {
+  expect,
+  expectNoErrors,
+  hydrated,
+  needsStream,
+  test,
+} from "./support/fixtures";
 import {
   joinFromPreJoin,
   openMeeting,
@@ -9,8 +15,8 @@ import {
 } from "./support/meeting";
 
 /**
- * Heavier checks for the nightly workflow (tagged @nightly): Firefox's own path for
- * backgrounds, and strong noise suppression in a real call.
+ * Heavier checks for the nightly workflow (tagged @nightly; it runs weekly): Firefox's own
+ * path for backgrounds, and strong noise suppression in a real call.
  */
 
 async function choose(page: Page, name: string) {
@@ -101,20 +107,27 @@ test("Firefox draws each frame of a slow camera once @nightly @firefox", async (
   expectNoErrors(host);
 });
 
-test("strong noise suppression is on by default and runs in a call @nightly", async ({
+test("strong noise suppression, once chosen, runs in a call @nightly", async ({
   people,
 }) => {
   needsStream();
   const host = await people.signedIn({ name: "Maya Host" });
   const { page } = host;
   await page.goto("/settings/audio");
-  await expect(
-    page.getByRole("button", { name: /Noise suppression/ }),
-  ).toContainText("Strong");
+  const noise = page.getByRole("button", { name: /Noise suppression/ });
+  // The browser's own is the default; Strong is a choice.
+  await expect(noise).toContainText("Standard");
+  await hydrated(noise);
+  await noise.click();
+  await page.getByRole("option", { name: /^Strong/ }).click();
+  await expect(noise).toContainText("Strong");
 
   const meeting = await createMeeting(host.user.id);
+  // RNNoise loads only for a microphone that uses it.
+  const rnnoise = page.waitForRequest("**/noise/rnnoise-worklet.js");
   await openMeeting(page, meeting);
   await joinFromPreJoin(page);
+  await rnnoise;
   const guest = await people.guest();
   await openMeeting(guest.page, meeting);
   await joinFromPreJoin(guest.page, "Jordan Lee");
